@@ -1,0 +1,45 @@
+{
+  "access_right": "open",
+  "title": "MBAG - MAS (akkervogels)",
+  "description": "<p>Repository voor de code met betrekking to steekproefdesign,\n-trekking, analyses … van de data afkomstig van het MAS protocol\n(akkervogels) binnen het MBAG project.<\/p>",
+  "keywords": [
+    "MBAG, MAS, akkervogels, biodiversiteit, beheerovereenkomsten, meetnet"
+  ],
+  "upload_type": "software",
+  "license": "CC-BY-4.0",
+  "language": "nld",
+  "contributors": [
+    {
+      "name": "Langeraert, Ward",
+      "affiliation": "Instituut voor Natuur- en Bosonderzoek (INBO)",
+      "orcid": "0000-0002-5900-8109",
+      "type": "ContactPerson"
+    },
+    {
+      "name": "Research Institute for Nature and Forest (INBO)",
+      "type": "RightsHolder"
+    }
+  ],
+  "creators": [
+    {
+      "name": "Langeraert, Ward",
+      "affiliation": "Instituut voor Natuur- en Bosonderzoek (INBO)",
+      "orcid": "0000-0002-5900-8109"
+    },
+    {
+      "name": "Cartuyvels, Emma",
+      "affiliation": "Instituut voor Natuur- en Bosonderzoek (INBO)",
+      "orcid": "0000-0001-7856-6360"
+    },
+    {
+      "name": "Van Calster, Hans",
+      "affiliation": "Instituut voor Natuur- en Bosonderzoek (INBO)",
+      "orcid": "0000-0001-8595-8426"
+    }
+  ],
+  "communities": [
+    {
+      "identifier": "inbo"
+    }
+  ]
+}
