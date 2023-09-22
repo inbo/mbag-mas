@@ -10,7 +10,6 @@ allowed:
   - motivation: not applicable
     value: no website badge found in README.md
 required:
-- CITATION
 - checklist
 - filename conventions
 - folder conventions
