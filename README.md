@@ -1,7 +1,7 @@
 <!-- badges: start -->
-![GitHub](https://img.shields.io/github/license//mbag-mas)
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status//mbag-mas/check-project)
-![GitHub repo size](https://img.shields.io/github/repo-size//mbag-mas)
+![GitHub](https://img.shields.io/github/license/inbo/mbag-mas)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/inbo/mbag-mas/check-project)
+![GitHub repo size](https://img.shields.io/github/repo-size/inbo/mbag-mas)
 <!-- badges: end -->
 
 # MBAG - MAS (akkervogels)
