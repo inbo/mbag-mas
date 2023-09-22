@@ -11,10 +11,10 @@
 [Van Calster, Hans![ORCID logo](https://info.orcid.org/wp-content/uploads/2019/11/orcid_16x16.png)](https://orcid.org/0000-0001-8595-8426)[^aut][^inbo.be]
 Research Institute for Nature and Forest (INBO)[^cph][^fnd]
 
-[^cph]: copyright holder
-[^fnd]: funder
-[^aut]: author
-[^cre]: contact person
+[^cph]: copyright houder
+[^fnd]: financier
+[^aut]: auteur
+[^cre]: contactpersoon
 [^inbo.be]: Instituut voor Natuur- en Bosonderzoek (INBO)
 
 **keywords**: MBAG, MAS, akkervogels, biodiversiteit, beheerovereenkomsten, meetnet
