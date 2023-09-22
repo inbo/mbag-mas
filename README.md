@@ -1,6 +1,5 @@
 <!-- badges: start -->
 ![GitHub](https://img.shields.io/github/license/inbo/mbag-mas)
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/inbo/mbag-mas/check-project)
 ![GitHub repo size](https://img.shields.io/github/repo-size/inbo/mbag-mas)
 <!-- badges: end -->
 
@@ -15,7 +14,7 @@ Research Institute for Nature and Forest (INBO)[^cph][^fnd]
 [^fnd]: financier
 [^aut]: auteur
 [^cre]: contactpersoon
-[^inbo.be]: Instituut voor Natuur- en Bosonderzoek (INBO)
+[^inbo.be]: Research Institute for Nature and Forest (INBO)
 
 **keywords**: MBAG; MAS; akkervogels; biodiversiteit; beheerovereenkomsten; meetnet
 
