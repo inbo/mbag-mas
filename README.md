@@ -22,9 +22,7 @@ Research Institute for Nature and Forest (INBO)[^cph][^fnd]
 <!-- community: inbo -->
 
 <!-- description: start -->
-Replace this with a short description of the project.
-It becomes the abstract of the project in the citation information.
-And the project description at https://zenodo.org
+Repository voor de code met betrekking to steekproefdesign, -trekking, analyses ... van de data afkomstig van het MAS protocol (akkervogels) binnen het MBAG project.
 <!-- description: end -->
 
-Anything below here is visible in the README but not in the citation.
+...
