@@ -17,7 +17,7 @@ Research Institute for Nature and Forest (INBO)[^cph][^fnd]
 [^cre]: contactpersoon
 [^inbo.be]: Instituut voor Natuur- en Bosonderzoek (INBO)
 
-**keywords**: MBAG, MAS, akkervogels, biodiversiteit, beheerovereenkomsten, meetnet
+**keywords**: MBAG; MAS; akkervogels; biodiversiteit; beheerovereenkomsten; meetnet
 
 <!-- community: inbo -->
 

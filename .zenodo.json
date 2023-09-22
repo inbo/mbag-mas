@@ -3,7 +3,12 @@
   "title": "MBAG - MAS (akkervogels)",
   "description": "<p>Repository voor de code met betrekking to steekproefdesign,\n-trekking, analyses … van de data afkomstig van het MAS protocol\n(akkervogels) binnen het MBAG project.<\/p>",
   "keywords": [
-    "MBAG, MAS, akkervogels, biodiversiteit, beheerovereenkomsten, meetnet"
+    "MBAG",
+    "MAS",
+    "akkervogels",
+    "biodiversiteit",
+    "beheerovereenkomsten",
+    "meetnet"
   ],
   "upload_type": "software",
   "license": "CC-BY-4.0",
