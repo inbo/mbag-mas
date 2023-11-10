@@ -79,9 +79,12 @@ get_coverage_wcs <- function(wcs = c("dtm", "omz", "dsm"),
   # set url
   wcs <- switch(
     wcs,
-    omz = "https://inspire.informatievlaanderen.be/overdrachtdiensten/oi-omz/wcs",
-    dtm = "https://inspire.informatievlaanderen.be/overdrachtdiensten/el-dtm/wcs",
-    dsm = "https://inspire.informatievlaanderen.be/overdrachtdiensten/el-dsm/wcs"
+    omz = paste0("https://inspire.informatievlaanderen.be/",
+                 "overdrachtdiensten/oi-omz/wcs"),
+    dtm = paste0("https://inspire.informatievlaanderen.be/",
+                 "overdrachtdiensten/el-dtm/wcs"),
+    dsm = paste0("https://inspire.informatievlaanderen.be/",
+                 "overdrachtdiensten/el-dsm/wcs")
   )
 
   assertthat::assert_that(is.character(layername))
@@ -118,14 +121,14 @@ get_coverage_wcs <- function(wcs = c("dtm", "omz", "dsm"),
                         epsg_code, "(",
                         bbox["xmin"],
                         ",",
-                        bbox["xmax"],")"),
+                        bbox["xmax"], ")"),
                       SUBSET = paste0(
                         "y,http://www.opengis.net/def/crs/EPSG/0/",
                         epsg_code,
                         "(",
                         bbox["ymin"],
                         ",",
-                        bbox["ymax"],")"),
+                        bbox["ymax"], ")"),
                       SCALEFACTOR = resolution,
                       FORMAT = "image/tiff",
                       RESPONSE_CRS = wcs_crs

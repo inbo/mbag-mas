@@ -12,12 +12,12 @@ list(
     command = exclusie_landgebruik_osm(
       gebied = selectie_openheid_klasses,
       osmdata = osm_belgium,
-      landuse = c("residential", "military", "industrial", "cemetery", 
+      landuse = c("residential", "military", "industrial", "cemetery",
                   "railway", "commercial", "farmyard"),
       leisure = c("park"),
-      buffer_poly = 0, 
+      buffer_poly = 0,
       layer_poly = list(aeroway = c("aerodrome")),
-      buffer_line = 100, 
+      buffer_line = 100,
       layer_line = list(highway = c("motorway", "motorway_link")),
       update_osm_layer = FALSE
       ),

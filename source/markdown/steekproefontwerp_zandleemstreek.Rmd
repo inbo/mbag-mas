@@ -20,7 +20,8 @@ opts_chunk$set(
   echo = TRUE,
   warning = FALSE,
   message = FALSE,
-  out.width = "100%")
+  out.width = "100%"
+)
 opts_knit$set(root.dir = here::here())
 ```
 
@@ -41,15 +42,18 @@ targets_store <- here("source", "targets", "mas_steekproef_zn_lm", "_targets")
 
 # to make tar_read work
 new_tar_vector <- function(value, objects) {
-    out <- do.call(vctrs::vec_rbind, objects)
-    if (any(sapply(out, inherits, what = "sfc"))) {
-      sf::st_as_sf(out)
-    } else {out}
+  out <- do.call(vctrs::vec_rbind, objects)
+  if (any(sapply(out, inherits, what = "sfc"))) {
+    sf::st_as_sf(out)
+  } else {
+    out
+  }
 }
 try(assignInNamespace(
   "value_produce_aggregate.tar_vector",
   new_tar_vector,
-  ns = "targets"))
+  ns = "targets"
+))
 ```
 
 # Vooraf
@@ -114,8 +118,9 @@ Werkwijze:
 We selecteren OL en HOL binnen de perimeter.
 
 ```{r}
-selectie_openheid_klasses <- tar_read(selectie_openheid_klasses, 
-                                      store = targets_store) %>%
+selectie_openheid_klasses <- tar_read(selectie_openheid_klasses,
+  store = targets_store
+) %>%
   filter(Naam == "Zandleemstreek")
 
 mapview(perimeters_data, color = "red", alpha.regions = 0, legend = FALSE) +
@@ -208,15 +213,18 @@ In groen de exclusiekaart en rood OL en HOL binnen de perimeter.
 
 ```{r}
 exclusie_osm_landgebruiken <- tar_read(exclusie_osm_landgebruiken,
-                                       store = targets_store) %>%
+  store = targets_store
+) %>%
   filter(Naam == "Zandleemstreek")
 
-detail <- c("xmin" = 150000,
-            "ymin" = 160000,
-            "xmax" = 177000,
-            "ymax" = 180000)
+detail <- c(
+  "xmin" = 150000,
+  "ymin" = 160000,
+  "xmax" = 177000,
+  "ymax" = 180000
+)
 
-detail_sf <- tibble(geometry = st_as_sfc(st_bbox(detail))) %>% 
+detail_sf <- tibble(geometry = st_as_sfc(st_bbox(detail))) %>%
   st_as_sf() %>%
   st_set_crs(31370)
 ```
@@ -224,16 +232,23 @@ detail_sf <- tibble(geometry = st_as_sfc(st_bbox(detail))) %>%
 ```{r}
 openheid_crop <- st_crop(selectie_openheid_klasses, detail)
 selectie_openheid_klasses_crop <- st_cast(openheid_crop)[which(
-  st_is(st_cast(openheid_crop), c("POLYGON", "MULTIPOLYGON"))), ]  %>% 
+  st_is(st_cast(openheid_crop), c("POLYGON", "MULTIPOLYGON"))
+), ] %>%
   summarise()
 
-mapview(st_crop(perimeters_data, detail), color = "red", alpha.regions = 0, 
-        legend = FALSE) +
+mapview(st_crop(perimeters_data, detail),
+  color = "red", alpha.regions = 0,
+  legend = FALSE
+) +
   mapview(detail_sf, color = "purple", alpha.regions = 0, legend = FALSE) +
-  mapview(selectie_openheid_klasses_crop, col.regions = "red", 
-          legend = FALSE) +
-  mapview(st_crop(exclusie_osm_landgebruiken, detail), col.regions = "green", 
-          legend = FALSE)
+  mapview(selectie_openheid_klasses_crop,
+    col.regions = "red",
+    legend = FALSE
+  ) +
+  mapview(st_crop(exclusie_osm_landgebruiken, detail),
+    col.regions = "green",
+    legend = FALSE
+  )
 ```
 
 ## Bepalen geldige plaatsen waar telling kan uitgevoerd worden
@@ -273,13 +288,19 @@ We verwijderen wegen die overlappen met de exclusiekaart en verwijderen overlapp
 paden <- tar_read(paden, store = targets_store) %>%
   filter(Naam == "Zandleemstreek")
 
-mapview(st_crop(perimeters_data, detail), color = "red", alpha.regions = 0, 
-        legend = FALSE) +
+mapview(st_crop(perimeters_data, detail),
+  color = "red", alpha.regions = 0,
+  legend = FALSE
+) +
   mapview(detail_sf, color = "purple", alpha.regions = 0, legend = FALSE) +
-  mapview(selectie_openheid_klasses_crop, col.regions = "red", 
-          legend = FALSE) +
-  mapview(st_crop(exclusie_osm_landgebruiken, detail), col.regions = "green", 
-          legend = FALSE) +
+  mapview(selectie_openheid_klasses_crop,
+    col.regions = "red",
+    legend = FALSE
+  ) +
+  mapview(st_crop(exclusie_osm_landgebruiken, detail),
+    col.regions = "green",
+    legend = FALSE
+  ) +
   mapview(st_crop(paden, detail), legend = FALSE)
 ```
 
@@ -310,13 +331,19 @@ Werkwijze:
 punten <- tar_read(punten, store = targets_store) %>%
   filter(Naam == "Zandleemstreek")
 
-mapview(st_crop(perimeters_data, detail), color = "red", alpha.regions = 0, 
-        legend = FALSE) +
+mapview(st_crop(perimeters_data, detail),
+  color = "red", alpha.regions = 0,
+  legend = FALSE
+) +
   mapview(detail_sf, color = "purple", alpha.regions = 0, legend = FALSE) +
-  mapview(selectie_openheid_klasses_crop, col.regions = "red", 
-          legend = FALSE) +
-  mapview(st_crop(exclusie_osm_landgebruiken, detail), col.regions = "green", 
-          legend = FALSE) +
+  mapview(selectie_openheid_klasses_crop,
+    col.regions = "red",
+    legend = FALSE
+  ) +
+  mapview(st_crop(exclusie_osm_landgebruiken, detail),
+    col.regions = "green",
+    legend = FALSE
+  ) +
   mapview(st_crop(paden, detail), legend = FALSE) +
   mapview(st_crop(punten, detail), zcol = "value", layer = "Type weg of pad")
 ```
@@ -342,7 +369,8 @@ Voor elk potentieel telpunt / telcirkel:
 
 ```{r}
 telcirkels_selectie_landgebruik <- tar_read(telcirkels_selectie_landgebruik,
-                                   store = targets_store) %>%
+  store = targets_store
+) %>%
   filter(startsWith(pointid, abbreviate("Zandleemstreek", 2)))
 ```
 
@@ -357,32 +385,45 @@ Het kan dus zijn dat op de volledige telcirkel deze oppervlakte-aandelen verschi
 
 ```{r}
 telcirkels_selectie_landgebruik %>%
-  ggtern::ggtern(aes(x = Akker + Grasland,
-                     y = Bos + Struikgewas,
-                     z = Overige)) + 
-  geom_point(alpha = 0.1,
-             aes(colour = selectie2))
+  ggtern::ggtern(aes(
+    x = Akker + Grasland,
+    y = Bos + Struikgewas,
+    z = Overige
+  )) +
+  geom_point(
+    alpha = 0.1,
+    aes(colour = selectie2)
+  )
 ```
 
 De kaart toont de punten die op deze manier niet meer in aanmerkingen komen.
 
 ```{r map-exclusie-landgebruik-vito}
 exclusie_punten <- punten %>%
-  left_join(telcirkels_selectie_landgebruik %>%
-              group_by(pointid) %>%
-              summarize(selectie2 = any(selectie2)),
-            by = "pointid") %>%
+  left_join(
+    telcirkels_selectie_landgebruik %>%
+      group_by(pointid) %>%
+      summarize(selectie2 = any(selectie2)),
+    by = "pointid"
+  ) %>%
   filter(!selectie2)
 
-mapview(st_crop(perimeters_data, detail), color = "red", alpha.regions = 0, 
-        legend = FALSE) +
+mapview(st_crop(perimeters_data, detail),
+  color = "red", alpha.regions = 0,
+  legend = FALSE
+) +
   mapview(detail_sf, color = "purple", alpha.regions = 0, legend = FALSE) +
-  mapview(selectie_openheid_klasses_crop, col.regions = "red", 
-          legend = FALSE) +
-  mapview(st_crop(exclusie_osm_landgebruiken, detail), col.regions = "green", 
-          legend = FALSE) +
+  mapview(selectie_openheid_klasses_crop,
+    col.regions = "red",
+    legend = FALSE
+  ) +
+  mapview(st_crop(exclusie_osm_landgebruiken, detail),
+    col.regions = "green",
+    legend = FALSE
+  ) +
   mapview(st_crop(paden, detail), legend = FALSE) +
-  mapview(st_crop(exclusie_punten, detail), col.regions = "black", legend = FALSE)
+  mapview(st_crop(exclusie_punten, detail), col.regions = "black",
+          legend = FALSE)
 ```
 
 ### Exclusie op basis van zichtbaarheid
@@ -402,16 +443,18 @@ Zie:\
 We verwijderen telpunten waar de cumulatieve 'viewshed visibility index' (cvvi) kleiner is dan 0.10.
 
 ```{r}
-punten_zichtbaarheid <- tar_read(punten_zichtbaarheid, 
-                                 store = targets_store) %>%
+punten_zichtbaarheid <- tar_read(punten_zichtbaarheid,
+  store = targets_store
+) %>%
   filter(Naam == "Zandleemstreek")
 
 plus_visibility <- add_openheid_landschap_to_frame(
-      path = path_to_openheid_landschap(),
-      punten_sf = punten_zichtbaarheid,
-      gebied = perimeters_data,
-      cutlevels = c(1.25, 1.35, 1.51),
-      class_labels = c("GL", "HGL", "HOL", "OL"))
+  path = path_to_openheid_landschap(),
+  punten_sf = punten_zichtbaarheid,
+  gebied = perimeters_data,
+  cutlevels = c(1.25, 1.35, 1.51),
+  class_labels = c("GL", "HGL", "HOL", "OL")
+)
 ```
 
 ```{r}
@@ -448,8 +491,9 @@ Voor de steekproeftrekking zijn vooral de oppervlakte aan soortbeschermingsmaatr
 Eventueel verder opgesplitst in winter-, zomer- en jaarrondmaatregelen.
 
 ```{r bo-sbp}
-steekproefkader_finaal <- tar_read(steekproefkader_finaal, 
-                                   store = targets_store) %>%
+steekproefkader_finaal <- tar_read(steekproefkader_finaal,
+  store = targets_store
+) %>%
   filter(Naam == "Zandleemstreek")
 ```
 
@@ -459,7 +503,8 @@ steekproefkader_finaal %>%
   geom_histogram(aes(x = area_prop_sb)) +
   labs(
     x = "Oppervlakte-aandeel soortbeschermingsmaatregelen binnen 300 m buffer",
-    y = "Aantal potentiële telpunten (steekproefkader)")
+    y = "Aantal potentiële telpunten (steekproefkader)"
+  )
 ```
 
 Verdeling zonder nullen.
@@ -471,7 +516,8 @@ steekproefkader_finaal %>%
   geom_histogram(aes(x = area_prop_sb)) +
   labs(
     x = "Oppervlakte-aandeel soortbeschermingsmaatregelen binnen 300 m buffer",
-    y = "Aantal potentiële telpunten (steekproefkader)")
+    y = "Aantal potentiële telpunten (steekproefkader)"
+  )
 ```
 
 ### Oppervlakte-aandeel hoofdteelt
@@ -507,32 +553,45 @@ Omzetten naar .parquet file.
 ```{r lbg-per-hoofdteelt}
 lbg_statistieken %>%
   ungroup() %>%
-  left_join(steekproefkader_finaal %>% st_drop_geometry() %>%
-              select(pointid, Naam),
-            by = "pointid") %>%
+  left_join(
+    steekproefkader_finaal %>%
+      st_drop_geometry() %>%
+      select(pointid, Naam),
+    by = "pointid"
+  ) %>%
   select(Naam, pointid, LBLHFDTLT, area_prop) %>%
-  pivot_wider(names_from = LBLHFDTLT,
-              values_from = area_prop,
-              values_fill = list(area_prop = 0),
-              values_fn = list(area_prop = sum)) %>%
+  pivot_wider(
+    names_from = LBLHFDTLT,
+    values_from = area_prop,
+    values_fill = list(area_prop = 0),
+    values_fn = list(area_prop = sum)
+  ) %>%
   pivot_longer(cols = -c(Naam, pointid)) %>%
   group_by(Naam, name) %>%
-  summarise(prop_n_points = sum(value > 0) / n(),
-            mean_prop = mean(value),
-            mean_prop_present = mean(value[value > 0]),
-            .groups = "drop_last") %>%
+  summarise(
+    prop_n_points = sum(value > 0) / n(),
+    mean_prop = mean(value),
+    mean_prop_present = mean(value[value > 0]),
+    .groups = "drop_last"
+  ) %>%
   filter(mean_prop > 0.01) %>%
-  pivot_longer(cols = c(prop_n_points, mean_prop, mean_prop_present),
-               names_to = "variable",
-               values_to = "value") %>%
+  pivot_longer(
+    cols = c(prop_n_points, mean_prop, mean_prop_present),
+    names_to = "variable",
+    values_to = "value"
+  ) %>%
   ggplot() +
-  geom_point(aes(y = forcats::fct_reorder(name, value, mean),
-                 x = value, colour = variable)) +
+  geom_point(aes(
+    y = forcats::fct_reorder(name, value, mean),
+    x = value, colour = variable
+  )) +
   scale_x_continuous(labels = scales::percent) +
-  scale_color_discrete(labels = c("Gemiddeld oppervlakteperc.",
-                                  "Gemiddeld oppervlakteperc.\nwaar aanwezig",
-                                  "Percentage pot. telpunten\n aanwezig")) +
-  labs(x = "Percentage in telcirkel") + 
+  scale_color_discrete(labels = c(
+    "Gemiddeld oppervlakteperc.",
+    "Gemiddeld oppervlakteperc.\nwaar aanwezig",
+    "Percentage pot. telpunten\n aanwezig"
+  )) +
+  labs(x = "Percentage in telcirkel") +
   theme(axis.title.y = element_blank())
 ```
 
@@ -555,31 +614,44 @@ Hier gebruiken we de indeling volgens 'gewasgroep' zoals deze in de landbouwgebr
 ```{r lbg-per-gewasgroep, warning=FALSE}
 lbg_statistieken %>%
   ungroup() %>%
-  left_join(steekproefkader_finaal %>% st_drop_geometry() %>%
-              select(pointid, Naam),
-            by = "pointid") %>%
+  left_join(
+    steekproefkader_finaal %>%
+      st_drop_geometry() %>%
+      select(pointid, Naam),
+    by = "pointid"
+  ) %>%
   select(pointid, Naam, GEWASGROEP, area_prop) %>%
-  pivot_wider(names_from = GEWASGROEP,
-              values_from = area_prop,
-              values_fill = list(area_prop = 0),
-              values_fn = list(area_prop = sum)) %>%
+  pivot_wider(
+    names_from = GEWASGROEP,
+    values_from = area_prop,
+    values_fill = list(area_prop = 0),
+    values_fn = list(area_prop = sum)
+  ) %>%
   pivot_longer(cols = -c(Naam, pointid)) %>%
   group_by(Naam, name) %>%
-  summarise(prop_n_points = sum(value > 0) / n(),
-            mean_prop = mean(value),
-            mean_prop_present = mean(value[value > 0]),
-            .groups = "drop_last") %>%
-  pivot_longer(cols = c(prop_n_points, mean_prop, mean_prop_present),
-               names_to = "variable",
-               values_to = "value") %>%
+  summarise(
+    prop_n_points = sum(value > 0) / n(),
+    mean_prop = mean(value),
+    mean_prop_present = mean(value[value > 0]),
+    .groups = "drop_last"
+  ) %>%
+  pivot_longer(
+    cols = c(prop_n_points, mean_prop, mean_prop_present),
+    names_to = "variable",
+    values_to = "value"
+  ) %>%
   ggplot() +
-  geom_point(aes(y = forcats::fct_reorder(name, value, mean),
-                 x = value, colour = variable)) +
+  geom_point(aes(
+    y = forcats::fct_reorder(name, value, mean),
+    x = value, colour = variable
+  )) +
   scale_x_continuous(labels = scales::percent) +
-  scale_color_discrete(labels = c("Gemiddeld oppervlakteperc.",
-                                  "Gemiddeld oppervlakteperc.\nwaar aanwezig",
-                                  "Percentage pot. telpunten\n aanwezig")) +
-  labs(x = "Percentage in telcirkel") + 
+  scale_color_discrete(labels = c(
+    "Gemiddeld oppervlakteperc.",
+    "Gemiddeld oppervlakteperc.\nwaar aanwezig",
+    "Percentage pot. telpunten\n aanwezig"
+  )) +
+  labs(x = "Percentage in telcirkel") +
   theme(axis.title.y = element_blank())
 ```
 
@@ -607,8 +679,11 @@ Toch is er nog een beetje HGL over maar in de allocatie zullen deze punten wegva
 
 ```{r landschap-openheid}
 openheid_classified <- rast(
-  here("data", "dem",
-       "openness300m_chm_res25_c300_mean_vlaanderen_classified.tif")) %>%
+  here(
+    "data", "dem",
+    "openness300m_chm_res25_c300_mean_vlaanderen_classified.tif"
+  )
+) %>%
   crop(perimeters_data) %>%
   mask(terra::vect(perimeters_data))
 ```
@@ -625,12 +700,18 @@ openheid_raster %>%
 ```{r openheid-points}
 steekproefkader_finaal %>%
   ggplot() +
-  geom_histogram(aes(x = openheid_waarde * 180 / pi,
-                     fill = openheid_klasse),
-                 binwidth = 0.5) +
+  geom_histogram(
+    aes(
+      x = openheid_waarde * 180 / pi,
+      fill = openheid_klasse
+    ),
+    binwidth = 0.5
+  ) +
   facet_wrap(~Naam, scales = "free_y") +
-  labs(x = "Gemiddelde openheid landschap binnen 300 m buffer (in graden)",
-       y = "Aantal potentiële telpunten (steekproefkader)")
+  labs(
+    x = "Gemiddelde openheid landschap binnen 300 m buffer (in graden)",
+    y = "Aantal potentiële telpunten (steekproefkader)"
+  )
 ```
 
 ### Soortbeschermingsplan
@@ -673,33 +754,44 @@ Deze werden tot 1 bestand samengevoegd met volgende code:
              path_to_sbp_akkervogels("sbp_overige_soorten.shp"))
 
 ```{r}
-sbp_overig <- 
-  st_read(path_to_sbp_akkervogels("sbp_overige_soorten.shp"), 
-          quiet = TRUE) %>%
+sbp_overig <-
+  st_read(path_to_sbp_akkervogels("sbp_overige_soorten.shp"),
+    quiet = TRUE
+  ) %>%
   st_transform(31370) %>%
-  filter(soort %in% c("Hamster", "Bruine kiekendief", "Grauwe kiekendief", 
-                      "Zomertortel")) %>%
-  mutate(soort = ifelse(soort == "Grauwe kiekendief" & gebied == "nieuw 2023", 
-                        "Grauwe kiekendief 2023", soort)) %>%
+  filter(soort %in% c(
+    "Hamster", "Bruine kiekendief", "Grauwe kiekendief",
+    "Zomertortel"
+  )) %>%
+  mutate(soort = ifelse(soort == "Grauwe kiekendief" & gebied == "nieuw 2023",
+    "Grauwe kiekendief 2023", soort
+  )) %>%
   select(soort)
-sbp_akkergvogels <- 
+sbp_akkergvogels <-
   st_read(path_to_sbp_akkervogels("akkervogelgebieden2022.shp"),
-          quiet = TRUE) %>%
+    quiet = TRUE
+  ) %>%
   st_transform(31370) %>%
   mutate(soort = "akkervogels2022") %>%
   select(soort)
 
-mapview(bind_rows(sbp_overig, sbp_akkergvogels), zcol = "soort", 
-        layer = "soort(engroep)")
+mapview(bind_rows(sbp_overig, sbp_akkergvogels),
+  zcol = "soort",
+  layer = "soort(engroep)"
+)
 ```
 
 In de zandleemstreek hebben we:
 
 ```{r}
 mapview(perimeters_data, color = "red", alpha.regions = 0, legend = FALSE) +
-mapview(st_intersection(bind_rows(sbp_overig, sbp_akkergvogels), 
-                        perimeters_data), 
-        zcol = "soort", layer = "soort(engroep)")
+  mapview(
+    st_intersection(
+      bind_rows(sbp_overig, sbp_akkergvogels),
+      perimeters_data
+    ),
+    zcol = "soort", layer = "soort(engroep)"
+  )
 ```
 
 ```{r}
@@ -713,18 +805,22 @@ Het oppervlakte aandeel aan SBP's binnen de zandleemstreek:
 binnen_sbp <- perimeters_data %>%
   st_intersection(sbp_akkervogels) %>%
   select(Naam) %>%
-  mutate(opp = st_area(.),
-         is_sbp = "binnen sbp")
+  mutate(
+    opp = st_area(.),
+    is_sbp = "binnen sbp"
+  )
 
 buiten_sbp <- perimeters_data %>%
   st_difference(sbp_akkervogels %>%
-                  st_union() %>%
-                  st_combine()) %>%
+    st_union() %>%
+    st_combine()) %>%
   select(Naam) %>%
-  mutate(opp = st_area(.),
-         is_sbp = "buiten sbp")
+  mutate(
+    opp = st_area(.),
+    is_sbp = "buiten sbp"
+  )
 
-opps <- bind_rows(buiten_sbp, binnen_sbp) %>% 
+opps <- bind_rows(buiten_sbp, binnen_sbp) %>%
   st_drop_geometry()
 
 opps %>%
@@ -744,23 +840,29 @@ Het oppervlakte aandeel aan SBP's binnen OL en HOL in de zandleemstreek:
 binnen_sbp <- selectie_openheid_klasses %>%
   st_intersection(sbp_akkervogels) %>%
   select(Naam) %>%
-  mutate(opp = st_area(.),
-         is_sbp = "binnen sbp")
+  mutate(
+    opp = st_area(.),
+    is_sbp = "binnen sbp"
+  )
 
 buiten_sbp <- selectie_openheid_klasses %>%
   st_difference(sbp_akkervogels %>%
-                  st_union() %>%
-                  st_combine()) %>%
+    st_union() %>%
+    st_combine()) %>%
   select(Naam) %>%
-  mutate(opp = st_area(.),
-         is_sbp = "buiten sbp")
+  mutate(
+    opp = st_area(.),
+    is_sbp = "buiten sbp"
+  )
 
-opps <- bind_rows(buiten_sbp, binnen_sbp) %>% 
+opps <- bind_rows(buiten_sbp, binnen_sbp) %>%
   st_drop_geometry()
 
 opps %>%
-  mutate(opp = units::set_units(opp, "ha"),
-         Naam = "Zandleemstreek (OL en HOL)") %>%
+  mutate(
+    opp = units::set_units(opp, "ha"),
+    Naam = "Zandleemstreek (OL en HOL)"
+  ) %>%
   group_by(Naam) %>%
   mutate(opp_aandeel = opp / sum(opp)) %>%
   units::drop_units() %>%
@@ -777,26 +879,32 @@ Som per telcirkel:
 binnen_sbp <- st_buffer(steekproefkader_finaal, 300) %>%
   st_intersection(sbp_akkervogels) %>%
   select(Naam) %>%
-  mutate(opp = st_area(.),
-         is_sbp = "binnen sbp")
+  mutate(
+    opp = st_area(.),
+    is_sbp = "binnen sbp"
+  )
 
 buiten_sbp <- st_buffer(steekproefkader_finaal, 300) %>%
   st_difference(sbp_akkervogels %>%
-                  st_union() %>%
-                  st_combine()) %>%
+    st_union() %>%
+    st_combine()) %>%
   select(Naam) %>%
-  mutate(opp = st_area(.),
-         is_sbp = "buiten sbp")
+  mutate(
+    opp = st_area(.),
+    is_sbp = "buiten sbp"
+  )
 
-opps <- bind_rows(buiten_sbp, binnen_sbp) %>% 
+opps <- bind_rows(buiten_sbp, binnen_sbp) %>%
   st_drop_geometry() %>%
   group_by(Naam, is_sbp) %>%
   summarise(opp = sum(opp)) %>%
   ungroup()
 
 opps %>%
-  mutate(opp = units::set_units(opp, "ha"),
-         Naam = "Steekproefkader") %>%
+  mutate(
+    opp = units::set_units(opp, "ha"),
+    Naam = "Steekproefkader"
+  ) %>%
   group_by(Naam) %>%
   mutate(opp_aandeel = opp / sum(opp)) %>%
   units::drop_units() %>%
@@ -815,28 +923,34 @@ binnen_sbp <- st_buffer(steekproefkader_finaal, 300) %>%
   summarise(.groups = "drop") %>%
   st_intersection(sbp_akkervogels) %>%
   select(Naam) %>%
-  mutate(opp = st_area(.),
-         is_sbp = "binnen sbp")
+  mutate(
+    opp = st_area(.),
+    is_sbp = "binnen sbp"
+  )
 
 buiten_sbp <- st_buffer(steekproefkader_finaal, 300) %>%
   group_by(Naam) %>%
   summarise(.groups = "drop") %>%
   st_difference(sbp_akkervogels %>%
-                  st_union() %>%
-                  st_combine()) %>%
+    st_union() %>%
+    st_combine()) %>%
   select(Naam) %>%
-  mutate(opp = st_area(.),
-         is_sbp = "buiten sbp")
+  mutate(
+    opp = st_area(.),
+    is_sbp = "buiten sbp"
+  )
 
-opps <- bind_rows(buiten_sbp, binnen_sbp) %>% 
+opps <- bind_rows(buiten_sbp, binnen_sbp) %>%
   st_drop_geometry() %>%
   group_by(Naam, is_sbp) %>%
   summarise(opp = sum(opp)) %>%
   ungroup()
 
 opps %>%
-  mutate(opp = units::set_units(opp, "ha"),
-         Naam = "Steekproefkader") %>%
+  mutate(
+    opp = units::set_units(opp, "ha"),
+    Naam = "Steekproefkader"
+  ) %>%
   group_by(Naam) %>%
   mutate(opp_aandeel = opp / sum(opp)) %>%
   units::drop_units() %>%
@@ -851,18 +965,27 @@ opps %>%
 ```{r}
 steekproefkader_finaal_strata <- steekproefkader_finaal %>%
   mutate(stratum = ifelse(is_sbp, paste0(openheid_klasse, " binnen sbp"),
-                                  paste0(openheid_klasse, " buiten sbp")))
+    paste0(openheid_klasse, " buiten sbp")
+  ))
 
-mapview(st_crop(perimeters_data, detail), color = "red", alpha.regions = 0, 
-        legend = FALSE) +
+mapview(st_crop(perimeters_data, detail),
+  color = "red", alpha.regions = 0,
+  legend = FALSE
+) +
   mapview(detail_sf, color = "purple", alpha.regions = 0, legend = FALSE) +
-  mapview(selectie_openheid_klasses_crop, col.regions = "red", 
-          legend = FALSE) +
-  mapview(st_crop(exclusie_osm_landgebruiken, detail), col.regions = "green", 
-          legend = FALSE) +
+  mapview(selectie_openheid_klasses_crop,
+    col.regions = "red",
+    legend = FALSE
+  ) +
+  mapview(st_crop(exclusie_osm_landgebruiken, detail),
+    col.regions = "green",
+    legend = FALSE
+  ) +
   mapview(st_crop(paden, detail), legend = FALSE) +
-  mapview(st_crop(steekproefkader_finaal_strata, detail), zcol = "stratum",
-          layer = "stratum")
+  mapview(st_crop(steekproefkader_finaal_strata, detail),
+    zcol = "stratum",
+    layer = "stratum"
+  )
 ```
 
 # Trekking steekproef zandleemstreek
@@ -909,11 +1032,13 @@ Niet echt belangrijk hier omdat we een maximum steekproef trekken en de tellers 
 ```{r}
 allocatie <- tar_read(allocatie_df, store = targets_store) %>%
   filter(Naam == "Zandleemstreek") %>%
-  mutate(openheid_sbp = paste(openheid_klasse,
-                           ifelse(is_sbp,
-                                  "binnen plan",
-                                  "buiten plan"))
-       )
+  mutate(openheid_sbp = paste(
+    openheid_klasse,
+    ifelse(is_sbp,
+      "binnen plan",
+      "buiten plan"
+    )
+  ))
 
 allocatie %>%
   mutate(steekproeftrekking = round(popsize / 20)) %>%
@@ -934,11 +1059,13 @@ Om te veel overlap te voorkomen binnen enzelfde stratum, is voor elk punt binnen
 ```{r trekking}
 steekproef <- tar_read(steekproef_final_600, store = targets_store) %>%
   filter(Naam == "Zandleemstreek") %>%
-  mutate(openheid_sbp = paste(openheid_klasse,
-                             ifelse(is_sbp,
-                                    "binnen plan",
-                                    "buiten plan"))
-         )
+  mutate(openheid_sbp = paste(
+    openheid_klasse,
+    ifelse(is_sbp,
+      "binnen plan",
+      "buiten plan"
+    )
+  ))
 ```
 
 Temporeel design:
@@ -962,16 +1089,17 @@ De vergelijking van HOL binnen vs. buiten plan en OL binnen vs. buiten plan is d
 ```{r}
 first_samples <- function(steekproef_df, min_n, multiplicatie) {
   factor_n <- min_n * multiplicatie
-  
+
   steekproef_df %>%
-    group_by(openheid_sbp) %>% 
-    mutate(id = row_number()) %>% # sample_order cannot be used due to thinning 
+    group_by(.data$openheid_sbp) %>%
+    mutate(id = row_number()) %>% # sample_order cannot be used due to thinning
     ungroup() %>%
     filter(id <= factor_n) %>%
-    mutate(batch = ifelse(id <= min_n, batch, "reserve set")) %>%
+    mutate(batch = ifelse(id <= min_n, .data$batch, "reserve set")) %>%
     select(-id) %>%
-    mutate(puntenset = paste("steekproef", min_n, "per stratum", 
-                             sep = " "))
+    mutate(puntenset = paste("steekproef", min_n, "per stratum",
+      sep = " "
+    ))
 }
 ```
 
@@ -979,20 +1107,26 @@ first_samples <- function(steekproef_df, min_n, multiplicatie) {
 ```{r check-balans}
 min_n_per_stratum <- c(20, 50, 100, 200)
 
-balansvergelijking <- do.call(rbind, lapply(min_n_per_stratum, first_samples, 
-                                            steekproef_df = steekproef,
-                                            multiplicatie = 1)) %>%
+balansvergelijking <- do.call(rbind, lapply(min_n_per_stratum, first_samples,
+  steekproef_df = steekproef,
+  multiplicatie = 1
+)) %>%
   bind_rows(steekproefkader_finaal %>%
-              filter(openheid_klasse %in% c("OL", "HOL")) %>% 
-              mutate(puntenset = "volledige steekproefkader")) %>%
+    filter(openheid_klasse %in% c("OL", "HOL")) %>%
+    mutate(puntenset = "volledige steekproefkader")) %>%
   mutate(sbp_akkervogels = ifelse(is_sbp,
-                                  "binnen sbp",
-                                  "buiten sbp")) %>%
+    "binnen sbp",
+    "buiten sbp"
+  )) %>%
   cbind(st_coordinates(.)) %>%
-  mutate(fillvar = factor(puntenset, levels = c(paste("steekproef", 
-                                                    c(20, 50, 100, 200), 
-                                                    "per stratum", sep = " "),
-                                                "volledige steekproefkader")))
+  mutate(fillvar = factor(puntenset, levels = c(
+    paste("steekproef",
+      c(20, 50, 100, 200),
+      "per stratum",
+      sep = " "
+    ),
+    "volledige steekproefkader"
+  )))
 
 balansvergelijking %>%
   st_drop_geometry() %>%
@@ -1008,9 +1142,11 @@ We beschouwen verschillende steekproeven waarbij we de eerste `r min_n_per_strat
 ```{r}
 balansvergelijking %>%
   ggplot() +
-  geom_boxplot(aes(x = sbp_akkervogels, y = openheid_waarde,
-                   fill = fillvar)) +
-  facet_grid(Naam~openheid_klasse) +
+  geom_boxplot(aes(
+    x = sbp_akkervogels, y = openheid_waarde,
+    fill = fillvar
+  )) +
+  facet_grid(Naam ~ openheid_klasse) +
   theme(legend.title = element_blank())
 ```
 
@@ -1019,19 +1155,23 @@ Ook lijken de SBP's gemiddeld iets zuidelijker gelegen.
 
 ```{r}
 balansvergelijking %>%
-  ggplot() + 
-  geom_boxplot(aes(x = sbp_akkervogels,
-                   y = X,
-                   fill = fillvar)) +
-  facet_grid(Naam~openheid_klasse, scales = "free") +
+  ggplot() +
+  geom_boxplot(aes(
+    x = sbp_akkervogels,
+    y = X,
+    fill = fillvar
+  )) +
+  facet_grid(Naam ~ openheid_klasse, scales = "free") +
   theme(legend.title = element_blank())
 
 balansvergelijking %>%
-  ggplot() + 
-  geom_boxplot(aes(x = sbp_akkervogels,
-                   y = Y,
-                   fill = fillvar)) +
-  facet_grid(Naam~openheid_klasse, scales = "free") +
+  ggplot() +
+  geom_boxplot(aes(
+    x = sbp_akkervogels,
+    y = Y,
+    fill = fillvar
+  )) +
+  facet_grid(Naam ~ openheid_klasse, scales = "free") +
   theme(legend.title = element_blank())
 ```
 
@@ -1042,9 +1182,11 @@ We zullen wel moeten corrigeren voor de confounders door de confounders op te ne
 ```{r}
 balansvergelijking %>%
   ggplot() +
-  geom_boxplot(aes(x = sbp_akkervogels,
-                   y = area_prop_sb,
-                   fill = fillvar)) +
+  geom_boxplot(aes(
+    x = sbp_akkervogels,
+    y = area_prop_sb,
+    fill = fillvar
+  )) +
   scale_y_sqrt() +
   facet_grid(~openheid_klasse) +
   labs(y = "Oppervlakte-aandeel SB beheerovereenkomsten") +
@@ -1058,9 +1200,11 @@ We zien dat de steekproef vanaf 50 punten per stratum een goede afspiegeling is 
 ```{r}
 mapview_n <- function(n) {
   mapview(perimeters_data, color = "red", alpha.regions = 0, legend = FALSE) +
-  mapview(first_samples(steekproef, n, multiplicatie = 1) %>% 
-            st_buffer(dist = 300), 
-          zcol = "openheid_sbp", layer = "stratum")
+    mapview(
+      first_samples(steekproef, n, multiplicatie = 1) %>%
+        st_buffer(dist = 300),
+      zcol = "openheid_sbp", layer = "stratum"
+    )
 }
 ```
 
@@ -1131,25 +1275,34 @@ Omdat we nu een nieuwe laag van sbp gebruiken, moeten we dit stratum opnieuw ber
 ```{r}
 # inlezen bestaande punten
 oude_cirkels <- read_csv(here(
-    "data",
-    "mas_piloot",
-    "steekproef_piloot_avimap.csv")) %>%
-  select(plotnaam = definitief_punt,
-         regio,
-         stratum,
-         X, Y) %>%
-  mutate(openheid_klasse = ifelse(grepl("HOL", stratum), "HOL", "OL"),
-         sbp = ifelse(grepl("binnen", stratum), "binnen", "buiten"),
-         stratum = gsub("L\\s{1}", "L\\\n", stratum),
-         jaar = 2022L) %>%
+  "data",
+  "mas_piloot",
+  "steekproef_piloot_avimap.csv"
+)) %>%
+  select(
+    plotnaam = definitief_punt,
+    regio,
+    stratum,
+    X, Y
+  ) %>%
+  mutate(
+    openheid_klasse = ifelse(grepl("HOL", stratum), "HOL", "OL"),
+    sbp = ifelse(grepl("binnen", stratum), "binnen", "buiten"),
+    stratum = gsub("L\\s{1}", "L\\\n", stratum),
+    jaar = 2022L
+  ) %>%
   select(-c(stratum, sbp)) %>%
   st_as_sf(coords = c("X", "Y"), crs = 31370)
 
 # herbereken sbp
-oude_punten_sbp <- add_stratum_sbp(punten_sf = oude_cirkels,
-                                    sbp = sbp_akkervogels) %>% 
-  mutate(sbp = ifelse(is_sbp == TRUE, "binnen", "buiten"),
-         openheid_sbp = paste(openheid_klasse, sbp, "plan", sep = " ")) %>%
+oude_punten_sbp <- add_stratum_sbp(
+  punten_sf = oude_cirkels,
+  sbp = sbp_akkervogels
+) %>%
+  mutate(
+    sbp = ifelse(is_sbp == TRUE, "binnen", "buiten"),
+    openheid_sbp = paste(openheid_klasse, sbp, "plan", sep = " ")
+  ) %>%
   select(-sbp)
 
 oude_cirkels_sbp <- oude_punten_sbp %>%
@@ -1158,13 +1311,15 @@ oude_cirkels_sbp <- oude_punten_sbp %>%
 # buffer nieuwe punten
 steekproef_raw <- tar_read(steekproef_thinned_600, store = targets_store) %>%
   filter(Naam == "Zandleemstreek") %>%
-  mutate(openheid_sbp = paste(openheid_klasse,
-                             ifelse(is_sbp,
-                                    "binnen plan",
-                                    "buiten plan"))
-         )
+  mutate(openheid_sbp = paste(
+    openheid_klasse,
+    ifelse(is_sbp,
+      "binnen plan",
+      "buiten plan"
+    )
+  ))
 
-cirkels_zandleemstreek <- steekproef_raw %>% 
+cirkels_zandleemstreek <- steekproef_raw %>%
   st_buffer(300)
 ```
 
@@ -1172,29 +1327,36 @@ Er zijn een aantal punten die overlappen voorminstens 50 % en tot hetzelfde stra
 
 ```{r}
 # welke punten overlappen minstens 50 %
-intersect <- st_intersection(oude_cirkels_sbp, cirkels_zandleemstreek) %>% 
-  mutate(intersect_area = st_area(.) %>% units::drop_units()) %>%
-  filter(intersect_area >= 0.5 * 300 * 300 * pi, # 50 %
-         openheid_sbp == openheid_sbp.1) %>%     # zelfde stratum
+intersect <- st_intersection(oude_cirkels_sbp, cirkels_zandleemstreek) %>%
+  mutate(intersect_area = st_area(.) %>%
+           units::drop_units()) %>%
+  filter(
+    intersect_area >= 0.5 * 300 * 300 * pi, # 50 %
+    openheid_sbp == openheid_sbp.1
+  ) %>% # zelfde stratum
   select(plotnaam, pointid, intersect_area) %>%
   st_drop_geometry() %>%
   group_by(pointid) %>%
   filter(intersect_area == max(intersect_area)) %>%
   ungroup()
-  
+
 
 intersect %>%
   mutate(intersect_prop = intersect_area / (300 * 300 * pi)) %>%
-  kable(col.names = c("bestaand", "nieuw", "intersect_area", "intersect_prop"),
-        digits = 2)
+  kable(
+    col.names = c("bestaand", "nieuw", "intersect_area", "intersect_prop"),
+    digits = 2
+  )
 ```
 
 ```{r}
 # visualisatie
-mapview(oude_cirkels_sbp %>% filter(plotnaam %in% intersect$plotnaam), 
-        col.regions = "red", layer = "bestaande punten") + 
+mapview(oude_cirkels_sbp %>% filter(plotnaam %in% intersect$plotnaam),
+  col.regions = "red", layer = "bestaande punten"
+) +
   mapview(cirkels_zandleemstreek %>% filter(pointid %in% intersect$pointid),
-          layer = "nieuwe punten")
+    layer = "nieuwe punten"
+  )
 ```
 
 In dit geval zal er wat overlap zijn met de punten uit De Moeren. 
@@ -1214,13 +1376,18 @@ We zullen een steekproef van 50 cirkels per stratum wegschrijven (eerste set) wa
 
 ```{r}
 steekproef_out <- first_samples(steekproef, 50, 2) %>%
-  select(pointid, Naam, openheid_sbp, sample_order, batch, 
-         zichtbaarheid = cvvi, wegtype = value)
+  select(pointid, Naam, openheid_sbp, sample_order, batch,
+    zichtbaarheid = cvvi, wegtype = value
+  )
 
-mapview(steekproef %>% st_buffer(300), alpha.regions = 0,
-        layer = "steekproef") +
-  mapview(steekproef_out %>% st_buffer(300), zcol = "batch",
-          layer = "eerste 50 per stratum en 50 reserve")
+mapview(steekproef %>% st_buffer(300),
+  alpha.regions = 0,
+  layer = "steekproef"
+) +
+  mapview(steekproef_out %>% st_buffer(300),
+    zcol = "batch",
+    layer = "eerste 50 per stratum en 50 reserve"
+  )
 ```
 
 ```{r}
@@ -1233,51 +1400,65 @@ steekproef_out %>%
 ```{r}
 # telpunten
 steekproef_out %>%
-  st_write(dsn = file.path(
-    "data",
-    "processed",
-    "steekproef_zandleemstreek_telpunten.geojson"),
-    delete_dsn = TRUE)
+  st_write(
+    dsn = file.path(
+      "data",
+      "processed",
+      "steekproef_zandleemstreek_telpunten.geojson"
+    ),
+    delete_dsn = TRUE
+  )
 
 steekproef_out %>%
   st_transform(crs = 4326) %>%
-  #KML kan niet overweg met NA waarden
-  mutate(across(.cols = -c(geometry),
-                ~ifelse(is.na(.),
-                        "",
-                        .
-                )
+  # KML kan niet overweg met NA waarden
+  mutate(across(
+    .cols = -c(geometry),
+    ~ ifelse(is.na(.),
+      "",
+      .
+    )
   )) %>%
-  st_write(dsn = file.path(
-    "data",
-    "processed",
-    "steekproef_zandleemstreek_telpunten.kml"),
-    delete_dsn = TRUE)
+  st_write(
+    dsn = file.path(
+      "data",
+      "processed",
+      "steekproef_zandleemstreek_telpunten.kml"
+    ),
+    delete_dsn = TRUE
+  )
 
 # telcirkels
 steekproef_out %>%
   st_buffer(dist = 300) %>%
-  st_write(dsn = file.path(
-    "data",
-    "processed",
-    "steekproef_zandleemstreek_telcirkels.geojson"),
-    delete_dsn = TRUE)
+  st_write(
+    dsn = file.path(
+      "data",
+      "processed",
+      "steekproef_zandleemstreek_telcirkels.geojson"
+    ),
+    delete_dsn = TRUE
+  )
 
 steekproef_out %>%
   st_buffer(dist = 300) %>%
   st_transform(crs = 4326) %>%
-  #KML kan niet overweg met NA waarden
-  mutate(across(.cols = -c(geometry),
-                ~ifelse(is.na(.),
-                        "",
-                        .
-                )
+  # KML kan niet overweg met NA waarden
+  mutate(across(
+    .cols = -c(geometry),
+    ~ ifelse(is.na(.),
+      "",
+      .
+    )
   )) %>%
-  st_write(dsn = file.path(
-    "data",
-    "processed",
-    "steekproef_zandleemstreek_telcirkels.kml"),
-    delete_dsn = TRUE)
+  st_write(
+    dsn = file.path(
+      "data",
+      "processed",
+      "steekproef_zandleemstreek_telcirkels.kml"
+    ),
+    delete_dsn = TRUE
+  )
 ```
 
 
@@ -1298,39 +1479,49 @@ Uiteindelijk moeten we tot een CSV komen waarbij enkel de punten *behouden* van 
 
 ```{r}
 zandleemstreek_avimap_df <- read_csv(file.path(
-    "data",
-    "processed",
-    "MAS netwerk Vlaanderen- Zandleemstreek_telpunten.csv"))
+  "data",
+  "processed",
+  "MAS netwerk Vlaanderen- Zandleemstreek_telpunten.csv"
+))
 
 zandleemstreek_avimap_sf <- st_as_sf(zandleemstreek_avimap_df,
-                                 wkt  = "WKT",
-                                 crs = st_crs(4326)) %>%
+  wkt = "WKT",
+  crs = st_crs(4326)
+) %>%
   st_zm() %>%
   st_transform(31370) %>%
   rename("geometry" = WKT)
 
 zandleemstreek_avimap_sf %>%
-  st_write(dsn = file.path(
-    "data",
-    "processed",
-    "steekproef_zandleemstreek_avimap.gpkg"),
-    delete_dsn = TRUE)
+  st_write(
+    dsn = file.path(
+      "data",
+      "processed",
+      "steekproef_zandleemstreek_avimap.gpkg"
+    ),
+    delete_dsn = TRUE
+  )
 
 zandleemstreek_avimap_sf %>%
-  st_write(dsn = file.path(
-    "data",
-    "processed",
-    "steekproef_zandleemstreek_avimap.geojson"),
-    delete_dsn = TRUE)
+  st_write(
+    dsn = file.path(
+      "data",
+      "processed",
+      "steekproef_zandleemstreek_avimap.geojson"
+    ),
+    delete_dsn = TRUE
+  )
 ```
 
 Voor reproduceerbaarheid houden we deze onder versiecontrole met de **git2rdata** package.
 
 ```{r}
 git2rdata::write_vc(zandleemstreek_avimap_df,
-                    file = file.path(
-                      "data",
-                      "processed",
-                      "steekproef_zandleemstreek_avimap"),
-                    sorting = "pointid")
+  file = file.path(
+    "data",
+    "processed",
+    "steekproef_zandleemstreek_avimap"
+  ),
+  sorting = "pointid"
+)
 ```
