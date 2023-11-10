@@ -14,8 +14,6 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
-renv::restore()
-
 # set up
 library(knitr)
 library(here)
@@ -25,7 +23,9 @@ opts_chunk$set(
   message = FALSE,
   out.width = "100%")
 opts_knit$set(root.dir = here::here())
+```
 
+```{r}
 # packages
 library(tidyverse)
 library(targets)
@@ -35,21 +35,10 @@ library(terra)
 
 # globals
 mbag_dir <- here()
-source(here("src", "R", "steekproefkader.R"))
-source(here("src", "R", "berekening_hulpvariabelen.R"))
-source(here("src", "R", "wfs_wcs.R"))
-targets_store <- here("src", "targets", "mas_steekproef_zavelberg", "_targets")
-
-new_tar_vector <- function(value, objects) {
-    out <- do.call(vctrs::vec_rbind, objects)
-    if (any(sapply(out, inherits, what = "sfc"))) {
-      sf::st_as_sf(out)
-    } else {out}
-}
-try(assignInNamespace(
-  "value_produce_aggregate.tar_vector",
-  new_tar_vector,
-  ns = "targets"))
+source(here("source", "R", "steekproefkader.R"))
+source(here("source", "R", "berekening_hulpvariabelen.R"))
+source(here("source", "R", "wfs_wcs.R"))
+targets_store <- here("source", "targets", "mas_steekproef_zn_lm", "_targets")
 ```
 
 # Vooraf
