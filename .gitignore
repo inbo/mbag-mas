@@ -13,6 +13,7 @@
 *.html
 *.mdb
 *.shp*
+*.csv
 *.shx
 *.xls*
 *_files

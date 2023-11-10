@@ -39,6 +39,18 @@ source(here("source", "R", "steekproefkader.R"))
 source(here("source", "R", "berekening_hulpvariabelen.R"))
 source(here("source", "R", "wfs_wcs.R"))
 targets_store <- here("source", "targets", "mas_steekproef_zn_lm", "_targets")
+
+# to make tar_read work
+new_tar_vector <- function(value, objects) {
+    out <- do.call(vctrs::vec_rbind, objects)
+    if (any(sapply(out, inherits, what = "sfc"))) {
+      sf::st_as_sf(out)
+    } else {out}
+}
+try(assignInNamespace(
+  "value_produce_aggregate.tar_vector",
+  new_tar_vector,
+  ns = "targets"))
 ```
 
 # Vooraf
@@ -57,8 +69,8 @@ Dat bestand kan je openen met de volgende code:
 Intersectie landbouwstreek zandleemstreek in België met contour Vlaanderen.
 Nieuwe file geschreven "zandleemstreek_perimeters.gpkg" met enkel de zandleemstreek multipolygoon.
 
-    # Code uitvoeren in mas_steekproef_zavelberg.Rproj
-    # na laden van globals in targets_steekproef_zavelberg.Rmd
+    # Code uitvoeren in mas_steekproef_zn_lm.Rproj
+    # na laden van globals in targets_steekproef_zn_lm.Rmd
 
     library(sf)
 
@@ -475,8 +487,8 @@ Voorlopige kaart.
 Finale kaart wordt eind maart gepubliceerd.
 Omzetten naar .parquet file.
 
-    # Code uitvoeren in mas_steekproef_zavelberg.Rproj
-    # na laden van globals in targets_steekproef_zavelberg.Rmd
+    # Code uitvoeren in mas_steekproef_zn_lm.Rproj
+    # na laden van globals in targets_steekproef_zn_lm.Rmd
         
     file <- sf::read_sf(file.path(mbag_dir, "data", "landbouwgebruikspercelen", "Shapefile",
                                   "Lbgbrprc22.shp"), query = NA)
