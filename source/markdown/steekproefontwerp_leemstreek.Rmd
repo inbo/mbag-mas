@@ -1151,7 +1151,7 @@ Omdat we nu een nieuwe laag van sbp gebruiken, moeten we dit stratum opnieuw ber
 # inlezen bestaande punten
 oude_cirkels <- read_csv(here(
     "data",
-    "processed",
+    "mas_piloot",
     "steekproef_piloot_avimap.csv")) %>%
   select(plotnaam = definitief_punt,
          regio,
@@ -1233,7 +1233,7 @@ We nemen een steekproef van 50 cirkels per stratum (eerste set) waarbij we ook d
 ```{r}
 piloot_perimeters <-  st_read(here(
     "data",
-    "processed",
+    "mas_piloot",
     "piloot_perimeters.gpkg"))
 oostelijke_leem_peri <- piloot_perimeters %>%
   filter(Naam == "Oostelijke leemstreek")

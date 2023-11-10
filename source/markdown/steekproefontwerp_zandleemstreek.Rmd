@@ -1133,7 +1133,7 @@ Omdat we nu een nieuwe laag van sbp gebruiken, moeten we dit stratum opnieuw ber
 # inlezen bestaande punten
 oude_cirkels <- read_csv(here(
     "data",
-    "processed",
+    "mas_piloot",
     "steekproef_piloot_avimap.csv")) %>%
   select(plotnaam = definitief_punt,
          regio,
