@@ -13,6 +13,8 @@
 *.html
 *.mdb
 *.shp*
+*.geojson
+*.kml
 *.csv
 *.shx
 *.xls*
