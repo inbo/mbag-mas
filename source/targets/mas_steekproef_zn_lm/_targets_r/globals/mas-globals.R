@@ -3,7 +3,7 @@ tar_option_set(packages = c("dplyr",
                             "readr",
                             "tidyr",
                             "tibble",
-                            "nngeo", 
+                            "nngeo",
                             "osmextract",
                             "terra",
                             "exactextractr",
@@ -17,7 +17,7 @@ tar_option_set(packages = c("dplyr",
                workspace_on_error = TRUE)
 
 target_dir <- rprojroot::find_root_file(
-    "src", "targets", "mas_steekproef_zavelberg",
+    "source", "targets", "mas_steekproef_zn_lm",
     criterion = rprojroot::is_git_root)
 mbag_dir <- rprojroot::find_root_file(
     criterion = rprojroot::is_git_root)
