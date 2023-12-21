@@ -358,7 +358,8 @@ paden_naar_punten <- function(data_paden,
     ) %>%
     st_as_sf() -> punten
 
-  punten %>%
+  punten[!st_is_empty(punten), ] %>%
+    st_cast("MULTIPOINT") %>%
     st_cast("POINT", warn = FALSE) %>%
     rownames_to_column(var = "pointid") -> punten
 
