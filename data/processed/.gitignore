@@ -4,4 +4,8 @@ trend_aup_excel.csv
 *.kml
 *.geojson
 steekproef_piloot_controle_gmaps.csv
+steekproef_piloot_avimap.tsv
+steekproef_piloot_avimap.yml
+trend_aup.tsv
+trend_aup.yml
 !.gitignore
