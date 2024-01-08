@@ -170,10 +170,6 @@ list(
     path_to_bo(jaar = 2022)
     ),
   tarchetypes::tar_file(
-    lbg_file,
-    path_to_lbg(jaar = 2022)
-  ),
-  tarchetypes::tar_file(
     sbp_akkervogels_file,
     path_to_sbp_akkervogels(file = "akkervogelgebieden2022.shp")
   ),
@@ -319,14 +315,6 @@ list(
       ),
     pattern = map(punten_selectie_zichtbaarheid),
     iteration = "list"
-  ),
-  tar_target(
-    name = lbg_statistics,
-    command = calc_lbg(
-      path = lbg_file,
-      punten_sf = punten_selectie_zichtbaarheid
-      ),
-    pattern = map(punten_selectie_zichtbaarheid)
   ),
   tar_target(
     name = plus_openheid_landschap,

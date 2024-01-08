@@ -33,10 +33,6 @@ list(
     path_to_bo(jaar = 2022)
     ),
   tarchetypes::tar_file(
-    lbg_file,
-    path_to_lbg(jaar = 2022)
-  ),
-  tarchetypes::tar_file(
     sbp_akkervogels_file,
     path_to_sbp_akkervogels(file = "akkervogelgebieden2022.shp")
   ),

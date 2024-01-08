@@ -9,14 +9,6 @@ list(
     iteration = "list"
   ),
   tar_target(
-    name = lbg_statistics,
-    command = calc_lbg(
-      path = lbg_file,
-      punten_sf = punten_selectie_zichtbaarheid
-      ),
-    pattern = map(punten_selectie_zichtbaarheid)
-  ),
-  tar_target(
     name = plus_openheid_landschap,
     command = add_openheid_landschap_to_frame(
       path = openheid_landschap_file,
