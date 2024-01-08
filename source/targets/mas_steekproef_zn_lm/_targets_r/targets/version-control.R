@@ -4,7 +4,7 @@ list(
     output_finaal(
       files = list(steekproefkader = steekproefkader_finaal, 
                    steekproef = steekproef_final_600),
-      write_out = TRUE
+      write_out = FALSE
     )
   )
 )

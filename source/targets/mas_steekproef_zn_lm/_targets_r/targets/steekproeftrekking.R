@@ -26,7 +26,7 @@ list(
   ),
   tarchetypes::tar_group_by(
     steekproefkader_per_stratum,
-    steekproefkader_finaal %>%
+    do.call(rbind.data.frame, steekproefkader_finaal) %>%
       semi_join(allocatie_df %>%
                   select(Naam, is_sbp, openheid_klasse),
                 by = c("Naam", "is_sbp", "openheid_klasse")),
@@ -41,6 +41,7 @@ list(
       sample_size_multiplication = 1,
       balance = c("X", "Y", "area_prop_sb")
       ),
-    pattern = map(steekproefkader_per_stratum, allocatie_per_stratum)
+    pattern = map(steekproefkader_per_stratum, allocatie_per_stratum),
+    iteration = "list"
   )
 )
