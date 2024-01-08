@@ -108,6 +108,7 @@ list(
       punten_sf = punten_zichtbaarheid_per_regio,
       min_cvvi = 0.1
     ),
-    pattern = map(punten_zichtbaarheid_per_regio)
+    pattern = map(punten_zichtbaarheid_per_regio),
+    iteration = "list"
   )
 )

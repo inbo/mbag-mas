@@ -5,7 +5,8 @@ list(
       punten_df = punten_selectie_zichtbaarheid,
       path_bo = bo_file
       ),
-    pattern = map(punten_selectie_zichtbaarheid)
+    pattern = map(punten_selectie_zichtbaarheid),
+    iteration = "list"
   ),
   tar_target(
     name = lbg_statistics,
@@ -24,7 +25,8 @@ list(
       cutlevels = c(1.25, 1.35, 1.51),
       class_labels = c("GL", "HGL", "HOL", "OL")
       ),
-    pattern = map(perimeters_data, plus_sb)
+    pattern = map(perimeters_data, plus_sb),
+    iteration = "list"
   ),
   tar_target(
     name = sbp_akkervogels,
@@ -41,8 +43,8 @@ list(
   tar_target(
     name = steekproefkader_finaal,
     command = add_stratum_sbp(
-      punten_sf = plus_openheid_landschap,
-      sbp = sbp_akkervogels
+      punten_sf = do.call(rbind.data.frame, plus_openheid_landschap),
+      sbp = do.call(rbind.data.frame, sbp_akkervogels),
       ),
     pattern = map(plus_openheid_landschap)
   )
