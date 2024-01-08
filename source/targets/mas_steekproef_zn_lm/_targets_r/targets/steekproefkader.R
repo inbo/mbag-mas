@@ -94,11 +94,12 @@ list(
       resolution = 5,
       spacing = 10
     ),
-    pattern = map(selectie_landgebruik_per_size)
+    pattern = map(selectie_landgebruik_per_size),
+    iteration = "list"
   ),
   tarchetypes::tar_group_by(
     name = punten_zichtbaarheid_per_regio,
-    command = punten_zichtbaarheid,
+    command = do.call(rbind.data.frame, punten_zichtbaarheid),
     Naam
   ),
   tar_target(
