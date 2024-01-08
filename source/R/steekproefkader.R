@@ -568,14 +568,36 @@ add_visibility_to_frame <- function(punten_sf,
   dtm <- terra::rast(file_dtm)
   crs(dtm) <- "epsg:31370"
 
+  # ptr slot gone when using terra::rast but still used in GVI
+  ## Create a new class definition with the additional slot
+  setClass(
+    "SpatRasterWithPtr",
+    contains = "SpatRaster",
+    slots = c(ptr = "ANY")
+  )
+
+  ## Create a constructor function for the new class
+  SpatRasterWithPtr <- function(...) {
+    obj <- new("SpatRasterWithPtr", ...)
+    obj@ptr <- NULL  # You can initialize the ptr slot as needed
+    return(obj)
+  }
+
+  ## Add ptr slot
+  dsm_with_ptr <- SpatRasterWithPtr(dsm)
+  dsm_with_ptr@ptr <- dsm@cpp
+
+  dtm_with_ptr <- SpatRasterWithPtr(dtm)
+  dtm_with_ptr@ptr <- dtm@cpp
+
   vvi_dm <- vvi_from_sf(
     observer = punten_sf %>% st_buffer(dist = observer_dist),
     spacing = spacing,
     cores = 1,
     progress = TRUE,
     max_distance = viewshed_dist,
-    dsm_rast = dsm,
-    dtm_rast = dtm,
+    dsm_rast = dsm_with_ptr,
+    dtm_rast = dtm_with_ptr,
     observer_height = obs_height,
     raster_res = resolution,
     output_type = "cumulative",
