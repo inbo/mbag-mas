@@ -106,6 +106,7 @@ tar_option_set(packages = c("dplyr",
                             "GVI"),
                format = "qs",
                memory = "transient",
+               iteration = "list",
                garbage_collection = TRUE,
                workspace_on_error = TRUE)
 
