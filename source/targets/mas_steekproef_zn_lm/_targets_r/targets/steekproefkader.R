@@ -5,23 +5,25 @@ list(
       gebied = perimeters_data,
       ol_strata = c("OL", "HOL")
       ),
-    pattern = map(perimeters_data)
+    pattern = map(perimeters_data),
+    iteration = "list"
   ),
   tar_target(
     name = exclusie_osm_landgebruiken,
     command = exclusie_landgebruik_osm(
       gebied = selectie_openheid_klasses,
       osmdata = osm_belgium,
-      landuse = c("residential", "military", "industrial", "cemetery",
+      landuse = c("residential", "military", "industrial", "cemetery", 
                   "railway", "commercial", "farmyard"),
       leisure = c("park"),
-      buffer_poly = 0,
+      buffer_poly = 0, 
       layer_poly = list(aeroway = c("aerodrome")),
-      buffer_line = 100,
+      buffer_line = 100, 
       layer_line = list(highway = c("motorway", "motorway_link")),
       update_osm_layer = FALSE
       ),
-    pattern = map(selectie_openheid_klasses)
+    pattern = map(selectie_openheid_klasses),
+    iteration = "list"
   ),
   tar_target(
     name = paden,
@@ -35,7 +37,8 @@ list(
       waterway = NULL,
       update_osm_layer = FALSE
       ),
-    pattern = map(selectie_openheid_klasses, exclusie_osm_landgebruiken)
+    pattern = map(selectie_openheid_klasses, exclusie_osm_landgebruiken),
+    iteration = "list"
   ),
   tar_target(
     name = punten,
@@ -45,7 +48,8 @@ list(
       interpoint_distance = 50,
       border_distance = 300
       ),
-    pattern = map(perimeters_data, paden)
+    pattern = map(perimeters_data, paden),
+    iteration = "list"
   ) ,
   tar_target(
     name = telcirkels_landgebruik,
@@ -55,7 +59,8 @@ list(
       file = vito_lum_2019_file,
       legend = legend_lum
       ),
-    pattern = map(punten)
+    pattern = map(punten),
+    iteration = "list"
   ),
   tar_target(
     name = telcirkels_selectie_landgebruik,
@@ -74,11 +79,12 @@ list(
       punten_sf = punten,
       selectie_df = telcirkels_selectie_landgebruik
       ),
-    pattern = map(punten, telcirkels_selectie_landgebruik)
+    pattern = map(punten, telcirkels_selectie_landgebruik),
+    iteration = "list"
   ),
   tarchetypes::tar_group_size(
     name = selectie_landgebruik_per_size,
-    command = selectie_landgebruik,
+    command = do.call(rbind.data.frame, selectie_landgebruik),
     size = 200
   ),
   tar_target(
@@ -88,11 +94,12 @@ list(
       resolution = 5,
       spacing = 10
     ),
-    pattern = map(selectie_landgebruik_per_size)
+    pattern = map(selectie_landgebruik_per_size),
+    iteration = "list"
   ),
   tarchetypes::tar_group_by(
     name = punten_zichtbaarheid_per_regio,
-    command = punten_zichtbaarheid,
+    command = do.call(rbind.data.frame, punten_zichtbaarheid),
     Naam
   ),
   tar_target(
@@ -101,6 +108,7 @@ list(
       punten_sf = punten_zichtbaarheid_per_regio,
       min_cvvi = 0.1
     ),
-    pattern = map(punten_zichtbaarheid_per_regio)
+    pattern = map(punten_zichtbaarheid_per_regio),
+    iteration = "list"
   )
 )

@@ -170,10 +170,6 @@ list(
     path_to_bo(jaar = 2022)
     ),
   tarchetypes::tar_file(
-    lbg_file,
-    path_to_lbg(jaar = 2022)
-  ),
-  tarchetypes::tar_file(
     sbp_akkervogels_file,
     path_to_sbp_akkervogels(file = "akkervogelgebieden2022.shp")
   ),
@@ -200,7 +196,8 @@ list(
       gebied = perimeters_data,
       ol_strata = c("OL", "HOL")
       ),
-    pattern = map(perimeters_data)
+    pattern = map(perimeters_data),
+    iteration = "list"
   ),
   tar_target(
     name = exclusie_osm_landgebruiken,
@@ -216,7 +213,8 @@ list(
       layer_line = list(highway = c("motorway", "motorway_link")),
       update_osm_layer = FALSE
       ),
-    pattern = map(selectie_openheid_klasses)
+    pattern = map(selectie_openheid_klasses),
+    iteration = "list"
   ),
   tar_target(
     name = paden,
@@ -230,7 +228,8 @@ list(
       waterway = NULL,
       update_osm_layer = FALSE
       ),
-    pattern = map(selectie_openheid_klasses, exclusie_osm_landgebruiken)
+    pattern = map(selectie_openheid_klasses, exclusie_osm_landgebruiken),
+    iteration = "list"
   ),
   tar_target(
     name = punten,
@@ -240,7 +239,8 @@ list(
       interpoint_distance = 50,
       border_distance = 300
       ),
-    pattern = map(perimeters_data, paden)
+    pattern = map(perimeters_data, paden),
+    iteration = "list"
   ) ,
   tar_target(
     name = telcirkels_landgebruik,
@@ -250,7 +250,8 @@ list(
       file = vito_lum_2019_file,
       legend = legend_lum
       ),
-    pattern = map(punten)
+    pattern = map(punten),
+    iteration = "list"
   ),
   tar_target(
     name = telcirkels_selectie_landgebruik,
@@ -269,11 +270,12 @@ list(
       punten_sf = punten,
       selectie_df = telcirkels_selectie_landgebruik
       ),
-    pattern = map(punten, telcirkels_selectie_landgebruik)
+    pattern = map(punten, telcirkels_selectie_landgebruik),
+    iteration = "list"
   ),
   tarchetypes::tar_group_size(
     name = selectie_landgebruik_per_size,
-    command = selectie_landgebruik,
+    command = do.call(rbind.data.frame, selectie_landgebruik),
     size = 200
   ),
   tar_target(
@@ -283,11 +285,12 @@ list(
       resolution = 5,
       spacing = 10
     ),
-    pattern = map(selectie_landgebruik_per_size)
+    pattern = map(selectie_landgebruik_per_size),
+    iteration = "list"
   ),
   tarchetypes::tar_group_by(
     name = punten_zichtbaarheid_per_regio,
-    command = punten_zichtbaarheid,
+    command = do.call(rbind.data.frame, punten_zichtbaarheid),
     Naam
   ),
   tar_target(
@@ -296,7 +299,8 @@ list(
       punten_sf = punten_zichtbaarheid_per_regio,
       min_cvvi = 0.1
     ),
-    pattern = map(punten_zichtbaarheid_per_regio)
+    pattern = map(punten_zichtbaarheid_per_regio),
+    iteration = "list"
   )
 )
 ```
@@ -309,15 +313,8 @@ list(
       punten_df = punten_selectie_zichtbaarheid,
       path_bo = bo_file
       ),
-    pattern = map(punten_selectie_zichtbaarheid)
-  ),
-  tar_target(
-    name = lbg_statistics,
-    command = calc_lbg(
-      path = lbg_file,
-      punten_sf = punten_selectie_zichtbaarheid
-      ),
-    pattern = map(punten_selectie_zichtbaarheid)
+    pattern = map(punten_selectie_zichtbaarheid),
+    iteration = "list"
   ),
   tar_target(
     name = plus_openheid_landschap,
@@ -328,7 +325,8 @@ list(
       cutlevels = c(1.25, 1.35, 1.51),
       class_labels = c("GL", "HGL", "HOL", "OL")
       ),
-    pattern = map(perimeters_data, plus_sb)
+    pattern = map(perimeters_data, plus_sb),
+    iteration = "list"
   ),
   tar_target(
     name = sbp_akkervogels,
@@ -339,15 +337,17 @@ list(
       extra_soorten = c("hamster", "bruine kiekendief", "zomertortel", 
                         "grauwe kiekendief")
       ),
-    pattern = map(perimeters_data)
+    pattern = map(perimeters_data),
+    iteration = "list"
   ),
   tar_target(
     name = steekproefkader_finaal,
     command = add_stratum_sbp(
       punten_sf = plus_openheid_landschap,
-      sbp = sbp_akkervogels
+      sbp = do.call(rbind.data.frame, sbp_akkervogels)
       ),
-    pattern = map(plus_openheid_landschap)
+    pattern = map(plus_openheid_landschap),
+    iteration = "list"
   )
 )
 ```
@@ -381,7 +381,7 @@ list(
   ),
   tarchetypes::tar_group_by(
     steekproefkader_per_stratum,
-    steekproefkader_finaal %>%
+    do.call(rbind.data.frame, steekproefkader_finaal) %>%
       semi_join(allocatie_df %>%
                   select(Naam, is_sbp, openheid_klasse),
                 by = c("Naam", "is_sbp", "openheid_klasse")),
@@ -396,35 +396,36 @@ list(
       sample_size_multiplication = 1,
       balance = c("X", "Y", "area_prop_sb")
       ),
-    pattern = map(steekproefkader_per_stratum, allocatie_per_stratum)
+    pattern = map(steekproefkader_per_stratum, allocatie_per_stratum),
+    iteration = "list"
   )
 )
 ```
 
 ```{targets nabehandeling}
 list(
-  tarchetypes::tar_map(
-    list(thin_dists = c(300, 600)),
-    tar_target(
-      steekproef_thinned,
-      thin_sample(
-        sample = steekproef,
-        thin_dist = thin_dists
-        ),
-      pattern = map(steekproef)
-    ),
-    tar_target(
-      steekproef_final,
-      replace_by_existing(
-        sample = steekproef_thinned,
-        existing_points = existing_data,
-        overlap_prop = 0.5,
-        sbp_file = sbp_akkervogels
-        ),
-      pattern = map(steekproef_thinned)
-    )
+  tar_target(
+    steekproef_thinned,
+    thin_sample(
+      sample = steekproef,
+      thin_dist = 600
+      ),
+    pattern = map(steekproef),
+    iteration = "list"
+  ),
+  tar_target(
+    steekproef_final,
+    replace_by_existing(
+      sample = steekproef_thinned,
+      existing_points = existing_data,
+      overlap_prop = 0.5,
+      sbp_file = do.call(rbind.data.frame, sbp_akkervogels)
+      ),
+    pattern = map(steekproef_thinned),
+    iteration = "list"
   )
 )
+
 ```
 
 ```{targets version-control}
@@ -434,7 +435,7 @@ list(
     output_finaal(
       files = list(steekproefkader = steekproefkader_finaal, 
                    steekproef = steekproef_final_600),
-      write_out = TRUE
+      write_out = FALSE
     )
   )
 )
