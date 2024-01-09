@@ -13,10 +13,14 @@
 *.html
 *.mdb
 *.shp*
+*.geojson
+*.kml
+*.csv
 *.shx
 *.xls*
 *_files
 docs
 libs
-output
 renv/library
+temp
+
