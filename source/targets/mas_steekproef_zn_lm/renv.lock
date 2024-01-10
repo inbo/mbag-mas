@@ -177,6 +177,13 @@
       "Repository": "CRAN",
       "Hash": "1c0aa18b97e6aaa17f93b8b866c0ace5"
     },
+    "SamplingBigData": {
+      "Package": "SamplingBigData",
+      "Version": "1.0.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "7c6fae63a8843588a1462d74779c4b8b"
+    },
     "V8": {
       "Package": "V8",
       "Version": "4.4.1",
@@ -714,6 +721,19 @@
         "vctrs"
       ],
       "Hash": "54ed3ea01b11e81a86544faaecfef8e2"
+    },
+    "duckdb": {
+      "Package": "duckdb",
+      "Version": "0.9.2-1",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "DBI",
+        "R",
+        "methods",
+        "utils"
+      ],
+      "Hash": "3ce50b727c58e724c4c61397a41946ac"
     },
     "e1071": {
       "Package": "e1071",
