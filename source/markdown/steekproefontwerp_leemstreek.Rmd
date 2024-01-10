@@ -97,8 +97,7 @@ Toegevoegd aan file "zandleemstreek_perimeters.gpkg".
 
 
 ```{r}
-perimeters_data <- tar_read(perimeters_data, store = targets_store) %>%
-  filter(Naam == "Leemstreek")
+perimeters_data <- tar_read(perimeters_data, store = targets_store)
 
 mapview(perimeters_data, color = "red", alpha.regions = 0, legend = FALSE)
 ```
