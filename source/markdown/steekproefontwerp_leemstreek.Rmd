@@ -58,8 +58,8 @@ try(assignInNamespace(
 
 # Vooraf
 
-Voeg dit toe aan het .Renviron bestand:  
-OSMEXT_DOWNLOAD_DIRECTORY="C:/R/osmdata"
+Voeg dit toe aan het `.Renviron` bestand:  
+`OSMEXT_DOWNLOAD_DIRECTORY="C:/R/osmdata"`
 
 Dat bestand kan je openen met de volgende code:
 
@@ -69,31 +69,33 @@ Dat bestand kan je openen met de volgende code:
 
 ## Perimeter bepalen
 
-Intersectie landbouwstreek leemstreek in België met contour Vlaanderen.
-Toegevoegd aan file "zandleemstreek_perimeters.gpkg".
+Om de perimeter te bepalen voer je onderstaande code uit in mas_steekproef_zn_lm.Rproj, na laden van globals in targets_steekproef_zn_lm.Rmd.
 
-    # Code uitvoeren in mas_steekproef_zn_lm.Rproj
-    # na laden van globals in targets_steekproef_zn_lm.Rmd
+De code maakt een intersectie tussen landbouwstreek leemstreek (heel België) en contour Vlaanderen en voegt deze toe  aan file "zandleemstreek_perimeters.gpkg".
 
-    library(sf)
+```{r, class.source = "fold-show", eval=FALSE}
+library(sf)
 
-    # Lees in polygonen landbouwstreken
-    landbouwstreken <- read_sf(file.path(mbag_dir, "data", "landbouwstreken", 
-                                         "Lbstrbel.shp")) |>
-      st_transform(crs = 31370)
-    
-    # Behoud Zandleemstreek
-    vlaanderen <- read_sf("S:/Vlaanderen/Grenzen/Administratief/Vlaanderen_met_kust_EEZ.shp") |>
-      st_transform(crs = 31370)
-    
-    leem_vlaanderen <- st_intersection(landbouwstreken, vlaanderen) |>
-      filter(NAAM == "Leemstreek") |>
-      mutate(section = NA) |>
-      select(Naam = NAAM, section, geom = geometry)
-    
-    st_write(obj = leem_vlaanderen,
-             dsn = path_to_perimeters("zandleemstreek_perimeters.gpkg"),
-    		     append = TRUE)
+# Lees in polygonen landbouwstreken
+landbouwstreken <- read_sf(file.path(mbag_dir,
+                                     "data",
+                                     "landbouwstreken",
+                                     "Lbstrbel.shp")) |>
+  st_transform(crs = 31370)
+
+# Behoud Leemstreek
+vlaanderen <- read_sf("S:/Vlaanderen/Grenzen/Administratief/Vlaanderen_met_kust_EEZ.shp") |>
+  st_transform(crs = 31370)
+
+leem_vlaanderen <- st_intersection(landbouwstreken, vlaanderen) |>
+  filter(NAAM == "Leemstreek") |>
+  mutate(section = NA) |>
+  select(Naam = NAAM, section, geom = geometry)
+
+st_write(obj = leem_vlaanderen,
+         dsn = path_to_perimeters("zandleemstreek_perimeters.gpkg"),
+         append = TRUE)
+```
 
 
 ```{r}
@@ -108,13 +110,13 @@ We maken gebruik van het DSM (digitaal oppervlakte model - DHMV II Vlaanderen) e
 Werkwijze:
 
 -   berekening "canopy height model" (CHM) door verschil te berekenen tussen DSM en DTM. Dit geeft dan hoogte boven het maaiveld (gebouwen, bodem, struiken, ...).
--   berekening van "positive topographic openness" (dit is een waarde tussen 0 en 2 in radians) door voor elke rastercel van het CHM in 8 kijkrichtingen na te gaan wat de gemiddelde hoek is t.o.v. zenith binnen een straal van 300m. Deze hoek geeft aan hoe plat het landschap is. Indien volledig plat is de hoek 90° (of 1.57 radians).
+-   berekening van "positive topographic openness" (dit is een waarde tussen 0 en 2 in radialen) door voor elke rastercel van het CHM in 8 kijk richtingen na te gaan wat de gemiddelde hoek is t.o.v. zenit binnen een straal van 300 m. Deze hoek geeft aan hoe plat het landschap is. Indien volledig plat is de hoek 90° (of 1.57 radialen).
 -   met dit resultaat de gemiddelde (van de gemiddelde) topografische openheid berekenen in een cirkelvormig landschap rond elke cel met straal 300 m.
 -   deze gemiddelden zijn daarna ingedeeld in drie klassen:
-    -   OL open landschap (\> 86,5°),
-    -   HOL halfopen landschap (77,3° - 86,5°),
-    -   HGL halfgesloten landschap (71,6° - 77,3°)
-    -   GL (\< 71,6°) gesloten landschap
+    -   OL: open landschap (\> 86,5°),
+    -   HOL: halfopen landschap (77,3° - 86,5°),
+    -   HGL: halfgesloten landschap (71,6° - 77,3°)
+    -   GL: (\< 71,6°) gesloten landschap
 
 We selecteren OL en HOL binnen de perimeter.
 
@@ -262,25 +264,25 @@ We selecteren de volgende wegen.
 ### Veldwegen en boswegen
 
 -   OSM definitie: `highway = track`
--   Objecttype: veldwegen en boswegen
+-   Object type: veldwegen en boswegen
 -   OSM Wiki: <https://wiki.openstreetmap.org/wiki/Tag:highway%3Dtrack>
 
-### Tertiare wegen
+### Tertiaire wegen
 
 -   OSM definitie: `highway = tertiary`
--   Objecttype: tertiare wegen
+-   Object type: tertiaire wegen
 -   OSM Wiki: <https://wiki.openstreetmap.org/wiki/Tag:highway%3Dtertiary>
 
 ### Afslagen tertiare wegen
 
 -   OSM definitie: `highway = tertiary_link`
--   Objecttype: afslagen tertiare wegen
+-   Object type: afslagen tertiare wegen
 -   OSM Wiki: <https://wiki.openstreetmap.org/wiki/Tag:highway%3Dtertiary_link>
 
 ### Lokale wegen
 
 -   OSM definitie: `highway = unclassified`
--   Objecttype: lokale wegen
+-   Object type: lokale wegen
 -   OSM Wiki: <https://wiki.openstreetmap.org/wiki/Tag:highway%3Dunclassified>
 
 We verwijderen wegen die overlappen met de exclusiekaart en verwijderen overlappende wegen.
@@ -441,7 +443,7 @@ Zie:\
 <https://docs.ropensci.org/tarchetypes/reference/tar_group_size.html>\
 <https://books.ropensci.org/targets/dynamic.html#performance-and-batching>
 
-We verwijderen telpunten waar de cumulatieve 'viewshed visibility index' (cvvi) kleiner is dan 0.10.
+We verwijderen telpunten waar de cumulatieve "viewshed visibility index" (cvvi) kleiner is dan 0.10.
 
 ```{r}
 punten_zichtbaarheid <- tar_read(punten_zichtbaarheid,
@@ -489,7 +491,7 @@ Indeling voor niet-productieve gewassen / beheerovereenkomsten (instrumenten):
 -   bufferstroken
 
 Voor de steekproeftrekking zijn vooral de oppervlakte aan soortbeschermingsmaatregelen van belang.
-Eventueel verder opgesplitst in winter-, zomer- en jaarrondmaatregelen.
+Eventueel verder opgesplitst in winter, zomer en jaarrond maatregelen.
 
 ```{r bo-sbp}
 steekproefkader_finaal <- tar_read(steekproefkader_finaal,
@@ -533,23 +535,31 @@ Voorlopige kaart.
 Finale kaart wordt eind maart gepubliceerd.
 Omzetten naar .parquet file.
 
-    # Code uitvoeren in mas_steekproef_zn_lm.Rproj
-    # na laden van globals in targets_steekproef_zn_lm.Rmd
-        
-    file <- sf::read_sf(file.path(mbag_dir, "data", "landbouwgebruikspercelen", "Shapefile",
-                                  "Lbgbrprc22.shp"), query = NA)
+```{r, class.source = "fold-show", eval=FALSE}
+# Code uitvoeren in mas_steekproef_zn_lm.Rproj
+# na laden van globals in targets_steekproef_zn_lm.Rmd
 
-    temp <- file %>%
-      mutate(OIDN = NA, 
-             UIDN = NA,
-             LENGTE = NA,
-             OPPERVL = NA) %>%
-      select(OIDN, UIDN, ALVID = REF_ID, HFDTLT = GWSCOD_H, LBLHFDTLT = GWSNAM_H, 
-             GEWASGROEP = GWSGRPH_LB, PM = GESP_PM, LBLPM = GESP_PM_LB, LENGTE, OPPERVL)
+file <- sf::read_sf(file.path(mbag_dir, "data", "landbouwgebruikspercelen", "Shapefile",
+                              "Lbgbrprc22.shp"), query = NA)
 
-    sfarrow::st_write_parquet(obj = temp, 
-      dsn = file.path(mbag_dir, "data", "landbouwgebruikspercelen", "parquet",
-                      "lbgbrprc2022.parquet"), chunk_size = 10000)
+temp <- file %>%
+  mutate(OIDN = NA,
+         UIDN = NA,
+         LENGTE = NA,
+         OPPERVL = NA) %>%
+  select(OIDN, UIDN, ALVID = REF_ID, HFDTLT = GWSCOD_H, LBLHFDTLT = GWSNAM_H,
+         GEWASGROEP = GWSGRPH_LB, PM = GESP_PM, LBLPM = GESP_PM_LB,
+         LENGTE, OPPERVL)
+
+sfarrow::st_write_parquet(obj = temp,
+                          dsn = file.path(mbag_dir,
+                                          "data",
+                                          "landbouwgebruikspercelen",
+                                          "parquet",
+                                          "lbgbrprc2022.parquet"),
+                          chunk_size = 10000)
+```
+
 
 ```{r lbg-per-hoofdteelt}
 lbg_statistieken %>%
@@ -598,17 +608,17 @@ lbg_statistieken %>%
 
 Een logische en veelgebruikte opdeling voor gewassen is:
 
--   graangewassen (monocotylen zoals tarwe, gerst, etc..)
+-   graangewassen (monocotylen zoals tarwe, gerst, e.a.)
 -   grasland (opdelen permanent en tijdelijk)
 -   mais
 -   aardappelen
--   wortelgewassen (biet, chicorei, wortel)
+-   wortelgewassen (biet, cichorei, wortel)
 -   peulvruchten (erwt)
--   groententeelt (kolen zoals bloemkool, brocolli, spruiten, prei, ajuin, sla)
--   groenbemester (klavers, luzerne, mosterd) of koolzaad
--   meerjarige fruitteelt (appel, peer, kers, ea)
+-   groenteteelt (kolen zoals bloemkool, broccoli, spruiten, prei, ajuin, sla)
+-   groenbemesters (klavers, luzerne, mosterd) of koolzaad
+-   meerjarige fruitteelt (appel, peer, kers, e.a.)
 -   vlas
--   andere (vb eenjarig fruitteelt)
+-   andere (bv eenjarig fruitteelt)
 
 Hier gebruiken we de indeling volgens 'gewasgroep' zoals deze in de landbouwgebruikspercelenkaart zit.
 
@@ -662,7 +672,7 @@ We maken gebruik van het DSM (digitaal oppervlakte model - DHMV II Vlaanderen) e
 Werkwijze:
 
 -   berekening "canopy height model" (CHM) door verschil te berekenen tussen DSM en DTM. Dit geeft dan hoogte boven het maaiveld (gebouwen, bodem, struiken, ...).
--   berekening van "positive topographic openness" (dit is een waarde tussen 0 en 2 in radians) door voor elke rastercel van het CHM in 8 kijkrichtingen na te gaan wat de gemiddelde hoek is t.o.v. zenith binnen een straal van 300m. Deze hoek geeft aan hoe plat het landschap is. Indien volledig plat is de hoek 90° (of 1.57 radians).
+-   berekening van "positive topographic openness" (dit is een waarde tussen 0 en 2 in radialen) door voor elke rastercel van het CHM in 8 kijkrichtingen na te gaan wat de gemiddelde hoek is t.o.v. zenit binnen een straal van 300 m. Deze hoek geeft aan hoe plat het landschap is. Indien volledig plat is de hoek 90° (of 1.57 radialen).
 -   met dit resultaat de gemiddelde (van de gemiddelde) topografische openheid berekenen in een cirkelvormig landschap rond elke cel met straal 300 m.
 -   deze gemiddelden zijn daarna ingedeeld in drie klassen:
     -   OL open landschap (\> 86,5°),
@@ -720,7 +730,7 @@ steekproefkader_finaal %>%
 Zowel binnen kerngebied als zoekzones zijn er soortbeschermende maatregelen (SB BO's) gelegd (zie kaart VLM BO's).
 In theorie waren deze maatregelen vooral bedoeld voor kerngebied, en zal daar een hogere dichtheid (bedekkingsgraad) liggen, maar de VLM heeft het toegelaten om ook in zoekzones deze maatregelen te sluiten (al was dat minder de prioriteit).
 Daar werd bv. in de Moeren geen rekening mee gehouden, en werden erg veel SB BO's gelegd, ook omdat dit gebied wél kerngebied was van plan kiekendief (SBP Grauwe Kiekendief) waardoor er wel veel BO's gesloten zijn.
-In de toekomst heeft VLM beloofd om meer/enkel rekening te houden met kerngebied.
+In de toekomst heeft VLM beloofd om meer / enkel rekening te houden met kerngebied.
 
 We nemen kerngebieden en zoekzones samen als onderzoeksgebied en alles hierbuiten beschouwen we als controle.
 Als SBP laag gebruiken we perimeter SBP akkervogels, SBP grauwe kiekendief, SBP bruine kiekendief, SBP zomertortel en SBP hamster.
@@ -728,31 +738,34 @@ De SBP laag voor de specifieke soorten werd als volgt samengesteld:
 
 -   De nieuwe (door INBO voorgestelde) nieuwe perimeter voor SBP Grauwe kiekendief. Dat is nog niet goedgekeurd, en nog niet van kracht, dus enkel ter voorbereiding van de toekomstige steekproef. (mail Johannes 2023-02-14)
 -   De oude perimeter van SBP Grauwe kiekendief (in gebruik van 2018 t/m 2022). (mail Johannes 2023-02-14)
--   SPB's andere soorten (download 2023-02-14): <https://www.vlaanderen.be/datavindplaats/catalogus/soortenbeschermingsprogrammas>
+-   SBP's andere soorten (download 2023-02-14): <https://www.vlaanderen.be/datavindplaats/catalogus/soortenbeschermingsprogrammas>
 
 De kaartlagen bevinden zich in de MAS drive map onder layers \> perimeters SBPs
 
 Deze werden tot 1 bestand samengevoegd met volgende code:
 
-    layer1 <- st_read("C:/Users/ward_langeraert/Downloads/INBO.A.4291_bijlage1/Kerngebied_SBP_2_INBO.shp")
-    layer2 <- st_read("C:/Users/ward_langeraert/Downloads/INBO.A.4291_bijlage1/PM_SBP_2_INBO.shp")
-    layer3 <- st_read("C:/Users/ward_langeraert/Downloads/PMZ_Kernzone_Grauwe_kiek_sbp/lu_sbp_pgs.shp")
-    layer4 <- st_read("C:/Users/ward_langeraert/Downloads/lu_sbp_pgs/lu_sbp_pgs.shp")
+```{r, class.source = "fold-show", eval=FALSE}
+layer1 <- st_read("C:/Users/ward_langeraert/Downloads/INBO.A.4291_bijlage1/Kerngebied_SBP_2_INBO.shp")
+layer2 <- st_read("C:/Users/ward_langeraert/Downloads/INBO.A.4291_bijlage1/PM_SBP_2_INBO.shp")
+layer3 <- st_read("C:/Users/ward_langeraert/Downloads/PMZ_Kernzone_Grauwe_kiek_sbp/lu_sbp_pgs.shp")
+layer4 <- st_read("C:/Users/ward_langeraert/Downloads/lu_sbp_pgs/lu_sbp_pgs.shp")
 
-    layer12 <- bind_rows(layer1, layer2) %>% 
-      summarise() %>%
-      mutate(soort = "Grauwe kiekendief", 
-             gebied = "nieuw 2023") %>%
-      select(everything(), geometry)
-    layer123 <- bind_rows(layer12, layer3 %>% 
-                            filter(soort == "Grauwe kiekendief") %>%
-                            select(soort, gebied))
+layer12 <- bind_rows(layer1, layer2) %>%
+  summarise() %>%
+  mutate(soort = "Grauwe kiekendief",
+         gebied = "nieuw 2023") %>%
+  select(everything(), geometry)
+layer123 <- bind_rows(layer12, layer3 %>%
+                        filter(soort == "Grauwe kiekendief") %>%
+                        select(soort, gebied))
 
-    layer_sbp <- bind_rows(layer123, layer4 %>% 
-                             select(soort, gebied))
+layer_sbp <- bind_rows(layer123, layer4 %>%
+                         select(soort, gebied))
 
-    st_write(layer_sbp,
-             path_to_sbp_akkervogels("sbp_overige_soorten.shp"))
+st_write(layer_sbp,
+         path_to_sbp_akkervogels("sbp_overige_soorten.shp"))
+```
+
 
 ```{r}
 sbp_overig <-
@@ -994,9 +1007,9 @@ mapview(st_crop(perimeters_data, detail),
 ## Stratificatie steekproef
 
 -   Stratificatie:
-    -   binnen vs. buiten SBP perimeter
+    -   binnen versus buiten SBP perimeter
         -   allocatiefactor 50 %
-    -   OL vs. HOL landschap
+    -   OL versus HOL landschap
         -   allocatiefactor proportioneel aan aantal potentiële telpunten (\~ stratumoppervlakte)
 -   Gebalanceerde en goed gespreide trekking:
     - ruimtelijk (x- en y-coördinaten)
@@ -1009,7 +1022,7 @@ Allocatie van de steekproefgrootte over de verschillende strata:
     -   Indien we echter ook geïnteresseerd zijn in uitspraken voor elk stratum apart en in onderlinge vergelijkingen tussen de strata, dan is een allocatie waarbij in elk stratum evenveel punten liggen meer aangewezen.
 
 Tussen deze twee scenario's zijn er veel tussenposities.
-In het algemeen kunnen we voor een kostenoptimale allocatie gebruik maken van een formule die stelt dat de allocatie recht evenredig is met de oppervlakte van een stratum en de variabilitiet in een stratum en omgekeerd evenredig is met de vierkantswortel van de kosten van het veldwerk in het stratum.
+In het algemeen kunnen we voor een naar kosten optimale allocatie gebruik maken van een formule die stelt dat de allocatie recht evenredig is met de oppervlakte van een stratum en de variabiliteit in een stratum en omgekeerd evenredig is met de vierkantswortel van de kosten van het veldwerk in het stratum.
 
 ***Hoe is het nu gedaan?***
 
@@ -1019,13 +1032,13 @@ Het maximaal aantal plots die binnen de OL, HOL perimeter kunnen gelegd worden i
 st_area(selectie_openheid_klasses) / units::set_units(300 * 300 * pi, m^2)
 ```
 
-We merkten echter dat een maximale trekking niet voor een goede spatiale spreiding zorgt omdat het algorime niet genoeg vrijheid krijgt. Daarom besluiten we uiteindelijk om 1/20ste (5 %) van het aantal elementen in het steekproefkader te nemen per stratum.
+We merkten echter dat een maximale trekking niet voor een goede spatiale spreiding zorgt omdat het algoritme niet genoeg vrijheid krijgt. Daarom besluiten we uiteindelijk om 1/20ste (5 %) van het aantal elementen in het steekproefkader te nemen per stratum.
 Dit is niet de finale steekproef, maar een (veel) grotere steekproef waaruit later het gewenste aantal telpunten wordt geselecteerd.
 Het algoritme kent een volgorde toe bij de steekproeftrekking en het is aan de hand van deze volgorde dat het gewenste aantal telpunten wordt geselecteerd.
 Dit heeft als eigenschap dat deze set ook (ruimtelijk) gebalanceerd is en een goede spreiding vertoont.
 
 We streven naar minstens 50 telpunten per stratum.
-Er zijn 4 strata (OL, HOL en binnen, buiten sbp) binnen de leemstreek.
+Er zijn 4 strata (OL, HOL en binnen, buiten SBP) binnen de leemstreek.
 Voor een betere precisie, moeten we de steekproefgrootte verder verhogen.
 Een vuistregel stelt dat de steekproefgrootte verviervoudigen, een halvering geeft van het betrouwbaarheidsinterval (dan hebben we 200 telpunten per stratum nodig).
 Niet echt belangrijk hier omdat we een maximum steekproef trekken en de tellers gewoon zoveel mogelijk punten laten doen (volgnummer).
@@ -1055,11 +1068,10 @@ De eerste bv. 300 (laagste volgnummers) zullen dan de set zijn voor de leemstree
 Indien een punt uitvalt, kan dit vervangen worden door het eerstvolgende uit de reeks dat nog niet toegewezen werd (het 301ste).
 De methode garandeert dat deze nieuwe set ruimtelijk goed gespreid is en een aselecte steekproef is.
   
-Om te veel overlap te voorkomen binnen enzelfde stratum, is voor elk punt binnen hetzelfde stratum nagegaan of een punt met grotere `sample_order` op minder dan 300 m of 600 m afstand ligt. Als dit het geval is, wordt het punt met de lagere `sample_order` weerhouden. We zullen beide thinning afstanden vergelijken.
+Om te veel overlap te voorkomen binnen eenzelfde stratum, is voor elk punt binnen hetzelfde stratum nagegaan of een punt met grotere sample_order op minder dan 600 m afstand ligt. Als dit het geval is wordt het punt met de lagere sample_order weerhouden. Voor een vergelijking tussen 300 en 600 m thinning, zie steekproefontwerp_leemstreek.Rmd.
 
 ```{r trekking}
-steekproef <- tar_read(steekproef_final_300, store = targets_store) %>%
-  bind_rows(tar_read(steekproef_final_600, store = targets_store)) %>%
+steekproef <- tar_read(steekproef_final_600, store = targets_store) %>%
   filter(Naam == "Leemstreek") %>%
   mutate(openheid_sbp = paste(
     openheid_klasse,
@@ -1079,12 +1091,9 @@ N.B.: voor de steekproef over Vlaanderen is het best mogelijk dat een ander temp
 Kaart van de steekproef:
 
 ```{r kaart-steekproef, warning=FALSE}
-mapview(steekproef %>% filter(thin_dist == 300) %>% st_buffer(dist = 300),
-  zcol = "openheid_sbp", layer = "stratum_300"
-) +
-  mapview(steekproef %>% filter(thin_dist == 600) %>% st_buffer(dist = 300),
-    zcol = "openheid_sbp", layer = "stratum_600"
-  ) +
+steekproef %>%
+  st_buffer(dist = 300) %>%
+  mapview(zcol = "openheid_sbp", layer = "stratum") +
   mapview(perimeters_data, color = "red", alpha.regions = 0, legend = FALSE)
 ```
 
@@ -1116,42 +1125,29 @@ balansvergelijking <- do.call(rbind, lapply(min_n_per_stratum, first_samples,
   steekproef_df = steekproef,
   multiplicatie = 1
 )) %>%
-  bind_rows(steekproef %>%
-    mutate(puntenset = "volledige steekproef")) %>%
   bind_rows(steekproefkader_finaal %>%
     filter(openheid_klasse %in% c("OL", "HOL")) %>%
-    mutate(
-      puntenset = "volledige steekproefkader",
-      thin_dist = 300
-    )) %>%
-  bind_rows(steekproefkader_finaal %>%
-    filter(openheid_klasse %in% c("OL", "HOL")) %>%
-    mutate(
-      puntenset = "volledige steekproefkader",
-      thin_dist = 600
-    )) %>%
+    mutate(puntenset = "volledige steekproefkader")) %>%
   mutate(sbp_akkervogels = ifelse(is_sbp,
     "binnen sbp",
     "buiten sbp"
   )) %>%
   cbind(st_coordinates(.)) %>%
   mutate(fillvar = factor(puntenset, levels = c(
-    paste("eerste",
+    paste("steekproef",
       c(20, 50, 100, 200),
       "per stratum",
       sep = " "
     ),
-    "volledige steekproef",
     "volledige steekproefkader"
   )))
 
 balansvergelijking %>%
   st_drop_geometry() %>%
-  group_by(fillvar, openheid = openheid_klasse, is_sbp, thin_dist) %>%
+  group_by(fillvar, openheid = openheid_klasse, is_sbp) %>%
   summarise(n_per_stratum = n()) %>%
-  group_by(fillvar, thin_dist) %>%
+  group_by(fillvar) %>%
   mutate(n_per_trekking = sum(n_per_stratum)) %>%
-  arrange(fillvar, thin_dist, openheid, is_sbp) %>%
   kable()
 ```
 
@@ -1168,7 +1164,7 @@ balansvergelijking %>%
   theme(legend.title = element_blank())
 ```
 
-We zien dat HOL gemiddeld iets noordelijker gelegen is dan OL binnen en buiten de SBP perimeter. Verder zien we dat binnen sbp meer oostelijk gelegen is.
+Een confounding probleem is dat HOL gemiddeld oostelijker gelegen is dan OL binnen en buiten de SBP perimeter. Ook lijken de SBP’s gemiddeld iets zuidelijker gelegen.
 
 ```{r}
 balansvergelijking %>%
@@ -1178,22 +1174,12 @@ balansvergelijking %>%
     y = X,
     fill = fillvar
   )) +
-  facet_grid(thin_dist ~ openheid_klasse, scales = "free") +
-  theme(legend.title = element_blank())
-
-balansvergelijking %>%
-  ggplot() +
-  geom_boxplot(aes(
-    x = sbp_akkervogels,
-    y = Y,
-    fill = fillvar
-  )) +
-  facet_grid(thin_dist ~ openheid_klasse, scales = "free") +
+  facet_grid(Naam ~ openheid_klasse, scales = "free") +
   theme(legend.title = element_blank())
 ```
 
 Verder is ook duidelijk te zien dat de meeste SB beheerovereenkomsten afgesloten zijn binnen de SBP perimeter.
-De stratificatie binnen vs. buiten SBP kunnen we dus effectief gebruiken als factor om na te gaan of er een effect is van deze maatregelen.
+De stratificatie binnen versus buiten SBP kunnen we dus effectief gebruiken als factor om na te gaan of er een effect is van deze maatregelen.
 We zullen wel moeten corrigeren voor de confounders door de confounders op te nemen in een model en/of door de data te filteren met behulp van statistical matching technieken in functie van specifieke vraagstellingen over de effectiviteit van beheerovereenkomsten.
 
 ```{r}
@@ -1205,17 +1191,12 @@ balansvergelijking %>%
     fill = fillvar
   )) +
   scale_y_sqrt() +
-  facet_grid(thin_dist ~ openheid_klasse) +
+  facet_grid(~openheid_klasse) +
   labs(y = "Oppervlakte-aandeel SB beheerovereenkomsten") +
   theme(legend.title = element_blank())
 ```
 
-We zien dat de steekproef vanaf 50 punten per stratum een goede afspiegeling is van de volledige populatie (boxplots voor steekproef eerste punten en volledig steekproefkader zijn zeer gelijkend). Ook is er bijna geen verschil tussen een thinning van 300 of 600. We besluiten voor thinning van 600 te gaan, zodat er geen overlap van telpunten is binnen eenzelfde stratum.
-
-```{r}
-steekproef <- steekproef %>%
-  filter(thin_dist == 600)
-```
+We zien dat de steekproef vanaf 50 punten per stratum een goede afspiegeling is van de volledige populatie (boxplots voor steekproef eerste punten en volledig steekproefkader zijn zeer gelijkend).
 
 
 ## Visualisatie steekproef
@@ -1263,7 +1244,7 @@ Enkele nuttige links:\
 
 1.  Hard coding
     -   Voeg op einde target toe met argument `TRUE` of `FALSE` om bepaalde bestanden weg te schrijven
-    -   Verander argument naar `TRUE` als je finale steekproef wil runnen en zet daarna ev. terug naar `FALSE`
+    -   Verander argument naar `TRUE` als je finale steekproef wil runnen en zet daarna eventueel terug naar `FALSE`
     -   Versiecontrole met git (check .gitignore)
 2.  Cloud storage
     -   Amazon of Google
@@ -1292,7 +1273,7 @@ We bekijken overlap met de pilootstudie.
 Er is niet veel overlap.
 We vervangen alle telpunten uit de steekproef van de leemstreek door reeds bestaande punten indien ze voor minstens 50 % overlappen en ze tot hetzelfde stratum behoren.
 Indien er meerdere bestaande punten overlappen, nemen we het bestaande punt dat het meest overlapt.
-Omdat we nu een nieuwe laag van sbp gebruiken, moeten we dit stratum opnieuw berekenen voor de bestaande punten.
+Omdat we nu een nieuwe laag van SBP gebruiken, moeten we dit stratum opnieuw berekenen voor de bestaande punten.
 
 
 ```{r}
@@ -1346,7 +1327,7 @@ cirkels_leemstreek <- steekproef_raw %>%
   st_buffer(300)
 ```
 
-Er zijn een aantal punten die overlappen voorminstens 50 % en tot hetzelfde stratum behoren.
+Er zijn een aantal punten die overlappen voor minstens 50 % en tot hetzelfde stratum behoren.
 
 ```{r}
 # welke punten overlappen minstens 50 %

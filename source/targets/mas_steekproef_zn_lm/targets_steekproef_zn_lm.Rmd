@@ -28,7 +28,7 @@ knitr::opts_knit$set(
 
 # Inleiding
 
-Dit document beschrijft de analyse-workflow voor het opstellen van het steekproefkader en de steekproeftrekking voor de extra tellingen die in 2023 toegevoegd worden aan de pilootfase van het MAS project.
+Dit document beschrijft de analyse workflow voor het opstellen van het steekproefkader en de steekproeftrekking voor de extra tellingen die in 2023 toegevoegd worden aan de pilootfase van het MAS project.
 Initieel ging dit om tellingen in kerngebied Zavelberg (Leefdaal) en bijhorend controlegebied (Kortenberg), maar dit gebied bleek te klein voor een correcte steekproeftrekking. 
 Daarom focussen we nu op de volledige Zandleemstreek en de Leemstreek. 
 Dit zal ook de overgang naar een overkoepelend meetnet voor heel Vlaanderen vereenvoudigen.
@@ -45,7 +45,7 @@ Installeren van de vereiste R packages.
 Extra reproduceerbaarheid van het analysestramien wordt verzekerd door het `renv` package.
 Voor compatibiliteit tussen `renv` en `targets`, zie `?targets::tar_renv`.
 Het bijhorende R-project heeft een `.Rprofile` bestand waarmee bij opstart van het project hetzelfde `renv` project geladen wordt als van het hoofd `mbag` R-project.
-Het `renv` package zorgt ervoor dat de analyses gebeuren in een geïsoleerd R-project met gespecifieerde versies van alle benodigde R packages (zowel de packages die expliciet geladen worden als de packages waarvan deze afhankelijk zijn).
+Het `renv` package zorgt ervoor dat de analyses gebeuren in een geïsoleerd R-project met gespecificeerde versies van alle benodigde R packages (zowel de packages die expliciet geladen worden als de packages waarvan deze afhankelijk zijn).
 
 De onderstaande chunk wordt best in interactieve modus uitgevoerd.
 
@@ -60,7 +60,7 @@ In onderstaande chunk laden we R packages die we nodig hebben in interactieve mo
 Verderop beschrijven we elk van de rekenstappen in Target Markdown chunks.
 Deze target-chunks worden weggeschreven naar een `_targets.R` bestand en de hulpscripts worden opgeslagen in een bestandsmap `_targets_r/`.
 De functie `tar_unscript()` in de chunk hieronder verwijdert alle hulpscripts uit de `_targets_r` bestandsmap.
-Dit is om te voorkomen dat er per ongeluk code naar deze map werd weggeschreven wanneer de target-chunks in interactieve modus worden uitgevoerd.
+Dit is om te voorkomen dat er per ongeluk code naar deze map werd weggeschreven wanneer de target chunks in interactieve modus worden uitgevoerd.
 
 ```{r}
 library(targets)
@@ -83,9 +83,9 @@ usethis::edit_r_environ()
 ```
 
 
-# Globals
+# Globale instellingen
 
-Eerst definiëren we globale opties/functies die voor alle targets gelden.
+Eerst definiëren we globale opties en functies die voor alle targets gelden.
 
 We gebruiken standaard "qs" als opslagformaat omdat dit zowel voor data.frames als voor andere R objecten toepasbaar is, resulteert in kleinere bestanden en sneller kan gelezen en weggeschreven worden in vergelijking met "rds" bestanden.
 
@@ -96,7 +96,7 @@ tar_option_set(packages = c("dplyr",
                             "readr",
                             "tidyr",
                             "tibble",
-                            "nngeo", 
+                            "nngeo",
                             "osmextract",
                             "terra",
                             "exactextractr",
@@ -142,7 +142,7 @@ list(
     ),
   tar_target(
     perimeters_data,
-    st_read(perimeters_file) %>% 
+    st_read(perimeters_file) %>%
       arrange(Naam)
     ),
   tarchetypes::tar_file(
@@ -204,12 +204,12 @@ list(
     command = exclusie_landgebruik_osm(
       gebied = selectie_openheid_klasses,
       osmdata = osm_belgium,
-      landuse = c("residential", "military", "industrial", "cemetery", 
+      landuse = c("residential", "military", "industrial", "cemetery",
                   "railway", "commercial", "farmyard"),
       leisure = c("park"),
-      buffer_poly = 0, 
+      buffer_poly = 0,
       layer_poly = list(aeroway = c("aerodrome")),
-      buffer_line = 100, 
+      buffer_line = 100,
       layer_line = list(highway = c("motorway", "motorway_link")),
       update_osm_layer = FALSE
       ),
@@ -334,7 +334,7 @@ list(
       path = sbp_akkervogels_file,
       gebied = perimeters_data,
       path_extra_soorten = sbp_overige_file,
-      extra_soorten = c("hamster", "bruine kiekendief", "zomertortel", 
+      extra_soorten = c("hamster", "bruine kiekendief", "zomertortel",
                         "grauwe kiekendief")
       ),
     pattern = map(perimeters_data),
@@ -425,7 +425,6 @@ list(
     iteration = "list"
   )
 )
-
 ```
 
 ```{targets version-control}
@@ -433,7 +432,7 @@ list(
   tar_target(
     output_objecten,
     output_finaal(
-      files = list(steekproefkader = steekproefkader_finaal, 
+      files = list(steekproefkader = steekproefkader_finaal,
                    steekproef = steekproef_final_600),
       write_out = FALSE
     )
@@ -443,7 +442,7 @@ list(
 
 # Analysestramien uitvoeren
 
-> If you ran all the `{targets}` chunks in non-interactive mode, then your R scripts are set up to run the pipeline.
+Nadat alle `{targets}` chunks in niet-interactieve modus zijn uitgevoerd, kan je de pijplijn laten lopen m.b.v. tar_make().
 
 ```{r}
 tar_make()
@@ -486,7 +485,7 @@ Ze kunnen individueel ingelezen worden met `tar_read()` of ingeladen worden met 
 ```{r}
 ```
 
-Handig is dat targets afkomstig van dynamic branching ook automatisch geaggreggeerd worden.
+Handig is dat targets afkomstig van dynamic branching ook automatisch geaggregeerd worden.
 
 In de bestandsmap `_targets/meta` zitten alle metadata, die met `tar_meta()` bekeken kunnen worden.
 

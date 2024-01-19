@@ -12,7 +12,8 @@
 point_to_gridcell <- function(
   xy,
   cell_width_m = 500,
-  point_position = c("center", "lowerleft", "upperleft", "lowerright", "upperright"),
+  point_position = c("center", "lowerleft",
+                     "upperleft", "lowerright", "upperright"),
   crs = 31370) {
   point_position <- match.arg(point_position)
 
@@ -28,8 +29,8 @@ point_to_gridcell <- function(
                              nQuadSegs = 1)
 
   # rotate 45 degrees around centroid
-  rot <- function(a) matrix(c(cos(a), sin(a), -sin(a), cos(a)), 2, 2)
-  pl <- (xy_buffer - xy) * rot(pi/4) + xy
+  rot <- function(a) matrix(c(cos(a), sin(a), - sin(a), cos(a)), 2, 2)
+  pl <- (xy_buffer - xy) * rot(pi / 4) + xy
   pl <- sf::st_sf(data.frame(xy_df, pl), crs = crs)
   return(pl)
 }
@@ -39,7 +40,8 @@ point_to_gridcell <- function(
 #'
 #' @param grid_cell A polygon within which boundaries zonal statistics will be
 #' calculated
-#' @param layer A rasterlayer containing land use classes or a polygon layer (sf object)
+#' @param layer A rasterlayer containing land use classes or
+#' a polygon layer (sf object)
 #' @param grid_group_by_col A character vector of columns to group by for zones
 #' @param layer_group_by_col A character vector of columns to group by for
 #' layer
@@ -56,7 +58,7 @@ landusemetrics_grid_cell <- function(
   progress = FALSE
 ) {
   require(duckdb)
-  if (inherits(layer, "SpatRaster") | inherits(layer, "RasterLayer")) {
+  if (inherits(layer, "SpatRaster") || inherits(layer, "RasterLayer")) {
     crs_grid <- gsub("^((.*?),\\n\\s*?){2}", "", sf::st_crs(grid_cell)$wkt)
     crs_layer <- gsub("^((.*?),\\n\\s*?){2}", "", terra::crs(layer))
     assertthat::assert_that(crs_grid == crs_layer)
@@ -110,4 +112,3 @@ landusemetrics_grid_cell <- function(
     return(int)
   }
 }
-
