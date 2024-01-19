@@ -1,0 +1,28 @@
+{
+  "R": {
+    "Version": "4.3.2",
+    "Repositories": [
+      {
+        "Name": "CRAN",
+        "URL": "https://cloud.r-project.org"
+      },
+      {
+        "Name": "INLA",
+        "URL": "https://inla.r-inla-download.org/R/stable"
+      },
+      {
+        "Name": "inbo",
+        "URL": "https://inbo.r-universe.dev"
+      }
+    ]
+  },
+  "Packages": {
+    "renv": {
+      "Package": "renv",
+      "Version": "1.0.3",
+      "OS_type": null,
+      "Repository": "CRAN",
+      "Source": "Repository"
+    }
+  }
+}
