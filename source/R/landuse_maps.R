@@ -30,10 +30,6 @@ lum_download <- function(
 }
 
 
-#testje <- sf::st_layers("Z:/Projects/PRJ_NARA_2020/Target_2/Extra_LGdatalagen.gdb")
-#testje2 <- sf::st_layers("Z:/Projects/PRJ_NARA_2020/Basisbestanden/Basisdata.gdb")
-
-
 #' read land use maps from inbo projects folder
 #'
 #' @param year one of "2013" or "2016"
@@ -50,17 +46,18 @@ lum_download <- function(
 #' @examples
 lum_read_from_inbo <- function(
   year = c("2016", "2013"),
-  layerid = c("finaal_natuurbeheer", "niveau1", "niveau2", "niveau3", "niveau4"),
+  layerid = c("finaal_natuurbeheer", "niveau1",
+              "niveau2", "niveau3", "niveau4"),
   root = "data/landgebruik/inbo",
   add_levels = FALSE) {
   require(dplyr)
   require(readr)
   year <- match.arg(year)
   layerid <- match.arg(layerid)
-  file <- paste0("LG", year, "_", layerid,".tif")
+  file <- paste0("LG", year, "_", layerid, ".tif")
   tr <- terra::rast(file.path(root, file))
   # re-assign categories labels which got lost in translation
-  # (ESRI -> geotiff -> terra::rast)
+  # (ESRI to geotiff to terra::rast)
   if (add_levels) {
     legend <- read_csv2(
       "data/landgebruik/legende_landgebruik.csv",
@@ -104,10 +101,10 @@ lum_read_from_vito <- function(
   require(dplyr)
   require(readr)
   year <- match.arg(year)
-  file <- paste0("lu_landgebruik_vlaa_", year, "_v2",".tif")
+  file <- paste0("lu_landgebruik_vlaa_", year, "_v2", ".tif")
   tr <- terra::rast(file.path(root, file))
   # re-assign categories labels which got lost in translation
-  # (ESRI -> geotiff -> terra::rast)
+  # (ESRI to geotiff to terra::rast)
   if (add_levels) {
     oldwd <- setwd(root)
     legend <- read_csv2(
@@ -149,4 +146,3 @@ lum_read_from_vito <- function(
 
   return(tr)
 }
-

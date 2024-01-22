@@ -62,16 +62,16 @@ draw_sample <- function(
   )
 
   sampling_frame$in_sample <-
-    ifelse(1:nrow(sampling_frame) %in% draw, TRUE, FALSE)
+    ifelse(seq_len(nrow(sampling_frame)) %in% draw, TRUE, FALSE)
   sampling_frame$sample_order <- NA
-  for (i in 1:length(draw)) {
+  for (i in seq_along(draw)) {
     sampling_frame$sample_order[draw[i]] <- i
   }
   sample_df <- sampling_frame[sampling_frame$in_sample, ]
   sample_df <- sample_df %>%
     arrange(sample_order) %>%
     mutate(batch = ifelse(sample_order <= sample_size,
-                          "eerste set" ,
+                          "eerste set",
                           "reserve set"))
 
   return(sample_df)
@@ -90,7 +90,7 @@ allocatie <- function(steekproefkader,
                       target_samplesize = 410,
                       popsize_minimum = 410,
                       allocatie_binnen_sbp = 0.5,
-                      allocatie_leemstreek = 350/410,
+                      allocatie_leemstreek = 350 / 410,
                       ol_strata = c("OL", "HOL")) {
   allocatie <- steekproefkader %>%
     st_drop_geometry() %>%

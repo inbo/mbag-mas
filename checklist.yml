@@ -21,3 +21,5 @@ spelling:
   ignore:
   - .github
   - LICENSE.md
+  - source/targets
+  - source/R

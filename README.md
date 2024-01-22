@@ -25,5 +25,5 @@ Instituut voor Natuur- en Bosonderzoek (INBO)[^cph][^fnd]
 <!-- description: start -->
 De toestand van de biodiversiteit in het agrarisch gebied gaat achteruit, met negatieve gevolgen voor de biodiversiteit buiten het landbouwgebied, voor de landbouw zelf en voor de veerkracht tegenover klimaatverandering. Met het Meetnet Biodiversiteit Agrarisch Gebied (MBAG) trachten we deze toestand beter op te volgen, als basis voor gerichte maatregelen om de achteruitgang te keren. Dit deelproject legt de basis voor een meetnet voor agrarische soorten (MAS).
 
-Dit in kaart brengen gebeurt op een snelle en efficiënte manier via puntentellingen, waarbij alle vogels en zoogdieren (o.a. haas, ree en vos) worden genoteerd binnen een straal van 300m, op vier momenten tijdens het broedseizoen. In 2023 bestrijken we de Leemstreek, de Moeren en de Zandleemstreek, in 2024 willen we een meetnet uitrollen met zeggingskracht over heel Vlaanderen.
+Dit in kaart brengen gebeurt op een snelle en efficiënte manier via puntentellingen, waarbij alle vogels en zoogdieren (o.a. haas, ree en vos) worden genoteerd binnen een straal van 300 m, op vier momenten tijdens het broedseizoen. In 2023 bestrijken we de Leemstreek, de Moeren en de Zandleemstreek, in 2024 willen we een meetnet uitrollen met zeggingskracht over heel Vlaanderen.
 <!-- description: end -->

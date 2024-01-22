@@ -123,8 +123,8 @@ output_finaal <- function(files, write_out) {
       name <- names(files)[i]
 
       object <- files[[i]] %>%
-        mutate(X = st_coordinates(.data$geometry)[,1],
-               Y = st_coordinates(.data$geometry)[,2]) %>%
+        mutate(X = st_coordinates(.data$geometry)[, 1],
+               Y = st_coordinates(.data$geometry)[, 2]) %>%
         st_drop_geometry()
 
       if ("thin_dist" %in% names(object)) {
