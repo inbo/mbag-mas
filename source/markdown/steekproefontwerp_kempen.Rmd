@@ -38,22 +38,7 @@ mbag_dir <- here()
 source(here("source", "R", "steekproefkader.R"))
 source(here("source", "R", "berekening_hulpvariabelen.R"))
 source(here("source", "R", "wfs_wcs.R"))
-targets_store <- here("source", "targets", "mas_steekproef_zn_lm", "_targets")
-
-# to make tar_read work
-new_tar_vector <- function(value, objects) {
-  out <- do.call(vctrs::vec_rbind, objects)
-  if (any(sapply(out, inherits, what = "sfc"))) {
-    sf::st_as_sf(out)
-  } else {
-    out
-  }
-}
-try(assignInNamespace(
-  "value_produce_aggregate.tar_vector",
-  new_tar_vector,
-  ns = "targets"
-))
+targets_store <- here("source", "targets", "mas_steekproef_zl_lm_za_kp_po", "_targets")
 ```
 
 # Vooraf
@@ -71,35 +56,36 @@ Dat bestand kan je openen met de volgende code:
 
 Om de perimeter te bepalen voer je onderstaande code uit in mas_steekproef_zn_lm.Rproj, na laden van globals in targets_steekproef_zn_lm.Rmd.
 
-De code maakt een intersectie tussen landbouwstreek leemstreek (heel België) en contour Vlaanderen en voegt deze toe  aan file "zandleemstreek_perimeters.gpkg".
+De code maakt een intersectie tussen landbouwstreek Kempen (heel België) en contour Vlaanderen en voegt deze toe  aan file "zandleemstreek_perimeters.gpkg".
 
 ```{r, class.source = "fold-show", eval=FALSE}
-library(sf)
-
-# Lees in polygonen landbouwstreken
-landbouwstreken <- read_sf(file.path(mbag_dir,
-                                     "data",
-                                     "landbouwstreken",
-                                     "Lbstrbel.shp")) |>
-  st_transform(crs = 31370)
-
-# Behoud polders
-vlaanderen <- read_sf("S:/Vlaanderen/Grenzen/Administratief/Vlaanderen_met_kust_EEZ.shp") |>
-  st_transform(crs = 31370)
-
-kemp_vlaanderen <- st_intersection(landbouwstreken, vlaanderen) |>
-  filter(NAAM == "Kempen") |>
-  mutate(section = NA) |>
-  select(Naam = NAAM, section, geom = geometry)
-
-st_write(obj = kemp_vlaanderen,
-         dsn = path_to_perimeters("zandleemstreek_perimeters.gpkg"),
-         append = TRUE)
+# library(sf)
+# 
+# # Lees in polygonen landbouwstreken
+# landbouwstreken <- read_sf(file.path(mbag_dir,
+#                                      "data",
+#                                      "landbouwstreken",
+#                                      "Lbstrbel.shp")) |>
+#   st_transform(crs = 31370)
+# 
+# # Behoud polders
+# vlaanderen <- read_sf("S:/Vlaanderen/Grenzen/Administratief/Vlaanderen_met_kust_EEZ.shp") |>
+#   st_transform(crs = 31370)
+# 
+# kemp_vlaanderen <- st_intersection(landbouwstreken, vlaanderen) |>
+#   filter(NAAM == "Kempen") |>
+#   mutate(section = NA) |>
+#   select(Naam = NAAM, section, geom = geometry)
+# 
+# st_write(obj = kemp_vlaanderen,
+#          dsn = path_to_perimeters("zl_lm_za_kp_po_perimeters.gpkg"),
+#          append = TRUE)
 ```
 
 
 ```{r}
-perimeters_data <- tar_read(perimeters_data, store = targets_store)
+perimeters_data <- tar_read(perimeters_data, store = targets_store) %>% 
+  filter(Naam == "Kempen")
 
 mapview(perimeters_data, color = "red", alpha.regions = 0, legend = FALSE)
 ```
@@ -122,9 +108,9 @@ We selecteren OL en HOL binnen de perimeter.
 
 ```{r}
 selectie_openheid_klasses <- tar_read(selectie_openheid_klasses,
-  store = targets_store
-) %>%
-  filter(Naam == "Leemstreek")
+  store = targets_store) %>%
+  reduce(rbind) %>% 
+  filter(Naam == "Kempen")
 
 mapview(perimeters_data, color = "red", alpha.regions = 0, legend = FALSE) +
   mapview(selectie_openheid_klasses, col.regions = "red", legend = FALSE)
@@ -136,7 +122,7 @@ We gebruiken kenmerken uit [OpenStreetMap](https://www.openstreetmap.org) om bep
 We gebruiken hiervoor de kenmerken [landuse](https://wiki.openstreetmap.org/wiki/NL:Key:landuse) (grondgebruik), [leisure](https://wiki.openstreetmap.org/wiki/NL:Key:leisure) (vrije tijd), [aeroway](https://wiki.openstreetmap.org/wiki/Key:aeroway) (luchthaven) en [highway](https://wiki.openstreetmap.org/wiki/Key:highway) (wegen).
 De links in voorgaande zin verwijzen naar de volledige lijst van mogelijke klassen.
 
-We knippen we onderstaande landgebruiken uit de openheid selectie.
+We knippen onderstaande landgebruiken uit voorgaande selectie.
 Rond autosnelwegen en invoegstroken en afritten van autosnelwegen trekken we een buffer van 100 m.
 
 ### Woongebied
@@ -216,15 +202,15 @@ In groen de exclusiekaart en rood OL en HOL binnen de perimeter.
 
 ```{r}
 exclusie_osm_landgebruiken <- tar_read(exclusie_osm_landgebruiken,
-  store = targets_store
-) %>%
-  filter(Naam == "Leemstreek")
+  store = targets_store) %>%
+  reduce(rbind) %>%
+  filter(Naam == "Kempen")
 
 detail <- c(
-  "xmin" = 116000,
-  "ymin" = 152500,
-  "xmax" = 130000,
-  "ymax" = 161000
+  "xmin" = 140000,
+  "ymin" = 170000,
+  "xmax" = 265000,
+  "ymax" = 247500
 )
 
 detail_sf <- tibble(geometry = st_as_sfc(st_bbox(detail))) %>%
@@ -289,7 +275,8 @@ We verwijderen wegen die overlappen met de exclusiekaart en verwijderen overlapp
 
 ```{r}
 paden <- tar_read(paden, store = targets_store) %>%
-  filter(Naam == "Leemstreek")
+  reduce(rbind) %>%
+  filter(Naam == "Kempen")
 
 mapview(st_crop(perimeters_data, detail),
   color = "red", alpha.regions = 0,
@@ -332,7 +319,8 @@ Werkwijze:
 
 ```{r}
 punten <- tar_read(punten, store = targets_store) %>%
-  filter(Naam == "Leemstreek")
+  reduce(rbind) %>%
+  filter(Naam == "Kempen")
 
 mapview(st_crop(perimeters_data, detail),
   color = "red", alpha.regions = 0,
@@ -372,9 +360,8 @@ Voor elk potentieel telpunt / telcirkel:
 
 ```{r}
 telcirkels_selectie_landgebruik <- tar_read(telcirkels_selectie_landgebruik,
-  store = targets_store
-) %>%
-  filter(startsWith(pointid, abbreviate("Leemstreek", 2)))
+                                            store = targets_store) %>%
+  filter(startsWith(pointid, abbreviate("Kempen", 2)))
 ```
 
 We gebruiken volgende regel als criterium voor telpunten die in aanmerkingen komen voor wat betreft de samenstelling van het landgebruik in een buffer van 300 m rond het punt:
@@ -431,25 +418,19 @@ mapview(st_crop(perimeters_data, detail),
 
 ### Exclusie op basis van zichtbaarheid
 
-Berekening cumulatieve zichtbaarheidsindex waarbij de waarnemer een bewegingsvrijheid heeft van 25 m rondom het telpunt.
-De zichtbaarheidsindex wordt berekend vanaf een set van locaties die 10 m van elkaar liggen in deze zone van bewegingsvrijheid en geeft de proportie aan van zichtbare rastercellen in de telcirkel met 300 m straal.
-De cumulatieve zichtbaarheidsindex is dan de proportie die zichtbaar is vanuit minstens één locatie binnen de zone van bewegingsvrijheid.
-Door middel van Digital Surface Model (DSM) en Digital Terrain Model (DTM).
-Aanpassing aan **GVI** package.
-Zie: `visibility.Rmd`.
-
-In de pipeline werd gebruik gemaakt van batching per 200 telpunten om rekentijd in te perken.
-Zie:\
-<https://docs.ropensci.org/tarchetypes/reference/tar_group_size.html>\
-<https://books.ropensci.org/targets/dynamic.html#performance-and-batching>
+We berekenen de cumulatieve zichtbaarheidsindex waarbij de waarnemer een bewegingsvrijheid heeft van 25 m rondom het telpunt.
+De zichtbaarheidsindex wordt berekend vanaf een set van locaties die 10 m van elkaar liggen in deze zone van bewegingsvrijheid en geeft de proportie aan van zichtbare rastercellen in de telcirkel met een straal van 300 m.
+De cumulatieve zichtbaarheidsindex is dan de som van alle rastercellen die zichtbaar zijn vanuit minstens één locatie binnen de zone van bewegingsvrijheid.
 
 We verwijderen telpunten waar de cumulatieve "viewshed visibility index" (cvvi) kleiner is dan 0.10.
 
+Ward, is dit niet een zeer lage cut-off?
+
 ```{r}
 punten_zichtbaarheid <- tar_read(punten_zichtbaarheid,
-  store = targets_store
-) %>%
-  filter(Naam == "Leemstreek")
+                                 store = targets_store) %>%
+  reduce(rbind) %>%
+  filter(Naam == "Kempen")
 
 plus_visibility <- add_openheid_landschap_to_frame(
   path = path_to_openheid_landschap(),
@@ -495,9 +476,9 @@ Eventueel verder opgesplitst in winter, zomer en jaarrond maatregelen.
 
 ```{r bo-sbp}
 steekproefkader_finaal <- tar_read(steekproefkader_finaal,
-  store = targets_store
-) %>%
-  filter(Naam == "Leemstreek")
+                                   store = targets_store) %>%
+  reduce(rbind) %>%
+  filter(Naam == "Kempen")
 ```
 
 ```{r}
@@ -521,149 +502,6 @@ steekproefkader_finaal %>%
     x = "Oppervlakte-aandeel soortbeschermingsmaatregelen binnen 300 m buffer",
     y = "Aantal potentiële telpunten (steekproefkader)"
   )
-```
-
-### Oppervlakte-aandeel hoofdteelt
-
-```{r lbg-stats}
-lbg_statistieken <- tar_read(lbg_statistics, store = targets_store) %>%
-  filter(startsWith(pointid, abbreviate("Leemstreek", 2)))
-```
-
-Belangrijkste teelten in 2022.
-Voorlopige kaart.
-Finale kaart wordt eind maart gepubliceerd.
-Omzetten naar .parquet file.
-
-```{r, class.source = "fold-show", eval=FALSE}
-# Code uitvoeren in mas_steekproef_zn_lm.Rproj
-# na laden van globals in targets_steekproef_zn_lm.Rmd
-
-file <- sf::read_sf(file.path(mbag_dir, "data", "landbouwgebruikspercelen", "Shapefile",
-                              "Lbgbrprc22.shp"), query = NA)
-
-temp <- file %>%
-  mutate(OIDN = NA,
-         UIDN = NA,
-         LENGTE = NA,
-         OPPERVL = NA) %>%
-  select(OIDN, UIDN, ALVID = REF_ID, HFDTLT = GWSCOD_H, LBLHFDTLT = GWSNAM_H,
-         GEWASGROEP = GWSGRPH_LB, PM = GESP_PM, LBLPM = GESP_PM_LB,
-         LENGTE, OPPERVL)
-
-sfarrow::st_write_parquet(obj = temp,
-                          dsn = file.path(mbag_dir,
-                                          "data",
-                                          "landbouwgebruikspercelen",
-                                          "parquet",
-                                          "lbgbrprc2022.parquet"),
-                          chunk_size = 10000)
-```
-
-
-```{r lbg-per-hoofdteelt}
-lbg_statistieken %>%
-  ungroup() %>%
-  left_join(
-    steekproefkader_finaal %>%
-      st_drop_geometry() %>%
-      select(pointid, Naam),
-    by = "pointid"
-  ) %>%
-  select(Naam, pointid, LBLHFDTLT, area_prop) %>%
-  pivot_wider(
-    names_from = LBLHFDTLT,
-    values_from = area_prop,
-    values_fill = list(area_prop = 0),
-    values_fn = list(area_prop = sum)
-  ) %>%
-  pivot_longer(cols = -c(Naam, pointid)) %>%
-  group_by(Naam, name) %>%
-  summarise(
-    prop_n_points = sum(value > 0) / n(),
-    mean_prop = mean(value),
-    mean_prop_present = mean(value[value > 0]),
-    .groups = "drop_last"
-  ) %>%
-  filter(mean_prop > 0.01) %>%
-  pivot_longer(
-    cols = c(prop_n_points, mean_prop, mean_prop_present),
-    names_to = "variable",
-    values_to = "value"
-  ) %>%
-  ggplot() +
-  geom_point(aes(
-    y = forcats::fct_reorder(name, value, mean),
-    x = value, colour = variable
-  )) +
-  scale_x_continuous(labels = scales::percent) +
-  scale_color_discrete(labels = c(
-    "Gemiddeld oppervlakteperc.",
-    "Gemiddeld oppervlakteperc.\nwaar aanwezig",
-    "Percentage pot. telpunten\n aanwezig"
-  )) +
-  labs(x = "Percentage in telcirkel") +
-  theme(axis.title.y = element_blank())
-```
-
-Een logische en veelgebruikte opdeling voor gewassen is:
-
--   graangewassen (monocotylen zoals tarwe, gerst, e.a.)
--   grasland (opdelen permanent en tijdelijk)
--   mais
--   aardappelen
--   wortelgewassen (biet, cichorei, wortel)
--   peulvruchten (erwt)
--   groenteteelt (kolen zoals bloemkool, broccoli, spruiten, prei, ajuin, sla)
--   groenbemesters (klavers, luzerne, mosterd) of koolzaad
--   meerjarige fruitteelt (appel, peer, kers, e.a.)
--   vlas
--   andere (bv eenjarig fruitteelt)
-
-Hier gebruiken we de indeling volgens 'gewasgroep' zoals deze in de landbouwgebruikspercelenkaart zit.
-
-```{r lbg-per-gewasgroep, warning=FALSE}
-lbg_statistieken %>%
-  ungroup() %>%
-  left_join(
-    steekproefkader_finaal %>%
-      st_drop_geometry() %>%
-      select(pointid, Naam),
-    by = "pointid"
-  ) %>%
-  select(pointid, Naam, GEWASGROEP, area_prop) %>%
-  pivot_wider(
-    names_from = GEWASGROEP,
-    values_from = area_prop,
-    values_fill = list(area_prop = 0),
-    values_fn = list(area_prop = sum)
-  ) %>%
-  pivot_longer(cols = -c(Naam, pointid)) %>%
-  group_by(Naam, name) %>%
-  summarise(
-    prop_n_points = sum(value > 0) / n(),
-    mean_prop = mean(value),
-    mean_prop_present = mean(value[value > 0]),
-    .groups = "drop_last"
-  ) %>%
-  pivot_longer(
-    cols = c(prop_n_points, mean_prop, mean_prop_present),
-    names_to = "variable",
-    values_to = "value"
-  ) %>%
-  ggplot() +
-  geom_point(aes(
-    y = forcats::fct_reorder(name, value, mean),
-    x = value, colour = variable
-  )) +
-  scale_x_continuous(labels = scales::percent) +
-  scale_color_discrete(labels = c(
-    "Gemiddeld oppervlakteperc.",
-    "Gemiddeld oppervlakteperc.\nwaar aanwezig",
-    "Percentage pot. telpunten\n aanwezig"
-  )) +
-  labs(x = "Percentage in telcirkel") +
-  theme(axis.title.y = element_blank())
 ```
 
 ### Openheid landschap
@@ -690,11 +528,8 @@ Toch is er nog een beetje HGL over maar in de allocatie zullen deze punten wegva
 
 ```{r landschap-openheid}
 openheid_classified <- rast(
-  here(
-    "data", "dem",
-    "openness300m_chm_res25_c300_mean_vlaanderen_classified.tif"
-  )
-) %>%
+  here("data", "dem",
+       "openness300m_chm_res25_c300_mean_vlaanderen_classified.tif")) %>%
   crop(perimeters_data) %>%
   mask(terra::vect(perimeters_data))
 ```
@@ -795,7 +630,7 @@ mapview(bind_rows(sbp_overig, sbp_akkergvogels),
 )
 ```
 
-In de leemstreek hebben we:
+In de Kempen hebben we:
 
 ```{r}
 mapview(perimeters_data, color = "red", alpha.regions = 0, legend = FALSE) +
@@ -810,10 +645,11 @@ mapview(perimeters_data, color = "red", alpha.regions = 0, legend = FALSE) +
 
 ```{r}
 sbp_akkervogels <- tar_read(sbp_akkervogels, store = targets_store) %>%
-  filter(Naam == "Leemstreek")
+  reduce(rbind) %>%
+  filter(Naam == "Kempen")
 ```
 
-Het oppervlakte aandeel aan SBP's binnen de leemstreek:
+Het oppervlakte aandeel aan SBP's binnen de Kempen:
 
 ```{r}
 binnen_sbp <- perimeters_data %>%
@@ -848,7 +684,7 @@ opps %>%
   kable(digits = 2)
 ```
 
-Het oppervlakte aandeel aan SBP's binnen OL en HOL in de leemstreek:
+Het oppervlakte aandeel aan SBP's binnen OL en HOL in de Kempen:
 
 ```{r}
 binnen_sbp <- selectie_openheid_klasses %>%
@@ -875,7 +711,7 @@ opps <- bind_rows(buiten_sbp, binnen_sbp) %>%
 opps %>%
   mutate(
     opp = units::set_units(opp, "ha"),
-    Naam = "Leemstreek (OL en HOL)"
+    Naam = "Kempen (OL en HOL)"
   ) %>%
   group_by(Naam) %>%
   mutate(opp_aandeel = opp / sum(opp)) %>%
@@ -1002,7 +838,7 @@ mapview(st_crop(perimeters_data, detail),
   )
 ```
 
-# Trekking steekproef leemstreek
+# Trekking steekproef Kempen
 
 ## Stratificatie steekproef
 
@@ -1017,7 +853,7 @@ mapview(st_crop(perimeters_data, detail),
 
 Allocatie van de steekproefgrootte over de verschillende strata:
 
--   Hier moeten we afweging maken tussen de precisie per stratum en precisie voor de leemstreek in zijn geheel.
+-   Hier moeten we afweging maken tussen de precisie per stratum en precisie voor de Kempen in zijn geheel.
     -   Voor het geheel zou een allocatie evenredig aan het steekproefkader van elk stratum wellicht de voorkeur hebben.
     -   Indien we echter ook geïnteresseerd zijn in uitspraken voor elk stratum apart en in onderlinge vergelijkingen tussen de strata, dan is een allocatie waarbij in elk stratum evenveel punten liggen meer aangewezen.
 
@@ -1038,14 +874,14 @@ Het algoritme kent een volgorde toe bij de steekproeftrekking en het is aan de h
 Dit heeft als eigenschap dat deze set ook (ruimtelijk) gebalanceerd is en een goede spreiding vertoont.
 
 We streven naar minstens 50 telpunten per stratum.
-Er zijn 4 strata (OL, HOL en binnen, buiten SBP) binnen de leemstreek.
+Er zijn 4 strata (OL, HOL en binnen, buiten SBP) binnen de Kempen.
 Voor een betere precisie, moeten we de steekproefgrootte verder verhogen.
 Een vuistregel stelt dat de steekproefgrootte verviervoudigen, een halvering geeft van het betrouwbaarheidsinterval (dan hebben we 200 telpunten per stratum nodig).
 Niet echt belangrijk hier omdat we een maximum steekproef trekken en de tellers gewoon zoveel mogelijk punten laten doen (volgnummer).
 
 ```{r}
 allocatie <- tar_read(allocatie_df, store = targets_store) %>%
-  filter(Naam == "Leemstreek") %>%
+  filter(Naam == "Kempen") %>%
   mutate(openheid_sbp = paste(
     openheid_klasse,
     ifelse(is_sbp,
@@ -1064,15 +900,16 @@ allocatie %>%
 
 We trekken geen veelvoud van het vooropgestelde aantal telpunten (enkel eerste batch van punten).
 Elk telpunt zal een volgnummer hebben.
-De eerste bv. 300 (laagste volgnummers) zullen dan de set zijn voor de leemstreek, die kan verdeeld worden over de medewerkers.
+De eerste bv. 300 (laagste volgnummers) zullen dan de set zijn voor de Kempen, die kan verdeeld worden over de medewerkers.
 Indien een punt uitvalt, kan dit vervangen worden door het eerstvolgende uit de reeks dat nog niet toegewezen werd (het 301ste).
 De methode garandeert dat deze nieuwe set ruimtelijk goed gespreid is en een aselecte steekproef is.
   
 Om te veel overlap te voorkomen binnen eenzelfde stratum, is voor elk punt binnen hetzelfde stratum nagegaan of een punt met grotere sample_order op minder dan 600 m afstand ligt. Als dit het geval is wordt het punt met de lagere sample_order weerhouden. Voor een vergelijking tussen 300 en 600 m thinning, zie steekproefontwerp_leemstreek.Rmd.
 
 ```{r trekking}
-steekproef <- tar_read(steekproef_final_600, store = targets_store) %>%
-  filter(Naam == "Leemstreek") %>%
+steekproef <- tar_read(steekproef_final, store = targets_store) %>%
+  reduce(rbind) %>%
+  filter(Naam == "Kempen") %>%
   mutate(openheid_sbp = paste(
     openheid_klasse,
     ifelse(is_sbp,
@@ -1271,10 +1108,9 @@ Bijvoorbeeld: Als een nieuw punt voor meer dan 50 % overlapt met een bestaand pu
 
 We bekijken overlap met de pilootstudie.
 Er is niet veel overlap.
-We vervangen alle telpunten uit de steekproef van de leemstreek door reeds bestaande punten indien ze voor minstens 50 % overlappen en ze tot hetzelfde stratum behoren.
+We vervangen alle telpunten uit de steekproef van de Kempen door reeds bestaande punten indien ze voor minstens 50 % overlappen en ze tot hetzelfde stratum behoren.
 Indien er meerdere bestaande punten overlappen, nemen we het bestaande punt dat het meest overlapt.
 Omdat we nu een nieuwe laag van SBP gebruiken, moeten we dit stratum opnieuw berekenen voor de bestaande punten.
-
 
 ```{r}
 # inlezen bestaande punten
@@ -1313,8 +1149,9 @@ oude_cirkels_sbp <- oude_punten_sbp %>%
   st_buffer(300)
 
 # buffer nieuwe punten
-steekproef_raw <- tar_read(steekproef_thinned_600, store = targets_store) %>%
-  filter(Naam == "Leemstreek") %>%
+steekproef_raw <- tar_read(steekproef_thinned, store = targets_store) %>%
+  reduce(rbind) %>%
+  filter(Naam == "Kempen") %>%
   mutate(openheid_sbp = paste(
     openheid_klasse,
     ifelse(is_sbp,
@@ -1323,15 +1160,25 @@ steekproef_raw <- tar_read(steekproef_thinned_600, store = targets_store) %>%
     )
   ))
 
-cirkels_leemstreek <- steekproef_raw %>%
+cirkels_kempen <- steekproef_raw %>%
   st_buffer(300)
 ```
 
-Er zijn een aantal punten die overlappen voor minstens 50 % en tot hetzelfde stratum behoren.
-
 ```{r}
+# visualisatie
+mapview(oude_cirkels_sbp,
+  col.regions = "red", layer = "bestaande punten"
+) +
+  mapview(cirkels_kempen,
+    layer = "nieuwe punten"
+  )
+```
+
+Er zijn geen punten die overlappen voor minstens 50 % en tot hetzelfde stratum behoren. Daarom voeren we onderstaande code niet uit.
+
+```{r, eval=FALSE}
 # welke punten overlappen minstens 50 %
-intersect <- st_intersection(oude_cirkels_sbp, cirkels_leemstreek) %>%
+intersect <- st_intersection(oude_cirkels_sbp, cirkels_kempen) %>%
   mutate(intersect_area = st_area(.) %>%
            units::drop_units()) %>%
   filter(
@@ -1352,19 +1199,7 @@ intersect %>%
   )
 ```
 
-```{r}
-# visualisatie
-mapview(oude_cirkels_sbp %>% filter(plotnaam %in% intersect$plotnaam),
-  col.regions = "red", layer = "bestaande punten"
-) +
-  mapview(cirkels_leemstreek %>% filter(pointid %in% intersect$pointid),
-    layer = "nieuwe punten"
-  )
-```
-
-In dit geval zal er wat overlap zijn met de punten uit Oostelijke leemstreek. 
-
-```{r}
+```{r, eval=FALSE}
 oude_punten_sbp %>%
   st_drop_geometry() %>%
   mutate(overlap = ifelse(plotnaam %in% intersect$plotnaam, "yes", "no")) %>%
