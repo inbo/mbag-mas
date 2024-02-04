@@ -1,5 +1,5 @@
 path_to_existing <- function(file) {
-  file.path(mbag_dir, "data", "processed", file)
+  file.path(mbag_dir, "data", "SOVON", file)
 }
 
 steekproef_uitdunnen <- function(
