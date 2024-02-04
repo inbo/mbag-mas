@@ -64,16 +64,32 @@ thin_sample <- function(sample, thin_dist) {
 
 replace_by_existing <- function(sample,
                                 existing_points,
+                                id_existing_points,
+                                gebied,
                                 overlap_prop = 0.5,
                                 sbp_file) {
+  # Determine where HOL and OL is in gebied
+  ol <- selectie_openheid(
+    gebied = gebied,
+    ol_strata = c("OL"))
+
+  hol <- selectie_openheid(
+    gebied = gebied,
+    ol_strata = c("HOL"))
   # Recalculate sbp stratum existing points
   old_points <- existing_points %>%
+    filter(st_within(., perimeters_data, sparse = FALSE)) %>%
     mutate(is_sbp = st_intersects(.,
                                   st_union(sbp_file),
                                   sparse = FALSE) %>%
              as.logical()
     ) %>%
-    mutate(openheid_klasse = ifelse(grepl("HOL", stratum), "HOL", "OL")) %>%
+    mutate(openheid_klasse = ifelse(st_within(., hol, sparse = FALSE),
+                                    "HOL",
+                                    ifelse(st_within(., ol, sparse = FALSE),
+                                           "OL",
+                                           NA))) %>%
+    rename(definitief_punt = id_existing_points) %>%
     select(definitief_punt, openheid_klasse, is_sbp)
 
   # Add buffers
