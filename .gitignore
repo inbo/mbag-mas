@@ -19,6 +19,8 @@
 *.shx
 *.xls*
 *_files
+*.tex
+*.pdf
 docs
 libs
 renv/library
