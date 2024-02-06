@@ -1,6 +1,6 @@
 ---
-title: "Uitrol van een meetnet agrarische soorten in Vlaanderen"
-subtitle: Opvolging akkervogels binnen het Meetnet Biodiversiteit in Agrarisch Gebied (MBAG)
+title: "Uitrol van een Meetnet Agrarische Soorten in Vlaanderen"
+subtitle: "Achtergronddocument Meetnet Agrarische Soorten in kader van het Meetnet Biodiversiteit in Agrarisch Gebied (MBAG project)"
 author:
   - name:
       given: "Ward"
@@ -36,6 +36,7 @@ reviewer:
     affiliation: "Instituut voor Natuur- en Bosonderzoek (INBO)"
 lang: nl
 style: INBO
+year: 2024
 floatbarrier: subsubsection
 keywords: "meetnet; monitoring; akkervogels; landbouw; Vlaanderen"
 community: "inbo"
@@ -55,22 +56,23 @@ output:
   bookdown::dontrun: default
 ---
 
-# Dankwoord {-}
+# Dankwoord {.unnumbered}
 
 De tekst voor het optionele dankwoord.
 
-# Voorwoord {-}
+# Voorwoord {.unnumbered}
 
 De tekst voor het optionele voorwoord.
 
-# Samenvatting {-}
+# Samenvatting {.unnumbered}
 
 <!-- description: start -->
+
 De tekst voor de verplichte samenvatting.
 Hou het [Heerlijk Helder](https://overheid.vlaanderen.be/communicatie/heerlijk-helder).
 <!-- description: end -->
 
-# Aanbevelingen voor beheer en/of beleid {-}
+# Aanbevelingen voor beheer en/of beleid {.unnumbered}
 
 Verplicht wanneer relevant.
 
