@@ -23,3 +23,7 @@ spelling:
   - LICENSE.md
   - source/targets
   - source/R
+  - output/mas_uitrol_vlaanderen/LICENSE.md
+  other:
+    en-GB:
+    - output/mas_uitrol_vlaanderen/00_abstract.Rmd
