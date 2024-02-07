@@ -78,18 +78,19 @@ replace_by_existing <- function(sample,
     ol_strata = c("HOL"))
   # Recalculate sbp stratum existing points
   old_points <- existing_points %>%
-    filter(st_within(., perimeters_data, sparse = FALSE)) %>%
+    st_transform(crs = 31370) %>%
+    st_filter(gebied) %>%
     mutate(is_sbp = st_intersects(.,
                                   st_union(sbp_file),
                                   sparse = FALSE) %>%
              as.logical()
     ) %>%
-    mutate(openheid_klasse = ifelse(st_within(., hol, sparse = FALSE),
+    mutate(openheid_klasse = ifelse(st_within(., hol) %>% as.logical(),
                                     "HOL",
-                                    ifelse(st_within(., ol, sparse = FALSE),
+                                    ifelse(st_within(., ol) %>% as.logical(),
                                            "OL",
                                            NA))) %>%
-    rename(definitief_punt = id_existing_points) %>%
+    mutate(definitief_punt = as.character(id_existing_points)) %>%
     select(definitief_punt, openheid_klasse, is_sbp)
 
   # Add buffers
