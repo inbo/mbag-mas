@@ -54,7 +54,7 @@ Dat bestand kan je openen met de volgende code:
 
 ## Perimeter bepalen
 
-Om de perimeter te bepalen voer je onderstaande code uit in mas_steekproef_zn_lm.Rproj, na laden van globals in targets_steekproef_zn_lm.Rmd.
+Om de perimeter te bepalen voer je onderstaande code uit in mas_steekproef_zn_lm.Rproj, na laden van globals in targets_steekproef_zL_lm_za_kp_po.Rmd.
 
 De code maakt een intersectie tussen landbouwstreek Zandstreek (heel België) en contour Vlaanderen en voegt deze toe  aan file "zandleemstreek_perimeters.gpkg".
 
