@@ -68,7 +68,7 @@ replace_by_existing <- function(sample,
                                 gebied,
                                 overlap_prop = 0.5,
                                 sbp_file) {
-  stop(sf::st_crs(existing_points)$input == "EPSG:28992")
+  stopifnot(sf::st_crs(existing_points)$input != "EPSG:28992")
   # Determine where HOL and OL is in gebied
   ol <- selectie_openheid(
     gebied = gebied,
