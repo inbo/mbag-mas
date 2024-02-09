@@ -91,7 +91,7 @@ replace_by_existing <- function(sample,
                                     ifelse(st_within(., ol) %>% as.logical(),
                                            "OL",
                                            NA))) %>%
-    mutate(definitief_punt = as.character(id_existing_points)) %>%
+    rename(definitief_punt = id_existing_points) %>%
     select(definitief_punt, openheid_klasse, is_sbp)
 
   # Add buffers
@@ -122,7 +122,8 @@ replace_by_existing <- function(sample,
     inner_join(intersect, by = "definitief_punt") %>%
     select(definitief_punt, pointid) %>%
     inner_join(sample %>% st_drop_geometry(), by = "pointid") %>%
-    select(pointid = definitief_punt, all_of(columns))
+    select(pointid = definitief_punt, all_of(columns)) %>%
+    mutate(pointid = as.character(pointid))
 
   # Add to sample
   sample_out <- sample %>%
