@@ -889,7 +889,9 @@ allocatie <- tar_read(allocatie_df, store = targets_store) %>%
   ))
 
 allocatie %>%
-  mutate(steekproeftrekking = round(popsize / 20)) %>%
+  mutate(steekproeftrekking = ifelse(popsize < 2000,
+                                     round(popsize / 5),
+                                     round(popsize / 20))) %>%
   select(-c(openheid_sbp, targetsize, excess)) %>%
   kable(digits = 3)
 ```
@@ -1098,52 +1100,43 @@ Bovendien zijn de data en de metadata in een standaard en open formaat, waardoor
 
 ## Overlap met bestaande telpunten
 
-We willen een lijst met alle bestaande punten en hun historie (vanaf wanneer beginnen tellen).
-Zo kunnen we een regel verzinnen om bestaande telpunten over te nemen bij een nieuwe trekking.
-Bijvoorbeeld: Als een nieuw punt voor meer dan 50 % overlapt met een bestaand punt en deze behoort tot hetzelfde stratum, dan wordt het nieuwe punt vervangen door het bestaande punt.
-
-> Opvragen bij SOVON?
-
-We bekijken overlap met de pilootstudie.
-Er is niet veel overlap.
 We vervangen alle telpunten uit de steekproef van de Zandstreek door reeds bestaande punten indien ze voor minstens 50 % overlappen en ze tot hetzelfde stratum behoren.
 Indien er meerdere bestaande punten overlappen, nemen we het bestaande punt dat het meest overlapt.
 Omdat we nu een nieuwe laag van SBP gebruiken, moeten we dit stratum opnieuw berekenen voor de bestaande punten.
 
 ```{r}
+ol <- selectie_openheid(
+  gebied = perimeters_data,
+  ol_strata = c("OL"))
+
+hol <- selectie_openheid(
+  gebied = perimeters_data,
+  ol_strata = c("HOL"))
+
 # inlezen bestaande punten
-oude_cirkels <- read_csv(here(
+oude_cirkels <- read_sf(here(
   "data",
-  "mas_piloot",
-  "steekproef_piloot_avimap.csv"
-)) %>%
-  select(
-    plotnaam = definitief_punt,
-    regio,
-    stratum,
-    X, Y
+  "SOVON",
+  "avimap_601_0_MAS_Vlaanderen_telpunten_xy.shp"
+)) %>% 
+  st_transform(crs = 31370) %>%
+  st_filter(perimeters_data) %>%
+  mutate(is_sbp = st_intersects(.,
+                                st_union(sbp_akkervogels),
+                                sparse = FALSE) %>%
+           as.logical()
   ) %>%
-  mutate(
-    openheid_klasse = ifelse(grepl("HOL", stratum), "HOL", "OL"),
-    sbp = ifelse(grepl("binnen", stratum), "binnen", "buiten"),
-    stratum = gsub("L\\s{1}", "L\\\n", stratum),
-    jaar = 2022L
-  ) %>%
-  select(-c(stratum, sbp)) %>%
-  st_as_sf(coords = c("X", "Y"), crs = 31370)
+  mutate(openheid_klasse = ifelse(st_within(geometry, hol, sparse = FALSE),
+                                  "HOL",
+                                  ifelse(st_within(geometry, ol, sparse = FALSE),
+                                         "OL",
+                                         NA))) %>%
+  rename(definitief_punt = id) %>%
+  select(definitief_punt, openheid_klasse, is_sbp) %>% 
+  mutate(sbp = ifelse(is_sbp == TRUE, "binnen", "buiten"),
+         openheid_sbp = paste(openheid_klasse, sbp, "plan", sep = " "))
 
-# herbereken sbp
-oude_punten_sbp <- add_stratum_sbp(
-  punten_sf = oude_cirkels,
-  sbp = sbp_akkervogels
-) %>%
-  mutate(
-    sbp = ifelse(is_sbp == TRUE, "binnen", "buiten"),
-    openheid_sbp = paste(openheid_klasse, sbp, "plan", sep = " ")
-  ) %>%
-  select(-sbp)
-
-oude_cirkels_sbp <- oude_punten_sbp %>%
+oude_cirkels_buffer <- oude_cirkels %>%
   st_buffer(300)
 
 # buffer nieuwe punten
@@ -1158,32 +1151,32 @@ steekproef_raw <- tar_read(steekproef_thinned, store = targets_store) %>%
     )
   ))
 
-cirkels_Zandstreek <- steekproef_raw %>%
+cirkels_zandstreek <- steekproef_raw %>%
   st_buffer(300)
 ```
 
 ```{r}
 # visualisatie
-mapview(oude_cirkels_sbp,
+mapview(oude_cirkels_buffer,
   col.regions = "red", layer = "bestaande punten"
 ) +
-  mapview(cirkels_Zandstreek,
+  mapview(cirkels_zandstreek,
     layer = "nieuwe punten"
   )
 ```
 
-Er zijn geen punten die overlappen voor minstens 50 % en tot hetzelfde stratum behoren. Daarom voeren we onderstaande code niet uit.
+Er zijn een aantal punten die overlappen voor minstens 50 % en tot hetzelfde stratum behoren.
 
-```{r, eval=FALSE}
+```{r}
 # welke punten overlappen minstens 50 %
-intersect <- st_intersection(oude_cirkels_sbp, cirkels_Zandstreek) %>%
+intersect <- st_intersection(oude_cirkels_buffer, cirkels_zandstreek) %>%
   mutate(intersect_area = st_area(.) %>%
            units::drop_units()) %>%
   filter(
     intersect_area >= 0.5 * 300 * 300 * pi, # 50 %
     openheid_sbp == openheid_sbp.1
   ) %>% # zelfde stratum
-  select(plotnaam, pointid, intersect_area) %>%
+  select(definitief_punt, pointid, intersect_area) %>%
   st_drop_geometry() %>%
   group_by(pointid) %>%
   filter(intersect_area == max(intersect_area)) %>%
@@ -1196,15 +1189,6 @@ intersect %>%
     digits = 2
   )
 ```
-
-```{r, eval=FALSE}
-oude_punten_sbp %>%
-  st_drop_geometry() %>%
-  mutate(overlap = ifelse(plotnaam %in% intersect$plotnaam, "yes", "no")) %>%
-  count(regio, overlap) %>%
-  kable()
-```
-
 
 ## Output als KML
 
