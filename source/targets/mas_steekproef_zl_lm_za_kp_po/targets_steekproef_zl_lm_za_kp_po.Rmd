@@ -110,7 +110,7 @@ tar_option_set(packages = c("dplyr",
                workspace_on_error = TRUE)
 
 target_dir <- rprojroot::find_root_file(
-    "source", "targets", "mas_steekproef_zn_lm",
+    "source", "targets", "mas_steekproef_zl_lm_za_kp_po",
     criterion = rprojroot::is_git_root)
 mbag_dir <- rprojroot::find_root_file(
     criterion = rprojroot::is_git_root)
@@ -179,13 +179,13 @@ list(
   ),
   tarchetypes::tar_file(
     existing_file,
-    path_to_existing(file = "steekproef_piloot_avimap.geojson")
+    path_to_existing(file = "avimap_601_0_MAS_Vlaanderen_telpunten_xy.shp")
   ),
   tar_target(
     existing_data,
     st_read(existing_file)
-  )
 )
+  )
 ```
 
 ```{targets steekproefkader}
@@ -418,6 +418,8 @@ list(
     replace_by_existing(
       sample = steekproef_thinned,
       existing_points = existing_data,
+      id_existing_points = as.name("id"),
+      gebied = perimeters_data,
       overlap_prop = 0.5,
       sbp_file = do.call(rbind.data.frame, sbp_akkervogels)
       ),

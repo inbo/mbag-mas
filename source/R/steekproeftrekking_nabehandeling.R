@@ -1,5 +1,5 @@
 path_to_existing <- function(file) {
-  file.path(mbag_dir, "data", "processed", file)
+  file.path(mbag_dir, "data", "SOVON", file)
 }
 
 steekproef_uitdunnen <- function(
@@ -64,16 +64,34 @@ thin_sample <- function(sample, thin_dist) {
 
 replace_by_existing <- function(sample,
                                 existing_points,
+                                id_existing_points,
+                                gebied,
                                 overlap_prop = 0.5,
                                 sbp_file) {
+  stopifnot(sf::st_crs(existing_points)$input != "EPSG:28992")
+  # Determine where HOL and OL is in gebied
+  ol <- selectie_openheid(
+    gebied = gebied,
+    ol_strata = c("OL"))
+
+  hol <- selectie_openheid(
+    gebied = gebied,
+    ol_strata = c("HOL"))
   # Recalculate sbp stratum existing points
   old_points <- existing_points %>%
+    st_transform(crs = 31370) %>%
+    st_filter(gebied) %>%
     mutate(is_sbp = st_intersects(.,
                                   st_union(sbp_file),
                                   sparse = FALSE) %>%
              as.logical()
     ) %>%
-    mutate(openheid_klasse = ifelse(grepl("HOL", stratum), "HOL", "OL")) %>%
+    mutate(openheid_klasse = ifelse(st_within(., hol) %>% as.logical(),
+                                    "HOL",
+                                    ifelse(st_within(., ol) %>% as.logical(),
+                                           "OL",
+                                           NA))) %>%
+    rename(definitief_punt = id_existing_points) %>%
     select(definitief_punt, openheid_klasse, is_sbp)
 
   # Add buffers
@@ -104,7 +122,8 @@ replace_by_existing <- function(sample,
     inner_join(intersect, by = "definitief_punt") %>%
     select(definitief_punt, pointid) %>%
     inner_join(sample %>% st_drop_geometry(), by = "pointid") %>%
-    select(pointid = definitief_punt, all_of(columns))
+    select(pointid = definitief_punt, all_of(columns)) %>%
+    mutate(pointid = as.character(pointid))
 
   # Add to sample
   sample_out <- sample %>%

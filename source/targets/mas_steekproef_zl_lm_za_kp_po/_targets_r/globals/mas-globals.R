@@ -17,7 +17,7 @@ tar_option_set(packages = c("dplyr",
                workspace_on_error = TRUE)
 
 target_dir <- rprojroot::find_root_file(
-    "source", "targets", "mas_steekproef_zn_lm",
+    "source", "targets", "mas_steekproef_zl_lm_za_kp_po",
     criterion = rprojroot::is_git_root)
 mbag_dir <- rprojroot::find_root_file(
     criterion = rprojroot::is_git_root)

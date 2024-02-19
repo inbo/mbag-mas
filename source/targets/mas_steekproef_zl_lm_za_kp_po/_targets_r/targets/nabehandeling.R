@@ -13,6 +13,8 @@ list(
     replace_by_existing(
       sample = steekproef_thinned,
       existing_points = existing_data,
+      id_existing_points = as.name("id"),
+      gebied = perimeters_data,
       overlap_prop = 0.5,
       sbp_file = do.call(rbind.data.frame, sbp_akkervogels)
       ),
