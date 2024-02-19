@@ -866,7 +866,7 @@ Het maximaal aantal plots die binnen de OL, HOL perimeter kunnen gelegd worden i
 st_area(selectie_openheid_klasses) / units::set_units(300 * 300 * pi, m^2)
 ```
 
-We merkten echter dat een maximale trekking niet voor een goede spatiale spreiding zorgt omdat het algoritme niet genoeg vrijheid krijgt. Daarom besluiten we uiteindelijk om 1/20ste (5 %) van het aantal elementen in het steekproefkader te nemen per stratum.
+We merkten echter dat een maximale trekking niet voor een goede spatiale spreiding zorgt omdat het algoritme niet genoeg vrijheid krijgt. Daarom besluiten we uiteindelijk om 1/20ste (5 %) van het aantal elementen in het steekproefkader te nemen per stratum. Indien er minder dan 2000 punten in een stratum zijn nemen we 1/5de (20%) om ervoor te zorgen dat we kunnen vergelijken tussen de verschillende strata.
 Dit is niet de finale steekproef, maar een (veel) grotere steekproef waaruit later het gewenste aantal telpunten wordt geselecteerd.
 Het algoritme kent een volgorde toe bij de steekproeftrekking en het is aan de hand van deze volgorde dat het gewenste aantal telpunten wordt geselecteerd.
 Dit heeft als eigenschap dat deze set ook (ruimtelijk) gebalanceerd is en een goede spreiding vertoont.
@@ -934,9 +934,6 @@ steekproef[] %>%
   mapview(perimeters_data, color = "red", alpha.regions = 0, legend = FALSE)
 ```
 
-De meest open landschappen zitten volledig binnen de perimeter van het SBP plan.
-De vergelijking van HOL binnen vs. buiten plan en OL binnen vs. buiten plan is dus bemoeilijkt omdat de gemiddelde openheid systematisch hoger zal liggen binnen de SBP perimeter.
-
 ```{r}
 first_samples <- function(steekproef_df, min_n, multiplicatie) {
   factor_n <- min_n * multiplicatie
@@ -970,14 +967,12 @@ balansvergelijking <- do.call(rbind, lapply(min_n_per_stratum, first_samples,
     "buiten sbp"
   )) %>%
   cbind(st_coordinates(.)) %>%
-  mutate(fillvar = factor(puntenset, levels = c(
-    paste("steekproef",
-      c(20, 50, 100, 200),
-      "per stratum",
-      sep = " "
-    ),
-    "volledige steekproefkader"
-  )))
+  mutate(fillvar = factor(puntenset,
+                          levels = c(paste("eerste",
+                                           c(20, 50, 100, 200),
+                                           "per stratum",
+                                           sep = " "), 
+                                     "volledige steekproefkader")))
 
 balansvergelijking %>%
   st_drop_geometry() %>%
@@ -1001,7 +996,7 @@ balansvergelijking %>%
   theme(legend.title = element_blank())
 ```
 
-Een confounding probleem is dat HOL gemiddeld oostelijker gelegen is dan OL binnen en buiten de SBP perimeter. Ook lijken de SBP’s gemiddeld iets zuidelijker gelegen.
+Een confounding probleem is dat OL gemiddeld zuidelijker gelegen is dan OL binnen en buiten de SBP perimeter. Ook lijken de SBP’s gemiddeld iets noordelijker gelegen.
 
 ```{r}
 balansvergelijking %>%
@@ -1009,6 +1004,18 @@ balansvergelijking %>%
   geom_boxplot(aes(
     x = sbp_akkervogels,
     y = X,
+    fill = fillvar
+  )) +
+  facet_grid(Naam ~ openheid_klasse, scales = "free") +
+  theme(legend.title = element_blank())
+```
+
+```{r}
+balansvergelijking %>%
+  ggplot() +
+  geom_boxplot(aes(
+    x = sbp_akkervogels,
+    y = Y,
     fill = fillvar
   )) +
   facet_grid(Naam ~ openheid_klasse, scales = "free") +
@@ -1033,7 +1040,7 @@ balansvergelijking %>%
   theme(legend.title = element_blank())
 ```
 
-We zien dat de steekproef vanaf 50 punten per stratum een goede afspiegeling is van de volledige populatie (boxplots voor steekproef eerste punten en volledig steekproefkader zijn zeer gelijkend).
+We zien dat de steekproef vanaf 50 punten per stratum een goede afspiegeling is van de volledige populatie (boxplots voor steekproef eerste 50 punten en volledig steekproefkader zijn zeer gelijkend).
 
 
 ## Visualisatie steekproef
@@ -1155,16 +1162,6 @@ cirkels_zandstreek <- steekproef_raw %>%
   st_buffer(300)
 ```
 
-```{r}
-# visualisatie
-mapview(oude_cirkels_buffer,
-  col.regions = "red", layer = "bestaande punten"
-) +
-  mapview(cirkels_zandstreek,
-    layer = "nieuwe punten"
-  )
-```
-
 Er zijn een aantal punten die overlappen voor minstens 50 % en tot hetzelfde stratum behoren.
 
 ```{r}
@@ -1190,6 +1187,15 @@ intersect %>%
   )
 ```
 
+```{r}
+# visualisatie
+mapview(oude_cirkels_buffer %>% filter(definitief_punt %in% intersect$definitief_punt),
+  col.regions = "red", layer = "bestaande punten"
+) +
+  mapview(cirkels_zandstreek %>% filter(pointid %in% intersect$pointid),
+    layer = "nieuwe punten"
+  )
+```
 ## Output als KML
 
 We nemen een steekproef van 50 cirkels per stratum (eerste set) waarbij we ook de volgende 50 punten per stratum includeren voor als er een punt niet zou kunnen geteld worden in het veld (reserve set).
