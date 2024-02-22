@@ -16,10 +16,9 @@ Ten slotte bespreken we de overige, kleine streken (Duinen, Weidestreek) apart i
 We overlopen volgende stappen:
 
 -   Afbakening van het steekproefkader
--   Stratificatie
--   Steekproefgrootte en allocatie van de totale steekproefgrootte over de strata
--   De steekproeftrekking
--   Overlap met bestaande telpunten
+-   Bepalen stratificatievariabelen en steekproeftrekking
+-   Overlap met bestaande telpunten en manuele controle
+-   Verzekering reproduceerbaarheid en traceerbaarheid
 
 ### Afbakening steekproefkader {#mas-steekproefkader}
 
@@ -147,6 +146,13 @@ Vervolgens hebben we dit netwerk van wegen omgevormd tot een puntennetwerk (Fig.
 -   Daarna worden punten die op minder dan 40 m van elkaar liggen ruimtelijk gegroepeerd (dit gebeurt wanneer verschillende paden elkaar kruisen of op korte afstand parallel aan elkaar liggen) en uit elk van deze clusters wordt één punt overgehouden
 -   Potentiële telpunten moeten op minstens 300 m van de grens (perimeter) gelegen zijn
 
+```{=tex}
+\begin{figure}
+  \makebox[\textwidth][c]{\includegraphics[width=1.1\textwidth]{media/steekproefkader_mas/mas_zandleem_afbakening.png}}
+  \caption{Methodiek voor de afbakening van het steekproefkader voor de uitrol van MAS Vlaanderen, gevisualiseerd voor een kleine oppervlakte in de Zandleemstreek (xmin = 150000, xmax = 177000, ymin = 160000, ymax = 180000). \textbf{A.} Selectie van open en halfopen landschap binnen de perimeter (rood). \textbf{B.} Exclusie van landgebruiken op basis van OpenStreetMap data (groen). \textbf{C.} Selectie van paden en wegen (blauw). \textbf{D.} Omvorming van wegennetwerk tot puntennetwerk.}
+  \label{fig:steekproef-afbakening}
+\end{figure}
+```
 **5. Bijkomend exclusiecriterium op basis van landgebruik**
 
 Deze lijst van potentiële telpunten is nog steeds een te ruime set van punten die nog onvoldoende goed overlapt met onze eigenlijke doelpopulatie.
@@ -174,23 +180,18 @@ Hierbij wordt gebruik gemaakt van het DSM (digitaal oppervlakte model - DHMV II 
 De code is op basis van de functie `vvi_from_sf()` in de GVI package v1.1 [@GVI-package].
 We verwijderen telpunten waar de CVVI kleiner is dan 0.10.
 
-```{=tex}
-\begin{figure}
-  \makebox[\textwidth][c]{\includegraphics[width=1.1\textwidth]{media/steekproefkader_mas/mas_zandleem_afbakening.png}}
-  \caption{Methodiek voor de afbakening van het steekproefkader voor de uitrol van MAS Vlaanderen, gevisualiseerd voor een kleine oppervlakte in de Zandleemstreek (xmin = 150000, xmax = 177000, ymin = 160000, ymax = 180000). \textbf{A.} Selectie van open en halfopen landschap binnen de perimeter (rood). \textbf{B.} Exclusie van landgebruiken op basis van OpenStreetMap data (groen). \textbf{C.} Selectie van paden en wegen (blauw). \textbf{D.} Omvorming van wegennetwerk tot puntennetwerk.}
-  \label{fig:steekproef-afbakening}
-\end{figure}
-```
-```{r zichtbaarheid, out.width = "80%", fig.cap = "Voorbeeld van CVVI berekening o.b.v. DSM en DTM."}
+```{r zichtbaarheid, out.width = "80%", fig.cap = "Voorbeeld van CVVI berekening o.b.v. DSM en DTM voor een telpunt in de Leemstreek."}
 include_graphics(file.path("media", "visibility",
                            "voorbeeld_zichtbaarheid.pdf"))
 ```
 
-### Stratificatie-variabelen en andere hulpvariabelen {#mas-stratificatie}
+### Stratificatievariabelen en steekproeftrekking {#mas-stratificatie}
 
-### Steekproefgrootte, allocatie steekproefgrootte over strata en steekproeftrekking {#mas-steekproefgrootte}
+\textcolor{red}{...}
 
-### Manuele controle {#manuele-controle}
+### Nabehandeling en manuele controle {#nabehandeling}
+
+\textcolor{red}{overlap met bestaande ...}
 
 De steekproef werd geëxporteerd naar een *KML*-bestand en gedeeld als een kaart in Google Maps met de tellers.
 Na manuele controle van de punten op bereikbaarheid, zichtbaarheid, overlap met andere punten, werden sommige punten verwijderd en vervangen door een ander punt (volgende in de rangorde).
