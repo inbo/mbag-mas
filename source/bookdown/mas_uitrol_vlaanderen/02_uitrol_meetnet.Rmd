@@ -138,6 +138,14 @@ tibble(
 
 ```
 
+**4. Omvorming van wegennetwerk tot puntennetwerk.**
+
+Vervolgens hebben we dit netwerk van wegen omgevormd tot een puntennetwerk (Fig. \@ref(fig:steekproef-afbakening)D), waarbij elk punt een potentieel telpunt kan zijn:
+
+-   Langs alle paden worden op regelmatige afstanden van 50 m punten gelegd[^02_uitrol_meetnet-2]
+-   Daarna worden punten die op minder dan 40 m van elkaar liggen ruimtelijk gegroepeerd (dit gebeurt wanneer verschillende paden elkaar kruisen of op korte afstand parallel aan elkaar liggen) en uit elk van deze clusters wordt één punt overgehouden
+-   Potentiële telpunten moeten op minstens 300 m van de grens (perimeter) gelegen zijn
+
 ```{=tex}
 \begin{figure}
   \makebox[\textwidth][c]{\includegraphics[width=1.1\textwidth]{media/steekproefkader_mas/mas_zandleem_afbakening.png}}
@@ -180,3 +188,5 @@ Tellers konden ook punten claimen door dit aan te geven in de Google Maps kaart.
 [^02_uitrol_meetnet-1]: Met uitzondering van de Duinen en de Weidestreek.
     Deze worden appart besproken in Sectie \@ref(overige-streken).
 
+[^02_uitrol_meetnet-2]: Bij de steekproeftrekking wordt een methode gebruikt die zal vermijden dat telpunten en hun telcirkels overlappen.
+    Het kan in deze fase dus geen kwaad dat potentiële telpunten op een afstand van minder dan 300 m van elkaar gelegen zijn.
