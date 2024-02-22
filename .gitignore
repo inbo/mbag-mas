@@ -21,6 +21,7 @@
 *_files
 *.tex
 *.pdf
+*.png
 docs
 libs
 renv/library
