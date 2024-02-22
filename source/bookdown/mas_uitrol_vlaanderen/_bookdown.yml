@@ -1,5 +1,5 @@
 book_filename: "langeraert_et_al_mas_uitrol_vlaanderen.Rmd"
-output_dir: "../../output/rapporten"
+output_dir: "../../../output/rapporten"
 delete_merged_file: TRUE
 language:
   label:
