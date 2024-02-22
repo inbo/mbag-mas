@@ -30,7 +30,7 @@ Voor de afbakening van het steekproefkader, starten we met een intersectie van d
 We bekomen dus polygonen voor elke landbouwstreek in Vlaanderen[^02_uitrol_meetnet-1].
 We moeten nu echter het steekproefkader verder verfijnen.
 Dit doen we in zes opeenvolgende stappen.
-De uiteindelijk bekomen lijst van an potentiële telpuntlocaties vormt het steekproefkader van het MAS in Vlaanderen.
+De uiteindelijk bekomen lijst van potentiële telpuntlocaties vormt het steekproefkader van het MAS in Vlaanderen.
 
 **1. Selectie open en halfopen landschap**
 
@@ -207,7 +207,7 @@ Tellers konden ook punten claimen door dit aan te geven in de Google Maps kaart.
 
 -   2023: zandleemstreek en leemstreek
     -   korte recap: zie piloot
-    -   overzicht beschrijvende statistiek: volgend hfst
+    -   overzicht beschrijvende statistiek: volgend hoofdstuk
 
 ### Uitbreiding tot een Vlaams meetnet {#uitbreiding-meetnet}
 
@@ -220,7 +220,7 @@ Tellers konden ook punten claimen door dit aan te geven in de Google Maps kaart.
 -   Bespreking Voeren en Duinen
 
 [^02_uitrol_meetnet-1]: Met uitzondering van de Duinen en de Weidestreek.
-    Deze worden appart besproken in Sectie \@ref(overige-streken).
+    Deze worden apart besproken in Sectie \@ref(overige-streken).
 
 [^02_uitrol_meetnet-2]: Bij de steekproeftrekking wordt een methode gebruikt die zal vermijden dat telpunten en hun telcirkels overlappen.
     Het kan in deze fase dus geen kwaad dat potentiële telpunten op een afstand van minder dan 300 m van elkaar gelegen zijn.
