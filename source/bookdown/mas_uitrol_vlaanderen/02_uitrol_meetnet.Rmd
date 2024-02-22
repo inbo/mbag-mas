@@ -30,7 +30,8 @@ In het geval van het MAS Vlaanderen maken we een lijst aan van potentiële telpu
 Voor de afbakening van het steekproefkader, starten we met een intersectie van de landbouwstreken van België met de contour van Vlaanderen.
 We bekomen dus polygonen voor elke landbouwstreek in Vlaanderen[^02_uitrol_meetnet-1].
 We moeten nu echter het steekproefkader verder verfijnen.
-Dit doen we in verschillende opeenvolgende stappen.
+Dit doen we in zes opeenvolgende stappen.
+De uiteindelijk bekomen lijst van an potentiële telpuntlocaties vormt het steekproefkader van het MAS in Vlaanderen.
 
 **1. Selectie open en halfopen landschap**
 
@@ -138,13 +139,29 @@ tibble(
 
 ```
 
-**4. Omvorming van wegennetwerk tot puntennetwerk.**
+**4. Omvorming van wegennetwerk tot puntennetwerk**
 
 Vervolgens hebben we dit netwerk van wegen omgevormd tot een puntennetwerk (Fig. \@ref(fig:steekproef-afbakening)D), waarbij elk punt een potentieel telpunt kan zijn:
 
 -   Langs alle paden worden op regelmatige afstanden van 50 m punten gelegd[^02_uitrol_meetnet-2]
 -   Daarna worden punten die op minder dan 40 m van elkaar liggen ruimtelijk gegroepeerd (dit gebeurt wanneer verschillende paden elkaar kruisen of op korte afstand parallel aan elkaar liggen) en uit elk van deze clusters wordt één punt overgehouden
 -   Potentiële telpunten moeten op minstens 300 m van de grens (perimeter) gelegen zijn
+
+**5. Bijkomend exclusiecriterium op basis van landgebruik**
+
+Deze lijst van potentiële telpunten is nog steeds een te ruime set van punten die nog onvoldoende goed overlapt met onze eigenlijke doelpopulatie.
+Daarom wordt nog een extra exclusiecriterium toegevoegd op basis van de VITO 2019 landgebruikskaart [@poelmans2021].
+Deze landgebruikskaart geeft ons betere informatie om de oppervlaktes aan akker, grasland, bos en struikgewas in een straal van 300 m te bepalen rond elk van de potentiële telpunten op de voorlopige lijst.
+Deze straal komt overeen met de telcirkel uit het MAS telprotocol.
+We zijn enkel geïnteresseerd in potentiële telpunten waar de samenstelling van het landgebruik in een buffer van 300 m rond het punt voldoet aan volgende regel:
+
+<!-- spell-check: ignore:start -->
+
+-   Akker + Grasland \> 40% én Grasland + Bos + Struikgewas + Akker \> 50%
+
+<!-- spell-check: ignore:end -->
+
+Met deze regel slagen we er in om potentiële telpunten uit te sluiten die bijvoorbeeld te dicht bij bebouwing gelegen zijn.
 
 ```{=tex}
 \begin{figure}
