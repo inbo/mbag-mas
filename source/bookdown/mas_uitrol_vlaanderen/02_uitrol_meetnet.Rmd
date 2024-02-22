@@ -163,6 +163,17 @@ We zijn enkel geïnteresseerd in potentiële telpunten waar de samenstelling van
 
 Met deze regel slagen we er in om potentiële telpunten uit te sluiten die bijvoorbeeld te dicht bij bebouwing gelegen zijn.
 
+**6. Bijkomend exclusiecriterium op basis van zichtbaarheid**
+
+Uit het MAS pilootproject \textcolor{red}{[REF]} bleken er na de steekproeftrekking vooral problemen met zichtbaarheid omdat punten nog vielen in bossen, boomgaarden, holle wegen etc.
+Om de meest extreme gevallen weg te filteren worden punten met een te slechte zichtbaarheid verwijderd.
+We berekenen zichtbaarheid als de cumulatieve zichtbaarheidsindex (CVVI: cumulative viewshed visibility index) waarbij de waarnemer een bewegingsvrijheid heeft van 25 m rondom het telpunt (Fig. \@ref(fig:zichtbaarheid)).
+De zichtbaarheidsindex wordt berekend vanaf een set van locaties die 10 m van elkaar liggen in deze zone van bewegingsvrijheid en geeft de proportie aan van zichtbare rastercellen (resolutie 5 m) in de telcirkel met straal 300 m.
+De cumulatieve zichtbaarheidsindex is dan de proportie die zichtbaar is vanuit minstens één locatie binnen de zone van bewegingsvrijheid.
+Hierbij wordt gebruik gemaakt van het DSM (digitaal oppervlakte model - DHMV II Vlaanderen, @DSM) en het DTM (digitaal terrein model, @DTM) op 5 m resolutie.
+De code is op basis van de functie `vvi_from_sf()` in de GVI package v1.1 [@GVI-package].
+We verwijderen telpunten waar de CVVI kleiner is dan 0.10.
+
 ```{=tex}
 \begin{figure}
   \makebox[\textwidth][c]{\includegraphics[width=1.1\textwidth]{media/steekproefkader_mas/mas_zandleem_afbakening.png}}
@@ -170,6 +181,11 @@ Met deze regel slagen we er in om potentiële telpunten uit te sluiten die bijvo
   \label{fig:steekproef-afbakening}
 \end{figure}
 ```
+```{r zichtbaarheid, out.width = "80%", fig.cap = "Voorbeeld van CVVI berekening o.b.v. DSM en DTM."}
+include_graphics(file.path("media", "visibility",
+                           "voorbeeld_zichtbaarheid.pdf"))
+```
+
 ### Stratificatie-variabelen en andere hulpvariabelen {#mas-stratificatie}
 
 ### Steekproefgrootte, allocatie steekproefgrootte over strata en steekproeftrekking {#mas-steekproefgrootte}
