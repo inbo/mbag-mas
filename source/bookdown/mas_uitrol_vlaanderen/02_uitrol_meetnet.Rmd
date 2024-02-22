@@ -1,5 +1,16 @@
 # Een meetnet agrarische soorten in Vlaanderen {#uitrol-vlaanderen}
 
+De opbouw voor MAS Vlaanderen werd al grotendeels besproken in \textcolour{red}{[REF]}.
+Dit meetnet wordt opgebouwd op basis van de verschillende landbouwstreken in Vlaanderen (Fig. \@ref(fig:landbouwstreken)).
+
+```{r landbouwstreken, out.width = "100%", fig.cap = "Landbouwstreken in Vlaanderen"}
+include_graphics(file.path("media", "kaartjes", "landbouwstreken_vl.png"))
+```
+
+In dit hoofdstuk vatten we eerst samen hoe het meetnet is opgebouwd en de steekproeftrekking werd gedaan (Sectie \@ref{meetnet-ontwerp}).
+Daarna overlopen we welke stappen voor MAS Vlaanderen reeds werden gedaan (Zandleemstreek en Leemstreek, \textcolour{red}{[REF]}) en welke uitbreiding er in 2024 gepland is (Polders, Zandstreek, Kempen) (Sectie \@ref{mas-vlaanderen}).
+Ten slotte bespreken we de overige, kleine streken (Duinen, Weidestreek) apart in Sectie \@ref{overige-streken}.
+
 ## Ontwerp van de gegevensinzameling {#meetnet-ontwerp}
 
 We overlopen volgende stappen:
@@ -17,11 +28,16 @@ Een steekproefkader kan bijvoorbeeld een lijst zijn (bv. alle landbouwbedrijven 
 In het geval van het MAS pilootproject maken we een lijst aan van potentiële telpuntlocaties.
 
 Voor de afbakening van het steekproefkader, starten we met een intersectie van de landbouwstreken van België met de contour van Vlaanderen.
-Dit geeft ons een kaart van de landbouwstreken in Vlaanderen (Fig. \@ref(fig:landbouwstreken)).
 
-```{r landbouwstreken, out.width = "100%", fig.cap = "Landbouwstreken in Vlaanderen"}
-include_graphics(file.path("media", "kaartjes", "landbouwstreken_vl.png"))
-```
+We bekomen dus polygonen voor elke landbouwstreek in Vlaanderen.
+We moeten nu echter het steekproefkader verder verfijnen.
+Dit doen we in verschillende opeenvolgende stappen.
+
+**1. Selectie open en halfopen landschap**
+
+**2. Exclusie irrelevante landgebruiken**
+
+In eerste instantie doen we dit door *exclusie* van een aantal landgebruiken op basis van OpenStreetMap data [@openstreetmapcontributors2022] (Fig. \@ref(fig:steekproef-afbakening)A):
 
 ### Stratificatie-variabelen en andere hulpvariabelen {#mas-stratificatie}
 
@@ -37,7 +53,7 @@ Tellers konden ook punten claimen door dit aan te geven in de Google Maps kaart.
 
 ### Reproduceerbaarheid en traceerbaarheid {#git-mas}
 
-## Stand van zaken en uitbreiding MAS {#stand-van-zaken}
+## Stand van zaken en uitbreiding MAS {#mas-vlaanderen}
 
 ### Stand van zaken {#stand-van-zaken}
 
