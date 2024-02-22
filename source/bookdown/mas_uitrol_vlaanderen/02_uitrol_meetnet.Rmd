@@ -25,11 +25,10 @@ We overlopen volgende stappen:
 
 Een steekproefkader heeft de bedoeling om de statistische doelpopulatie die we willen onderzoeken zo goed mogelijk te benaderen.
 Een steekproefkader kan bijvoorbeeld een lijst zijn (bv. alle landbouwbedrijven in Vlaanderen) of het kan een ruimtelijke afbakening zijn (bv. de contour van Vlaanderen).
-In het geval van het MAS pilootproject maken we een lijst aan van potentiële telpuntlocaties.
+In het geval van het MAS Vlaanderen maken we een lijst aan van potentiële telpuntlocaties.
 
 Voor de afbakening van het steekproefkader, starten we met een intersectie van de landbouwstreken van België met de contour van Vlaanderen.
-
-We bekomen dus polygonen voor elke landbouwstreek in Vlaanderen.
+We bekomen dus polygonen voor elke landbouwstreek in Vlaanderen[^02_uitrol_meetnet-1].
 We moeten nu echter het steekproefkader verder verfijnen.
 Dit doen we in verschillende opeenvolgende stappen.
 
@@ -70,3 +69,6 @@ Tellers konden ook punten claimen door dit aan te geven in de Google Maps kaart.
 ## Overige landbouwstreken {#overige-streken}
 
 -   Bespreking Voeren en Duinen
+
+[^02_uitrol_meetnet-1]: Met uitzondering van de Duinen en de Weidestreek.
+    Deze worden appart besproken in Sectie \@ref{overige-streken}.
