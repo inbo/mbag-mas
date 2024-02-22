@@ -1,12 +1,51 @@
 # Een meetnet agrarische soorten in Vlaanderen {#uitrol-vlaanderen}
 
-## Stand van zaken MAS {#stand-van-zaken}
+## Ontwerp van de gegevensinzameling {#meetnet-ontwerp}
+
+We overlopen volgende stappen:
+
+-   Afbakening van het steekproefkader
+-   Stratificatie
+-   Steekproefgrootte en allocatie van de totale steekproefgrootte over de strata
+-   De steekproeftrekking
+-   Overlap met bestaande telpunten
+
+### Afbakening steekproefkader {#mas-steekproefkader}
+
+Een steekproefkader heeft de bedoeling om de statistische doelpopulatie die we willen onderzoeken zo goed mogelijk te benaderen.
+Een steekproefkader kan bijvoorbeeld een lijst zijn (bv. alle landbouwbedrijven in Vlaanderen) of het kan een ruimtelijke afbakening zijn (bv. de contour van Vlaanderen).
+In het geval van het MAS pilootproject maken we een lijst aan van potentiële telpuntlocaties.
+
+Voor de afbakening van het steekproefkader, starten we met een intersectie van de landbouwstreken van België met de contour van Vlaanderen.
+Dit geeft ons een kaart van de landbouwstreken in Vlaanderen (Fig. \@ref(fig:landbouwstreken)).
+
+```{r landbouwstreken, out.width = "100%", fig.cap = "Landbouwstreken in Vlaanderen"}
+include_graphics(file.path("media", "kaartjes", "landbouwstreken_vl.png"))
+```
+
+### Stratificatie-variabelen en andere hulpvariabelen {#mas-stratificatie}
+
+### Steekproefgrootte, allocatie steekproefgrootte over strata en steekproeftrekking {#mas-steekproefgrootte}
+
+### Manuele controle {#manuele-controle}
+
+De steekproef werd geëxporteerd naar een *KML*-bestand en gedeeld als een kaart in Google Maps met de tellers.
+Na manuele controle van de punten op bereikbaarheid, zichtbaarheid, overlap met andere punten, werden sommige punten verwijderd en vervangen door een ander punt (volgende in de rangorde).
+
+Daarna werden punten toebedeeld aan tellers.
+Tellers konden ook punten claimen door dit aan te geven in de Google Maps kaart.
+
+### Reproduceerbaarheid en traceerbaarheid {#git-mas}
+
+## Stand van zaken en uitbreiding MAS {#stand-van-zaken}
+
+### Stand van zaken {#stand-van-zaken}
 
 -   2023: zandleemstreek en leemstreek
     -   korte recap: zie piloot
     -   overzicht beschrijvende statistiek: volgend hfst
 
-## Uitbreiding tot een Vlaams meetnet {#uitbreiding-meetnet}
+### Uitbreiding tot een Vlaams meetnet {#uitbreiding-meetnet}
 
 -   beschrijving van de uitbreiding
 -   2024: kempen, zandstreek, polders
