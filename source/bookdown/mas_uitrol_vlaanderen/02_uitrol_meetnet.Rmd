@@ -1,15 +1,15 @@
 # Een meetnet agrarische soorten in Vlaanderen {#uitrol-vlaanderen}
 
-De opbouw voor MAS Vlaanderen werd al grotendeels besproken in \textcolour{red}{[REF]}.
+De opbouw voor MAS Vlaanderen werd al grotendeels besproken in \textcolor{red}{[REF]}.
 Dit meetnet wordt opgebouwd op basis van de verschillende landbouwstreken in Vlaanderen (Fig. \@ref(fig:landbouwstreken)).
 
 ```{r landbouwstreken, out.width = "100%", fig.cap = "Landbouwstreken in Vlaanderen"}
 include_graphics(file.path("media", "kaartjes", "landbouwstreken_vl.png"))
 ```
 
-In dit hoofdstuk vatten we eerst samen hoe het meetnet is opgebouwd en de steekproeftrekking werd gedaan (Sectie \@ref{meetnet-ontwerp}).
-Daarna overlopen we welke stappen voor MAS Vlaanderen reeds werden gedaan (Zandleemstreek en Leemstreek, \textcolour{red}{[REF]}) en welke uitbreiding er in 2024 gepland is (Polders, Zandstreek, Kempen) (Sectie \@ref{mas-vlaanderen}).
-Ten slotte bespreken we de overige, kleine streken (Duinen, Weidestreek) apart in Sectie \@ref{overige-streken}.
+In dit hoofdstuk vatten we eerst samen hoe het meetnet is opgebouwd en de steekproeftrekking werd gedaan (Sectie \@ref(meetnet-ontwerp)).
+Daarna overlopen we welke stappen voor MAS Vlaanderen reeds werden gedaan (Zandleemstreek en Leemstreek, \textcolor{red}{[REF]}) en welke uitbreiding er in 2024 gepland is (Polders, Zandstreek, Kempen) (Sectie \@ref(mas-vlaanderen)).
+Ten slotte bespreken we de overige, kleine streken (Duinen, Weidestreek) apart in Sectie \@ref(overige-streken).
 
 ## Ontwerp van de gegevensinzameling {#meetnet-ontwerp}
 
@@ -50,7 +50,93 @@ Werkwijze:
 
 **2. Exclusie irrelevante landgebruiken**
 
-In eerste instantie doen we dit door *exclusie* van een aantal landgebruiken op basis van OpenStreetMap data [@openstreetmapcontributors2022] (Fig. \@ref(fig:steekproef-afbakening)B):
+In tweede instantie sluiten we een aantal landgebruiken uit op basis van OpenStreetMap data [@openstreetmapcontributors2024] (Tabel \@ref(tab:exclusie-landgebruik), Fig.
+\@ref(fig:steekproef-afbakening)B).
+Voor de uitbreiding in 2024 werd een recentere versie van de OpenStreetMap data gedownload op \textcolor{red}{xx-xx-2024}.
+Naast de exclusie van deze landgebruiken sluiten we ook een zone van 100 m rond autosnelwegen en invoegstroken en afritten van autosnelwegen uit.
+Dit omdat langs autosnelwegen vaak parallelle paden liggen.
+Dit kan in de steekproef tot gevolg hebben dat er met een hogere waarschijnlijkheid een punt wordt geselecteerd vlak bij een snelweg, omdat er veel van zulke punten zijn.
+De realiteit van het terrein kan een invloed hebben op de waarnemingen (bv. vaak kraaiachtigen en Buizerd langs snelwegen) en vrij zeker ook op de detecteerbaarheid (geluidsoverlast en beperkte zichtbaarheid).
+
+```{r exclusie-landgebruik}
+tibble(
+  landgebruik = c("woongebied",
+                  "militair terrein",
+                  "industriegebied",
+                  "begraafplaats",
+                  "spoorwegemplacement, spoorwegbedding",
+                  "commercieel",
+                  "boerenerf",
+                  "park",
+                  "vliegveld",
+                  "autosnelweg",
+                  "invoegstroken en afritten van autosnelwegen"),
+  `OSM definitie` = c(
+    "landuse = residential",
+    "landuse = military",
+    "landuse = industrial",
+    "landuse = cemetary",
+    "landuse = railway",
+    "landuse = commercial",
+    "landuse = farmyard",
+    "leisure = park",
+    "aeroway = aerodrome",
+    "highway = motorway",
+    "highway = motorway_link"
+  ),
+  `OSM wiki` = c(
+    "https://wiki.openstreetmap.org/wiki/Tag:landuse%3Dresidential",
+    "https://wiki.openstreetmap.org/wiki/Tag:landuse%3Dmilitary",
+    "https://wiki.openstreetmap.org/wiki/Tag:landuse%3Dindustrial",
+    "https://wiki.openstreetmap.org/wiki/Tag:landuse%3Dcemetery",
+    "https://wiki.openstreetmap.org/wiki/Tag:landuse%3Drailway",
+    "https://wiki.openstreetmap.org/wiki/Tag:landuse%3Dcommercial",
+    "https://wiki.openstreetmap.org/wiki/Tag:landuse%3Dfarmyard",
+    "https://wiki.openstreetmap.org/wiki/Tag:leisure%3Dpark",
+    "https://wiki.openstreetmap.org/wiki/Tag:aeroway%3Daerodrome",
+    "https://wiki.openstreetmap.org/wiki/Tag:highway%3Dmotorway",
+    "https://wiki.openstreetmap.org/wiki/Tag:highway%3Dmotorway_link"
+  )
+) %>%
+  kable(caption = paste("Exclusie van landgebruiken MAS Vlaanderen."),
+        booktabs = TRUE) %>%
+  kableExtra::kable_styling(latex_options = c("scale_down", "striped")) %>%
+  kableExtra::row_spec(0, bold = TRUE)
+
+```
+
+**3. Bepalen geldige plaatsen waar telling kan uitgevoerd worden**
+
+MAS tellingen gebeuren altijd vanaf een openbare weg of pad, er worden in principe nooit (landbouw)percelen betreden.
+We gebruiken daarom een extractie uit OpenStreetMap van alle wegentypes die in aanmerkingen komen (positieve selectie, dus autosnelwegen en dergelijke worden hier indirect uitgesloten) (Tabel \@ref(tab:inclusie-wegen), Fig.
+\@ref(fig:steekproef-afbakening)C):
+
+```{r inclusie-wegen}
+tibble(
+  wegen = c("veldwegen en boswegen",
+            "tertiare wegen",
+            "afslagen tertiare wegen",
+            "lokale wegen"),
+  `OSM definitie` = c(
+    "highway = track",
+    "highway = tertiary",
+    "highway = tertiary_link",
+    "highway = unclassified"
+  ),
+  `OSM wiki` = c(
+    "https://wiki.openstreetmap.org/wiki/Tag:highway%3Dtrack",
+    "https://wiki.openstreetmap.org/wiki/Tag:highway%3Dtertiary",
+    "https://wiki.openstreetmap.org/wiki/Tag:highway%3Dtertiary_link",
+    "https://wiki.openstreetmap.org/wiki/Tag:highway%3Dunclassified"
+  )
+) %>%
+  kable(caption = paste("Selectie routes waarlangs telpunten gelegd kunnen",
+                        "worden."),
+        booktabs = TRUE) %>%
+  kableExtra::kable_styling(latex_options = c("scale_down", "striped")) %>%
+  kableExtra::row_spec(0, bold = TRUE)
+
+```
 
 ```{=tex}
 \begin{figure}
@@ -92,4 +178,5 @@ Tellers konden ook punten claimen door dit aan te geven in de Google Maps kaart.
 -   Bespreking Voeren en Duinen
 
 [^02_uitrol_meetnet-1]: Met uitzondering van de Duinen en de Weidestreek.
-    Deze worden appart besproken in Sectie \@ref{overige-streken}.
+    Deze worden appart besproken in Sectie \@ref(overige-streken).
+
