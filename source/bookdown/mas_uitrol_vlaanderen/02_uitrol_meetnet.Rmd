@@ -34,10 +34,31 @@ Dit doen we in verschillende opeenvolgende stappen.
 
 **1. Selectie open en halfopen landschap**
 
+Binnen deze polygonen selecteren we open en halfopen landschap (Fig. \@ref(fig:steekproef-afbakening)A).
+Om de openheid van het landschap te bepalen, moeten we een operationele definitie maken van hoe open een landschap is.
+We maken hiervoor gebruik van het DSM (digitaal oppervlakte model - DHMV II Vlaanderen, @DSM) en het DTM (digitaal terrein model, @DTM) op 5 m resolutie.
+Werkwijze:
+
+-   berekening "canopy height model" (CHM) door verschil te berekenen tussen DSM en DTM. Dit geeft dan hoogte boven het maaiveld (gebouwen, bodem, struiken ...).
+-   berekening van "positive topographic openness" (dit is een waarde tussen 0 en 2 in radialen) door voor elke rastercel van het CHM in 8 kijkrichtingen na te gaan wat de gemiddelde hoek is t.o.v. het zenit binnen een straal van 300 m. Deze hoek geeft aan hoe open het landschap is. Indien volledig open is de hoek 90° (of 1.57 radialen).
+-   met dit resultaat de gemiddelde (van de gemiddelde) topografische openheid berekenen in een cirkelvormig landschap rond elke cel met straal 300 m.
+-   deze gemiddelden zijn daarna ingedeeld in vier klassen:
+    -   OL: open landschap (\> 86,5°),
+    -   HOL: halfopen landschap (77,3° - 86,5°),
+    -   HGL: halfgesloten landschap (71,6° - 77,3°)
+    -   GL: gesloten landschap (\< 71,6°)
+
 **2. Exclusie irrelevante landgebruiken**
 
-In eerste instantie doen we dit door *exclusie* van een aantal landgebruiken op basis van OpenStreetMap data [@openstreetmapcontributors2022] (Fig. \@ref(fig:steekproef-afbakening)A):
+In eerste instantie doen we dit door *exclusie* van een aantal landgebruiken op basis van OpenStreetMap data [@openstreetmapcontributors2022] (Fig. \@ref(fig:steekproef-afbakening)B):
 
+```{=tex}
+\begin{figure}
+  \makebox[\textwidth][c]{\includegraphics[width=1.1\textwidth]{media/steekproefkader_mas/mas_zandleem_afbakening.png}}
+  \caption{Methodiek voor de afbakening van het steekproefkader voor de uitrol van MAS Vlaanderen, gevisualiseerd voor een kleine oppervlakte in de Zandleemstreek (xmin = 150000, xmax = 177000, ymin = 160000, ymax = 180000). \textbf{A.} Selectie van open en halfopen landschap binnen de perimeter (rood). \textbf{B.} Exclusie van landgebruiken op basis van OpenStreetMap data (groen). \textbf{C.} Selectie van paden en wegen (blauw). \textbf{D.} Omvorming van wegennetwerk tot puntennetwerk.}
+  \label{fig:steekproef-afbakening}
+\end{figure}
+```
 ### Stratificatie-variabelen en andere hulpvariabelen {#mas-stratificatie}
 
 ### Steekproefgrootte, allocatie steekproefgrootte over strata en steekproeftrekking {#mas-steekproefgrootte}
