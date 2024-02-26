@@ -187,7 +187,23 @@ include_graphics(file.path("media", "visibility",
 
 ### Stratificatievariabelen en steekproeftrekking {#mas-stratificatie}
 
-\textcolor{red}{...}
+Bij een steekproefontwerp kan het interessant zijn om te stratificeren.
+Er zijn verschillende redenen waarom we dit zouden willen doen.
+Een eerste is dat we aparte uitspraken willen voor individuele strata.
+Dit is bijvoorbeeld het geval wanneer we denken aan de stratificatie volgens **landbouwstreek** (doelstelling zicht krijgen op regionale verschillen in toestand en trend).
+Maar ook binnen een landbouwstreek willen we verder stratificeren in termen van binnen en buiten **soortbeschermingsplan (SBP) zones** voor akkervogels en in termen van **openheid van het landschap** \@ref(fig:stratificatievariabelen).
+
+De stratificatie binnen versus buiten SBP zal ons helpen om telpunten te vergelijken waar veel beschermingsmaatregelen genomen zijn versus telpunten met weinig beschermingsmaatregelen.
+\textcolor{red}{uitschrijven waar SBP kaarten vandaan komen, zie rapport pilootstudie} Deze stratificatie is niet zwart-wit.
+Ook binnen SBP gebied zullen er telpunten zijn met weinig beschermingsmaatregelen en het omgekeerde kan ook het geval zijn.
+De stratificatie zorgt er echter voor dat we de kans om van beide situaties voldoende gevallen hebben vergroten.
+In latere analyses hoeven we deze factor (binnen versus buiten SBP) niet per se te gebruiken, we kunnen in de plaats ervan de oppervlakte aan SBP beschermingsmaatregelen binnen een telcirkel modelleren.
+
+```{r stratificatievariabelen, out.width = "100%", fig.cap = "Verspreiding verschillende strata in Vlaanderen met aanduiding van grenzen van de verschillende landbouwstreken"}
+include_graphics(file.path("media", "kaartjes", "strata_vlaanderen.png"))
+```
+
+Naast bovenstaande stratificaties, hebben we ook nog het **oppervlakte-aandeel aan soortbeschermingsmaatregelen** berekend (toestand beheerovereenkomsten 2022), omdat we kunnen verwachten dat die gerelateerd zijn met de relatieve populatiegroottes van de akkervogels en omdat we graag willen leren vanaf welk minimaal oppervlakte-aandeel er positieve effecten te verwachten zijn.
 
 ### Nabehandeling en manuele controle {#nabehandeling}
 
