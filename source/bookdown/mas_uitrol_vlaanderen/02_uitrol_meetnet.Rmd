@@ -52,7 +52,7 @@ Werkwijze:
 
 In tweede instantie sluiten we een aantal landgebruiken uit op basis van OpenStreetMap data [@openstreetmapcontributors2024] (Tabel \@ref(tab:exclusie-landgebruik), Fig.
 \@ref(fig:steekproef-afbakening)B).
-Voor de uitbreiding in 2024 werd een recentere versie van de OpenStreetMap data gedownload op \textcolor{red}{xx-xx-2024}.
+Voor de uitbreiding in 2024 werd een recentere versie van de OpenStreetMap data gedownload op 31-01-2024.
 Naast de exclusie van deze landgebruiken sluiten we ook een zone van 100 m rond autosnelwegen en invoegstroken en afritten van autosnelwegen uit.
 Dit omdat langs autosnelwegen vaak parallelle paden liggen.
 Dit kan in de steekproef tot gevolg hebben dat er met een hogere waarschijnlijkheid een punt wordt geselecteerd vlak bij een snelweg, omdat er veel van zulke punten zijn.
