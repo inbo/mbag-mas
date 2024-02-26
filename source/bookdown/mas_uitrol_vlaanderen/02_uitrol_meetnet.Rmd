@@ -191,10 +191,10 @@ Bij een steekproefontwerp kan het interessant zijn om te stratificeren.
 Er zijn verschillende redenen waarom we dit zouden willen doen.
 Een eerste is dat we aparte uitspraken willen voor individuele strata.
 Dit is bijvoorbeeld het geval wanneer we denken aan de stratificatie volgens **landbouwstreek** (doelstelling zicht krijgen op regionale verschillen in toestand en trend).
-Maar ook binnen een landbouwstreek willen we verder stratificeren in termen van binnen en buiten **soortbeschermingsplan (SBP) zones** voor akkervogels en in termen van **openheid van het landschap** \@ref(fig:stratificatievariabelen).
+Maar ook binnen een landbouwstreek willen we verder stratificeren in termen van binnen en buiten **soortbeschermingsplan (SBP) zones** voor akkervogels en in termen van **openheid van het landschap** (Fig. \@ref(fig:stratificatievariabelen)).
 
 De stratificatie binnen versus buiten SBP zal ons helpen om telpunten te vergelijken waar veel beschermingsmaatregelen genomen zijn versus telpunten met weinig beschermingsmaatregelen.
-\textcolor{red}{uitschrijven waar SBP kaarten vandaan komen, zie rapport pilootstudie} Deze stratificatie is niet zwart-wit.
+\textcolor{red}{uitschrijven waar SBP kaarten vandaan komen, zie rapport pilootstudie, zie Bijlage @ref(sbp-per-soort)} Deze stratificatie is niet zwart-wit.
 Ook binnen SBP gebied zullen er telpunten zijn met weinig beschermingsmaatregelen en het omgekeerde kan ook het geval zijn.
 De stratificatie zorgt er echter voor dat we de kans om van beide situaties voldoende gevallen hebben vergroten.
 In latere analyses hoeven we deze factor (binnen versus buiten SBP) niet per se te gebruiken, we kunnen in de plaats ervan de oppervlakte aan SBP beschermingsmaatregelen binnen een telcirkel modelleren.
