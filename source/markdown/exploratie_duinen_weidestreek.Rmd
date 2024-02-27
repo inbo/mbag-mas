@@ -225,7 +225,7 @@ mapview(
 # Extractie paden
 
 ```{r}
-paden <- lapply(seq_along(selectie_openheid_klasses), function(i) {
+paden <- lapply(names(selectie_openheid_klasses), function(i) {
   extract_osm_paden(
     gebied = selectie_openheid_klasses[[i]],
     exclusie = exclusie_osm_landgebruiken[[i]],
@@ -237,7 +237,7 @@ paden <- lapply(seq_along(selectie_openheid_klasses), function(i) {
     update_osm_layer = FALSE
     )
 })
-names(paden) <- c("Duinen", "Weidestreek")
+names(paden) <- names(selectie_openheid_klasses)
 ```
 
 ## Duinen
@@ -300,4 +300,80 @@ paden$Weidestreek %>%
   mutate(lengte_km = as.numeric(st_length(.)) / 1e3) %>%
   st_drop_geometry() %>%
   kable(digits = 2)
+```
+
+# Punten langs paden
+
+```{r}
+punten <- lapply(names(paden), function(i) {
+  paden_naar_punten(
+    data_paden = paden[[i]],
+    gebieden = kleine_landbouwstreken[[i]],
+    interpoint_distance = 50,
+    border_distance = 300
+    )
+})
+names(punten) <- names(paden)
+```
+
+## Duinen
+
+```{r}
+mapview(
+    kleine_landbouwstreken$Duinen,
+    color = "red",
+    alpha.regions = 0,
+    legend = FALSE
+  ) +
+  mapview(
+    selectie_openheid_klasses$Duinen,
+    col.regions = "red",
+    layer = "OL, HOL"
+  ) +
+  mapview(exclusie_osm_landgebruiken$Duinen,
+    col.regions = "green",
+    legend = FALSE
+  ) +
+  mapview(paden$Duinen, legend = FALSE) +
+  mapview(punten$Duinen, zcol = "value", layer = "Type weg of pad")
+```
+
+Overzicht aantal punten per categorie:
+
+```{r}
+punten$Duinen %>%
+  st_drop_geometry() %>%
+  count(Naam, key, value, name = "Aantal punten") %>%
+  kable()
+```
+
+## Weidestreek
+
+```{r}
+mapview(
+    kleine_landbouwstreken$Weidestreek,
+    color = "red",
+    alpha.regions = 0,
+    legend = FALSE
+  ) +
+  mapview(
+    selectie_openheid_klasses$Weidestreek,
+    col.regions = "red",
+    layer = "OL, HOL"
+  ) +
+  mapview(exclusie_osm_landgebruiken$Weidestreek,
+    col.regions = "green",
+    legend = FALSE
+  ) +
+  mapview(paden$Weidestreek, legend = FALSE) +
+  mapview(punten$Weidestreek, zcol = "value", layer = "Type weg of pad")
+```
+
+Overzicht aantal punten per categorie:
+
+```{r}
+punten$Weidestreek %>%
+  st_drop_geometry() %>%
+  count(Naam, key, value, name = "Aantal punten") %>%
+  kable()
 ```
