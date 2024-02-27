@@ -541,3 +541,101 @@ ggplot(punten_zichtbaarheid$Weidestreek) +
   geom_vline(xintercept = 0.1, colour = "firebrick") +
   scale_x_continuous(breaks = seq(0, 1, 0.1))
 ```
+
+# Voeg stratificatievariabelen toe
+
+```{r}
+# Voor proportie beheerovereenkomsten toe
+plus_sb <- lapply(punten_selectie_zichtbaarheid, function(streek) {
+  add_bo_to_frame(
+    punten_df = streek,
+    path_bo = path_to_bo(jaar = 2022)
+    )
+})
+
+# Voeg stratum openheid landschap toe
+plus_openheid_landschap <- lapply(names(plus_sb), function(i) {
+  add_openheid_landschap_to_frame(
+    path = path_to_openheid_landschap(),
+    punten_sf = plus_sb[[i]],
+    gebied = kleine_landbouwstreken[[i]],
+    cutlevels = c(1.25, 1.35, 1.51),
+    class_labels = c("GL", "HGL", "HOL", "OL")
+    )
+})
+names(plus_openheid_landschap) <- names(plus_sb)
+
+# Bereken SBP binnen landbouwstreken
+sbp_akkervogels_duinen <- read_sbp_akkervogels(
+  path = path_to_sbp_akkervogels(file = "akkervogelgebieden2022.shp"),
+  gebied = kleine_landbouwstreken$Duinen,
+  path_extra_soorten = path_to_sbp_akkervogels(file = "sbp_overige_soorten.shp"),
+  extra_soorten = c("hamster", "bruine kiekendief", "zomertortel",
+                    "grauwe kiekendief")
+  )
+
+sbp_akkervogels_weidestreek <- read_sbp_others(
+  path_to_sbp_akkervogels(file = "sbp_overige_soorten.shp"),
+  soorten = c("hamster", "bruine kiekendief", "zomertortel", "grauwe kiekendief"),
+  gebied = kleine_landbouwstreken$Weidestreek
+  ) %>%
+  summarise()
+
+sbp_akkervogels <- list(
+  Duinen = sbp_akkervogels_duinen,
+  Weidestreek = sbp_akkervogels_weidestreek
+)
+
+# Voeg SBP stratum toe aan finale punten
+steekproefkader_finaal <- lapply(names(plus_openheid_landschap), function(i) {
+  add_stratum_sbp(
+    punten_sf = plus_openheid_landschap[[i]],
+    sbp = sbp_akkervogels[[i]]
+    ) %>%
+    filter(openheid_klasse %in% c("OL", "HOL")) %>%
+    mutate(sbp = ifelse(is_sbp, "binnen", "buiten"),
+           stratum = paste(openheid_klasse, sbp, sep = " - ")
+    )
+})
+names(steekproefkader_finaal) <- names(plus_openheid_landschap)
+```
+
+## Duinen
+
+```{r}
+steekproefkader_finaal$Duinen %>%
+  st_drop_geometry() %>%
+  count(stratum) %>%
+  mutate(prop = n / sum(n)) %>%
+  kable(digits = 3)
+```
+
+```{r}
+mapview(
+    kleine_landbouwstreken$Duinen,
+    color = "red",
+    alpha.regions = 0,
+    legend = FALSE
+  ) +
+  mapview(steekproefkader_finaal$Duinen, zcol = "stratum", layer = "stratum")
+```
+
+## Weidestreek
+
+```{r}
+steekproefkader_finaal$Weidestreek %>%
+  st_drop_geometry() %>%
+  count(stratum) %>%
+  mutate(prop = n / sum(n)) %>%
+  kable(digits = 3)
+```
+
+```{r}
+mapview(
+    kleine_landbouwstreken$Weidestreek,
+    color = "red",
+    alpha.regions = 0,
+    legend = FALSE
+  ) +
+  mapview(steekproefkader_finaal$Weidestreek, zcol = "stratum", layer = "stratum")
+```
