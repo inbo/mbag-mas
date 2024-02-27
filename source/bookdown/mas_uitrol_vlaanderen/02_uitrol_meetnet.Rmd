@@ -205,15 +205,30 @@ include_graphics(file.path("media", "kaartjes", "strata_vlaanderen.png"))
 
 Naast bovenstaande stratificaties, hebben we ook nog het **oppervlakte-aandeel aan soortbeschermingsmaatregelen** berekend (toestand beheerovereenkomsten 2022), omdat we kunnen verwachten dat die gerelateerd zijn met de relatieve populatiegroottes van de akkervogels en omdat we graag willen leren vanaf welk minimaal oppervlakte-aandeel er positieve effecten te verwachten zijn.
 
+In de praktijk werd er een veelvoud van het vooropgestelde aantal telpunten getrokken met behulp van een algoritme voor ruimtelijk gebalanceerde (X-coördinaten, Y-coördinaten en oppervlakte-aandeel aan soortbeschermingsmaatregelen) en gestratificeerde (landbouwstreek, SBP, openheid) steekproeftrekking [@grafström2011].
+De methode liet toe om per stratum zowel ruimtelijk een goede spreiding te hebben van de telpunten als een goede afspiegeling van de verdeling van de oppervlakte-aandelen aan soortbeschermingsmaatregelen in de statistische subpopulatie van het stratum.
+Een ander voordeel van deze methode is dat elk getrokken telpunt een volgnummer krijgt, wat van belang was bij het nagaan van overlap met bestaande telpunten en bij de manuele controle (Sectie \@ref(nabehandeling)).
+Indien een punt uitvalt, kan dit vervangen worden door het eerstvolgende uit de reeks dat nog niet toegewezen werd.
+De methode garandeert dat deze nieuwe set ruimtelijk goed gespreid is en een aselecte steekproef is.
+Voor elk stratum in elke landbouwstreek (OL binnen SBP, OL buiten SBP, HOL binnen SBP, HOL buiten SBP) nemen we evenveel punten.
+Zo zorgen we ervoor dat we ook in zeldzamere strata genoeg data zullen verzamelen, waardoor we uitspraken kunnen doen voor elk stratum apart en we onderlinge de strata kunnen vergelijken.
+Hier tegenover staat wel dat, indien we uitspraken willen doen op hogere niveaus (bv. landbouwregio), we hiermee moeten rekening houden in de analyses door gewichten toe te kennen proportioneel aan de oppervlakte aan OL en HOL.
+
 ### Nabehandeling en manuele controle {#nabehandeling}
 
-\textcolor{red}{overlap met bestaande ...}
+Ondanks de ruimtelijke spreiding, was omwille van hoge densiteit aan telpunten er soms toch nog overlap tussen telpunten.
+Om te veel overlap van telpunten te voorkomen binnen eenzelfde stratum, is voor elk punt binnen hetzelfde stratum nagegaan of een punt met grotere rangorde op minder dan 600 m afstand ligt.
+Als dit het geval is, wordt het punt met de lagere rangorde weerhouden.
+
+We hebben alle telpunten uit de nieuwe steekproef vervangen door reeds bestaande punten indien ze voor minstens 50 % overlappen en ze tot hetzelfde stratum behoren.
+Indien er meerdere bestaande punten overlappen, nemen we het bestaande punt dat het meest overlapt.
 
 De steekproef werd geëxporteerd naar een *KML*-bestand en gedeeld als een kaart in Google Maps met de tellers.
 Na manuele controle van de punten op bereikbaarheid, zichtbaarheid, overlap met andere punten, werden sommige punten verwijderd en vervangen door een ander punt (volgende in de rangorde).
 
 Daarna werden punten toebedeeld aan tellers.
 Tellers konden ook punten claimen door dit aan te geven in de Google Maps kaart.
+De preciese verdeling en aantal punten per landbouwstreek word besproken in Sectie \@ref(mas-vlaanderen).
 
 ### Reproduceerbaarheid en traceerbaarheid {#git-mas}
 
