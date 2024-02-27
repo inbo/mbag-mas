@@ -210,9 +210,11 @@ De methode liet toe om per stratum zowel ruimtelijk een goede spreiding te hebbe
 Een ander voordeel van deze methode is dat elk getrokken telpunt een volgnummer krijgt, wat van belang was bij het nagaan van overlap met bestaande telpunten en bij de manuele controle (Sectie \@ref(nabehandeling)).
 Indien een punt uitvalt, kan dit vervangen worden door het eerstvolgende uit de reeks dat nog niet toegewezen werd.
 De methode garandeert dat deze nieuwe set ruimtelijk goed gespreid is en een aselecte steekproef is.
+
 Voor elk stratum in elke landbouwstreek (OL binnen SBP, OL buiten SBP, HOL binnen SBP, HOL buiten SBP) nemen we evenveel punten.
 Zo zorgen we ervoor dat we ook in zeldzamere strata genoeg data zullen verzamelen, waardoor we uitspraken kunnen doen voor elk stratum apart en we onderlinge de strata kunnen vergelijken.
 Hier tegenover staat wel dat, indien we uitspraken willen doen op hogere niveaus (bv. landbouwregio), we hiermee moeten rekening houden in de analyses door gewichten toe te kennen proportioneel aan de oppervlakte aan OL en HOL.
+\textcolor{red}{tabel gewichten in bijlage!}
 
 ### Nabehandeling en manuele controle {#nabehandeling}
 
@@ -231,6 +233,28 @@ Tellers konden ook punten claimen door dit aan te geven in de Google Maps kaart.
 De preciese verdeling en aantal punten per landbouwstreek word besproken in Sectie \@ref(mas-vlaanderen).
 
 ### Reproduceerbaarheid en traceerbaarheid {#git-mas}
+
+De steekproeftrekking werd gedaan met R [@R] in RStudio [@RStudio] via de **targets** "pipeline tool" package [@targets-package].
+Deze laatste is een computationele workflow die analyses uitvoert op een efficiënte en reproduceerbare manier.
+Via de **renv** package [@renv-package] werd een reproduceerbare omgeving gecreëerd die bijhield welke versies van R en welke (versies van) verschillende packages werden gebruikt in het project.
+Alle code werd beheerd onder versiecontrole met Git op een online GitHub repository.
+Dit houdt in dat niet enkel de code zelf, maar ook alle wijzigingen in de code doorheen de tijd daar kunnen geraadpleegd worden.
+
+De toestand van de GitHub repository op het moment van de steekproeftrekking voor de Leemstreek en de Zandleemstreek kan geraadpleegd worden in de GitHub repository van de MAS pilootstudie [@github-repo-piloot] via de volgende commit hash:
+
+```{=tex}
+\begin{center}
+bafe6a6164dde186f309d1aacbcbff0ccde21735
+\end{center}
+```
+De toestand van de GitHub repository op het moment van de steekproeftrekking voor de andere landbouwstreken kan geraadpleegd worden in de GitHub repository van het MBAG - MAS project [@github-repo-mas] via de volgende commit hash:
+
+```{=tex}
+\begin{center}
+???
+\end{center}
+```
+\textcolor{red}{Centraal beschikbaar stellen via Zenodo (<https://zenodo.org/>): (1) het steekproefkader, (2) de steekproef, (3) de finale steekproef na manuele controle (de punten die effectief werden bezocht in het veld), en (4) de tabel met gewichten per stratum.}
 
 ## Stand van zaken en uitbreiding MAS {#mas-vlaanderen}
 
