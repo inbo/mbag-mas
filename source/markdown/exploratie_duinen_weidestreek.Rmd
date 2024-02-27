@@ -44,7 +44,7 @@ source(here("source", "R", "geocomputations.R"))
 
 # Inlezen kaartlagen
 
-```{r}
+```{r, results="hide"}
 landbouwstreken <- st_read(here("data", "landbouwstreken", "Lbstrvl.gpkg"))
 landbouwstreken <- landbouwstreken %>%
   mutate(Naam = ifelse(startsWith(NAAM, "Weidestreek"),
@@ -155,9 +155,10 @@ openheid_sf$Weidestreek %>%
 OSM kaart gedownload op 27/02/2024.
 
 > Er zijn in beide gebieden geen snelwegen aanwezig dus dit wordt niet in de functie gespecifieerd (anders krijgen we een error)
+
 > Er is in de Weidestreek geen vliegveld aanwezig dus dit wordt niet in de functie gespecifieerd (anders krijgen we een error)
 
-```{r}
+```{r, results="hide"}
 exclusie_osm_duinen <- exclusie_landgebruik_osm(
     gebied = selectie_openheid_klasses$Duinen,
     osmdata = path_to_osm_download(),
@@ -226,7 +227,7 @@ mapview(
 
 # Extractie paden
 
-```{r}
+```{r, results="hide"}
 paden <- lapply(names(selectie_openheid_klasses), function(i) {
   extract_osm_paden(
     gebied = selectie_openheid_klasses[[i]],
@@ -507,7 +508,7 @@ telcirkels_selectie_landgebruik$Weidestreek %>%
 
 # Selectie zichtbaarheid
 
-```{r}
+```{r, results="hide"}
 # Bereken zichtbaarheid
 punten_zichtbaarheid <- lapply(selectie_landgebruik, function(streek) {
   add_visibility_to_frame(
@@ -548,9 +549,9 @@ ggplot(punten_zichtbaarheid$Weidestreek) +
   scale_x_continuous(breaks = seq(0, 1, 0.1))
 ```
 
-# Voeg stratificatievariabelen toe
+# Het steekproefkader
 
-```{r}
+```{r, results="hide"}
 # Voeg proportie beheerovereenkomsten toe
 plus_sb <- lapply(punten_selectie_zichtbaarheid, function(streek) {
   add_bo_to_frame(
