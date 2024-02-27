@@ -37,6 +37,7 @@ library(mapview)
 mbag_dir <- here()
 source(here("source", "R", "steekproefkader.R"))
 source(here("source", "R", "berekening_hulpvariabelen.R"))
+source(here("source", "R", "geocomputations.R"))
 ```
 
 
@@ -376,4 +377,125 @@ punten$Weidestreek %>%
   st_drop_geometry() %>%
   count(Naam, key, value, name = "Aantal punten") %>%
   kable()
+```
+
+# Selectie landgebruik VITO
+
+We gebruiken volgende regel als criterium voor telpunten die in aanmerkingen komen voor wat betreft de samenstelling van het landgebruik in een buffer van 300 m rond het punt:
+
+-   Akker + Grasland \> 40% én Grasland + Bos + Struikgewas + Akker \> 50%
+
+```{r}
+telcirkels_landgebruik <- lapply(punten, function(streek) {
+  punten_lum_buffer(
+    punten_sf = streek,
+    radius = 300,
+    file = path_to_lum(jaar = 2019),
+    legend = read_legend_lum(file = path_to_legend_lum())
+    )
+})
+
+telcirkels_selectie_landgebruik <- lapply(telcirkels_landgebruik, function(streek) {
+  punten_selectie_landgebruik(
+    lum_extract_result = streek,
+    legend_rast = read_legend_lum(file = path_to_legend_lum()),
+    max_prop_overige = 0.5,
+    min_prop_akker = 0.3,
+    min_prop_akker_grasland = 0.4
+    )
+})
+
+selectie_landgebruik <- lapply(names(punten), function(i) {
+  selectie_landgebruik_vito(
+    punten_sf = punten[[i]],
+    selectie_df = telcirkels_selectie_landgebruik[[i]]
+    )
+})
+names(selectie_landgebruik) <- names(punten)
+
+exclusie_punten <- lapply(names(punten), function(i) {
+  punten[[i]] %>%
+    left_join(
+      telcirkels_selectie_landgebruik[[i]] %>%
+        group_by(pointid) %>%
+        summarize(selectie2 = any(selectie2)),
+      by = "pointid"
+    ) %>%
+    filter(!selectie2)
+})
+names(exclusie_punten) <- names(punten)
+```
+
+## Duinen
+
+De kaart toont de punten die op deze manier niet meer in aanmerkingen komen.
+
+```{r}
+mapview(
+    kleine_landbouwstreken$Duinen,
+    color = "red",
+    alpha.regions = 0,
+    legend = FALSE
+  ) +
+  mapview(
+    selectie_openheid_klasses$Duinen,
+    col.regions = "red",
+    layer = "OL, HOL"
+  ) +
+  mapview(exclusie_osm_landgebruiken$Duinen,
+    col.regions = "green",
+    legend = FALSE
+  ) +
+  mapview(paden$Duinen, legend = FALSE) +
+  mapview(exclusie_punten$Duinen, col.regions = "black",
+          legend = FALSE)
+```
+
+```{r}
+telcirkels_selectie_landgebruik$Duinen %>%
+  ggtern::ggtern(aes(
+    x = Akker + Grasland,
+    y = Bos + Struikgewas,
+    z = Overige
+  )) +
+  geom_point(
+    alpha = 0.1,
+    aes(colour = selectie2)
+  )
+```
+
+## Weidestreek
+
+```{r}
+mapview(
+    kleine_landbouwstreken$Weidestreek,
+    color = "red",
+    alpha.regions = 0,
+    legend = FALSE
+  ) +
+  mapview(
+    selectie_openheid_klasses$Weidestreek,
+    col.regions = "red",
+    layer = "OL, HOL"
+  ) +
+  mapview(exclusie_osm_landgebruiken$Weidestreek,
+    col.regions = "green",
+    legend = FALSE
+  ) +
+  mapview(paden$Weidestreek, legend = FALSE) +
+  mapview(exclusie_punten$Weidestreek, col.regions = "black",
+          legend = FALSE)
+```
+
+```{r}
+telcirkels_selectie_landgebruik$Weidestreek %>%
+  ggtern::ggtern(aes(
+    x = Akker + Grasland,
+    y = Bos + Struikgewas,
+    z = Overige
+  )) +
+  geom_point(
+    alpha = 0.1,
+    aes(colour = selectie2)
+  )
 ```
