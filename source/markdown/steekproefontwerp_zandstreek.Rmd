@@ -38,7 +38,7 @@ mbag_dir <- here()
 source(here("source", "R", "steekproefkader.R"))
 source(here("source", "R", "berekening_hulpvariabelen.R"))
 source(here("source", "R", "wfs_wcs.R"))
-targets_store <- here("source", "targets", "mas_steekproef_zl_lm_za_kp_po", "_targets")
+targets_store <- here("source", "targets", "mas_steekproef_za_kp_po", "_targets")
 ```
 
 # Vooraf
@@ -54,9 +54,9 @@ Dat bestand kan je openen met de volgende code:
 
 ## Perimeter bepalen
 
-Om de perimeter te bepalen voer je onderstaande code uit in mas_steekproef_zn_lm.Rproj, na laden van globals in targets_steekproef_zL_lm_za_kp_po.Rmd.
+Om de perimeter te bepalen voer je onderstaande code uit in mas_steekproef_za_kp_po.Rproj, na laden van globals in targets_steekproef_za_kp_po.Rmd.
 
-De code maakt een intersectie tussen landbouwstreek Zandstreek (heel België) en contour Vlaanderen en voegt deze toe  aan file "zandleemstreek_perimeters.gpkg".
+De code maakt een intersectie tussen landbouwstreek Zandstreek (heel België) en contour Vlaanderen en voegt deze toe  aan file "za_kp_po_perimeters.gpkg".
 
 ```{r, class.source = "fold-show", eval=FALSE}
 # library(sf)
@@ -68,17 +68,17 @@ De code maakt een intersectie tussen landbouwstreek Zandstreek (heel België) en
 #                                      "Lbstrbel.shp")) |>
 #   st_transform(crs = 31370)
 # 
-# # Behoud polders
+# # Behoud zandstreek
 # vlaanderen <- read_sf("S:/Vlaanderen/Grenzen/Administratief/Vlaanderen_met_kust_EEZ.shp") |>
 #   st_transform(crs = 31370)
 # 
-# kemp_vlaanderen <- st_intersection(landbouwstreken, vlaanderen) |>
+# zand_vlaanderen <- st_intersection(landbouwstreken, vlaanderen) |>
 #   filter(NAAM == "Zandstreek") |>
 #   mutate(section = NA) |>
 #   select(Naam = NAAM, section, geom = geometry)
 # 
-# st_write(obj = kemp_vlaanderen,
-#          dsn = path_to_perimeters("zl_lm_za_kp_po_perimeters.gpkg"),
+# st_write(obj = zand_vlaanderen,
+#          dsn = path_to_perimeters("za_kp_po_perimeters.gpkg"),
 #          append = TRUE)
 ```
 
