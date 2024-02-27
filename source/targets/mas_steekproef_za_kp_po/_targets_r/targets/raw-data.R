@@ -42,10 +42,10 @@ list(
   ),
   tarchetypes::tar_file(
     existing_file,
-    path_to_existing(file = "steekproef_piloot_avimap.geojson")
+    path_to_existing(file = "avimap_601_0_MAS_Vlaanderen_telpunten_xy.shp")
   ),
   tar_target(
     existing_data,
     st_read(existing_file)
-  )
 )
+  )

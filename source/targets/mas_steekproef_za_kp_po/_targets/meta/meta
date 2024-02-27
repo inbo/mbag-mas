@@ -21,7 +21,7 @@ bo_file|stem|7e0d21cf5606c794|359c1b4c7990a9fd|9b9db394958c0f85|665821918|C:/R/g
 calc_lbg|function|4bd8328de31b952f|||||||||||||||
 calc_target_samplesize|function|9a42e00e97b67225|||||||||||||||
 check_osm_data|function|5f8ba81fe1582ba0|||||||||||||||
-draw_sample|function|6b4e58998baf682d|||||||||||||||
+draw_sample|function|e1df96192ac18541|||||||||||||||
 exclusie_buffer_osm|function|b12f445c455246d2|||||||||||||||
 exclusie_landgebruik_osm|function|d62477921f46efda|||||||||||||||
 exclusie_osm_landgebruiken|pattern|a8f02eacc1ae66f9|54fbf1b7171aea20||1325409374||||0|qs|local|list||exclusie_osm_landgebruiken_0d33dff1*exclusie_osm_landgebruiken_d350b8cd*exclusie_osm_landgebruiken_ae95f54b|0||
@@ -57,7 +57,7 @@ paden_f7159c85|branch|0a9e1745f6a5e49f|1dcd3de79261e01b|76754148cf678567|8895141
 paden_naar_punten|function|9e5b98188bb1c603|||||||||||||||
 path_to_bo|function|bcff15dc4b79c7e2|||||||||||||||
 path_to_bo2021|function|4499a9363a6088d5|||||||||||||||
-path_to_existing|function|aa544f605069b841|||||||||||||||
+path_to_existing|function|25c9bc64400737b8|||||||||||||||
 path_to_lbg|function|0922d05d9993a839|||||||||||||||
 path_to_legend_lum|function|add62ebd90e5ab78|||||||||||||||
 path_to_lum|function|c76ba3b6c3939e05|||||||||||||||
