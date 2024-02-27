@@ -387,6 +387,7 @@ We gebruiken volgende regel als criterium voor telpunten die in aanmerkingen kom
 -   Akker + Grasland \> 40% én Grasland + Bos + Struikgewas + Akker \> 50%
 
 ```{r}
+# Bereken landgebruik
 telcirkels_landgebruik <- lapply(punten, function(streek) {
   punten_lum_buffer(
     punten_sf = streek,
@@ -396,6 +397,7 @@ telcirkels_landgebruik <- lapply(punten, function(streek) {
     )
 })
 
+# Classificatie landgebruik
 telcirkels_selectie_landgebruik <- lapply(telcirkels_landgebruik, function(streek) {
   punten_selectie_landgebruik(
     lum_extract_result = streek,
@@ -406,6 +408,7 @@ telcirkels_selectie_landgebruik <- lapply(telcirkels_landgebruik, function(stree
     )
 })
 
+# Selecteer op landgebruik
 selectie_landgebruik <- lapply(names(punten), function(i) {
   selectie_landgebruik_vito(
     punten_sf = punten[[i]],
@@ -414,6 +417,7 @@ selectie_landgebruik <- lapply(names(punten), function(i) {
 })
 names(selectie_landgebruik) <- names(punten)
 
+# Bereken punten die verwijderd worden
 exclusie_punten <- lapply(names(punten), function(i) {
   punten[[i]] %>%
     left_join(
@@ -504,6 +508,7 @@ telcirkels_selectie_landgebruik$Weidestreek %>%
 # Selectie zichtbaarheid
 
 ```{r}
+# Bereken zichtbaarheid
 punten_zichtbaarheid <- lapply(selectie_landgebruik, function(streek) {
   add_visibility_to_frame(
     punten_sf = streek,
@@ -512,6 +517,7 @@ punten_zichtbaarheid <- lapply(selectie_landgebruik, function(streek) {
     )
 })
 
+# Filter slechte zichtbaarheid
 punten_selectie_zichtbaarheid <- lapply(punten_zichtbaarheid, function(streek) {
   filter_zichtbaarheid(
     punten_sf = streek,
@@ -545,7 +551,7 @@ ggplot(punten_zichtbaarheid$Weidestreek) +
 # Voeg stratificatievariabelen toe
 
 ```{r}
-# Voor proportie beheerovereenkomsten toe
+# Voeg proportie beheerovereenkomsten toe
 plus_sb <- lapply(punten_selectie_zichtbaarheid, function(streek) {
   add_bo_to_frame(
     punten_df = streek,
