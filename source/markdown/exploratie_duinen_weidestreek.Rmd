@@ -31,6 +31,7 @@ library(tidyverse)
 library(sf)
 library(terra)
 library(nngeo)
+library(GVI)
 library(mapview)
 
 # source
@@ -498,4 +499,45 @@ telcirkels_selectie_landgebruik$Weidestreek %>%
     alpha = 0.1,
     aes(colour = selectie2)
   )
+```
+
+# Selectie zichtbaarheid
+
+```{r}
+punten_zichtbaarheid <- lapply(selectie_landgebruik, function(streek) {
+  add_visibility_to_frame(
+    punten_sf = streek,
+    resolution = 5,
+    spacing = 10
+    )
+})
+
+punten_selectie_zichtbaarheid <- lapply(punten_zichtbaarheid, function(streek) {
+  filter_zichtbaarheid(
+    punten_sf = streek,
+    min_cvvi = 0.1
+    )
+})
+```
+
+## Duinen
+
+In de Duinen vallen geen punten weg.
+
+```{r}
+ggplot(punten_zichtbaarheid$Duinen) +
+  geom_histogram(aes(x = cvvi)) +
+  geom_vline(xintercept = 0.1, colour = "firebrick") +
+  scale_x_continuous(breaks = seq(0, 1, 0.1))
+```
+
+## Weidestreek
+
+In de Weidestreek vallen een beperkt aantal punten weg.
+
+```{r}
+ggplot(punten_zichtbaarheid$Weidestreek) +
+  geom_histogram(aes(x = cvvi)) +
+  geom_vline(xintercept = 0.1, colour = "firebrick") +
+  scale_x_continuous(breaks = seq(0, 1, 0.1))
 ```
