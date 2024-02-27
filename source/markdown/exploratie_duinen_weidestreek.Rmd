@@ -222,3 +222,82 @@ mapview(
   )
 ```
 
+# Extractie paden
+
+```{r}
+paden <- lapply(seq_along(selectie_openheid_klasses), function(i) {
+  extract_osm_paden(
+    gebied = selectie_openheid_klasses[[i]],
+    exclusie = exclusie_osm_landgebruiken[[i]],
+    osmdata = path_to_osm_download(),
+    paths_include = c("track", "tertiary", "tertiary_link", "unclassified"),
+    cutting_exclude = NULL,
+    historic_exclude = NULL,
+    waterway = NULL,
+    update_osm_layer = FALSE
+    )
+})
+names(paden) <- c("Duinen", "Weidestreek")
+```
+
+## Duinen
+
+In blauw tonen we de paden die overblijven.
+
+```{r}
+mapview(
+    kleine_landbouwstreken$Duinen,
+    color = "red",
+    alpha.regions = 0,
+    legend = FALSE
+  ) +
+  mapview(
+    selectie_openheid_klasses$Duinen,
+    col.regions = "red",
+    layer = "OL, HOL"
+  ) +
+  mapview(exclusie_osm_landgebruiken$Duinen,
+    col.regions = "green",
+    legend = FALSE
+  ) +
+  mapview(paden$Duinen, legend = FALSE)
+```
+
+```{r}
+paden$Duinen %>%
+  group_by(Naam, key, value) %>%
+  summarise(.groups = "drop") %>%
+  mutate(lengte_km = as.numeric(st_length(.)) / 1e3) %>%
+  st_drop_geometry() %>%
+  kable(digits = 2)
+```
+
+## Weidestreek
+
+```{r}
+mapview(
+    kleine_landbouwstreken$Weidestreek,
+    color = "red",
+    alpha.regions = 0,
+    legend = FALSE
+  ) +
+  mapview(
+    selectie_openheid_klasses$Weidestreek,
+    col.regions = "red",
+    layer = "OL, HOL"
+  ) +
+  mapview(exclusie_osm_landgebruiken$Weidestreek,
+    col.regions = "green",
+    legend = FALSE
+  ) +
+  mapview(paden$Weidestreek, legend = FALSE)
+```
+
+```{r}
+paden$Weidestreek %>%
+  group_by(Naam, key, value) %>%
+  summarise(.groups = "drop") %>%
+  mutate(lengte_km = as.numeric(st_length(.)) / 1e3) %>%
+  st_drop_geometry() %>%
+  kable(digits = 2)
+```
