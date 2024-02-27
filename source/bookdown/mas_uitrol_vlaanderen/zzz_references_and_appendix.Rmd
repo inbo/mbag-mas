@@ -5,3 +5,9 @@ INBOmd::references(appendix = TRUE)
 ```
 
 # Bijlage
+
+## Gebruikte kaarten soortbeschermingsplannen voor stratificatie {#sbp-per-soort}
+
+```{r out.width = "100%"}
+include_graphics(file.path("media", "kaartjes", "sbp_mbag_per_soort_totaal.png"))
+```
