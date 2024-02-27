@@ -30,11 +30,13 @@ opts_knit$set(root.dir = here::here())
 library(tidyverse)
 library(sf)
 library(terra)
+library(nngeo)
 library(mapview)
 
 # source
 mbag_dir <- here()
 source(here("source", "R", "steekproefkader.R"))
+source(here("source", "R", "berekening_hulpvariabelen.R"))
 ```
 
 
@@ -146,4 +148,77 @@ openheid_sf$Weidestreek %>%
   kable()
 ```
 
+# Exclusie landgebruiken
+
+OSM kaart gedownload op 27/02/2024.
+
+> Er zijn in beide gebieden geen snelwegen aanwezig dus dit wordt niet in de functie gespecifieerd (anders krijgen we een error)
+> Er is in de Weidestreek geen vliegveld aanwezig dus dit wordt niet in de functie gespecifieerd (anders krijgen we een error)
+
+```{r}
+exclusie_osm_duinen <- exclusie_landgebruik_osm(
+    gebied = selectie_openheid_klasses$Duinen,
+    osmdata = path_to_osm_download(),
+    landuse = c("residential", "military", "industrial", "cemetery",
+                "railway", "commercial", "farmyard"),
+    leisure = c("park"),
+    buffer_poly = 0,
+    layer_poly = list(aeroway = c("aerodrome")),
+    update_osm_layer = FALSE)
+
+exclusie_osm_weidestreek <- exclusie_landgebruik_osm(
+    gebied = selectie_openheid_klasses$Weidestreek,
+    osmdata = path_to_osm_download(),
+    landuse = c("residential", "military", "industrial", "cemetery",
+                "railway", "commercial", "farmyard"),
+    leisure = c("park"),
+    update_osm_layer = FALSE)
+
+exclusie_osm_landgebruiken <- list(
+  Duinen = exclusie_osm_duinen,
+  Weidestreek = exclusie_osm_weidestreek
+)
+```
+
+## Duinen
+
+In groen duiden we de exclusielaag aan.
+
+```{r}
+mapview(
+    kleine_landbouwstreken$Duinen,
+    color = "red",
+    alpha.regions = 0,
+    legend = FALSE
+  ) +
+  mapview(
+    selectie_openheid_klasses$Duinen,
+    col.regions = "red",
+    layer = "OL, HOL"
+  ) +
+  mapview(exclusie_osm_landgebruiken$Duinen,
+    col.regions = "green",
+    legend = FALSE
+  )
+```
+
+## Weidestreek
+
+```{r}
+mapview(
+    kleine_landbouwstreken$Weidestreek,
+    color = "red",
+    alpha.regions = 0,
+    legend = FALSE
+  ) +
+  mapview(
+    selectie_openheid_klasses$Weidestreek,
+    col.regions = "red",
+    layer = "OL, HOL"
+  ) +
+  mapview(exclusie_osm_landgebruiken$Weidestreek,
+    col.regions = "green",
+    legend = FALSE
+  )
+```
 
