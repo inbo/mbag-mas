@@ -158,7 +158,7 @@ OSM kaart gedownload op 27/02/2024.
 
 > Er is in de Weidestreek geen vliegveld aanwezig dus dit wordt niet in de functie gespecifieerd (anders krijgen we een error)
 
-```{r, results="hide"}
+```{r, cache=TRUE, results="hide"}
 exclusie_osm_duinen <- exclusie_landgebruik_osm(
     gebied = selectie_openheid_klasses$Duinen,
     osmdata = path_to_osm_download(),
@@ -227,7 +227,7 @@ mapview(
 
 # Extractie paden
 
-```{r, results="hide"}
+```{r, cache=TRUE, results="hide"}
 paden <- lapply(names(selectie_openheid_klasses), function(i) {
   extract_osm_paden(
     gebied = selectie_openheid_klasses[[i]],
@@ -387,7 +387,7 @@ We gebruiken volgende regel als criterium voor telpunten die in aanmerkingen kom
 
 -   Akker + Grasland \> 40% én Grasland + Bos + Struikgewas + Akker \> 50%
 
-```{r}
+```{r, cache=TRUE}
 # Bereken landgebruik
 telcirkels_landgebruik <- lapply(punten, function(streek) {
   punten_lum_buffer(
@@ -508,7 +508,7 @@ telcirkels_selectie_landgebruik$Weidestreek %>%
 
 # Selectie zichtbaarheid
 
-```{r, results="hide"}
+```{r, cache=TRUE, results="hide"}
 # Bereken zichtbaarheid
 punten_zichtbaarheid <- lapply(selectie_landgebruik, function(streek) {
   add_visibility_to_frame(
