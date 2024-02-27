@@ -29,9 +29,121 @@ opts_knit$set(root.dir = here::here())
 # packages
 library(tidyverse)
 library(sf)
+library(terra)
 library(mapview)
 
 # source
+mbag_dir <- here()
 source(here("source", "R", "steekproefkader.R"))
-source(here("source", "R", "berekening_hulpvariabelen.R"))
 ```
+
+
+# Inlezen kaartlagen
+
+```{r}
+landbouwstreken <- st_read(here("data", "landbouwstreken", "Lbstrvl.gpkg"))
+landbouwstreken <- landbouwstreken %>%
+  mutate(Naam = ifelse(startsWith(NAAM, "Weidestreek"),
+                       "Weidestreek", NAAM),
+         section = NA) %>%
+  select(Naam, section) %>%
+  st_transform(31370)
+ggplot() +
+  geom_sf(data = landbouwstreken, aes(fill = Naam)) +
+  ggtitle("Landbouwstreken in Vlaanderen")
+```
+
+We selecteren de Duinen en de Weidestreek.
+
+```{r}
+duinen_sf <- landbouwstreken %>%
+  filter(Naam %in% c("Duinen"))
+weidestreek_sf <- landbouwstreken %>%
+  filter(Naam %in% c("Weidestreek"))
+
+kleine_landbouwstreken <- list(
+  Duinen = duinen_sf,
+  Weidestreek = weidestreek_sf
+)
+```
+
+# Openheid landschap
+
+We kijken hoeveel open en halfopen landschap er aanwezig is in de Duinen en de Weidestreek.
+
+```{r}
+openheid_sf <- lapply(kleine_landbouwstreken, function(streek) {
+  df_ol <- selectie_openheid(
+      gebied = streek,
+      ol_strata = c("OL")
+      ) %>%
+    mutate(openheid = "OL")
+  df_hol <- selectie_openheid(
+      gebied = streek,
+      ol_strata = c("HOL")
+      ) %>%
+    mutate(openheid = "HOL")
+  
+  bind_rows(df_ol, df_hol)
+})
+```
+
+```{r}
+selectie_openheid_klasses <- lapply(kleine_landbouwstreken, function(streek) {
+  selectie_openheid(
+      gebied = streek,
+      ol_strata = c("OL", "HOL")
+      )
+})
+```
+
+## Duinen
+
+```{r}
+mapview(kleine_landbouwstreken$Duinen, color = "red", alpha.regions = 0, legend = FALSE) +
+  mapview(openheid_sf$Duinen, zcol = "openheid", layer = "openheid")
+```
+
+```{r}
+area_duinen <- st_area(kleine_landbouwstreken$Duinen)
+```
+
+In de Duinen hebben we een totale oppervlakte van `r area_duinen`.
+Wat is de oppervlakte open en halfopen landschap?
+`prop_area` is de proportie ten opzichte van de totale landbouwstreek.
+
+```{r}
+openheid_sf$Duinen %>%
+  rowwise() %>%
+  mutate(area = st_area(geom),
+         prop_area = area / area_duinen) %>%
+  st_drop_geometry() %>%
+  select(Naam, openheid, area, prop_area) %>%
+  kable()
+```
+
+## Weidestreek
+
+```{r}
+mapview(kleine_landbouwstreken$Weidestreek, color = "red", alpha.regions = 0, legend = FALSE) +
+  mapview(openheid_sf$Weidestreek, zcol = "openheid", layer = "openheid")
+```
+
+```{r}
+area_weidestreek <- st_area(kleine_landbouwstreken$Weidestreek)
+```
+
+In de Weidestreek hebben we een totale oppervlakte van `r area_weidestreek`.
+Wat is de oppervlakte open en halfopen landschap?
+
+```{r}
+openheid_sf$Weidestreek %>%
+  rowwise() %>%
+  mutate(area = st_area(geom),
+         prop_area = area / area_weidestreek) %>%
+  st_drop_geometry() %>%
+  select(Naam, openheid, area, prop_area) %>%
+  kable()
+```
+
+
