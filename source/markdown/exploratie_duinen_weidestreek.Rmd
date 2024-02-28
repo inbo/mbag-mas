@@ -79,6 +79,7 @@ kleine_landbouwstreken <- list(
 # Berekening steekproefkader
 ## Openheid landschap
 
+We selecteren open en halfopen landschap.
 We kijken hoeveel open en halfopen landschap er aanwezig is in de Duinen en de Weidestreek.
 
 ```{r}
@@ -159,6 +160,7 @@ openheid_sf$Weidestreek %>%
 
 ## Exclusie landgebruiken
 
+We sluiten bepaalde landgebruiken uit op basis van OpenStreetMap (OSM).
 OSM kaart gedownload op 27/02/2024.
 
 > Er zijn in beide gebieden geen snelwegen aanwezig dus dit wordt niet in de functie gespecifieerd (anders krijgen we een error). De code verschilt dus ligt van de code in de targets pipeline, maar zal hetzelfde resultaat geven.
@@ -235,6 +237,8 @@ mapview(
 ```
 
 ## Extractie paden
+
+Op basis van OSM extraheren we paden waarlangs geteld kan worden.
 
 ```{r, cache=TRUE, results="hide"}
 paden <- lapply(names(selectie_openheid_klasses), function(i) {
@@ -316,6 +320,8 @@ paden$Weidestreek %>%
 
 ## Punten langs paden
 
+Om de 50 m leggen we potentiële telpunten langs de paden.
+
 ```{r}
 punten <- lapply(names(paden), function(i) {
   paden_naar_punten(
@@ -392,7 +398,8 @@ punten$Weidestreek %>%
 
 ## Selectie landgebruik VITO
 
-We gebruiken volgende regel als criterium voor telpunten die in aanmerkingen komen voor wat betreft de samenstelling van het landgebruik in een buffer van 300 m rond het punt:
+We moeten nog verder filteren op landgebruik.
+We gebruiken volgende regel als selectiecriterium voor telpunten die in aanmerkingen komen voor wat betreft de samenstelling van het landgebruik in een buffer van 300 m rond het punt:
 
 -   Akker + Grasland \> 40% én Grasland + Bos + Struikgewas + Akker \> 50%
 
@@ -443,6 +450,21 @@ names(exclusie_punten) <- names(punten)
 
 ### Duinen
 
+Er worden opnieuw een aantal punten uitgesloten.
+
+```{r}
+telcirkels_selectie_landgebruik$Duinen %>%
+  ggtern::ggtern(aes(
+    x = Akker + Grasland,
+    y = Bos + Struikgewas,
+    z = Overige
+  )) +
+  geom_point(
+    alpha = 0.1,
+    aes(colour = selectie2)
+  )
+```
+
 De kaart toont de punten die op deze manier niet meer in aanmerkingen komen.
 
 ```{r}
@@ -466,8 +488,12 @@ mapview(
           legend = FALSE)
 ```
 
+### Weidestreek
+
+Er worden weinig punten nog uitgesloten in de Weidestreek.
+
 ```{r}
-telcirkels_selectie_landgebruik$Duinen %>%
+telcirkels_selectie_landgebruik$Weidestreek %>%
   ggtern::ggtern(aes(
     x = Akker + Grasland,
     y = Bos + Struikgewas,
@@ -479,7 +505,7 @@ telcirkels_selectie_landgebruik$Duinen %>%
   )
 ```
 
-### Weidestreek
+De kaart toont de punten die op deze manier niet meer in aanmerkingen komen.
 
 ```{r}
 mapview(
@@ -502,20 +528,13 @@ mapview(
           legend = FALSE)
 ```
 
-```{r}
-telcirkels_selectie_landgebruik$Weidestreek %>%
-  ggtern::ggtern(aes(
-    x = Akker + Grasland,
-    y = Bos + Struikgewas,
-    z = Overige
-  )) +
-  geom_point(
-    alpha = 0.1,
-    aes(colour = selectie2)
-  )
-```
-
 ## Selectie zichtbaarheid
+
+We berekenen de zichtbaarheid op basis van de "cumulative viewshed
+visibility index" (CVVI).
+We verwijderen punten waarbij de CVVI kleiner is dan 0.1.
+
+> GVI installeren via remotes::install_github("hansvancalster/GVI@patch-1")
 
 ```{r, cache=TRUE, results="hide"}
 # Bereken zichtbaarheid
@@ -549,7 +568,7 @@ ggplot(punten_zichtbaarheid$Duinen) +
 
 ### Weidestreek
 
-In de Weidestreek vallen een beperkt aantal punten weg.
+In de Weidestreek valt een beperkt aantal punten weg.
 
 ```{r}
 ggplot(punten_zichtbaarheid$Weidestreek) +
@@ -559,6 +578,8 @@ ggplot(punten_zichtbaarheid$Weidestreek) +
 ```
 
 # Stratificatie van het steekproefkader
+
+We voegen stratificatievariabelen toe aan de finale puntenset: proportie beheerovereenkomsten, openheid landschap (OL, HOL) en binnen of buiten soortbeschermingsplan (SBP).
 
 ```{r, results="hide"}
 # Voeg proportie beheerovereenkomsten toe
@@ -626,6 +647,11 @@ steekproefkader_finaal$Duinen %>%
   kable(digits = 3)
 ```
 
+In de Duinen zien we dat het steekproefkader vooral in twee gebieden gelocaliseerd is.
+
+1.  Rond Nieuwpoort
+2.  Hazegraspolder
+
 ```{r}
 mapview(
     kleine_landbouwstreken$Duinen,
@@ -646,6 +672,8 @@ steekproefkader_finaal$Weidestreek %>%
   kable(digits = 3)
 ```
 
+In de Weidestreek zien we een relatief goede spreiding van punten. Er is vooral HOL aanwezig.
+
 ```{r}
 mapview(
     kleine_landbouwstreken$Weidestreek,
@@ -655,3 +683,11 @@ mapview(
   ) +
   mapview(steekproefkader_finaal$Weidestreek, zcol = "stratum", layer = "stratum")
 ```
+
+## Conclusie
+
+We merken sterke spatiale clustering van punten binnen eenzelfde stratum, vooral in de Duinen.
+Indien we geen overlap tussen punten van hetzelfde stratum willen, zullen hier bijgevolg maar een beperkt aantal punten geselecteerd worden bij steekproeftrekking.
+
+Om toch een voldoende grote steekproef te krijgen per landbouwstreek, kunnen we opteren om een allocatie te doen evenredig aan de oppervlakte van elk stratum.
+Het zal dan niet mogelijk zijn uitspraken te doen over elk stratum apart, maar wel over elke landbouwstreek als geheel en bijgevolg een aanvulling met de andere (grote) landbouwstreken om een uitspraak over Vlaanderen te kunnen doen.
