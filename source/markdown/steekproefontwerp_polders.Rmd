@@ -1300,14 +1300,14 @@ Een tweede kolom wordt toegevoegd `vervangen door`. Dit is enkel ingevuld bij ee
   
 Uiteindelijk moeten we tot een CSV komen waarbij enkel de punten *behouden* van de eerste batch en *vervanging* van de reserve batch geüpload worden in Avimap (met tellerscode erbij). Overlappen met reeds getelde MAS punten worden niet meegegeven (0 punten).
 
-```{r}
-leemstreek_avimap_df <- read_csv(file.path(
+```{r, eval=FALSE}
+polders_avimap_df <- read_csv(file.path(
   "data",
   "processed",
-  "MAS netwerk Vlaanderen- Westelijke_leemstreek_telpunten.csv"
+  "..."
 ))
 
-leemstreek_avimap_sf <- st_as_sf(leemstreek_avimap_df,
+polders_avimap_sf <- st_as_sf(polders_avimap_df,
   wkt = "WKT",
   crs = st_crs(4326)
 ) %>%
@@ -1315,22 +1315,22 @@ leemstreek_avimap_sf <- st_as_sf(leemstreek_avimap_df,
   st_transform(31370) %>%
   rename("geometry" = WKT)
 
-leemstreek_avimap_sf %>%
+polders_avimap_sf %>%
   st_write(
     dsn = file.path(
       "data",
       "processed",
-      "steekproef_leemstreek_avimap.gpkg"
+      "steekproef_polders_avimap.gpkg"
     ),
     delete_dsn = TRUE
   )
 
-leemstreek_avimap_sf %>%
+polders_avimap_sf %>%
   st_write(
     dsn = file.path(
       "data",
       "processed",
-      "steekproef_leemstreek_avimap.geojson"
+      "steekproef_polders_avimap.geojson"
     ),
     delete_dsn = TRUE
   )
@@ -1338,12 +1338,12 @@ leemstreek_avimap_sf %>%
 
 Voor reproduceerbaarheid houden we deze onder versiecontrole met de **git2rdata** package.
 
-```{r}
-git2rdata::write_vc(leemstreek_avimap_df,
+```{r, eval=FALSE}
+git2rdata::write_vc(polders_avimap_df,
   file = file.path(
     "data",
     "processed",
-    "steekproef_leemstreek_avimap"
+    "steekproef_polders_avimap"
   ),
   sorting = "pointid"
 )
