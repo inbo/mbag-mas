@@ -41,7 +41,6 @@ source(here("source", "R", "berekening_hulpvariabelen.R"))
 source(here("source", "R", "geocomputations.R"))
 ```
 
-
 # Inlezen kaartlagen
 
 ```{r, results="hide"}
@@ -52,12 +51,18 @@ landbouwstreken <- landbouwstreken %>%
          section = NA) %>%
   select(Naam, section) %>%
   st_transform(31370)
+```
+
+We beschouwen `r nrow(landbouwstreken)` landbouwstreken in vlaanderen.
+
+```{r}
 ggplot() +
   geom_sf(data = landbouwstreken, aes(fill = Naam)) +
   ggtitle("Landbouwstreken in Vlaanderen")
 ```
 
 We selecteren de Duinen en de Weidestreek.
+Deze bekijken we hier apart omdat dit kleine gebieden zijn en we willen uitzoeken of het de moeite is om hier ook een steekproeftrekking uit te voeren.
 
 ```{r}
 duinen_sf <- landbouwstreken %>%
@@ -71,7 +76,8 @@ kleine_landbouwstreken <- list(
 )
 ```
 
-# Openheid landschap
+# Berekening steekproefkader
+## Openheid landschap
 
 We kijken hoeveel open en halfopen landschap er aanwezig is in de Duinen en de Weidestreek.
 
@@ -101,7 +107,7 @@ selectie_openheid_klasses <- lapply(kleine_landbouwstreken, function(streek) {
 })
 ```
 
-## Duinen
+### Duinen
 
 ```{r}
 mapview(kleine_landbouwstreken$Duinen, color = "red", alpha.regions = 0, legend = FALSE) +
@@ -112,9 +118,8 @@ mapview(kleine_landbouwstreken$Duinen, color = "red", alpha.regions = 0, legend 
 area_duinen <- st_area(kleine_landbouwstreken$Duinen)
 ```
 
-In de Duinen hebben we een totale oppervlakte van `r area_duinen`.
-Wat is de oppervlakte open en halfopen landschap?
-`prop_area` is de proportie ten opzichte van de totale landbouwstreek.
+In de Duinen hebben we een totale oppervlakte van `r round(area_duinen*10^-6, 2)` km².
+Een dikke 50 % hiervan is open en halfopen landschap, maar op basis van de verspreiding, lijkt het erop dat veel niet in landbouwgebied ligt (Westhoekreservaat, haven Zeebrugge ...).
 
 ```{r}
 openheid_sf$Duinen %>%
@@ -126,7 +131,9 @@ openheid_sf$Duinen %>%
   kable()
 ```
 
-## Weidestreek
+`prop_area` is de proportie ten opzichte van de totale landbouwstreek.
+
+### Weidestreek
 
 ```{r}
 mapview(kleine_landbouwstreken$Weidestreek, color = "red", alpha.regions = 0, legend = FALSE) +
@@ -137,8 +144,8 @@ mapview(kleine_landbouwstreken$Weidestreek, color = "red", alpha.regions = 0, le
 area_weidestreek <- st_area(kleine_landbouwstreken$Weidestreek)
 ```
 
-In de Weidestreek hebben we een totale oppervlakte van `r area_weidestreek`.
-Wat is de oppervlakte open en halfopen landschap?
+In de Weidestreek hebben we een totale oppervlakte van `r round(area_weidestreek*10^-6, 2)` km².
+Een dikke 60 % hiervan is open en halfopen landschap.
 
 ```{r}
 openheid_sf$Weidestreek %>%
@@ -150,7 +157,7 @@ openheid_sf$Weidestreek %>%
   kable()
 ```
 
-# Exclusie landgebruiken
+## Exclusie landgebruiken
 
 OSM kaart gedownload op 27/02/2024.
 
@@ -183,7 +190,7 @@ exclusie_osm_landgebruiken <- list(
 )
 ```
 
-## Duinen
+### Duinen
 
 In groen duiden we de exclusielaag aan.
 
@@ -205,7 +212,7 @@ mapview(
   )
 ```
 
-## Weidestreek
+### Weidestreek
 
 ```{r}
 mapview(
@@ -225,7 +232,7 @@ mapview(
   )
 ```
 
-# Extractie paden
+## Extractie paden
 
 ```{r, cache=TRUE, results="hide"}
 paden <- lapply(names(selectie_openheid_klasses), function(i) {
@@ -243,7 +250,7 @@ paden <- lapply(names(selectie_openheid_klasses), function(i) {
 names(paden) <- names(selectie_openheid_klasses)
 ```
 
-## Duinen
+### Duinen
 
 In blauw tonen we de paden die overblijven.
 
@@ -275,7 +282,7 @@ paden$Duinen %>%
   kable(digits = 2)
 ```
 
-## Weidestreek
+### Weidestreek
 
 ```{r}
 mapview(
@@ -305,7 +312,7 @@ paden$Weidestreek %>%
   kable(digits = 2)
 ```
 
-# Punten langs paden
+## Punten langs paden
 
 ```{r}
 punten <- lapply(names(paden), function(i) {
@@ -319,7 +326,7 @@ punten <- lapply(names(paden), function(i) {
 names(punten) <- names(paden)
 ```
 
-## Duinen
+### Duinen
 
 ```{r}
 mapview(
@@ -350,7 +357,7 @@ punten$Duinen %>%
   kable()
 ```
 
-## Weidestreek
+### Weidestreek
 
 ```{r}
 mapview(
@@ -381,7 +388,7 @@ punten$Weidestreek %>%
   kable()
 ```
 
-# Selectie landgebruik VITO
+## Selectie landgebruik VITO
 
 We gebruiken volgende regel als criterium voor telpunten die in aanmerkingen komen voor wat betreft de samenstelling van het landgebruik in een buffer van 300 m rond het punt:
 
@@ -432,7 +439,7 @@ exclusie_punten <- lapply(names(punten), function(i) {
 names(exclusie_punten) <- names(punten)
 ```
 
-## Duinen
+### Duinen
 
 De kaart toont de punten die op deze manier niet meer in aanmerkingen komen.
 
@@ -470,7 +477,7 @@ telcirkels_selectie_landgebruik$Duinen %>%
   )
 ```
 
-## Weidestreek
+### Weidestreek
 
 ```{r}
 mapview(
@@ -506,7 +513,7 @@ telcirkels_selectie_landgebruik$Weidestreek %>%
   )
 ```
 
-# Selectie zichtbaarheid
+## Selectie zichtbaarheid
 
 ```{r, cache=TRUE, results="hide"}
 # Bereken zichtbaarheid
@@ -527,7 +534,7 @@ punten_selectie_zichtbaarheid <- lapply(punten_zichtbaarheid, function(streek) {
 })
 ```
 
-## Duinen
+### Duinen
 
 In de Duinen vallen geen punten weg.
 
@@ -538,7 +545,7 @@ ggplot(punten_zichtbaarheid$Duinen) +
   scale_x_continuous(breaks = seq(0, 1, 0.1))
 ```
 
-## Weidestreek
+### Weidestreek
 
 In de Weidestreek vallen een beperkt aantal punten weg.
 
@@ -549,7 +556,7 @@ ggplot(punten_zichtbaarheid$Weidestreek) +
   scale_x_continuous(breaks = seq(0, 1, 0.1))
 ```
 
-# Het steekproefkader
+# Stratificatie van het steekproefkader
 
 ```{r, results="hide"}
 # Voeg proportie beheerovereenkomsten toe
