@@ -161,9 +161,9 @@ openheid_sf$Weidestreek %>%
 
 OSM kaart gedownload op 27/02/2024.
 
-> Er zijn in beide gebieden geen snelwegen aanwezig dus dit wordt niet in de functie gespecifieerd (anders krijgen we een error)
+> Er zijn in beide gebieden geen snelwegen aanwezig dus dit wordt niet in de functie gespecifieerd (anders krijgen we een error). De code verschilt dus ligt van de code in de targets pipeline, maar zal hetzelfde resultaat geven.
 
-> Er is in de Weidestreek geen vliegveld aanwezig dus dit wordt niet in de functie gespecifieerd (anders krijgen we een error)
+> Er is in de Weidestreek geen vliegveld aanwezig dus dit wordt niet in de functie gespecifieerd (anders krijgen we een error). De code verschilt dus ligt van de code in de targets pipeline, maar zal hetzelfde resultaat geven.
 
 ```{r, cache=TRUE, results="hide"}
 exclusie_osm_duinen <- exclusie_landgebruik_osm(
@@ -192,7 +192,7 @@ exclusie_osm_landgebruiken <- list(
 
 ### Duinen
 
-In groen duiden we de exclusielaag aan.
+In groen duiden we de exclusielaag aan. Het gaat vooral om industriegebied, stedelijk gebied en militair gebied.
 
 ```{r}
 mapview(
@@ -213,6 +213,8 @@ mapview(
 ```
 
 ### Weidestreek
+
+Niet veel exclusie. Wel langs sporen en stedelijk gebied.
 
 ```{r}
 mapview(
