@@ -875,7 +875,8 @@ steekproef_thinned$Duinen %>%
   mutate(prop = n / sum(n)) %>%
   full_join(allocatie_df$Duinen) %>%
   select(Naam, openheid_klasse, is_sbp, allocatie, samplesize,
-         prop_steekproef = prop, n_steekproef = n)
+         prop_steekproef = prop, n_steekproef = n) %>%
+  kable()
 ```
 
 ```{r}
@@ -972,7 +973,8 @@ steekproef_thinned$Weidestreek %>%
   mutate(prop = n / sum(n)) %>%
   full_join(allocatie_df$Weidestreek) %>%
   select(Naam, openheid_klasse, is_sbp, allocatie, samplesize,
-         prop_steekproef = prop, n_steekproef = n)
+         prop_steekproef = prop, n_steekproef = n) %>%
+  kable()
 ```
 
 ```{r}
@@ -1033,5 +1035,22 @@ balansvergelijking_weidestreek %>%
 ```
 
 # Conclusie steekproeftrekking
+## Duinen
 
-...
+We hebben in de Duinen een steekproef van slechts `r eerste_set_duinen` punten kunnen nemen die niet overlappen binnen eenzelfde stratum.
+De proporties van de strata komen echter niet meer goed overeen met de allocatieproporties.
+Ruimtelijk gezien komt de steekproef wel relatief goed overeen met het steekproefkader.
+
+Enerzijds zijn dit zeer weinig punten, en anderzijds liggen deze punten zeer dicht bij de landbouwstreek van de Polders, zodat we geen sterk verschillende resultaten verwachten op basis van de punten die hier in de Duinen liggen.
+De steekproeftrekking van de Duinen zal allicht geen grote meerwaarde hebben voor uitspraken op Vlaams niveau.
+Bovendien kunnen we geen betrouwbare uitspraken doen op schaal van deze landbouwstreek zelf, omdat het zo weinig punten zijn en de proporties van de strata in de steekproef ook niet goed overeenkomen met deze in het steekproefkader.
+
+## Weidestreek
+
+We hebben in de Weidestreek een steekproef van `r eerste_set_weidestreek` punten kunnen nemen die niet overlappen binnen eenzelfde stratum.
+De proporties van de strata komen relatief goed overeen met de allocatieproporties.
+Ruimtelijk gezien komt de steekproef ook relatief goed overeen met het steekproefkader.
+
+De Weidestreek is een aparte regio met een relatief groot oppervlak die gunstig is voor akkervogels.
+De steekproeftrekking van de Weidestreek kan dus wel een meerwaarde hebben voor uitspraken op Vlaams niveau.
+Het aantal telpunten kan groot genoeg zijn om uitspraken te doen op schaal van deze landbouwstreek zelf en de proporties van de strata in de steekproef komen relatief goed overeenkomen met deze in het steekproefkader.
