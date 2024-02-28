@@ -698,7 +698,7 @@ mapview(
   mapview(steekproefkader_finaal$Weidestreek, zcol = "stratum", layer = "stratum")
 ```
 
-## Conclusie
+# Conclusie steekproefkader
 
 We merken sterke spatiale clustering van punten binnen eenzelfde stratum, vooral in de Duinen.
 Indien we geen overlap tussen punten van hetzelfde stratum willen, zullen hier bijgevolg maar een beperkt aantal punten geselecteerd worden bij steekproeftrekking.
@@ -707,6 +707,7 @@ Om toch een voldoende grote steekproef te krijgen per landbouwstreek, kunnen we 
 Het zal dan niet mogelijk zijn uitspraken te doen over elk stratum apart, maar wel over elke landbouwstreek als geheel en bijgevolg een aanvulling met de andere (grote) landbouwstreken om een uitspraak over Vlaanderen te kunnen doen.
 
 # Steekproeftrekking
+## Steekproefallocatie
 
 We nemen een ruimtelijk gebalanceerde steekproef van 50 punten en 50 reservepunten per landbouwstreek.
 
@@ -757,7 +758,7 @@ steekproef <- lapply(steekproefkader_per_stratum, function(streek) {
 })
 ```
 
-## Duinen
+### Duinen
 
 De allocatie tabel ziet er als volgt uit.
 
@@ -791,7 +792,7 @@ mapview(filter(steekproef$Duinen, batch == "eerste set"),
         zcol = "stratum", layer = "stratum")
 ```
 
-## Weidestreek
+### Weidestreek
 
 De allocatie tabel ziet er als volgt uit.
 
@@ -825,7 +826,7 @@ mapview(filter(steekproef$Weidestreek, batch == "eerste set"),
         zcol = "stratum", layer = "stratum")
 ```
 
-# Uitdunnen steekproef
+## Uitdunnen steekproef
 
 We zullen zien hoeveel punten er overblijven als we geen overlap tussen telpunten toelaten.
 
@@ -838,7 +839,7 @@ steekproef_thinned <- lapply(steekproef, function(streek) {
 })
 ```
 
-## Duinen
+### Duinen
 
 We zien een zeer sterke afname van aantal punten nadat we uitdunnen.
 
@@ -932,7 +933,7 @@ balansvergelijking_duinen %>%
     labs(fill = "Legende")
 ```
 
-## Weidestreek
+### Weidestreek
 
 We zien een zeer sterke afname van aantal punten nadat we uitdunnen.
 
@@ -1025,3 +1026,7 @@ balansvergelijking_weidestreek %>%
     facet_grid(~ openheid_klasse) +
     labs(fill = "Legende")
 ```
+
+# Conclusie steekproeftrekking
+
+...
