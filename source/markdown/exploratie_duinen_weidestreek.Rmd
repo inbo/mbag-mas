@@ -40,6 +40,7 @@ source(here("source", "R", "steekproefkader.R"))
 source(here("source", "R", "berekening_hulpvariabelen.R"))
 source(here("source", "R", "geocomputations.R"))
 source(here("source", "R", "draw_sample.R"))
+source(here("source", "R", "steekproeftrekking_nabehandeling.R"))
 ```
 
 # Inlezen kaartlagen
@@ -707,7 +708,9 @@ Het zal dan niet mogelijk zijn uitspraken te doen over elk stratum apart, maar w
 
 # Steekproeftrekking
 
-We nemen een ruimtelijk gebalanceerde steekproef van 50 punten en 50 reservepunten.
+We nemen een ruimtelijk gebalanceerde steekproef van 50 punten en 50 reservepunten per landbouwstreek.
+
+> Er is geen gebalanceerde steekproef m.b.t. proportie soortbeschermingsmaatregelen omdat er geen overlap was in deze landbouwstreken. De code verschilt dus ligt van de code in de targets pipeline, maar zal hetzelfde resultaat geven.
 
 ```{r}
 # Bereken allocatiefactor binnen SBP
@@ -754,3 +757,271 @@ steekproef <- lapply(steekproefkader_per_stratum, function(streek) {
 })
 ```
 
+## Duinen
+
+De allocatie tabel ziet er als volgt uit.
+
+```{r}
+allocatie_df$Duinen %>%
+  select(Naam, openheid_klasse, is_sbp, popsize, allocatie_gebied,
+         allocatie_sbp, allocatie_openheid, allocatie, samplesize) %>%
+  kable(digits = 3)
+```
+
+Het is gelukt om een steekproef te nemen volgens deze allocatie:
+
+```{r}
+steekproef$Duinen %>%
+  st_drop_geometry() %>%
+  count(openheid_klasse, is_sbp, batch) %>%
+  kable()
+```
+
+Echter, we zien dat de punten vrij dicht bij elkaar liggen in sommige gevallen.
+Hier tonen we enkel de eerste set:
+
+```{r}
+mapview(
+    kleine_landbouwstreken$Duinen,
+    color = "red",
+    alpha.regions = 0,
+    legend = FALSE
+  ) +
+mapview(filter(steekproef$Duinen, batch == "eerste set"),
+        zcol = "stratum", layer = "stratum")
+```
+
+## Weidestreek
+
+De allocatie tabel ziet er als volgt uit.
+
+```{r}
+allocatie_df$Weidestreek %>%
+  select(Naam, openheid_klasse, is_sbp, popsize, allocatie_gebied,
+         allocatie_sbp, allocatie_openheid, allocatie, samplesize) %>%
+  kable(digits = 3)
+```
+
+Het is gelukt om een steekproef te nemen volgens deze allocatie, maar we hebben geen reserveset voor OL buiten SBP.
+
+```{r}
+steekproef$Weidestreek %>%
+  st_drop_geometry() %>%
+  count(openheid_klasse, is_sbp, batch) %>%
+  kable()
+```
+
+Echter, we zien dat de punten vrij dicht bij elkaar liggen in sommige gevallen.
+Hier tonen we enkel de eerste set:
+
+```{r}
+mapview(
+    kleine_landbouwstreken$Weidestreek,
+    color = "red",
+    alpha.regions = 0,
+    legend = FALSE
+  ) +
+mapview(filter(steekproef$Weidestreek, batch == "eerste set"),
+        zcol = "stratum", layer = "stratum")
+```
+
+# Uitdunnen steekproef
+
+We zullen zien hoeveel punten er overblijven als we geen overlap tussen telpunten toelaten.
+
+```{r}
+steekproef_thinned <- lapply(steekproef, function(streek) {
+  thin_sample(
+    sample = streek,
+    thin_dist = 600
+    )
+})
+```
+
+## Duinen
+
+We zien een zeer sterke afname van aantal punten nadat we uitdunnen.
+
+```{r}
+steekproef_thinned$Duinen %>%
+  st_drop_geometry() %>%
+  count(openheid_klasse, is_sbp, batch) %>%
+  kable(digits = 3)
+```
+
+Hier tonen we enkel de eerste set:
+
+```{r}
+mapview(
+    kleine_landbouwstreken$Duinen,
+    color = "red",
+    alpha.regions = 0,
+    legend = FALSE
+  ) +
+mapview(filter(steekproef_thinned$Duinen, batch == "eerste set"),
+        zcol = "stratum", layer = "stratum")
+```
+
+We zien toch een groot verschil tussen de proporties in de steekproef (`prop_steekproef`) en de originele allocatie (`allocatie`) en bijgevolg het aantal punten (vergelijk `n_steekproef` met `samplesize`).
+
+```{r}
+steekproef_thinned$Duinen %>%
+  st_drop_geometry() %>%
+  filter(batch == "eerste set") %>%
+  count(openheid_klasse, is_sbp) %>%
+  mutate(prop = n / sum(n)) %>%
+  full_join(allocatie_df$Duinen) %>%
+  select(Naam, openheid_klasse, is_sbp, allocatie, samplesize,
+         prop_steekproef = prop, n_steekproef = n)
+```
+
+```{r}
+balansvergelijking_duinen <- steekproef_thinned$Duinen %>%
+  filter(batch == "eerste set") %>%
+  select_at(names(steekproefkader_finaal$Duinen)) %>%
+  mutate(fill_var = "steekproef") %>%
+  bind_rows(steekproefkader_finaal$Duinen %>% mutate(fill_var = "steekproefkader")) %>%
+  mutate(sbp_akkervogels = ifelse(is_sbp, "binnen SBP", "buiten SBP")) %>%
+  cbind(st_coordinates(.)) %>%
+  st_drop_geometry() %>%
+  mutate(fill_var = factor(fill_var, levels = c("steekproefkader", "steekproef")))
+
+count_df_duinen <- balansvergelijking_duinen %>%
+  group_by(fill_var, openheid_klasse, sbp_akkervogels) %>%
+  summarise(max_openheid = max(openheid_waarde),
+            max_x = max(X),
+            max_y = max(Y),
+            n = n(),
+            .groups = "drop")
+```
+
+We zien vooral dat de steekproef buiten SBP niet helemaal representatief lijkt met het steekproefkader op vlak van openheid.
+
+```{r}
+balansvergelijking_duinen %>%
+  ggplot(aes(x = sbp_akkervogels, y = openheid_waarde)) +
+    geom_boxplot(aes(fill = fill_var)) +
+    geom_label(data = count_df_duinen,
+               aes(y = max_openheid + 0.01, label = paste("n =", n)),
+               size = 3, position = position_dodge2(width = 0.75)) +
+    facet_grid(~ openheid_klasse) +
+    labs(fill = "Legende")
+```
+
+Als we naar longitude en latitude kijken, lijkt dit wel min of meer ok.
+
+```{r}
+balansvergelijking_duinen %>%
+  ggplot(aes(x = sbp_akkervogels, y = X)) +
+    geom_boxplot(aes(fill = fill_var)) +
+    geom_label(data = count_df_duinen,
+               aes(y = max_x + 2000, label = paste("n =", n)),
+               size = 3, position = position_dodge2(width = 0.75)) +
+    facet_grid(~ openheid_klasse) +
+    labs(fill = "Legende")
+```
+
+```{r}
+balansvergelijking_duinen %>%
+  ggplot(aes(x = sbp_akkervogels, y = Y)) +
+    geom_boxplot(aes(fill = fill_var)) +
+    geom_label(data = count_df_duinen,
+               aes(y = max_y + 2000, label = paste("n =", n)),
+               size = 3, position = position_dodge2(width = 0.75)) +
+    facet_grid(~ openheid_klasse) +
+    labs(fill = "Legende")
+```
+
+## Weidestreek
+
+We zien een zeer sterke afname van aantal punten nadat we uitdunnen.
+
+```{r}
+steekproef_thinned$Weidestreek %>%
+  st_drop_geometry() %>%
+  count(openheid_klasse, is_sbp, batch) %>%
+  kable(digits = 3)
+```
+
+Hier tonen we enkel de eerste set:
+
+```{r}
+mapview(
+    kleine_landbouwstreken$Weidestreek,
+    color = "red",
+    alpha.regions = 0,
+    legend = FALSE
+  ) +
+mapview(filter(steekproef_thinned$Weidestreek, batch == "eerste set"),
+        zcol = "stratum", layer = "stratum")
+```
+
+Er is geen extreem groot verschil tussen de proporties in de steekproef (`prop_steekproef`) en de originele allocatie (`allocatie`) en bijgevolg het aantal punten (vergelijk `n_steekproef` met `samplesize`).
+
+```{r}
+steekproef_thinned$Weidestreek %>%
+  st_drop_geometry() %>%
+  filter(batch == "eerste set") %>%
+  count(openheid_klasse, is_sbp) %>%
+  mutate(prop = n / sum(n)) %>%
+  full_join(allocatie_df$Weidestreek) %>%
+  select(Naam, openheid_klasse, is_sbp, allocatie, samplesize,
+         prop_steekproef = prop, n_steekproef = n)
+```
+
+```{r}
+balansvergelijking_weidestreek <- steekproef_thinned$Weidestreek %>%
+  filter(batch == "eerste set") %>%
+  select_at(names(steekproefkader_finaal$Weidestreek)) %>%
+  mutate(fill_var = "steekproef") %>%
+  bind_rows(steekproefkader_finaal$Weidestreek %>% mutate(fill_var = "steekproefkader")) %>%
+  mutate(sbp_akkervogels = ifelse(is_sbp, "binnen SBP", "buiten SBP")) %>%
+  cbind(st_coordinates(.)) %>%
+  st_drop_geometry() %>%
+  mutate(fill_var = factor(fill_var, levels = c("steekproefkader", "steekproef")))
+
+count_df_weidestreek <- balansvergelijking_weidestreek %>%
+  group_by(fill_var, openheid_klasse, sbp_akkervogels) %>%
+  summarise(max_openheid = max(openheid_waarde),
+            max_x = max(X),
+            max_y = max(Y),
+            n = n(),
+            .groups = "drop")
+```
+
+We zien vooral dat de steekproef OL buiten SBP niet helemaal representatief lijkt met het steekproefkader op vlak van openheid.
+
+```{r}
+balansvergelijking_weidestreek %>%
+  ggplot(aes(x = sbp_akkervogels, y = openheid_waarde)) +
+    geom_boxplot(aes(fill = fill_var)) +
+    geom_label(data = count_df_weidestreek,
+               aes(y = max_openheid + 0.01, label = paste("n =", n)),
+               size = 3, position = position_dodge2(width = 0.75)) +
+    facet_grid(~ openheid_klasse) +
+    labs(fill = "Legende")
+```
+
+Als we naar longitude en latitude kijken, lijkt dit wel min of meer ok.
+
+```{r}
+balansvergelijking_weidestreek %>%
+  ggplot(aes(x = sbp_akkervogels, y = X)) +
+    geom_boxplot(aes(fill = fill_var)) +
+    geom_label(data = count_df_weidestreek,
+               aes(y = max_x + 2000, label = paste("n =", n)),
+               size = 3, position = position_dodge2(width = 0.75)) +
+    facet_grid(~ openheid_klasse) +
+    labs(fill = "Legende")
+```
+
+```{r}
+balansvergelijking_weidestreek %>%
+  ggplot(aes(x = sbp_akkervogels, y = Y)) +
+    geom_boxplot(aes(fill = fill_var)) +
+    geom_label(data = count_df_weidestreek,
+               aes(y = max_y + 2000, label = paste("n =", n)),
+               size = 3, position = position_dodge2(width = 0.75)) +
+    facet_grid(~ openheid_klasse) +
+    labs(fill = "Legende")
+```
