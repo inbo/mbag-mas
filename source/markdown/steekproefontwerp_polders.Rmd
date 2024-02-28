@@ -1136,7 +1136,7 @@ oude_cirkels <- read_sf(here(
                                   ifelse(st_within(geometry, ol, sparse = FALSE),
                                          "OL",
                                          NA))) %>%
-  rename(definitief_punt = id) %>%
+  rename(definitief_punt = naam) %>%
   select(definitief_punt, openheid_klasse, is_sbp) %>% 
   mutate(sbp = ifelse(is_sbp == TRUE, "binnen", "buiten"),
          openheid_sbp = paste(openheid_klasse, sbp, "plan", sep = " "))
