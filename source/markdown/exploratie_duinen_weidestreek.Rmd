@@ -39,6 +39,7 @@ mbag_dir <- here()
 source(here("source", "R", "steekproefkader.R"))
 source(here("source", "R", "berekening_hulpvariabelen.R"))
 source(here("source", "R", "geocomputations.R"))
+source(here("source", "R", "draw_sample.R"))
 ```
 
 # Inlezen kaartlagen
@@ -639,6 +640,12 @@ names(steekproefkader_finaal) <- names(plus_openheid_landschap)
 
 ## Duinen
 
+Er zijn geen soortbeschermingsmaatregelen in de Duinen binnen het steekproefkader.
+
+```{r}
+summary(plus_sb$Duinen$area_prop_sb)
+```
+
 ```{r}
 steekproefkader_finaal$Duinen %>%
   st_drop_geometry() %>%
@@ -663,6 +670,12 @@ mapview(
 ```
 
 ## Weidestreek
+
+Er zijn geen soortbeschermingsmaatregelen in de Weidestreek binnen het steekproefkader.
+
+```{r}
+summary(plus_sb$Weidestreek$area_prop_sb)
+```
 
 ```{r}
 steekproefkader_finaal$Weidestreek %>%
@@ -691,3 +704,53 @@ Indien we geen overlap tussen punten van hetzelfde stratum willen, zullen hier b
 
 Om toch een voldoende grote steekproef te krijgen per landbouwstreek, kunnen we opteren om een allocatie te doen evenredig aan de oppervlakte van elk stratum.
 Het zal dan niet mogelijk zijn uitspraken te doen over elk stratum apart, maar wel over elke landbouwstreek als geheel en bijgevolg een aanvulling met de andere (grote) landbouwstreken om een uitspraak over Vlaanderen te kunnen doen.
+
+# Steekproeftrekking
+
+We nemen een ruimtelijk gebalanceerde steekproef van 50 punten en 50 reservepunten.
+
+```{r}
+# Bereken allocatiefactor binnen SBP
+allocatie_binnen_sbp <- lapply(steekproefkader_finaal, function(streek) {
+  streek %>%
+    st_drop_geometry() %>%
+    count(is_sbp) %>%
+    mutate(prop = n / sum(n)) %>%
+    filter(is_sbp) %>%
+    pull(prop)
+})
+
+# Bereken allocatie tabel
+allocatie_df <- lapply(names(steekproefkader_finaal), function(i) {
+  allocatie(
+    steekproefkader = steekproefkader_finaal[[i]],
+    min_samplesize = 0,
+    target_samplesize = 50,
+    popsize_minimum = 0,
+    allocatie_binnen_sbp = allocatie_binnen_sbp[[i]],
+    allocatie_leemstreek = 0,
+    ol_strata = c("OL", "HOL")
+    )
+})
+names(allocatie_df) <- names(steekproefkader_finaal)
+
+# Voeg steekproefkader toe aan allocatie tabel
+steekproefkader_per_stratum <- lapply(names(steekproefkader_finaal),
+                                      function(i) {
+  steekproefkader_finaal[[i]] %>%
+    semi_join(allocatie_df[[i]] %>% select(Naam, is_sbp, openheid_klasse),
+              by = c("Naam", "is_sbp", "openheid_klasse"))
+})
+names(steekproefkader_per_stratum) <- names(steekproefkader_finaal)
+
+# Neem ruimtelijk gebalanceerde steekproef
+steekproef <- lapply(steekproefkader_per_stratum, function(streek) {
+  draw_sample(
+    sampling_frame = streek,
+    sample_size = 50,
+    sample_size_multiplication = 2,
+    balance = c("X", "Y")
+    )
+})
+```
+
