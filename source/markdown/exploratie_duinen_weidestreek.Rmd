@@ -844,13 +844,15 @@ steekproef_thinned <- lapply(steekproef, function(streek) {
 We zien een zeer sterke afname van aantal punten nadat we uitdunnen.
 
 ```{r}
+eerste_set_duinen <- nrow(filter(steekproef_thinned$Duinen,
+                                 batch == "eerste set"))
 steekproef_thinned$Duinen %>%
   st_drop_geometry() %>%
   count(openheid_klasse, is_sbp, batch) %>%
   kable(digits = 3)
 ```
 
-Hier tonen we enkel de eerste set:
+In de eerste set hebben we nu `r eerste_set_duinen` punten:
 
 ```{r}
 mapview(
@@ -938,13 +940,16 @@ balansvergelijking_duinen %>%
 We zien een zeer sterke afname van aantal punten nadat we uitdunnen.
 
 ```{r}
+eerste_set_weidestreek <- nrow(filter(steekproef_thinned$Weidestreek,
+                                      batch == "eerste set"))
+
 steekproef_thinned$Weidestreek %>%
   st_drop_geometry() %>%
   count(openheid_klasse, is_sbp, batch) %>%
   kable(digits = 3)
 ```
 
-Hier tonen we enkel de eerste set:
+In de eerste set hebben we nu `r eerste_set_weidestreek` punten:
 
 ```{r}
 mapview(
