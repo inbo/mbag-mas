@@ -1035,6 +1035,11 @@ balansvergelijking_weidestreek %>%
 ```
 
 # Conclusie steekproeftrekking
+
+Er zijn geen soortbeschermingsmaatregelen in de Duinen/Weidestreek binnen het steekproefkader.
+Dit zorgt er voor dat we de effectiviteit van deze maatregelen dus niet gaan kunnen testen voor deze regio's.
+Dit is ook interessant om in het achterhoofd te houden voor de globale resultaten voor Vlaanderen.
+
 ## Duinen
 
 We hebben in de Duinen een steekproef van slechts `r eerste_set_duinen` punten kunnen nemen die niet overlappen binnen eenzelfde stratum.
