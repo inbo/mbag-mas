@@ -1042,7 +1042,6 @@ balansvergelijking %>%
 
 We zien dat de steekproef vanaf 50 punten per stratum een goede afspiegeling is van de volledige populatie (boxplots voor steekproef eerste 50 punten en volledig steekproefkader zijn zeer gelijkend).
 
-
 ## Visualisatie steekproef
 
 ```{r}
@@ -1114,11 +1113,16 @@ Omdat we nu een nieuwe laag van SBP gebruiken, moeten we dit stratum opnieuw ber
 ```{r}
 ol <- selectie_openheid(
   gebied = perimeters_data,
-  ol_strata = c("OL"))
+  ol_strata = c("OL")) %>%
+    mutate(openheid_klasse = "OL")
 
 hol <- selectie_openheid(
   gebied = perimeters_data,
-  ol_strata = c("HOL"))
+  ol_strata = c("HOL")) %>%
+    mutate(openheid_klasse = "HOL")
+
+ol_hol <- rbind(ol, hol) %>%
+    select(openheid_klasse)
 
 # inlezen bestaande punten
 oude_cirkels <- read_sf(here(
@@ -1133,11 +1137,7 @@ oude_cirkels <- read_sf(here(
                                 sparse = FALSE) %>%
            as.logical()
   ) %>%
-  mutate(openheid_klasse = ifelse(st_within(geometry, hol, sparse = FALSE),
-                                  "HOL",
-                                  ifelse(st_within(geometry, ol, sparse = FALSE),
-                                         "OL",
-                                         NA))) %>%
+st_join(ol_hol) %>%
   rename(definitief_punt = naam) %>%
   select(definitief_punt, openheid_klasse, is_sbp) %>% 
   mutate(sbp = ifelse(is_sbp == TRUE, "binnen", "buiten"),
@@ -1196,6 +1196,14 @@ mapview(oude_cirkels_buffer %>% filter(definitief_punt %in% intersect$definitief
     layer = "nieuwe punten"
   )
 ```
+
+Controle bestaande punten in steekproef:
+```{r}
+steekproef %>% 
+  filter(!str_detect(pointid, "Zn")) %>% 
+  kable()
+```
+
 ## Output als KML
 
 We nemen een steekproef van 50 cirkels per stratum (eerste set) waarbij we ook de volgende 50 punten per stratum includeren voor als er een punt niet zou kunnen geteld worden in het veld (reserve set).
