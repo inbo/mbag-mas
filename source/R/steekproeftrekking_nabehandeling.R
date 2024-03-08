@@ -72,11 +72,16 @@ replace_by_existing <- function(sample,
   # Determine where HOL and OL is in gebied
   ol <- selectie_openheid(
     gebied = gebied,
-    ol_strata = c("OL"))
+    ol_strata = c("OL")) %>%
+    mutate(openheid_klasse = "OL")
 
   hol <- selectie_openheid(
     gebied = gebied,
-    ol_strata = c("HOL"))
+    ol_strata = c("HOL")) %>%
+    mutate(openheid_klasse = "HOL")
+
+  ol_hol <- rbind(ol, hol) %>%
+    select(openheid_klasse)
   # Recalculate sbp stratum existing points
   old_points <- existing_points %>%
     st_transform(crs = 31370) %>%
@@ -86,11 +91,7 @@ replace_by_existing <- function(sample,
                                   sparse = FALSE) %>%
              as.logical()
     ) %>%
-    mutate(openheid_klasse = ifelse(st_within(., hol) %>% as.logical(),
-                                    "HOL",
-                                    ifelse(st_within(., ol) %>% as.logical(),
-                                           "OL",
-                                           NA))) %>%
+    st_join(ol_hol) %>%
     rename(definitief_punt = id_existing_points) %>%
     select(definitief_punt, openheid_klasse, is_sbp)
 
