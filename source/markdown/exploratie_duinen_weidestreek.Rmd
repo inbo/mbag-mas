@@ -300,7 +300,8 @@ m <- mapview(
     st_crop(kleine_landbouwstreken$Duinen, detail_westkant_sf),
     color = "red",
     alpha.regions = 0,
-    legend = FALSE
+    legend = FALSE,
+    lwd = 1
   ) +
   mapview(
     st_crop(selectie_openheid_klasses$Duinen, detail_westkant_sf),
@@ -339,7 +340,8 @@ m <- mapview(
     st_crop(kleine_landbouwstreken$Duinen, detail_oostkant_sf),
     color = "red",
     alpha.regions = 0,
-    legend = FALSE
+    legend = FALSE,
+    lwd = 1
   ) +
   mapview(
     st_crop(selectie_openheid_klasses$Duinen, detail_oostkant_sf),
@@ -414,7 +416,8 @@ m <- mapview(
     kleine_landbouwstreken$Weidestreek,
     color = "red",
     alpha.regions = 0,
-    legend = FALSE
+    legend = FALSE,
+    lwd = 2
   ) +
   mapview(
     selectie_openheid_klasses$Weidestreek,
@@ -950,7 +953,8 @@ m <- mapview(
     kleine_landbouwstreken$Weidestreek,
     color = "red",
     alpha.regions = 0,
-    legend = FALSE
+    legend = FALSE,
+    lwd = 2
   ) +
   mapview(
     steekproefkader_finaal$Weidestreek,
@@ -1328,4 +1332,61 @@ Het aantal telpunten kan groot genoeg zijn om uitspraken te doen op schaal van d
 
 De vervolgvraag stelt zich of we een grotere finale steekproef kunnen bekomen door geen reservepunten te voorzien.
 
+```{r}
+calc_chisq <- function(observed, expected) {
+  calc_df <- tibble(observed = observed, expected = expected) %>%
+    rowwise() %>%
+    mutate(single_chi = (observed - expected)^2 / expected)
+  
+  sum(calc_df$single_chi)
+}
+```
 
+```{r}
+sizes <- 50:80
+out_list <- vector(mode = "list", length = length(sizes))
+
+for (i in seq_along(sizes)) {
+  extended_size <- sizes[i]
+  
+  allocatie_extended <- allocatie(
+    steekproefkader = steekproefkader_finaal$Weidestreek,
+    min_samplesize = 0,
+    target_samplesize = extended_size,
+    popsize_minimum = 0,
+    allocatie_binnen_sbp = allocatie_binnen_sbp$Weidestreek,
+    allocatie_leemstreek = 0,
+    ol_strata = c("OL", "HOL")
+    )
+  
+  steekproef_extended <- draw_sample(
+    sampling_frame = steekproefkader_per_stratum$Weidestreek,
+    sample_size = extended_size,
+    sample_size_multiplication = 1,
+    balance = c("X", "Y")
+    )
+
+  steekproef_extended_thinned <- thin_sample(
+    sample = steekproef_extended,
+    thin_dist = 600
+    )
+  
+  summary_df <- steekproef_extended_thinned %>%
+    st_drop_geometry() %>%
+    count(openheid_klasse, is_sbp) %>%
+    mutate(prop = n / sum(n)) %>%
+    full_join(allocatie_extended, by = join_by(openheid_klasse, is_sbp)) %>%
+    select(Naam, openheid_klasse, is_sbp, allocatie, samplesize,
+           prop_steekproef = prop, n_steekproef = n)
+  
+  out_list[[i]] <- tibble(
+    steekproef_grootte = extended_size,
+    finale_grootte = nrow(steekproef_extended_thinned),
+    chisq = calc_chisq(observed = summary_df$n_steekproef,
+                       expected = summary_df$samplesize)
+  )
+}
+names(out_list) <- sizes
+
+chi_squared_df <- do.call(rbind.data.frame, out_list)
+```
