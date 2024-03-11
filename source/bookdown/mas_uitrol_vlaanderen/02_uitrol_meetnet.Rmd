@@ -274,6 +274,32 @@ De toestand van de GitHub repository op het moment van de steekproeftrekking voo
 
 -   Bespreking Voeren en Duinen
 
+### De Duinen
+
+...
+
+```{=tex}
+\begin{figure}
+  \makebox[\textwidth][c]{\includegraphics[width=1.1\textwidth]{media/steekproeftrekking/afbakening_duinen_totaal.png}}
+  \caption{Afbakening van het steekproefkader in de landbouwstreek van de Duinen. Selectie van open en halfopen landschap binnen de perimeter (rood). Exclusie van landgebruiken op basis van OpenStreetMap data (groen). Selectie van paden en wegen (blauw). \textbf{A.} Westkant (xmin = 150000, xmax = 177000, ymin = 160000, ymax = 180000). \textbf{B.} Oostkant (xmin = 150000, xmax = 177000, ymin = 160000, ymax = 180000).}
+  \label{fig:afbakening-duinen}
+\end{figure}
+```
+...
+
+```{=tex}
+\begin{figure}
+  \makebox[\textwidth][c]{\includegraphics[width=1.1\textwidth]{media/steekproeftrekking/steekproefkader_duinen_totaal.png}}
+  \caption{Steekproefkader in de landbouwstreek van de Duinen. Er zijn enkel potentiële punten rond Nieuwpoort (\textbf{A}) en Knokke (Het Zwin, \textbf{B}).}
+  \label{fig:steekproefkader-duinen}
+\end{figure}
+```
+...
+
+### De Weidestreek
+
+...
+
 [^02_uitrol_meetnet-1]: Met uitzondering van de Duinen en de Weidestreek.
     Deze worden apart besproken in Sectie \@ref(overige-streken).
 
