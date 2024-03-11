@@ -282,6 +282,104 @@ mapview(
 ```
 
 ```{r}
+# Create png for report
+detail_westkant <- c(
+  "xmin" = 21500,
+  "ymin" = 197000,
+  "xmax" = 50000,
+  "ymax" = 217000)
+
+detail_westkant_sf <- tibble(geometry = st_as_sfc(st_bbox(detail_westkant))) %>% 
+  st_as_sf() %>%
+  st_set_crs(31370)
+
+mapview::mapviewOptions(fgb = FALSE) # opslaan werkt anders niet
+dir.create("media/steekproeftrekking", showWarnings = FALSE)
+
+m <- mapview(
+    st_crop(kleine_landbouwstreken$Duinen, detail_westkant_sf),
+    color = "red",
+    alpha.regions = 0,
+    legend = FALSE
+  ) +
+  mapview(
+    st_crop(selectie_openheid_klasses$Duinen, detail_westkant_sf),
+    col.regions = "red",
+    legend = FALSE
+  ) +
+  mapview(
+    st_crop(exclusie_osm_landgebruiken$Duinen, detail_westkant_sf),
+    col.regions = "green",
+    legend = FALSE
+  ) +
+  mapview(
+    st_crop(paden$Duinen, detail_westkant_sf),
+    legend = FALSE)
+
+mapview::mapshot(m, file = here("media", "steekproeftrekking",
+                                "afbakening_duinen_west.png"))
+```
+
+```{r}
+# Create png for report
+detail_oostkant <- c(
+  "xmin" = 50000,
+  "ymin" = 213000,
+  "xmax" = 82000,
+  "ymax" = 230000)
+
+detail_oostkant_sf <- tibble(geometry = st_as_sfc(st_bbox(detail_oostkant))) %>% 
+  st_as_sf() %>%
+  st_set_crs(31370)
+
+mapview::mapviewOptions(fgb = FALSE) # opslaan werkt anders niet
+dir.create("media/steekproeftrekking", showWarnings = FALSE)
+
+m <- mapview(
+    st_crop(kleine_landbouwstreken$Duinen, detail_oostkant_sf),
+    color = "red",
+    alpha.regions = 0,
+    legend = FALSE
+  ) +
+  mapview(
+    st_crop(selectie_openheid_klasses$Duinen, detail_oostkant_sf),
+    col.regions = "red",
+    legend = FALSE
+  ) +
+  mapview(
+    st_crop(exclusie_osm_landgebruiken$Duinen, detail_oostkant_sf),
+    col.regions = "green",
+    legend = FALSE
+  ) +
+  mapview(
+    st_crop(paden$Duinen, detail_oostkant_sf),
+    legend = FALSE)
+
+mapview::mapshot(m, file = here("media", "steekproeftrekking",
+                                "afbakening_duinen_oost.png"))
+```
+
+```{r}
+plot1 <- png::readPNG(here("media", "steekproeftrekking",
+                           "afbakening_duinen_west.png"))
+plot2 <- png::readPNG(here("media", "steekproeftrekking",
+                           "afbakening_duinen_oost.png"))
+
+p <- cowplot::plot_grid(
+  grid::rasterGrob(plot1),
+  grid::rasterGrob(plot2),
+  nrow = 1, labels = c("A.", "B."))
+
+
+ggsave(here("media", "steekproeftrekking", "afbakening_duinen_totaal.png"),
+       p,
+       dpi = 300,
+       width = 8,
+       height = 4)
+```
+
+
+```{r}
 paden$Duinen %>%
   group_by(Naam, key, value) %>%
   summarise(.groups = "drop") %>%
@@ -701,7 +799,6 @@ m <- mapview(
 mapview::mapshot(m, file = here("media", "steekproeftrekking",
                                 "steekproefkader_duinen_west.png"))
 ```
-
 
 ```{r}
 detail_east <- c(
