@@ -410,6 +410,31 @@ mapview(
 ```
 
 ```{r}
+m <- mapview(
+    kleine_landbouwstreken$Weidestreek,
+    color = "red",
+    alpha.regions = 0,
+    legend = FALSE
+  ) +
+  mapview(
+    selectie_openheid_klasses$Weidestreek,
+    col.regions = "red",
+    legend = FALSE
+  ) +
+  mapview(
+    exclusie_osm_landgebruiken$Weidestreek,
+    col.regions = "green",
+    legend = FALSE
+  ) +
+  mapview(
+    paden$Weidestreek,
+    legend = FALSE)
+
+mapview::mapshot(m, file = here("media", "steekproeftrekking",
+                                "afbakening_weidestreek.png"))
+```
+
+```{r}
 paden$Weidestreek %>%
   group_by(Naam, key, value) %>%
   summarise(.groups = "drop") %>%
@@ -914,7 +939,27 @@ mapview(
     alpha.regions = 0,
     legend = FALSE
   ) +
-  mapview(steekproefkader_finaal$Weidestreek, zcol = "stratum", layer = "stratum")
+  mapview(
+    steekproefkader_finaal$Weidestreek,
+    zcol = "stratum",
+    layer = "stratum")
+```
+
+```{r}
+m <- mapview(
+    kleine_landbouwstreken$Weidestreek,
+    color = "red",
+    alpha.regions = 0,
+    legend = FALSE
+  ) +
+  mapview(
+    steekproefkader_finaal$Weidestreek,
+    zcol = "stratum",
+    layer = "stratum",
+    cex = 4)
+
+mapview::mapshot(m, file = here("media", "steekproeftrekking",
+                                "steekproefkader_weidestreek.png"))
 ```
 
 # Conclusie steekproefkader
