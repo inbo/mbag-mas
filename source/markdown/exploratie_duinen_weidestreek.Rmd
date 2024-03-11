@@ -670,6 +670,128 @@ mapview(
   mapview(steekproefkader_finaal$Duinen, zcol = "stratum", layer = "stratum")
 ```
 
+```{r}
+# Create png for report
+detail_west <- c(
+  "xmin" = 34000,
+  "ymin" = 203000,
+  "xmax" = 40500,
+  "ymax" = 208000)
+
+detail_west_sf <- tibble(geometry = st_as_sfc(st_bbox(detail_west))) %>% 
+  st_as_sf() %>%
+  st_set_crs(31370)
+
+mapview::mapviewOptions(fgb = FALSE) # opslaan werkt anders niet
+dir.create("media/steekproeftrekking", showWarnings = FALSE)
+
+m <- mapview(
+    st_crop(kleine_landbouwstreken$Duinen, detail_west_sf),
+    color = "red",
+    alpha.regions = 0,
+    legend = FALSE,
+    lwd = 2
+  ) +
+  mapview(st_crop(steekproefkader_finaal$Duinen, detail_west_sf),
+          zcol = "stratum",
+          layer = "stratum") +
+  mapview(detail_west_sf, color = "purple", alpha.regions = 0, legend = FALSE,
+          lwd = 2)
+
+mapview::mapshot(m, file = here("media", "steekproeftrekking",
+                                "steekproefkader_duinen_west.png"))
+```
+
+
+```{r}
+detail_east <- c(
+  "xmin" = 77000,
+  "ymin" = 225000,
+  "xmax" = 81500,
+  "ymax" = 230000)
+
+detail_east_sf <- tibble(geometry = st_as_sfc(st_bbox(detail_east))) %>% 
+  st_as_sf() %>%
+  st_set_crs(31370)
+
+m <- mapview(
+    st_crop(kleine_landbouwstreken$Duinen, detail_east_sf),
+    color = "red",
+    alpha.regions = 0,
+    legend = FALSE,
+    lwd = 2
+  ) +
+  mapview(st_crop(steekproefkader_finaal$Duinen, detail_east_sf),
+          zcol = "stratum",
+          layer = "stratum") +
+  mapview(detail_east_sf, color = "purple", alpha.regions = 0, legend = FALSE,
+          lwd = 2)
+
+mapview::mapshot(m, file = here("media", "steekproeftrekking",
+                                "steekproefkader_duinen_oost.png"))
+```
+
+```{r}
+m <- mapview(
+    kleine_landbouwstreken$Duinen,
+    color = "red",
+    alpha.regions = 0,
+    legend = FALSE,
+    lwd = 1
+  ) +
+  mapview(steekproefkader_finaal$Duinen,
+          zcol = "stratum",
+          layer = "stratum") +
+  mapview(detail_east_sf, color = "purple", alpha.regions = 0, legend = FALSE,
+          lwd = 1) +
+  mapview(detail_west_sf, color = "purple", alpha.regions = 0, legend = FALSE,
+          lwd = 1)
+
+mapview::mapshot(m, file = here("media", "steekproeftrekking",
+                                "steekproefkader_duinen.png"))
+```
+
+```{r}
+plot1 <- png::readPNG(here("media", "steekproeftrekking",
+                           "steekproefkader_duinen_west.png"))
+plot2 <- png::readPNG(here("media", "steekproeftrekking",
+                           "steekproefkader_duinen_oost.png"))
+plot3 <- png::readPNG(here("media", "steekproeftrekking",
+                           "steekproefkader_duinen.png"))
+
+p <- cowplot::plot_grid(
+  grid::rasterGrob(plot3),
+  cowplot::plot_grid(grid::rasterGrob(plot1), grid::rasterGrob(plot2),
+                     labels = c("A.", "B.")),
+  ncol = 1)
+
+
+plots <- cowplot::align_plots(
+  grid::rasterGrob(plot3), grid::rasterGrob(plot1),
+  align = "v", axis = "l")
+# then build the bottom row
+bottom_row <- cowplot::plot_grid(
+  grid::rasterGrob(plot1), grid::rasterGrob(plot2),
+  labels = c("A.", "B."), label_size = 12)
+
+p <- cowplot::plot_grid(plots[[1]], bottom_row, ncol = 1)
+
+p <- cowplot::ggdraw(p) + 
+  geom_text(
+    data = data.frame(x = c(0.38, 0.64),
+                      y = c(0.72, 0.88),
+                      label = c("A.", "B.")),
+    aes(x, y, label = label), size = 3,
+    inherit.aes = FALSE
+  )
+
+ggsave(here("media", "steekproeftrekking", "steekproefkader_duinen_totaal.png"),
+       p,
+       dpi = 300,
+       width = 9,
+       height = 8)
+```
+
 ## Weidestreek
 
 Er zijn geen soortbeschermingsmaatregelen in de Weidestreek binnen het steekproefkader.
@@ -1059,3 +1181,9 @@ Ruimtelijk gezien komt de steekproef ook relatief goed overeen met het steekproe
 De Weidestreek is een aparte regio met een relatief groot oppervlak die gunstig is voor akkervogels.
 De steekproeftrekking van de Weidestreek kan dus wel een meerwaarde hebben voor uitspraken op Vlaams niveau.
 Het aantal telpunten kan groot genoeg zijn om uitspraken te doen op schaal van deze landbouwstreek zelf en de proporties van de strata in de steekproef komen relatief goed overeenkomen met deze in het steekproefkader.
+
+### Uitbreiding Weidestreek
+
+De vervolgvraag stelt zich of we een grotere finale steekproef kunnen bekomen door geen reservepunten te voorzien.
+
+
