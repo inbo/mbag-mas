@@ -1337,7 +1337,7 @@ Het aantal telpunten kan groot genoeg zijn om uitspraken te doen op schaal van d
 ### Uitbreiding Weidestreek
 
 ```{r}
-sizes <- 40:80
+sizes <- 40:100
 ```
 
 De vervolgvraag stelt zich of we een grotere finale steekproef kunnen bekomen door geen reservepunten te voorzien.
@@ -1387,13 +1387,14 @@ for (i in seq_along(sizes)) {
     mutate(prop = n / sum(n)) %>%
     full_join(allocatie_extended, by = join_by(openheid_klasse, is_sbp)) %>%
     select(Naam, openheid_klasse, is_sbp, allocatie, samplesize,
-           prop_steekproef = prop, n_steekproef = n)
+           prop_steekproef = prop, n_steekproef = n) %>%
+    mutate(expected = allocatie * sum(n_steekproef))
   
   out_list[[i]] <- tibble(
     steekproef_grootte = extended_size,
     finale_grootte = nrow(steekproef_extended_thinned),
     chisq = calc_chisq(observed = summary_df$n_steekproef,
-                       expected = summary_df$samplesize)
+                       expected = summary_df$expected)
   )
 }
 names(out_list) <- sizes
@@ -1402,24 +1403,10 @@ chi_squared_df <- do.call(rbind.data.frame, out_list)
 ```
 
 ```{r}
-max_inf_val <- chi_squared_df %>%
-  filter(chisq == Inf) %>%
-  pull(steekproef_grootte) %>%
-  max()
-
 ggplot(chi_squared_df, aes(x = steekproef_grootte, y = chisq)) +
   geom_point(aes(fill = finale_grootte), shape = 21, size = 3) +
-  geom_vline(xintercept = max_inf_val + 0.5, linetype = "dashed",
-             colour = "darkgrey") +
-  annotate("label",
-           x = max_inf_val,
-           y = max(pull(filter(chi_squared_df, chisq != Inf), chisq)),
-           label = "Inf",
-           colour = "black",
-           fill = "lightblue",
-           hjust = "right") +
   geom_text(aes(label = finale_grootte),
-            position = position_nudge(x = -0.3, y = 0.5)) +
+            position = position_nudge(x = -0.3, y = 0.1)) +
   scale_x_continuous(minor_breaks = sizes,
                      breaks = seq(min(sizes), max(sizes), 5)) +
   scale_fill_gradientn(colours = c("firebrick", "yellow2", "green")) +
