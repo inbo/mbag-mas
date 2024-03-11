@@ -280,10 +280,10 @@ Het zal dan niet mogelijk zijn uitspraken te doen over elk stratum apart, maar w
 ### De Duinen
 
 De landbouwstreek van de Duinen is een smalle strook langs de kust met een totale oppervlakte van 80.27 km².
-Een 54.3 % hiervan is open en halfopen landschap.
+Een 54,3 % hiervan is open en halfopen landschap (resp. 12,9 en 41,4 %).
 Grote delen hiervan bleken echter niet in landbouwgebied te liggen.
 Het gaat vooral om industriegebied, stedelijk gebied en militair gebied.
-In het resterende gebied liggen een beperkt aantal paden en wegen (Fig. \@ref(fig:afbakening-duinen)).
+In het resterende gebied ligt 51,67 km paden en wegen (Fig. \@ref(fig:afbakening-duinen)).
 
 ```{=tex}
 \begin{figure}
@@ -313,10 +313,28 @@ We besluiten geen punten te tellen voor het MAS in de Duinen.
 
 ### De Weidestreek
 
-...
+De Weidestreek heeft een totale oppervlakte van 50,53 km².
+Een 62,9 % hiervan is open en halfopen landschap (resp. 11,0 en 51,9 %).
+Een beperkt aandeel leek niet in landbouwgebied te liggen.
+Het gaat vooral om spoorwegen en stedelijk gebied.
+In het resterende gebied ligt 80,56 km paden en wegen (Fig. \@ref(fig:afbakening-weidestreek)).
+
+Langs deze paden werden punten gelegd die bijgevolg werden gefilterd op basis van landgebruik en zichtbaarheid zoals beschreven in \@ref(meetnet-ontwerp).
+In het overgebleven steekproefkader merkten we een sterke spatiale clustering van punten binnen eenzelfde stratum, maar met een veel betere spreiding van de punten in het volledige gebied (Fig. \@ref(fig:steekproefkader-weidestreek)).
+
+Bijgevolg hebben we in de Weidestreek wel een voldoende grote steekproef nemen waarvan punten niet overlapten binnen eenzelfde stratum.
+De proporties van de strata kwamen bovendien niet meer goed overeen met de allocatieproporties.
+De proporties van de strata kwamen relatief goed overeen met de allocatieproporties.
+Ruimtelijk gezien kwam de steekproef ook relatief goed overeen met het steekproefkader.
+
+De Weidestreek is een aparte regio met een relatief groot oppervlak die gunstig is voor akkervogels.
+De steekproeftrekking van de Weidestreek kan dus wel een meerwaarde hebben voor MAS Vlaanderen.
+Het aantal telpunten kan groot genoeg zijn om uitspraken te doen op schaal van deze landbouwstreek zelf en de proporties van de strata in de steekproef komen relatief goed overeenkomen met deze in het steekproefkader.
+We besluiten in de Weidestreek wel een steekproef te nemen zoals beschreven in \@ref(meetnet-ontwerp) met het verschil dat we hier een allocatie gebruikten evenredig aan de oppervlakte van elk stratum.
 
 [^02_uitrol_meetnet-1]: Met uitzondering van de Duinen en de Weidestreek.
     Deze worden apart besproken in Sectie \@ref(overige-streken).
 
 [^02_uitrol_meetnet-2]: Bij de steekproeftrekking wordt een methode gebruikt die zal vermijden dat telpunten en hun telcirkels overlappen.
     Het kan in deze fase dus geen kwaad dat potentiële telpunten op een afstand van minder dan 300 m van elkaar gelegen zijn.
+
