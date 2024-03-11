@@ -288,12 +288,12 @@ In het resterende gebied ligt 51,67 km paden en wegen (Fig. \@ref(fig:afbakening
 ```{=tex}
 \begin{figure}
   \makebox[\textwidth][c]{\includegraphics[width=1.1\textwidth]{media/steekproeftrekking/afbakening_duinen_totaal.png}}
-  \caption{Afbakening van het steekproefkader in de landbouwstreek van de Duinen. Selectie van open en halfopen landschap binnen de perimeter (rood). Exclusie van landgebruiken op basis van OpenStreetMap data (groen). Selectie van paden en wegen (blauw). \textbf{A.} Westkant (xmin = 150000, xmax = 177000, ymin = 160000, ymax = 180000). \textbf{B.} Oostkant (xmin = 150000, xmax = 177000, ymin = 160000, ymax = 180000).}
+  \caption{Afbakening van het steekproefkader in de landbouwstreek van de Duinen. Selectie van open en halfopen landschap binnen de perimeter (rood). Exclusie van landgebruiken op basis van OpenStreetMap data (groen). Selectie van paden en wegen (blauw). \textbf{A.} Westkant (xmin = 21500, xmax = 50000, ymin = 197000, ymax = 217000). \textbf{B.} Oostkant (xmin = 50000, xmax = 82000, ymin = 213000, ymax = 230000).}
   \label{fig:afbakening-duinen}
 \end{figure}
 ```
-Langs deze paden werden punten gelegd die bijgevolg werden gefilterd op basis van landgebruik en zichtbaarheid zoals beschreven in \@ref(meetnet-ontwerp).
-In het overgebleven steekproefkader merkten we een sterke spatiale clustering van punten in zijn geheel (enkel punten in regio Nieuwpoort en Knokke) en binnen eenzelfde stratum (Fig. \@ref(fig:steekproefkader-duinen)).
+Langs deze paden werden punten gelegd die ten slotte werden gefilterd op basis van landgebruik en zichtbaarheid zoals beschreven in \@ref(meetnet-ontwerp).
+In het overgebleven steekproefkader merkten we een sterke spatiale clustering van punten zowel in zijn geheel (enkel punten in regios Nieuwpoort en Knokke) als binnen eenzelfde stratum (Fig. \@ref(fig:steekproefkader-duinen)).
 
 ```{=tex}
 \begin{figure}
@@ -302,13 +302,14 @@ In het overgebleven steekproefkader merkten we een sterke spatiale clustering va
   \label{fig:steekproefkader-duinen}
 \end{figure}
 ```
-Bijgevolg hebben we in de Duinen een steekproef van slechts 13 punten kunnen nemen die niet overlappen binnen eenzelfde stratum.
+Bijgevolg hebben we in de Duinen een ruimtelijk gebalanceerde steekproef van slechts 13 punten kunnen nemen die niet overlapten binnen eenzelfde stratum.
 De proporties van de strata kwamen bovendien niet meer goed overeen met de allocatieproporties.
 Ruimtelijk gezien kwam de steekproef wel relatief goed overeen met het steekproefkader, hoewel vergelijking moeilijk was door het beperkt aantal punten.
 
 Ten eerste zijn dit zeer weinig punten, en ten tweede liggen deze punten zeer dicht bij de landbouwstreek van de Polders, zodat we geen sterk verschillende resultaten verwachten op basis van de punten die hier in de Duinen liggen.
 De steekproeftrekking van de Duinen zal allicht geen grote meerwaarde hebben voor uitspraken op Vlaams niveau.
 Bovendien kunnen we geen betrouwbare uitspraken doen op schaal van deze landbouwstreek zelf, omdat het zo weinig punten zijn en de proporties van de strata in de steekproef ook niet goed overeenkomen met deze in het steekproefkader.
+
 We besluiten geen punten te tellen voor het MAS in de Duinen.
 
 ### De Weidestreek
@@ -319,10 +320,24 @@ Een beperkt aandeel leek niet in landbouwgebied te liggen.
 Het gaat vooral om spoorwegen en stedelijk gebied.
 In het resterende gebied ligt 80,56 km paden en wegen (Fig. \@ref(fig:afbakening-weidestreek)).
 
-Langs deze paden werden punten gelegd die bijgevolg werden gefilterd op basis van landgebruik en zichtbaarheid zoals beschreven in \@ref(meetnet-ontwerp).
-In het overgebleven steekproefkader merkten we een sterke spatiale clustering van punten binnen eenzelfde stratum, maar met een veel betere spreiding van de punten in het volledige gebied (Fig. \@ref(fig:steekproefkader-weidestreek)).
+```{=tex}
+\begin{figure}
+  \makebox[\textwidth][c]{\includegraphics[width=1.1\textwidth]{media/steekproeftrekking/afbakening_weidestreek.png}}
+  \caption{Afbakening van het steekproefkader in de Weidestreek. Selectie van open en halfopen landschap binnen de perimeter (rood). Exclusie van landgebruiken op basis van OpenStreetMap data (groen). Selectie van paden en wegen (blauw).}
+  \label{fig:afbakening-weidestreek}
+\end{figure}
+```
+Langs deze paden werden punten gelegd die ten slotte werden gefilterd op basis van landgebruik en zichtbaarheid zoals beschreven in \@ref(meetnet-ontwerp).
+In het overgebleven steekproefkader merkten we een sterke spatiale clustering van punten binnen eenzelfde stratum, maar met een relatief goede spreiding van de punten in het volledige gebied (Fig. \@ref(fig:steekproefkader-weidestreek)).
 
-Bijgevolg hebben we in de Weidestreek wel een voldoende grote steekproef nemen waarvan punten niet overlapten binnen eenzelfde stratum.
+```{=tex}
+\begin{figure}
+  \makebox[\textwidth][c]{\includegraphics[width=1.1\textwidth]{media/steekproeftrekking/steekproefkader_weidestreek.png}}
+  \caption{Steekproefkader in de Weidestreek.}
+  \label{fig:steekproefkader-weidestreek}
+\end{figure}
+```
+Bijgevolg hebben we in de Weidestreek wel een voldoende grote, ruimtelijk gebalanceerde steekproef kunnen waarvan punten niet overlapten binnen eenzelfde stratum.
 De proporties van de strata kwamen bovendien niet meer goed overeen met de allocatieproporties.
 De proporties van de strata kwamen relatief goed overeen met de allocatieproporties.
 Ruimtelijk gezien kwam de steekproef ook relatief goed overeen met het steekproefkader.
@@ -330,6 +345,7 @@ Ruimtelijk gezien kwam de steekproef ook relatief goed overeen met het steekproe
 De Weidestreek is een aparte regio met een relatief groot oppervlak die gunstig is voor akkervogels.
 De steekproeftrekking van de Weidestreek kan dus wel een meerwaarde hebben voor MAS Vlaanderen.
 Het aantal telpunten kan groot genoeg zijn om uitspraken te doen op schaal van deze landbouwstreek zelf en de proporties van de strata in de steekproef komen relatief goed overeenkomen met deze in het steekproefkader.
+
 We besluiten in de Weidestreek wel een steekproef te nemen zoals beschreven in \@ref(meetnet-ontwerp) met het verschil dat we hier een allocatie gebruikten evenredig aan de oppervlakte van elk stratum.
 
 [^02_uitrol_meetnet-1]: Met uitzondering van de Duinen en de Weidestreek.
@@ -337,4 +353,3 @@ We besluiten in de Weidestreek wel een steekproef te nemen zoals beschreven in \
 
 [^02_uitrol_meetnet-2]: Bij de steekproeftrekking wordt een methode gebruikt die zal vermijden dat telpunten en hun telcirkels overlappen.
     Het kan in deze fase dus geen kwaad dat potentiële telpunten op een afstand van minder dan 300 m van elkaar gelegen zijn.
-
