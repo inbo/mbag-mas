@@ -136,7 +136,7 @@ Dit geldt dan eveneens voor alle stroomafwaartse targets die ervan afhankelijk z
 list(
   tarchetypes::tar_file(
     perimeters_file,
-    path_to_perimeters("za_kp_po_perimeters.gpkg")
+    path_to_perimeters("weidestreek_perimeters.gpkg")
     ),
   tar_target(
     perimeters_data,
@@ -186,6 +186,8 @@ list(
   )
 ```
 
+Er zijn in de Weidestreek geen snelwegen noch een vliegveldaanwezig, dus dit wordt niet in de functie gespecifieerd (anders krijgen we een error). De code verschilt dus licht van de code in de andere targets pipeline, maar zal hetzelfde resultaat geven.
+
 ```{targets steekproefkader}
 list(
   tar_target(
@@ -205,10 +207,6 @@ list(
       landuse = c("residential", "military", "industrial", "cemetery",
                   "railway", "commercial", "farmyard"),
       leisure = c("park"),
-      buffer_poly = 0,
-      layer_poly = list(aeroway = c("aerodrome")),
-      buffer_line = 100,
-      layer_line = list(highway = c("motorway", "motorway_link")),
       update_osm_layer = FALSE
       ),
     pattern = map(selectie_openheid_klasses),
