@@ -1397,7 +1397,6 @@ for (i in seq_along(sizes)) {
                        expected = summary_df$expected)
   )
 }
-names(out_list) <- sizes
 
 chi_squared_df <- do.call(rbind.data.frame, out_list)
 ```
@@ -1413,16 +1412,80 @@ ggplot(chi_squared_df, aes(x = steekproef_grootte, y = chisq)) +
   labs(x = "Initiële steekproefgrootte",
        y = "Chi-kwadraattoetsingsgrootheid",
        fill = "Finale\nsteekproef-\ngrootte")
+```
 
-ggplot(chi_squared_df, aes(x = steekproef_grootte, y = chisq)) +
+Wat als we spelen met de thinning?
+
+```{r}
+thinning <- seq(400, 550, by = 50)
+```
+
+```{r}
+out_list_thinning <- vector(mode = "list",
+                            length = length(sizes) * length(thinning))
+
+for (j in seq_along(thinning)) {
+  thin <- thinning[j]
+  for (i in seq_along(sizes)) {
+    extended_size <- sizes[i]
+    
+    print(paste0("Steekproefgrootte: ", extended_size,
+                 ". Thinning: ", thin, "."))
+    
+    allocatie_extended <- allocatie(
+      steekproefkader = steekproefkader_finaal$Weidestreek,
+      min_samplesize = 0,
+      target_samplesize = extended_size,
+      popsize_minimum = 0,
+      allocatie_binnen_sbp = allocatie_binnen_sbp$Weidestreek,
+      allocatie_leemstreek = 0,
+      ol_strata = c("OL", "HOL")
+      )
+    
+    steekproef_extended <- draw_sample(
+      sampling_frame = steekproefkader_per_stratum$Weidestreek,
+      sample_size = extended_size,
+      sample_size_multiplication = 1,
+      balance = c("X", "Y")
+      )
+  
+    steekproef_extended_thinned <- thin_sample(
+      sample = steekproef_extended,
+      thin_dist = thin
+      )
+    
+    summary_df <- steekproef_extended_thinned %>%
+      st_drop_geometry() %>%
+      count(openheid_klasse, is_sbp) %>%
+      mutate(prop = n / sum(n)) %>%
+      full_join(allocatie_extended, by = join_by(openheid_klasse, is_sbp)) %>%
+      select(Naam, openheid_klasse, is_sbp, allocatie, samplesize,
+             prop_steekproef = prop, n_steekproef = n) %>%
+      mutate(expected = allocatie * sum(n_steekproef))
+    
+    out_list_thinning[[i + (j - 1) * length(sizes)]] <- tibble(
+      steekproef_grootte = extended_size,
+      finale_grootte = nrow(steekproef_extended_thinned),
+      chisq = calc_chisq(observed = summary_df$n_steekproef,
+                         expected = summary_df$expected),
+      thinning = thin
+    )
+  }
+}
+
+chi_squared_df_thinning <- do.call(rbind.data.frame, out_list_thinning)
+```
+
+```{r}
+ggplot(chi_squared_df_thinning, aes(x = steekproef_grootte, y = chisq)) +
   geom_point(aes(fill = finale_grootte), shape = 21, size = 3) +
   geom_text(aes(label = finale_grootte),
-            position = position_nudge(x = -0.3, y = 0.1)) +
+            position = position_nudge(x = -0.3, y = 0.2)) +
   scale_x_continuous(minor_breaks = sizes,
                      breaks = seq(min(sizes), max(sizes), 5)) +
   scale_fill_gradientn(colours = c("firebrick", "yellow2", "green")) +
+  facet_wrap(~thinning, ncol = 2) +
   labs(x = "Initiële steekproefgrootte",
        y = "Chi-kwadraattoetsingsgrootheid",
        fill = "Finale\nsteekproef-\ngrootte")
 ```
-
