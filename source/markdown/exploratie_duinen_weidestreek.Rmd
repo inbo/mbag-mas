@@ -171,9 +171,9 @@ openheid_sf$Weidestreek %>%
 We sluiten bepaalde landgebruiken uit op basis van OpenStreetMap (OSM).
 OSM kaart gedownload op 27/02/2024.
 
-> Er zijn in beide gebieden geen snelwegen aanwezig dus dit wordt niet in de functie gespecifieerd (anders krijgen we een error). De code verschilt dus ligt van de code in de targets pipeline, maar zal hetzelfde resultaat geven.
+> Er zijn in beide gebieden geen snelwegen aanwezig dus dit wordt niet in de functie gespecifieerd (anders krijgen we een error). De code verschilt dus licht van de code in de targets pipeline, maar zal hetzelfde resultaat geven.
 
-> Er is in de Weidestreek geen vliegveld aanwezig dus dit wordt niet in de functie gespecifieerd (anders krijgen we een error). De code verschilt dus ligt van de code in de targets pipeline, maar zal hetzelfde resultaat geven.
+> Er is in de Weidestreek geen vliegveld aanwezig dus dit wordt niet in de functie gespecifieerd (anders krijgen we een error). De code verschilt dus licht van de code in de targets pipeline, maar zal hetzelfde resultaat geven.
 
 ```{r, cache=TRUE, results="hide"}
 exclusie_osm_duinen <- exclusie_landgebruik_osm(
@@ -985,7 +985,7 @@ Het zal dan niet mogelijk zijn uitspraken te doen over elk stratum apart, maar w
 
 We nemen een ruimtelijk gebalanceerde steekproef van 50 punten en 50 reservepunten per landbouwstreek.
 
-> Er is geen gebalanceerde steekproef m.b.t. proportie soortbeschermingsmaatregelen omdat er geen overlap was in deze landbouwstreken. De code verschilt dus ligt van de code in de targets pipeline, maar zal hetzelfde resultaat geven.
+> Er is geen gebalanceerde steekproef m.b.t. proportie soortbeschermingsmaatregelen omdat er geen overlap was in deze landbouwstreken. De code verschilt dus licht van de code in de targets pipeline, maar zal hetzelfde resultaat geven.
 
 ```{r}
 # Bereken allocatiefactor binnen SBP
