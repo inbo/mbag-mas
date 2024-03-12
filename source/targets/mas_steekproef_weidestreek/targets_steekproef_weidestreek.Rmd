@@ -348,25 +348,29 @@ list(
 )
 ```
 
+Om toch een voldoende grote steekproef te krijgen per landbouwstreek, kunnen we opteren om een allocatie te doen evenredig aan de oppervlakte van elk stratum. Het zal dan niet mogelijk zijn uitspraken te doen over elk stratum apart, maar wel over elke landbouwstreek als geheel en bijgevolg een aanvulling met de andere (grote) landbouwstreken om een uitspraak over Vlaanderen te kunnen doen.
+
+Er is geen gebalanceerde steekproef m.b.t. proportie soortbeschermingsmaatregelen omdat er geen overlap was in deze landbouwstreek. De code verschilt dus licht van de code in de andere targets pipeline, maar zal hetzelfde resultaat geven.
+
 ```{targets steekproeftrekking}
 list(
-  tar_target(
-    name = target_size,
-    command = calc_target_samplesize(gebied = selectie_openheid_klasses),
-    pattern = map(selectie_openheid_klasses)
-  ),
   tar_target(
     allocatie_df,
     allocatie(
       steekproefkader = steekproefkader_finaal,
-      min_samplesize = 200,
-      target_samplesize = target_size,
-      popsize_minimum = 200,
-      allocatie_binnen_sbp = 0.5,
+      min_samplesize = 0,
+      target_samplesize = 91,
+      popsize_minimum = 0,
+      allocatie_binnen_sbp = steekproefkader_finaal %>%
+        st_drop_geometry() %>%
+        count(is_sbp) %>%
+        mutate(prop = n / sum(n)) %>%
+        filter(is_sbp) %>%
+        pull(prop),
       allocatie_leemstreek = 0,
       ol_strata = c("OL", "HOL")
       ),
-    pattern = map(steekproefkader_finaal, target_size)
+    pattern = map(steekproefkader_finaal)
   ),
   tarchetypes::tar_group_by(
     allocatie_per_stratum,
@@ -389,8 +393,9 @@ list(
     steekproef,
     draw_sample(
       sampling_frame = steekproefkader_per_stratum,
+      sample_size = 91,
       sample_size_multiplication = 1,
-      balance = c("X", "Y", "area_prop_sb")
+      balance = c("X", "Y")
       ),
     pattern = map(steekproefkader_per_stratum, allocatie_per_stratum),
     iteration = "list"
@@ -398,13 +403,15 @@ list(
 )
 ```
 
+We verlagen de thinning distance naar 400.
+
 ```{targets nabehandeling}
 list(
   tar_target(
     steekproef_thinned,
     thin_sample(
       sample = steekproef,
-      thin_dist = 600
+      thin_dist = 400
       ),
     pattern = map(steekproef),
     iteration = "list"
