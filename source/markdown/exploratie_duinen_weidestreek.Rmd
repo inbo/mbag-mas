@@ -1353,7 +1353,7 @@ calc_chisq <- function(observed, expected) {
 }
 ```
 
-```{r}
+```{r, cache=TRUE}
 out_list <- vector(mode = "list", length = length(sizes))
 
 for (i in seq_along(sizes)) {
@@ -1488,4 +1488,110 @@ ggplot(chi_squared_df_thinning, aes(x = steekproef_grootte, y = chisq)) +
   labs(x = "Initiële steekproefgrootte",
        y = "Chi-kwadraattoetsingsgrootheid",
        fill = "Finale\nsteekproef-\ngrootte")
+```
+
+We bekijken de steekproefgroottes met Chi-kwadraattoetsingsgrootheid kleiner dan 1 en finale steekproefgrootte minstens 50:
+
+```{r}
+chi_squared_df_thinning %>%
+  filter(chisq < 1,
+         finale_grootte >= 50) %>%
+  arrange(desc(finale_grootte)) %>%
+  kable()
+```
+
+We besluiten een steekproeftrekking van 91 punten te nemen om 58 punten over te houden bij een thinning van  400 m.
+
+```{r}
+allocatie_extended <- allocatie(
+  steekproefkader = steekproefkader_finaal$Weidestreek,
+  min_samplesize = 0,
+  target_samplesize = 91,
+  popsize_minimum = 0,
+  allocatie_binnen_sbp = allocatie_binnen_sbp$Weidestreek,
+  allocatie_leemstreek = 0,
+  ol_strata = c("OL", "HOL")
+  )
+
+steekproef_extended <- draw_sample(
+  sampling_frame = steekproefkader_per_stratum$Weidestreek,
+  sample_size = 91,
+  sample_size_multiplication = 1,
+  balance = c("X", "Y")
+  )
+  
+steekproef_extended_thinned <- thin_sample(
+  sample = steekproef_extended,
+  thin_dist = 400
+  )
+```
+
+Er is inderdaad een goede overeenkomst tussen de proporties in de steekproef (`prop_steekproef`) en de originele allocatie (`allocatie`).
+
+```{r}
+steekproef_extended_thinned %>%
+  st_drop_geometry() %>%
+  filter(batch == "eerste set") %>%
+  count(openheid_klasse, is_sbp) %>%
+  mutate(prop = n / sum(n)) %>%
+  full_join(allocatie_extended) %>%
+  select(Naam, openheid_klasse, is_sbp, allocatie, samplesize,
+         prop_steekproef = prop, n_steekproef = n) %>%
+  kable()
+```
+
+```{r}
+balansvergelijking_weidestreek2 <- steekproef_extended_thinned %>%
+  select_at(names(steekproefkader_finaal$Weidestreek)) %>%
+  mutate(fill_var = "steekproef") %>%
+  bind_rows(steekproefkader_finaal$Weidestreek %>% mutate(fill_var = "steekproefkader")) %>%
+  mutate(sbp_akkervogels = ifelse(is_sbp, "binnen SBP", "buiten SBP")) %>%
+  cbind(st_coordinates(.)) %>%
+  st_drop_geometry() %>%
+  mutate(fill_var = factor(fill_var, levels = c("steekproefkader", "steekproef")))
+
+count_df_weidestreek2 <- balansvergelijking_weidestreek2 %>%
+  group_by(fill_var, openheid_klasse, sbp_akkervogels) %>%
+  summarise(max_openheid = max(openheid_waarde),
+            max_x = max(X),
+            max_y = max(Y),
+            n = n(),
+            .groups = "drop")
+```
+
+We zien vooral dat de steekproef relatief goed overeenkomt met het steekproefkader op vlak van openheid.
+
+```{r}
+balansvergelijking_weidestreek2 %>%
+  ggplot(aes(x = sbp_akkervogels, y = openheid_waarde)) +
+    geom_boxplot(aes(fill = fill_var)) +
+    geom_label(data = count_df_weidestreek2,
+               aes(y = max_openheid + 0.01, label = paste("n =", n)),
+               size = 3, position = position_dodge2(width = 0.75)) +
+    facet_grid(~ openheid_klasse) +
+    labs(fill = "Legende")
+```
+
+Als we naar longitude en latitude kijken, lijkt dit wel min of meer ok. Opnieuw is er voor OL buiten SBP niet zo'n goede match, maar dit is ook maar 1 punt dus het is onmogelijk een goede vergelijking te maken.
+
+```{r}
+balansvergelijking_weidestreek2 %>%
+  ggplot(aes(x = sbp_akkervogels, y = X)) +
+    geom_boxplot(aes(fill = fill_var)) +
+    geom_label(data = count_df_weidestreek2,
+               aes(y = max_x + 2000, label = paste("n =", n)),
+               size = 3, position = position_dodge2(width = 0.75)) +
+    facet_grid(~ openheid_klasse) +
+    labs(fill = "Legende")
+```
+
+```{r}
+balansvergelijking_weidestreek2 %>%
+  ggplot(aes(x = sbp_akkervogels, y = Y)) +
+    geom_boxplot(aes(fill = fill_var)) +
+    geom_label(data = count_df_weidestreek2,
+               aes(y = max_y + 2000, label = paste("n =", n)),
+               size = 3, position = position_dodge2(width = 0.75)) +
+    facet_grid(~ openheid_klasse) +
+    labs(fill = "Legende")
 ```
