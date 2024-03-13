@@ -441,7 +441,7 @@ list(
                                              steekproefkader_finaal),
                    steekproef = do.call(rbind.data.frame,
                                         steekproef_final)),
-      write_out = TRUE
+      write_out = FALSE
     )
   )
 )
