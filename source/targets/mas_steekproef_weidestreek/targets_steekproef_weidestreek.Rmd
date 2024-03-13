@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
   warning = FALSE,
   message = FALSE)
 target_dir <- rprojroot::find_root_file(
-    "source", "targets", "mas_steekproef_za_kp_po",
+    "source", "targets", "mas_steekproef_weidestreek",
     criterion = rprojroot::is_git_root)
 knitr::opts_knit$set(
   root.dir = target_dir)
