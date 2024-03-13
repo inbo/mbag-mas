@@ -1420,7 +1420,7 @@ Wat als we spelen met de thinning?
 thinning <- seq(400, 550, by = 50)
 ```
 
-```{r}
+```{r, results='hide'}
 out_list_thinning <- vector(mode = "list",
                             length = length(sizes) * length(thinning))
 
