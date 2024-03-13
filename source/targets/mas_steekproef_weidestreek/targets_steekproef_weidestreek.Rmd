@@ -108,7 +108,7 @@ tar_option_set(packages = c("dplyr",
                workspace_on_error = TRUE)
 
 target_dir <- rprojroot::find_root_file(
-    "source", "targets", "mas_steekproef_zl_lm_za_kp_po",
+    "source", "targets", "mas_steekproef_weidestreek",
     criterion = rprojroot::is_git_root)
 mbag_dir <- rprojroot::find_root_file(
     criterion = rprojroot::is_git_root)
@@ -301,6 +301,8 @@ list(
 )
 ```
 
+Er is geen overlap met SBP akkervogels dus we gebruiken de functie read_sbp_other in plaats van read_sbp_akkervogels.
+
 ```{targets hulpvariabelen}
 list(
   tar_target(
@@ -326,12 +328,10 @@ list(
   ),
   tar_target(
     name = sbp_akkervogels,
-    command = read_sbp_akkervogels(
-      path = sbp_akkervogels_file,
-      gebied = perimeters_data,
-      path_extra_soorten = sbp_overige_file,
-      extra_soorten = c("hamster", "bruine kiekendief", "zomertortel",
-                        "grauwe kiekendief")
+    command = read_sbp_others(
+      path = sbp_overige_file,
+      soorten = c("hamster", "bruine kiekendief", "zomertortel", "grauwe kiekendief"),
+      gebied = perimeters_data
       ),
     pattern = map(perimeters_data),
     iteration = "list"
@@ -375,9 +375,7 @@ list(
   tarchetypes::tar_group_by(
     allocatie_per_stratum,
     allocatie_df,
-    Naam,
-    is_sbp,
-    openheid_klasse
+    Naam
   ),
   tarchetypes::tar_group_by(
     steekproefkader_per_stratum,
@@ -385,9 +383,7 @@ list(
       semi_join(allocatie_df %>%
                   select(Naam, is_sbp, openheid_klasse),
                 by = c("Naam", "is_sbp", "openheid_klasse")),
-    Naam,
-    is_sbp,
-    openheid_klasse
+    Naam
   ),
   tar_target(
     steekproef,
