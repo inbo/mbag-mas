@@ -1312,11 +1312,16 @@ Een tweede kolom wordt toegevoegd `vervangen door`. Dit is enkel ingevuld bij ee
 Uiteindelijk moeten we tot een CSV komen waarbij enkel de punten *behouden* van de eerste batch en *vervanging* van de reserve batch geüpload worden in Avimap (met tellerscode erbij). Overlappen met reeds getelde MAS punten worden niet meegegeven (0 punten).
 
 ```{r, eval=FALSE}
-kempen_avimap_df <- read_csv(file.path(
+kempen_avimap_df <- read_delim(file.path(
   "data",
   "processed",
-  "..."
-))
+  "MAS netwerk Vlaanderen- steekproef_kempen_telpunten_uncut.csv"),
+  delim = ";") %>% 
+  filter(beslissing %in% c("behouden", "vervangen door bestaand")) %>% 
+  select(-naam, - beschrijving) %>% 
+  rename("naam" = Naam,
+         "pointid_from_targets" = pointid) %>% 
+  mutate(pointid = ifelse(is.na(vervanging_id), pointid_from_targets, vervanging_id))
 
 kempen_avimap_sf <- st_as_sf(kempen_avimap_df,
   wkt = "WKT",
