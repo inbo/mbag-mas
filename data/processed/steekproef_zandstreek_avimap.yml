@@ -3,11 +3,9 @@
   optimize: yes
   NA string: NA
   sorting: pointid
-  hash: 86043755f9766eb7090029b96d2fbe0f7456bab5
-  data_hash: 2bc29e1841606b251ee7d37d1bef8993ffa91e59
+  hash: 129ace065af854b68da9eb93175f814258d1b7f0
+  data_hash: ccb81171479234995ccd07aeb493489c24df08f9
 WKT:
-  class: character
-beschrijving:
   class: character
 pointid:
   class: character
@@ -22,4 +20,10 @@ batch:
 zichtbaarheid:
   class: numeric
 wegtype:
+  class: character
+beslissing:
+  class: character
+vervanging_id:
+  class: character
+pointid_from_targets:
   class: character
