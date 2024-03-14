@@ -1042,6 +1042,7 @@ balansvergelijking %>%
 
 We zien dat de steekproef vanaf 50 punten per stratum een goede afspiegeling is van de volledige populatie (boxplots voor steekproef eerste 50 punten en volledig steekproefkader zijn zeer gelijkend).
 
+
 ## Visualisatie steekproef
 
 ```{r}
@@ -1310,12 +1311,17 @@ Een tweede kolom wordt toegevoegd `vervangen door`. Dit is enkel ingevuld bij ee
   
 Uiteindelijk moeten we tot een CSV komen waarbij enkel de punten *behouden* van de eerste batch en *vervanging* van de reserve batch geüpload worden in Avimap (met tellerscode erbij). Overlappen met reeds getelde MAS punten worden niet meegegeven (0 punten).
 
-```{r, eval=FALSE}
+```{r}
 zandstreek_avimap_df <- read_csv(file.path(
   "data",
   "processed",
-  "..."
-))
+  "MAS netwerk Vlaanderen- steekproef_zandstreek_telpunten_uncut.csv"
+)) %>% 
+  filter(beslissing %in% c("behouden", "vervangen door bestaand")) %>% 
+  select(-naam, - beschrijving) %>% 
+  rename("naam" = Naam,
+         "pointid_from_targets" = pointid) %>% 
+  mutate(pointid = ifelse(is.na(vervanging_id), pointid_from_targets, vervanging_id))
 
 zandstreek_avimap_sf <- st_as_sf(zandstreek_avimap_df,
   wkt = "WKT",
@@ -1324,7 +1330,9 @@ zandstreek_avimap_sf <- st_as_sf(zandstreek_avimap_df,
   st_zm() %>%
   st_transform(31370) %>%
   rename("geometry" = WKT)
+```
 
+```{r, eval=FALSE}
 zandstreek_avimap_sf %>%
   st_write(
     dsn = file.path(
@@ -1355,6 +1363,7 @@ git2rdata::write_vc(zandstreek_avimap_df,
     "processed",
     "steekproef_zandstreek_avimap"
   ),
-  sorting = "pointid"
+  sorting = "pointid",
+  strict = FALSE
 )
 ```
