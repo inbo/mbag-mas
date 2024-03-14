@@ -1313,8 +1313,14 @@ Uiteindelijk moeten we tot een CSV komen waarbij enkel de punten *behouden* van 
 polders_avimap_df <- read_csv(file.path(
   "data",
   "processed",
-  "..."
-))
+  "MAS netwerk Vlaanderen- steekproef_polders_telpunten_uncut.csv"
+)) %>% 
+  filter(beslissing %in% c("behouden", "vervangen door bestaand")) %>% 
+  select(-naam, - beschrijving) %>% 
+  rename("naam" = Naam,
+         "pointid_from_targets" = pointid) %>% 
+  mutate(pointid = ifelse(is.na(vervanging_id), pointid_from_targets, vervanging_id))
+
 
 polders_avimap_sf <- st_as_sf(polders_avimap_df,
   wkt = "WKT",
