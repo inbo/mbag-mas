@@ -16,6 +16,7 @@
 *.geojson
 *.kml
 *.csv
+*.png
 *.shx
 *.xls*
 *_files
