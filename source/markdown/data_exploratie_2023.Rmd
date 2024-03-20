@@ -293,6 +293,21 @@ summary_vogels_2023 %>%
   kable()
 ```
 
+```{r}
+mas_2023_vogels %>%
+  st_drop_geometry() %>%
+  group_by(regio, jaar, periode_in_jaar) %>%
+  summarise(aantal_waarnemingen = n_distinct(oid),
+            .groups = "drop") %>%
+  ggplot() +
+    geom_bar(aes(x = periode_in_jaar, y = aantal_waarnemingen),
+             stat = "identity") +
+    facet_wrap(~regio) +
+    labs(x = "telperiode", y = "aantal waarnemingen")
+```
+
+## Soortendiversiteit
+
 Het aantal soorten neemt vooral toe in de eerste twee telperiodes.
 
 ```{r}
@@ -362,4 +377,113 @@ cum_aantal_spec %>%
     theme(legend.position = "bottom")
 ```
 
+Een overzicht van het aantal soorten per telpunt in de Westelijke leemstreek en de Zandleemstreek.
 
+```{r}
+mas_2023_vogels %>%
+  st_drop_geometry() %>%
+  group_by(regio, jaar, plotnaam, openheid_klasse, sbp, periode_in_jaar,
+           naam) %>%
+  summarise(totaal_aantal = sum(aantal),
+            .groups = "drop_last") %>%
+  summarise(aantal_soorten = n(),
+            .groups = "drop") %>%
+  mutate(stratum = paste(openheid_klasse, sbp, sep = " -\n")) %>%
+  ggplot() +
+    geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
+    geom_boxplot(aes(x = stratum, y = aantal_soorten,
+                     colour = periode_in_jaar)) +
+    facet_wrap(~regio) +
+    labs(y = "aantal soorten per telpunt", x = "", colour = "Telperiode")
+```
+
+Om welke soorten gaat het?
+
+```{r}
+roofvogels_f <- function() {
+  roofvogels <- c("Blauwe Kiekendief", "Boomvalk", "Bruine Kiekendief",
+                  "Buizerd", "Grauwe Kiekendief", "Ransuil", "Rode Wouw",
+                  "Slechtvalk", "Smelleken", "Sperwer", "Steenuil",
+                  "Steppekiekendief", "Torenvalk", "Velduil", "Wespendief",
+                  "Zwarte Wouw")
+
+  return(roofvogels)
+}
+
+doelsoorten <- c(
+  "Veldleeuwerik", 
+  "Gele Kwikstaart", 
+  "Geelgors", 
+  "Kievit", 
+  "Grasmus",
+  "Witte Kwikstaart",
+  "Ringmus",
+  "Kwartel",
+  "Kneu",
+  "Torenvalk")
+```
+
+```{r}
+bezoekenlijst_2023 <- mas_2023_vogels %>%
+  st_drop_geometry() %>%
+  distinct(regio, jaar, plotnaam, periode_in_jaar)
+
+relfreqs_vogels <- mas_2023_vogels %>%
+  st_drop_geometry() %>%
+  filter(ifelse(naam %in% roofvogels_f(), wrntype >= 0L, wrntype > 0L)) %>%
+  group_by(regio, plotnaam, jaar, periode_in_jaar, naam) %>%
+  summarise(totaal_aantal = sum(aantal),
+            .groups = "drop") %>%
+  pivot_wider(names_from = naam,
+              values_from = totaal_aantal,
+              values_fill = list(totaal_aantal = 0)) %>%
+  full_join(bezoekenlijst_2023,
+            by = join_by(regio, jaar, plotnaam, periode_in_jaar)) %>%
+  replace(is.na(.), 0) %>%
+  mutate(jaar = factor(jaar)) %>%
+  group_by(jaar, periode_in_jaar, regio) %>%
+  summarise(across(.cols = where(~ is.numeric(.x) && min(.x) == 0),
+                   .fns = ~sum(.x > 0) / n()),
+            n = n(),
+            .groups = "drop") %>%
+  pivot_longer(cols = where(is.double),
+               names_to = "naam",
+               values_to = "relfreq")
+```
+
+Overzicht van relatieve frequenties van de 20 meest frequente soorten in een bepaalde regio. Elk punt staat voor een relatieve frequentie in een bepaald jaar en een bepaalde telperiode van dat jaar. Enkel data met broedcode > 0 zijn weerhouden tenzij voor roofvogels.
+
+```{r}
+library(ggtext)
+highlight <- function(x, pat, color="black", family="") {
+  ifelse(x %in% pat,
+         glue::glue("<b style='font-family:{family}; color:{color}'>{x}</b>"),
+         x)
+}
+```
+
+```{r}
+freq_to_plot <- relfreqs_vogels %>%
+  group_by(regio, naam) %>%
+  mutate(
+    w = n / sum(n),
+    gemiddelde_freq = weighted.mean(relfreq, w)) %>%
+  ungroup() %>%
+  mutate(naam = reorder(naam, gemiddelde_freq, decreasing = FALSE)) %>%
+  filter(as.numeric(naam) > length(unique(naam)) - 20 |
+           naam %in% doelsoorten)
+freq_to_plot %>%
+  ggplot() +
+    geom_vline(xintercept = 0, alpha = 0.2, linetype = "dashed") +
+    geom_hline(yintercept = length(unique(freq_to_plot$naam)) - 20 + 0.5,
+               alpha = 0.2, linetype = "dashed") +
+    geom_point(aes(x = relfreq, y = naam, colour = regio),
+               size = 1) +
+    labs(y = "", x = "relatieve frequentie", colour = "Regio") +
+    scale_y_discrete(labels = function(x) highlight(x, doelsoorten, "red")) +
+    theme(legend.position = "top",
+          axis.text = element_text(size = 8),
+          axis.text.y = element_markdown(),
+          panel.spacing = unit(0.7, "lines")) +
+    guides(colour = guide_legend(override.aes = list(size = 2)))
+```
