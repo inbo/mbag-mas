@@ -589,3 +589,61 @@ relfreq_diff_wl %>%
           panel.spacing = unit(1.2, "lines")) +
     guides(colour = guide_legend(override.aes = list(size = 3)))
 ```
+
+Top twintig van beide kanten in 1 figuur.
+
+```{r}
+relfreq_diff_total <- relfreqs_vogels %>%
+  select(-n) %>%
+  pivot_wider(names_from = regio,
+              values_from = relfreq,
+              values_fill = 0) %>%
+  mutate(verschilfreq = `Zandleemstreek` - `Westelijke leemstreek`) %>%
+  mutate(naam = reorder(naam, verschilfreq, FUN = "mean",
+                        decreasing = FALSE)) %>%
+  filter(as.numeric(naam) > length(unique(naam)) - 20 |
+           as.numeric(naam) <= 20 |
+           naam %in% doelsoorten)
+
+relfreq_diff_total %>%
+  ggplot() +
+    geom_vline(xintercept = 0,
+               colour = "lightgrey") +
+    geom_hline(yintercept = c(20.5,
+                length(unique(relfreq_diff_total$naam)) - 20 + 0.5),
+               alpha = 0.2, linetype = "dashed") +
+    geom_point(aes(x = verschilfreq, y = naam),
+               size = 1) +
+    labs(y = "", x = "Verschil in relatieve frequentie") +
+    scale_y_discrete(labels = function(x) highlight(x, doelsoorten, "red")) +
+    coord_cartesian(xlim = c(0 - abs(max(relfreq_diff_zn$verschilfreq)),
+                             0 + abs(max(relfreq_diff_zn$verschilfreq)))) +
+    scale_x_continuous(breaks = seq(-1, 1, 0.05)) +
+    theme(legend.position = "top",
+          axis.text = element_text(size = 8),
+          axis.text.y = element_markdown(),
+          panel.spacing = unit(1.2, "lines")) +
+    guides(colour = guide_legend(override.aes = list(size = 3))) +
+    annotate("segment",
+             x = c(abs(max(relfreq_diff_zn$verschilfreq))),
+             y = c(length(unique(relfreq_diff_total$naam)) - 20 + 1),
+             xend = c(abs(max(relfreq_diff_zn$verschilfreq))),
+             yend = c(length(unique(relfreq_diff_total$naam)) - 20 + 3),
+             arrow = arrow(type = "closed", length = unit(0.015, "npc")),
+             colour = "black") +
+    annotate("segment",
+           x = c(abs(max(relfreq_diff_zn$verschilfreq))),
+           y = c(20.5 - 0.5),
+           xend = c(abs(max(relfreq_diff_zn$verschilfreq))),
+           yend = c(20.5 - 2.5),
+           arrow = arrow(type = "closed", length = unit(0.015, "npc")),
+           colour = "black") +
+    annotate("text", label = c("Zandleemstrek"),
+             x = c(abs(max(relfreq_diff_zn$verschilfreq)) + 0.01),
+             y = c(length(unique(relfreq_diff_total$naam)) - 20 + 1),
+             size = 2, hjust = "left", colour = "black", angle = 90) +
+    annotate("text", label = c("Westelijke leemstreek"),
+           x = c(abs(max(relfreq_diff_zn$verschilfreq)) + 0.01),
+           y = c(20.5 - 0.5),
+           size = 2, hjust = "right", colour = "black", angle = 90)
+```
