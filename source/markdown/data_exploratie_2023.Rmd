@@ -23,6 +23,8 @@ opts_chunk$set(
   out.width = "100%"
 )
 opts_knit$set(root.dir = here::here())
+
+Sys.setenv("PROJ_NETWORK" = "ON")
 ```
 
 ```{r}
@@ -37,5 +39,28 @@ theme_set(theme_inbo(transparent = TRUE))
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::select)
 conflicted::conflicts_prefer(dplyr::lag)
+
+# Paths
+data_path <- here("data", "mas")
+media_path <- here("media", "exploratie_2023")
+dir.create(media_path, showWarnings = FALSE)
 ```
+
+# Doel
+
+Exploratie gegevens Zandleemstreek en Westelijke leemstreek 2023 voor eerste rapport MBAG.
+
+
+# Inlezen data
+
+```{r}
+file_geojson_2023 <- file.path(data_path, 
+                               "20230810_qgis_export_sovon_wfs_2023.geojson")
+mas_geojson_2023 <- read_sf(file_geojson_2023)
+```
+
+We moeten een reeks selecties en data preparatiestappen doen.
+In een later stadium worden deze best in een analysepijplijn (bv. targets) gegoten.
+
+
 
