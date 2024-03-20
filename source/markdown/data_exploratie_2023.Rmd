@@ -91,5 +91,21 @@ mas_31370_pipeline <-
   select(oid:y_amersfoord, x_lambert, y_lambert, everything())
 ```
 
+## Data selectie
+### Landbouwstreken
+
+We selecteren de data van de Zandleemstreek en de Westelijke leemstreek.
+Dit doen we door te joinen met de steekproef.
+
+```{r}
+steekproef_avimap <- read_csv(here("data", "steekproefkaders",
+                                   "steekproef_avimap_mbag_piloot.csv"))
+
+steekproef_avimap_subset <- steekproef_avimap %>%
+  filter(regio %in% c("Westelijke leemstreek", "Zandleemstreek"))
+
+mas_data_regios <- mas_31370_pipeline %>%
+  inner_join(steekproef_avimap_subset, by = join_by(plotnaam == pointid))
+```
 
 
