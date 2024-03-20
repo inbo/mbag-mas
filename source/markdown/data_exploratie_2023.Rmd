@@ -373,7 +373,7 @@ cum_aantal_spec %>%
            y = 0,
            vjust = -1) +
     geom_line(linewidth = 1) +
-    labs(x = "", y = "Totaal aantal soorten", colour = "") +
+    labs(x = "", y = "Totaal aantal soorten", colour = "Regio") +
     theme(legend.position = "bottom")
 ```
 
