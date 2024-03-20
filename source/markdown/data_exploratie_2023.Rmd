@@ -193,3 +193,72 @@ mapview::mapview(st_crop(steekproef_avimap_subset_sf, detail_sf),
   mapview::mapview(detail_sf, alpha.regions = 0)
 ```
 
+### Zoogdieren en vogels
+
+```{r}
+mas_soortgrp <- mas_distance %>%
+  filter(soortgrp %in% 1:2)
+```
+
+## Dubbeltellingen
+
+Er zijn geen punten dubbelgeteld.
+
+```{r}
+mas_soortgrp %>%
+  st_drop_geometry() %>%
+  group_by(plotnaam, jaar, periode_in_jaar) %>%
+  summarize(aantal_teldagen = n_distinct(doy),
+            aantal_waarnemers = n_distinct(waarnemer),
+            .groups = "drop") %>%
+  filter(aantal_teldagen > 1 | aantal_waarnemers > 1) %>%
+  kable()
+```
+
+## Soortnamen
+
+We controleren de soortnamen. Voor de vogels hebben we:
+
+```{r}
+vogels <- mas_soortgrp %>%
+  filter(soortgrp == 2) %>%
+  distinct(naam) %>%
+  arrange(naam) %>%
+  pull(naam)
+vogels
+```
+
+We vervangen `Engelse Kwikstaart` door `Gele Kwikstaart` en `Rouwkwikstaart` door `Witte Kwikstaart`.
+We vervangen enkel de soortnaam. Het soortnummer blijft behouden.
+
+Voor de zoogdieren hebben we:
+
+```{r}
+zoogdieren <- mas_soortgrp %>%
+  filter(soortgrp == 1) %>%
+  distinct(naam) %>%
+  arrange(naam) %>%
+  pull(naam)
+zoogdieren
+```
+
+```{r}
+# Code allows to adjust for other subspecies as well!
+mas_clean <- mas_soortgrp %>%
+  mutate(
+    naam = case_when(
+      tolower(naam) %in% tolower(c("gele kwikstaart (spec)", 
+                                   "engelse kwikstaart"))
+        ~ "Gele Kwikstaart",
+      tolower(naam) %in% tolower(c("witte kwikstaart (spec)", 
+                                   "Rouwkwikstaart"))
+        ~ "Witte Kwikstaart",
+      tolower(naam) == tolower("canadese gans spec.") 
+        ~ "Grote Canadese Gans",
+      tolower(naam) == tolower("Witsterblauwborst") 
+        ~ "Blauwborst",
+      TRUE ~ naam
+      )
+    )
+```
+
