@@ -175,7 +175,7 @@ mas_distance <- mas_telperiodes %>%
 De afstanden van de waarnemingen tot het middelpunt zijn correct:
 
 ```{r}
-detail <- c("xmin" = 194000,
+detail <- c("xmin" = 193500,
             "ymin" = 179000,
             "xmax" = 201000,
             "ymax" = 185000)
@@ -244,7 +244,7 @@ zoogdieren
 
 ```{r}
 # Code allows to adjust for other subspecies as well!
-mas_clean <- mas_soortgrp %>%
+mas_2023_clean <- mas_soortgrp %>%
   mutate(
     naam = case_when(
       tolower(naam) %in% tolower(c("gele kwikstaart (spec)", 
@@ -261,4 +261,105 @@ mas_clean <- mas_soortgrp %>%
       )
     )
 ```
+
+```{r}
+glimpse(mas_2023_clean)
+```
+
+# Vogels 2023
+
+```{r}
+mas_2023_vogels <- mas_2023_clean %>%
+  filter(soortgrp == 2)  # vogels
+```
+
+## Enkele cijfers
+
+```{r}
+summary_vogels_2023 <- mas_2023_vogels %>%
+  st_drop_geometry() %>%
+  group_by(regio, jaar) %>%
+  mutate(aantal_soorten_regiojaar = n_distinct(naam)) %>%
+  group_by(regio, jaar, openheid_klasse, sbp) %>%
+  mutate(aantal_waarnemingen = n_distinct(oid), 
+         aantal_plots = n_distinct(plotid), 
+         aantal_soorten_stratum = n_distinct(naam)) %>%
+  ungroup() %>%
+  distinct(regio, jaar, openheid_klasse, sbp, aantal_waarnemingen, aantal_plots,
+           aantal_soorten_stratum, aantal_soorten_regiojaar) %>%
+  arrange(regio, jaar, openheid_klasse, sbp)
+
+summary_vogels_2023 %>%
+  kable()
+```
+
+Het aantal soorten neemt vooral toe in de eerste twee telperiodes.
+
+```{r}
+cum_aantal_spec <- mas_2023_vogels %>% 
+  st_drop_geometry() %>%
+  group_by(regio, naam) %>% 
+  filter(datum == min(datum)) %>% 
+  slice(1) %>% # takes the first occurrence if there is a tie
+  ungroup() %>%
+  group_by(regio, datum) %>%
+  summarise(n_spec = n_distinct(naam),
+            .groups = "drop") %>%
+  group_by(regio) %>%
+  arrange(datum) %>%
+  mutate(cum_sum = cumsum(n_spec)) %>%
+  ungroup()
+
+jaar <- 2023
+cum_aantal_spec %>%
+  ggplot(aes(x = datum, y = cum_sum, colour = regio)) +
+    annotate("rect",
+           xmin = ymd(paste(jaar, r1_start, sep = "-")),
+           xmax = ymd(paste(jaar, r1_stop, sep = "-")),
+           ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+    annotate("text", label = "R1",
+           x = ymd(paste(jaar, r1_start, sep = "-")) + 
+             (ymd(paste(jaar, r1_stop, sep = "-")) -
+                ymd(paste(jaar, r1_start, sep = "-"))) / 2,
+           y = 0,
+           vjust = -1) +
+    annotate("rect",
+           xmin = ymd(paste(jaar, r2_start, sep = "-")),
+           xmax = ymd(paste(jaar, r2_stop, sep = "-")),
+           ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+    annotate("text", label = "R2",
+           x = ymd(paste(jaar, r2_start, sep = "-")) + 
+             (ymd(paste(jaar, r2_stop, sep = "-")) -
+                ymd(paste(jaar, r2_start, sep = "-"))) / 2,
+           y = 0,
+           vjust = -1) +
+    annotate("rect",
+           xmin = ymd(paste(jaar, r3_start, sep = "-")),
+           xmax = ymd(paste(jaar, r3_stop, sep = "-")),
+           ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+    annotate("text", label = "R3",
+           x = ymd(paste(jaar, r3_start, sep = "-")) + 
+             (ymd(paste(jaar, r3_stop, sep = "-")) -
+                ymd(paste(jaar, r3_start, sep = "-"))) / 2,
+           y = 0,
+           vjust = -1) +
+    annotate("rect",
+           xmin = ymd(paste(jaar, r4_start, sep = "-")),
+           xmax = ymd(paste(jaar, r4_stop, sep = "-")),
+           ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+    annotate("text", label = "R4",
+           x = ymd(paste(jaar, r4_start, sep = "-")) + 
+             (ymd(paste(jaar, r4_stop, sep = "-")) -
+                ymd(paste(jaar, r4_start, sep = "-"))) / 2,
+           y = 0,
+           vjust = -1) +
+    geom_line(linewidth = 1) +
+    labs(x = "", y = "totaal aantal soorten", colour = "") +
+    theme(legend.position = "bottom")
+```
+
 
