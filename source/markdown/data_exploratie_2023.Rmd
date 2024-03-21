@@ -98,14 +98,11 @@ We selecteren de data van de Zandleemstreek en de Westelijke leemstreek.
 Dit doen we door te joinen met de steekproef.
 
 ```{r}
-steekproef_avimap <- read_csv(here("data", "steekproefkaders",
+steekproef_avimap_piloot <- read_csv(here("data", "steekproefkaders",
                                    "steekproef_avimap_mbag_piloot.csv"))
 
-steekproef_avimap_subset <- steekproef_avimap %>%
-  filter(regio %in% c("Westelijke leemstreek", "Zandleemstreek"))
-
 mas_data_regios <- mas_31370_pipeline %>%
-  inner_join(steekproef_avimap_subset, by = join_by(plotnaam == pointid))
+  inner_join(steekproef_avimap_piloot, by = join_by(plotnaam == pointid))
 ```
 
 ### Telrondes
@@ -147,13 +144,13 @@ mas_telperiodes <- mas_data_regios %>%
 We herberekenen de afstanden tussen de waarnemingen en de telpunten. We ronden af to 1 m nauwkeurig.
 
 ```{r}
-steekproef_avimap_subset_sf <- steekproef_avimap_subset %>%
+steekproef_avimap_piloot_sf <- steekproef_avimap_piloot %>%
   st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
   select(plotnaam = pointid, regio, geometry)
 
 mas_controle_afstand <- mas_telperiodes %>%
   select(oid, plotnaam, distance2plot, naam, jaar, waarnemer = waarneme) %>%
-  inner_join(steekproef_avimap_subset_sf %>% as_tibble(),
+  inner_join(steekproef_avimap_piloot_sf %>% as_tibble(),
              by = c("plotnaam"), suffix = c(".stip", ".telpunt")) %>%
   mutate(calc_distance = st_distance(.$geometry.stip, .$geometry.telpunt,
             by_element = TRUE),
@@ -184,7 +181,7 @@ detail_sf <- tibble(geometry = st_as_sfc(st_bbox(detail))) %>%
   st_as_sf() %>%
   st_set_crs(31370)
 
-mapview::mapview(st_crop(steekproef_avimap_subset_sf, detail_sf),
+mapview::mapview(st_crop(steekproef_avimap_piloot_sf, detail_sf),
                  legend = FALSE) +
   mapview::mapview(st_crop(st_buffer(mas_distance, mas_distance$distance2plot),
                            detail_sf), 
