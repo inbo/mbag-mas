@@ -845,7 +845,56 @@ relfreq_diff_total %>%
 
 ## Doelsoorten
 
+We bekijken de relatieve frequenties van de doelsoorten in meer detail (per stratum).
 
+```{r}
+relfreqs_vogels %>%
+  filter(naam %in% doelsoorten) %>% 
+  group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
+  summarise(gemiddelde_freq = weighted.mean(relfreq, w)) %>%
+  ungroup() %>%
+  group_by(landbouwstreek, jaar, naam) %>%
+  summarise(gemiddelde_freq = mean(gemiddelde_freq)) %>%
+  ungroup() %>%
+  full_join(gewicht_per_landbouwstreek) %>%
+  group_by(jaar, naam) %>%
+  mutate(order_var = weighted.mean(gemiddelde_freq, w)) %>%
+  ungroup() %>%
+  mutate(naam = reorder(naam, order_var,
+                        decreasing = FALSE)) %>%
+  select(-c(n, w, order_var)) %>%
+  arrange(desc(naam), desc(gemiddelde_freq)) %>%
+  kable(digits = 3)
+```
+
+We ordenen volgens gewogen gemiddelde.
+
+```{r}
+relfreqs_vogels %>%
+  filter(naam %in% doelsoorten) %>% 
+  group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
+  mutate(gemiddelde_freq = weighted.mean(relfreq, w)) %>%
+  ungroup() %>%
+  group_by(landbouwstreek, jaar, naam) %>%
+  mutate(gemiddelde_freq = mean(gemiddelde_freq)) %>%
+  ungroup() %>%
+  select(-c(w, n)) %>%
+  full_join(gewicht_per_landbouwstreek, by = join_by(landbouwstreek)) %>%
+  group_by(jaar, naam) %>%
+  mutate(order_var = weighted.mean(gemiddelde_freq, w)) %>%
+  ungroup() %>%
+  mutate(naam = reorder(naam, order_var,
+                        decreasing = FALSE)) %>%
+  ggplot() +
+    geom_vline(xintercept = 0, alpha = 0.2, linetype = "dashed") +
+    geom_point(aes(x = relfreq, y = naam, colour = stratum),
+               size = 1, position = position_dodge(width = 0.4)) +
+    scale_x_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.25)) +
+    labs(y = "", x = "Relatieve frequentie", colour = "Stratum") +
+    facet_grid(~landbouwstreek) +
+    theme(legend.position = "top") +
+    guides(colour = guide_legend(override.aes = list(size = 2)))
+```
 
 # Zoogdieren 2023
 
