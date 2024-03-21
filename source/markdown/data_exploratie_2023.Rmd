@@ -848,7 +848,7 @@ relfreq_diff_total %>%
 We bekijken de relatieve frequenties van de doelsoorten in meer detail (per stratum).
 
 ```{r}
-relfreqs_vogels %>%
+relfreqs_doelsoorten <- relfreqs_vogels %>%
   filter(naam %in% doelsoorten) %>% 
   group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
   summarise(gemiddelde_freq = weighted.mean(relfreq, w)) %>%
@@ -862,7 +862,10 @@ relfreqs_vogels %>%
   ungroup() %>%
   mutate(naam = reorder(naam, order_var,
                         decreasing = FALSE)) %>%
-  select(-c(n, w, order_var)) %>%
+  select(-c(n, w)) %>%
+  rename(gemiddelde_freq_regio = order_var)
+
+relfreqs_doelsoorten %>%
   arrange(desc(naam), desc(gemiddelde_freq)) %>%
   kable(digits = 3)
 ```
@@ -872,18 +875,10 @@ We ordenen volgens gewogen gemiddelde.
 ```{r}
 relfreqs_vogels %>%
   filter(naam %in% doelsoorten) %>% 
-  group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
-  mutate(gemiddelde_freq = weighted.mean(relfreq, w)) %>%
-  ungroup() %>%
-  group_by(landbouwstreek, jaar, naam) %>%
-  mutate(gemiddelde_freq = mean(gemiddelde_freq)) %>%
-  ungroup() %>%
-  select(-c(w, n)) %>%
-  full_join(gewicht_per_landbouwstreek, by = join_by(landbouwstreek)) %>%
-  group_by(jaar, naam) %>%
-  mutate(order_var = weighted.mean(gemiddelde_freq, w)) %>%
-  ungroup() %>%
-  mutate(naam = reorder(naam, order_var,
+  full_join(relfreqs_doelsoorten %>%
+              distinct(landbouwstreek, naam, gemiddelde_freq_regio),
+            by = join_by(landbouwstreek, naam)) %>%
+  mutate(naam = reorder(naam, gemiddelde_freq_regio,
                         decreasing = FALSE)) %>%
   ggplot() +
     geom_vline(xintercept = 0, alpha = 0.2, linetype = "dashed") +
@@ -1155,7 +1150,8 @@ relfreqs_zoogdieren %>%
   ungroup() %>%
   mutate(naam = reorder(naam, order_var,
                         decreasing = FALSE)) %>%
-  select(-c(n, w, order_var)) %>%
+  select(-c(n, w)) %>%
+  rename(gemiddelde_freq_regio = order_var) %>%
   arrange(desc(naam), desc(gemiddelde_freq)) %>%
   kable(digits = 5)
 ```
