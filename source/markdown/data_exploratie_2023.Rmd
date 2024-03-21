@@ -832,7 +832,7 @@ relfreq_diff_total %>%
            yend = c(10.5 - 2.5),
            arrow = arrow(type = "closed", length = unit(0.015, "npc")),
            colour = "black") +
-    annotate("text", label = c("Zandleemstrek"),
+    annotate("text", label = c("Zandleemstreek"),
              x = c(abs(max(relfreq_diff_zn$verschilfreq)) + 0.01),
              y = c(length(unique(relfreq_diff_total$naam)) - 10 + 1),
              size = 2, hjust = "left", colour = "black", angle = 90) +
@@ -840,4 +840,368 @@ relfreq_diff_total %>%
            x = c(abs(max(relfreq_diff_zn$verschilfreq)) + 0.01),
            y = c(10.5 - 0.5),
            size = 2, hjust = "right", colour = "black", angle = 90)
+```
+
+# Zoogdieren 2023
+
+```{r}
+mas_2023_zoogdieren <- mas_2023_clean %>%
+  filter(soortgrp == 1)  # zoogdieren
+```
+
+## Enkele cijfers
+
+```{r}
+summary_zoogdieren_2023 <- mas_2023_zoogdieren %>%
+  st_drop_geometry() %>%
+  group_by(regio, jaar) %>%
+  mutate(aantal_soorten_regiojaar = n_distinct(naam)) %>%
+  group_by(regio, jaar, openheid_klasse, sbp) %>%
+  mutate(aantal_waarnemingen = n_distinct(oid),
+         aantal_soorten_stratum = n_distinct(naam)) %>%
+  ungroup() %>%
+  distinct(regio, jaar, openheid_klasse, sbp, aantal_waarnemingen,
+           aantal_soorten_stratum, aantal_soorten_regiojaar) %>%
+  arrange(regio, jaar, openheid_klasse, sbp)
+
+summary_zoogdieren_2023 %>%
+  kable()
+```
+
+We kijken naar het aantal waarnemingen.
+
+```{r}
+mas_2023_zoogdieren %>%
+  st_drop_geometry() %>%
+  group_by(regio, jaar, periode_in_jaar) %>%
+  summarise(aantal_waarnemingen = n_distinct(oid),
+            .groups = "drop") %>%
+  ggplot(aes(x = periode_in_jaar, y = aantal_waarnemingen)) +
+    geom_bar(stat = "identity") +
+    geom_text(aes(label = aantal_waarnemingen),
+              position = position_dodge(width = 0.9), vjust = -0.25) +
+    facet_wrap(~regio) +
+    labs(x = "Telperiode", y = "Aantal waarnemingen")
+```
+
+Voor verdere analyses groeperen we de Westelijke en Oostelijke leemstreek tot de Leemstreek.
+
+```{r}
+mas_2023_zoogdieren <- full_join(mas_2023_zoogdieren, gewichten_mas_2023,
+                                 by = join_by(regio, openheid_klasse, sbp))
+```
+
+
+## Soortendiversiteit
+
+Het aantal soorten neemt vooral toe in de eerste twee telperiodes.
+
+```{r}
+cum_aantal_spec_strat <- mas_2023_zoogdieren %>% 
+  st_drop_geometry() %>%
+  group_by(landbouwstreek, naam) %>% 
+  filter(datum == min(datum)) %>% 
+  slice(1) %>% # takes the first occurrence if there is a tie
+  ungroup() %>%
+  group_by(landbouwstreek, datum) %>%
+  summarise(n_spec = n_distinct(naam),
+            .groups = "drop") %>%
+  group_by(landbouwstreek) %>%
+  arrange(datum) %>%
+  mutate(cum_sum = cumsum(n_spec)) %>%
+  ungroup()
+
+jaar <- 2023
+cum_p1 <- cum_aantal_spec_strat %>%
+  ggplot(aes(x = datum, y = cum_sum, colour = landbouwstreek)) +
+    annotate("rect",
+           xmin = ymd(paste(jaar, r1_start, sep = "-")),
+           xmax = ymd(paste(jaar, r1_stop, sep = "-")),
+           ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+    annotate("text", label = "R1",
+           x = ymd(paste(jaar, r1_start, sep = "-")) + 
+             (ymd(paste(jaar, r1_stop, sep = "-")) -
+                ymd(paste(jaar, r1_start, sep = "-"))) / 2,
+           y = 0,
+           vjust = -1) +
+    annotate("rect",
+           xmin = ymd(paste(jaar, r2_start, sep = "-")),
+           xmax = ymd(paste(jaar, r2_stop, sep = "-")),
+           ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+    annotate("text", label = "R2",
+           x = ymd(paste(jaar, r2_start, sep = "-")) + 
+             (ymd(paste(jaar, r2_stop, sep = "-")) -
+                ymd(paste(jaar, r2_start, sep = "-"))) / 2,
+           y = 0,
+           vjust = -1) +
+    annotate("rect",
+           xmin = ymd(paste(jaar, r3_start, sep = "-")),
+           xmax = ymd(paste(jaar, r3_stop, sep = "-")),
+           ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+    annotate("text", label = "R3",
+           x = ymd(paste(jaar, r3_start, sep = "-")) + 
+             (ymd(paste(jaar, r3_stop, sep = "-")) -
+                ymd(paste(jaar, r3_start, sep = "-"))) / 2,
+           y = 0,
+           vjust = -1) +
+    annotate("rect",
+           xmin = ymd(paste(jaar, r4_start, sep = "-")),
+           xmax = ymd(paste(jaar, r4_stop, sep = "-")),
+           ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+    annotate("text", label = "R4",
+           x = ymd(paste(jaar, r4_start, sep = "-")) + 
+             (ymd(paste(jaar, r4_stop, sep = "-")) -
+                ymd(paste(jaar, r4_start, sep = "-"))) / 2,
+           y = 0,
+           vjust = -1) +
+    geom_line(linewidth = 1) +
+    labs(x = "", y = "Totaal aantal soorten", colour = "Regio") +
+    theme(legend.position = "bottom")
+```
+
+We bekijken dit ook per stratum.
+
+```{r}
+cum_aantal_spec_strat <- mas_2023_zoogdieren %>% 
+  st_drop_geometry() %>%
+  group_by(landbouwstreek, openheid_klasse, sbp, naam) %>% 
+  filter(datum == min(datum)) %>% 
+  slice(1) %>% # takes the first occurrence if there is a tie
+  ungroup() %>%
+  group_by(landbouwstreek, openheid_klasse, sbp, datum) %>%
+  summarise(n_spec = n_distinct(naam),
+            .groups = "drop") %>%
+  group_by(landbouwstreek, openheid_klasse, sbp) %>%
+  arrange(datum) %>%
+  mutate(cum_sum = cumsum(n_spec)) %>%
+  ungroup()
+
+jaar <- 2023
+cum_p2 <- cum_aantal_spec_strat %>%
+  mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
+  ggplot(aes(x = datum, y = cum_sum, colour = stratum)) +
+    annotate("rect",
+           xmin = ymd(paste(jaar, r1_start, sep = "-")),
+           xmax = ymd(paste(jaar, r1_stop, sep = "-")),
+           ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+    annotate("text", label = "R1",
+           x = ymd(paste(jaar, r1_start, sep = "-")) + 
+             (ymd(paste(jaar, r1_stop, sep = "-")) -
+                ymd(paste(jaar, r1_start, sep = "-"))) / 2,
+           y = 0,
+           vjust = -1) +
+    annotate("rect",
+           xmin = ymd(paste(jaar, r2_start, sep = "-")),
+           xmax = ymd(paste(jaar, r2_stop, sep = "-")),
+           ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+    annotate("text", label = "R2",
+           x = ymd(paste(jaar, r2_start, sep = "-")) + 
+             (ymd(paste(jaar, r2_stop, sep = "-")) -
+                ymd(paste(jaar, r2_start, sep = "-"))) / 2,
+           y = 0,
+           vjust = -1) +
+    annotate("rect",
+           xmin = ymd(paste(jaar, r3_start, sep = "-")),
+           xmax = ymd(paste(jaar, r3_stop, sep = "-")),
+           ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+    annotate("text", label = "R3",
+           x = ymd(paste(jaar, r3_start, sep = "-")) + 
+             (ymd(paste(jaar, r3_stop, sep = "-")) -
+                ymd(paste(jaar, r3_start, sep = "-"))) / 2,
+           y = 0,
+           vjust = -1) +
+    annotate("rect",
+           xmin = ymd(paste(jaar, r4_start, sep = "-")),
+           xmax = ymd(paste(jaar, r4_stop, sep = "-")),
+           ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+    annotate("text", label = "R4",
+           x = ymd(paste(jaar, r4_start, sep = "-")) + 
+             (ymd(paste(jaar, r4_stop, sep = "-")) -
+                ymd(paste(jaar, r4_start, sep = "-"))) / 2,
+           y = 0,
+           vjust = -1) +
+    geom_line(linewidth = 1) +
+    facet_wrap(~landbouwstreek) +
+    labs(x = "", y = "Totaal aantal soorten", colour = "Regio") +
+    theme(legend.position = "bottom")
+```
+
+```{r}
+gridExtra::grid.arrange(cum_p1, cum_p2)
+```
+
+Voor elke soort kunnen we de relatieve frequentie ($P$) berekenen als de proportie telpunten waarin de soort aanwezig is per telperiode, stratum en regio.
+Een relatieve frequentie van 0,5 wil dus zeggen dat de soort in 50 % van de telpunten gezien is.
+
+$$
+P = \sum_{i=1}^{N} I(n_i > 0) / N
+$$
+
+Waarbij $N$ het totaal aantal telpunten is in een bepaalde telperiode, stratum en regio en $n_i$ het aantal individuen van de beschouwde soort waargenomen aan telpunt $i$.
+$I(\cdot)$ is de indicatorfunctie die 1 geeft als $n_i > 0$ en 0 anderzijds.
+We selecteerden enkel waarnemingen met broedcode groter dan nul.
+Voor roofzoogdieren hielden we geen rekening met broedcode, omdat we voor deze soorten meer algemeen geïnteresseerd zijn in predatiedruk op de akkerzoogdieren.
+
+```{r}
+relfreqs_zoogdieren <- mas_2023_zoogdieren %>%
+  mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
+  st_drop_geometry() %>%
+  group_by(landbouwstreek, plotnaam, jaar, stratum, periode_in_jaar, naam) %>%
+  summarise(totaal_aantal = sum(aantal),
+            .groups = "drop") %>%
+  pivot_wider(names_from = naam,
+              values_from = totaal_aantal,
+              values_fill = list(totaal_aantal = 0)) %>%
+  full_join(bezoekenlijst_2023,
+            by = join_by(landbouwstreek, plotnaam, jaar, stratum,
+                         periode_in_jaar)) %>%
+  replace(is.na(.), 0) %>%
+  mutate(jaar = factor(jaar)) %>%
+  group_by(jaar, periode_in_jaar, landbouwstreek, stratum) %>%
+  summarise(across(.cols = where(~ is.numeric(.x) && min(.x) == 0),
+                   .fns = ~sum(.x > 0) / n()),
+            n = n(),
+            .groups = "drop") %>%
+  pivot_longer(cols = where(is.double),
+               names_to = "naam",
+               values_to = "relfreq") %>%
+  separate_wider_delim(stratum, " - ",
+                       names = c("openheid_klasse", "sbp")) %>%
+  full_join(select(gewichten_mas_2023, -n),
+            relationship = "many-to-many",
+            by = join_by(landbouwstreek, openheid_klasse, sbp)) %>%
+  mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
+  distinct()
+```
+
+Overzicht van relatieve frequenties van de 20 meest frequente soorten in een bepaalde regio (gewogen gemiddelde).
+Elk punt staat voor een relatieve frequentie in een bepaalde telperiode.
+We nemen een gewogen gemiddelde per landbouwstreek waarbij de gewichten afhankelijk zijn van regio (in het geval van de Leemstreek, westelijk vs. oostelijk) en stratum.
+Over de telperiodes heen mogen we wel een ongewogen gemiddelde nemen want dit zijn replicaten.
+
+```{r}
+relfreqs_zoogdieren %>%
+  group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
+  summarise(gemiddelde_freq = weighted.mean(relfreq, w)) %>%
+  ungroup() %>%
+  group_by(landbouwstreek, jaar, naam) %>%
+  summarise(gemiddelde_freq = mean(gemiddelde_freq)) %>%
+  ungroup() %>%
+  full_join(gewicht_per_landbouwstreek) %>%
+  group_by(jaar, naam) %>%
+  mutate(order_var = weighted.mean(gemiddelde_freq, w)) %>%
+  ungroup() %>%
+  mutate(naam = reorder(naam, order_var,
+                        decreasing = FALSE)) %>%
+  select(-c(n, w, order_var)) %>%
+  arrange(desc(naam)) %>%
+  kable(digits = 2)
+```
+
+In de volgende figuur is elk punt een relatieve frequentie per telperiode.
+
+```{r}
+freq_to_plot <- relfreqs_zoogdieren %>%
+  group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
+  summarise(gemiddelde_freq = weighted.mean(relfreq, w)) %>%
+  ungroup() %>%
+  full_join(gewicht_per_landbouwstreek) %>%
+  group_by(jaar, naam) %>%
+  mutate(order_var = weighted.mean(gemiddelde_freq, w)) %>%
+  ungroup() %>%
+  mutate(naam = reorder(naam, order_var,
+                        decreasing = FALSE))
+
+freq_to_plot %>%
+  ggplot() +
+    geom_vline(xintercept = 0, alpha = 0.2, linetype = "dashed") +
+    geom_point(aes(x = gemiddelde_freq, y = naam, colour = landbouwstreek),
+               size = 1) +
+    labs(y = "", x = "Relatieve frequentie", colour = "Regio") +
+    scale_y_discrete(labels = function(x) highlight(x, doelsoorten, "red")) +
+    theme(legend.position = "top",
+          axis.text = element_text(size = 8),
+          axis.text.y = element_markdown(),
+          panel.spacing = unit(0.7, "lines")) +
+    guides(colour = guide_legend(override.aes = list(size = 2)))
+```
+
+Top 20 van soorten die in termen van verschil in gemiddelde relatieve frequentie van voorkomen meer voorkomen in de Zandleemstreek dan in de Leemstreek:
+
+```{r}
+relfreqs_zoogdieren %>%
+  group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
+  summarise(gemiddelde_freq_w = weighted.mean(relfreq, w)) %>%
+  ungroup() %>%
+  group_by(landbouwstreek, jaar, naam) %>%
+  summarise(gemiddelde_freq = mean(gemiddelde_freq_w)) %>%
+  ungroup() %>%
+  distinct(landbouwstreek, naam, gemiddelde_freq) %>%
+  pivot_wider(names_from = landbouwstreek,
+              values_from = gemiddelde_freq,
+              values_fill = 0) %>%
+  mutate(verschilfreq = `Zandleemstreek` - `Leemstreek`) %>%
+  ungroup() %>%
+  arrange(desc(verschilfreq)) %>%
+  kable(digits = 2)
+```
+
+```{r}
+relfreq_diff_zn <- relfreqs_zoogdieren %>%
+  group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
+  summarise(gemiddelde_freq = weighted.mean(relfreq, w)) %>%
+  ungroup() %>%
+  pivot_wider(names_from = landbouwstreek,
+              values_from = gemiddelde_freq,
+              values_fill = 0) %>%
+  mutate(verschilfreq = `Zandleemstreek` - `Leemstreek`) %>%
+  mutate(naam = reorder(naam, verschilfreq, FUN = "mean",
+                        decreasing = FALSE))
+
+relfreq_diff_zn %>%
+  ggplot() +
+    geom_vline(xintercept = 0,
+               colour = "lightgrey") +
+    geom_point(aes(x = verschilfreq, y = naam),
+               size = 1) +
+    labs(y = "", x = "Verschil in relatieve frequentie") +
+    scale_y_discrete(labels = function(x) highlight(x, doelsoorten, "red")) +
+    coord_cartesian(xlim = c(0 - abs(max(relfreq_diff_zn$verschilfreq)),
+                             0 + abs(max(relfreq_diff_zn$verschilfreq)))) +
+    scale_x_continuous(breaks = seq(-1, 1, 0.05)) +
+    theme(legend.position = "top",
+          axis.text = element_text(size = 8),
+          axis.text.y = element_markdown(),
+          panel.spacing = unit(1.2, "lines")) +
+    guides(colour = guide_legend(override.aes = list(size = 3))) +
+    annotate("segment",
+             x = 0.01,
+             y = 0.75,
+             xend = 0.05,
+             yend = 0.75,
+             arrow = arrow(type = "closed", length = unit(0.015, "npc")),
+             colour = "black") +
+    annotate("segment",
+             x = -0.01,
+             y = 0.75,
+             xend = -0.05,
+             yend = 0.75,
+             arrow = arrow(type = "closed", length = unit(0.015, "npc")),
+             colour = "black") +
+    annotate("text", label = c("Zandleemstreek"),
+             x = 0.01,
+             y = 0.6,
+             size = 2, hjust = "left", colour = "black") +
+    annotate("text", label = c("Leemstreek"),
+             x = -0.01,
+             y = 0.6,
+             size = 2, hjust = "right", colour = "black")
 ```
