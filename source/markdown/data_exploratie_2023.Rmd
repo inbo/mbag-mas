@@ -99,7 +99,7 @@ Dit doen we door te joinen met de steekproef.
 
 ```{r}
 steekproef_avimap_piloot <- read_csv(here("data", "steekproefkaders",
-                                   "steekproef_avimap_mbag_piloot.csv"))
+                                          "steekproef_avimap_mbag_piloot.csv"))
 
 mas_data_regios <- mas_31370_pipeline %>%
   inner_join(steekproef_avimap_piloot, by = join_by(plotnaam == pointid))
@@ -290,41 +290,97 @@ summary_vogels_2023 %>%
   kable()
 ```
 
+De meeste telpunten werden in alle telperiodes aangedaan.
+
+```{r}
+mas_2023_vogels %>%
+  st_drop_geometry() %>%
+  group_by(regio, jaar, periode_in_jaar) %>%
+  summarise(aantal_telpunten = n_distinct(plotnaam),
+            .groups = "drop") %>%
+  ggplot(aes(x = periode_in_jaar, y = aantal_telpunten)) +
+    geom_bar(stat = "identity") +
+    geom_text(aes(label = aantal_telpunten),
+              position = position_dodge(width = 0.9), vjust = -0.25) +
+    facet_wrap(~regio) +
+    labs(x = "Telperiode", y = "Aantal telpunten")
+```
+
+We kijken ook naar het aantal waarnemingen.
+
 ```{r}
 mas_2023_vogels %>%
   st_drop_geometry() %>%
   group_by(regio, jaar, periode_in_jaar) %>%
   summarise(aantal_waarnemingen = n_distinct(oid),
             .groups = "drop") %>%
-  ggplot() +
-    geom_bar(aes(x = periode_in_jaar, y = aantal_waarnemingen),
-             stat = "identity") +
+  ggplot(aes(x = periode_in_jaar, y = aantal_waarnemingen)) +
+    geom_bar(stat = "identity") +
+    geom_text(aes(label = aantal_waarnemingen),
+              position = position_dodge(width = 0.9), vjust = -0.25) +
     facet_wrap(~regio) +
     labs(x = "Telperiode", y = "Aantal waarnemingen")
 ```
+
+Voor verdere analyses groeperen we de Westelijke en Oostelijke leemstreek tot de Leemstreek.
+We lezen de gewichten van de strata in zodat we eventueel kunnen rekening houden met onderlingen proporties per stratum.
+
+```{r}
+gewichten_oostelijke_leemstreek <- read_csv(
+  here("data", "steekproefkaders", "gewichten_oostelijke_leemstreek.csv"))
+gewichten_westelijke_leemstreek <- read_csv(
+  here("data", "steekproefkaders", "gewichten_westelijke_leemstreek.csv"))
+gewichten_zandleemstreek <- read_csv(
+  here("data", "steekproefkaders", "gewichten_zandleemstreek.csv"))
+```
+
+We groeperen de gewichten per landbouwstreek (berekening proporties per landbouwstreek).
+
+```{r}
+gewichten_mas_2023 <- bind_rows(gewichten_oostelijke_leemstreek,
+          gewichten_westelijke_leemstreek,
+          gewichten_zandleemstreek) %>%
+  mutate(landbouwstreek = ifelse(grepl("\\sleemstreek$", regio),
+                                 "Leemstreek",
+                                 regio)) %>%
+  group_by(landbouwstreek) %>%
+  mutate(totaal = sum(n),
+         w = n / totaal) %>%
+  ungroup() %>%
+  select(landbouwstreek, regio, openheid_klasse, sbp, n, w)
+
+gewichten_mas_2023 %>%
+  kable(digits = 3)
+```
+
+```{r}
+mas_2023_vogels <- full_join(mas_2023_vogels, gewichten_mas_2023,
+                             by = join_by(regio, openheid_klasse, sbp))
+```
+
 
 ## Soortendiversiteit
 
 Het aantal soorten neemt vooral toe in de eerste twee telperiodes.
 
 ```{r}
-cum_aantal_spec <- mas_2023_vogels %>% 
+cum_aantal_spec_strat <- mas_2023_vogels %>% 
   st_drop_geometry() %>%
-  group_by(regio, naam) %>% 
+  group_by(landbouwstreek, naam) %>% 
   filter(datum == min(datum)) %>% 
   slice(1) %>% # takes the first occurrence if there is a tie
   ungroup() %>%
-  group_by(regio, datum) %>%
+  group_by(landbouwstreek, datum) %>%
   summarise(n_spec = n_distinct(naam),
             .groups = "drop") %>%
-  group_by(regio) %>%
+  group_by(landbouwstreek) %>%
   arrange(datum) %>%
   mutate(cum_sum = cumsum(n_spec)) %>%
   ungroup()
 
 jaar <- 2023
-cum_aantal_spec %>%
-  ggplot(aes(x = datum, y = cum_sum, colour = regio)) +
+cum_aantal_spec_strat %>%
+  ggplot(aes(x = datum, y = cum_sum, colour = landbouwstreek)) +
     annotate("rect",
            xmin = ymd(paste(jaar, r1_start, sep = "-")),
            xmax = ymd(paste(jaar, r1_stop, sep = "-")),
@@ -374,12 +430,83 @@ cum_aantal_spec %>%
     theme(legend.position = "bottom")
 ```
 
+We bekijken dit ook per stratum.
+
+```{r}
+cum_aantal_spec_strat <- mas_2023_vogels %>% 
+  st_drop_geometry() %>%
+  group_by(landbouwstreek, openheid_klasse, sbp, naam) %>% 
+  filter(datum == min(datum)) %>% 
+  slice(1) %>% # takes the first occurrence if there is a tie
+  ungroup() %>%
+  group_by(landbouwstreek, openheid_klasse, sbp, datum) %>%
+  summarise(n_spec = n_distinct(naam),
+            .groups = "drop") %>%
+  group_by(landbouwstreek, openheid_klasse, sbp) %>%
+  arrange(datum) %>%
+  mutate(cum_sum = cumsum(n_spec)) %>%
+  ungroup()
+
+jaar <- 2023
+cum_aantal_spec_strat %>%
+  mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
+  ggplot(aes(x = datum, y = cum_sum, colour = stratum)) +
+    annotate("rect",
+           xmin = ymd(paste(jaar, r1_start, sep = "-")),
+           xmax = ymd(paste(jaar, r1_stop, sep = "-")),
+           ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+    annotate("text", label = "R1",
+           x = ymd(paste(jaar, r1_start, sep = "-")) + 
+             (ymd(paste(jaar, r1_stop, sep = "-")) -
+                ymd(paste(jaar, r1_start, sep = "-"))) / 2,
+           y = 0,
+           vjust = -1) +
+    annotate("rect",
+           xmin = ymd(paste(jaar, r2_start, sep = "-")),
+           xmax = ymd(paste(jaar, r2_stop, sep = "-")),
+           ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+    annotate("text", label = "R2",
+           x = ymd(paste(jaar, r2_start, sep = "-")) + 
+             (ymd(paste(jaar, r2_stop, sep = "-")) -
+                ymd(paste(jaar, r2_start, sep = "-"))) / 2,
+           y = 0,
+           vjust = -1) +
+    annotate("rect",
+           xmin = ymd(paste(jaar, r3_start, sep = "-")),
+           xmax = ymd(paste(jaar, r3_stop, sep = "-")),
+           ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+    annotate("text", label = "R3",
+           x = ymd(paste(jaar, r3_start, sep = "-")) + 
+             (ymd(paste(jaar, r3_stop, sep = "-")) -
+                ymd(paste(jaar, r3_start, sep = "-"))) / 2,
+           y = 0,
+           vjust = -1) +
+    annotate("rect",
+           xmin = ymd(paste(jaar, r4_start, sep = "-")),
+           xmax = ymd(paste(jaar, r4_stop, sep = "-")),
+           ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+    annotate("text", label = "R4",
+           x = ymd(paste(jaar, r4_start, sep = "-")) + 
+             (ymd(paste(jaar, r4_stop, sep = "-")) -
+                ymd(paste(jaar, r4_start, sep = "-"))) / 2,
+           y = 0,
+           vjust = -1) +
+    geom_line(linewidth = 1) +
+    facet_wrap(~landbouwstreek) +
+    labs(x = "", y = "Totaal aantal soorten", colour = "Regio") +
+    theme(legend.position = "bottom")
+```
+
 Een overzicht van het aantal soorten per telpunt in de Westelijke leemstreek en de Zandleemstreek.
 
 ```{r}
 mas_2023_vogels %>%
   st_drop_geometry() %>%
-  group_by(regio, jaar, plotnaam, openheid_klasse, sbp, periode_in_jaar,
+  group_by(landbouwstreek, jaar, plotnaam, openheid_klasse, sbp, periode_in_jaar,
            naam) %>%
   summarise(totaal_aantal = sum(aantal),
             .groups = "drop_last") %>%
@@ -390,7 +517,7 @@ mas_2023_vogels %>%
     geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
     geom_boxplot(aes(x = stratum, y = aantal_soorten,
                      colour = periode_in_jaar)) +
-    facet_wrap(~regio) +
+    facet_wrap(~landbouwstreek) +
     labs(y = "Aantal soorten per telpunt", x = "", colour = "Telperiode")
 ```
 
