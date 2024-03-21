@@ -637,7 +637,7 @@ relfreqs_vogels %>%
                         decreasing = FALSE)) %>%
   select(-c(n, w, order_var)) %>%
   slice_max(naam, n = 20 * 2) %>%
-  kable(digits = 2)
+  kable(digits = 3)
 ```
 
 In de volgende figuur is elk punt een relatieve frequentie per telperiode.
@@ -1103,7 +1103,7 @@ relfreqs_zoogdieren %>%
                         decreasing = FALSE)) %>%
   select(-c(n, w, order_var)) %>%
   arrange(desc(naam)) %>%
-  kable(digits = 2)
+  kable(digits = 5)
 ```
 
 In de volgende figuur is elk punt een relatieve frequentie per telperiode.
