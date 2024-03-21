@@ -349,6 +349,12 @@ gewichten_mas_2023 <- bind_rows(gewichten_oostelijke_leemstreek,
   ungroup() %>%
   select(landbouwstreek, regio, openheid_klasse, sbp, n, w)
 
+gewicht_per_landbouwstreek <- gewichten_mas_2023 %>%
+  group_by(landbouwstreek) %>%
+  summarise(n = sum(n),
+            .groups = "drop") %>%
+  mutate(w = n / sum(n))
+
 gewichten_mas_2023 %>%
   kable(digits = 3)
 ```
@@ -379,7 +385,7 @@ cum_aantal_spec_strat <- mas_2023_vogels %>%
   ungroup()
 
 jaar <- 2023
-cum_aantal_spec_strat %>%
+cum_p1 <- cum_aantal_spec_strat %>%
   ggplot(aes(x = datum, y = cum_sum, colour = landbouwstreek)) +
     annotate("rect",
            xmin = ymd(paste(jaar, r1_start, sep = "-")),
@@ -448,7 +454,7 @@ cum_aantal_spec_strat <- mas_2023_vogels %>%
   ungroup()
 
 jaar <- 2023
-cum_aantal_spec_strat %>%
+cum_p2 <- cum_aantal_spec_strat %>%
   mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
   ggplot(aes(x = datum, y = cum_sum, colour = stratum)) +
     annotate("rect",
@@ -499,6 +505,10 @@ cum_aantal_spec_strat %>%
     facet_wrap(~landbouwstreek) +
     labs(x = "", y = "Totaal aantal soorten", colour = "Regio") +
     theme(legend.position = "bottom")
+```
+
+```{r}
+gridExtra::grid.arrange(cum_p1, cum_p2)
 ```
 
 Een overzicht van het aantal soorten per telpunt in de Westelijke leemstreek en de Zandleemstreek.
@@ -597,7 +607,7 @@ relfreqs_vogels <- mas_2023_vogels %>%
   distinct()
 ```
 
-Overzicht van relatieve frequenties van de 20 meest frequente soorten in een bepaalde regio.
+Overzicht van relatieve frequenties van de 20 meest frequente soorten in een bepaalde regio (gewogen gemiddelde).
 Elk punt staat voor een relatieve frequentie in een bepaalde telperiode.
 We nemen een gewogen gemiddelde per landbouwstreek waarbij de gewichten afhankelijk zijn van regio (in het geval van de Leemstreek, westelijk vs. oostelijk) en stratum.
 Over de telperiodes heen mogen we wel een ongewogen gemiddelde nemen want dit zijn replicaten.
@@ -612,11 +622,37 @@ highlight <- function(x, pat, color="black", family="") {
 ```
 
 ```{r}
+relfreqs_vogels %>%
+  group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
+  summarise(gemiddelde_freq = weighted.mean(relfreq, w)) %>%
+  ungroup() %>%
+  group_by(landbouwstreek, jaar, naam) %>%
+  summarise(gemiddelde_freq = mean(gemiddelde_freq)) %>%
+  ungroup() %>%
+  full_join(gewicht_per_landbouwstreek) %>%
+  group_by(jaar, naam) %>%
+  mutate(order_var = weighted.mean(gemiddelde_freq, w)) %>%
+  ungroup() %>%
+  mutate(naam = reorder(naam, order_var,
+                        decreasing = FALSE)) %>%
+  select(-c(n, w, order_var)) %>%
+  slice_max(naam, n = 20 * 2) %>%
+  kable(digits = 2)
+```
+
+In de volgende figuur is elk punt een relatieve frequentie per telperiode.
+
+```{r}
 freq_to_plot <- relfreqs_vogels %>%
   group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
   summarise(gemiddelde_freq = weighted.mean(relfreq, w)) %>%
   ungroup() %>%
-  mutate(naam = reorder(naam, gemiddelde_freq, decreasing = FALSE)) %>%
+  full_join(gewicht_per_landbouwstreek) %>%
+  group_by(jaar, naam) %>%
+  mutate(order_var = weighted.mean(gemiddelde_freq, w)) %>%
+  ungroup() %>%
+  mutate(naam = reorder(naam, order_var,
+                        decreasing = FALSE)) %>%
   filter(as.numeric(naam) > length(unique(naam)) - 20 |
            naam %in% doelsoorten)
 
