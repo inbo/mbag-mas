@@ -637,6 +637,7 @@ relfreqs_vogels %>%
                         decreasing = FALSE)) %>%
   select(-c(n, w, order_var)) %>%
   slice_max(naam, n = 20 * 2) %>%
+  arrange(desc(naam), desc(gemiddelde_freq)) %>%
   kable(digits = 3)
 ```
 
@@ -1102,7 +1103,7 @@ relfreqs_zoogdieren %>%
   mutate(naam = reorder(naam, order_var,
                         decreasing = FALSE)) %>%
   select(-c(n, w, order_var)) %>%
-  arrange(desc(naam)) %>%
+  arrange(desc(naam), desc(gemiddelde_freq)) %>%
   kable(digits = 5)
 ```
 
