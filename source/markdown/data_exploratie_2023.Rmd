@@ -547,35 +547,60 @@ doelsoorten <- c(
   "Torenvalk")
 ```
 
+Voor elke soort kunnen we de relatieve frequentie ($P$) berekenen als de proportie telpunten waarin de soort aanwezig is per telperiode, stratum en regio.
+Een relatieve frequentie van 0,5 wil dus zeggen dat de soort in 50 % van de telpunten gezien is.
+
+$$
+P = \sum_{i=1}^{N} I(n_i > 0) / N
+$$
+
+Waarbij $N$ het totaal aantal telpunten is in een bepaalde telperiode, stratum en regio en $n_i$ het aantal individuen van de beschouwde soort waargenomen aan telpunt $i$.
+$I(\cdot)$ is de indicatorfunctie die 1 geeft als $n_i > 0$ en 0 anderzijds.
+We selecteerden enkel waarnemingen met broedcode groter dan nul.
+Voor roofvogels hielden we geen rekening met broedcode, omdat we voor deze soorten meer algemeen geïnteresseerd zijn in predatiedruk op de akkervogels.
+
 ```{r}
 bezoekenlijst_2023 <- mas_2023_vogels %>%
   st_drop_geometry() %>%
-  distinct(regio, jaar, plotnaam, periode_in_jaar)
+  mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
+  distinct(landbouwstreek, regio, jaar, stratum, plotnaam, periode_in_jaar)
 
 relfreqs_vogels <- mas_2023_vogels %>%
+  mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
   st_drop_geometry() %>%
   filter(ifelse(naam %in% roofvogels_f(), wrntype >= 0L, wrntype > 0L)) %>%
-  group_by(regio, plotnaam, jaar, periode_in_jaar, naam) %>%
+  group_by(landbouwstreek, plotnaam, jaar, stratum, periode_in_jaar, naam) %>%
   summarise(totaal_aantal = sum(aantal),
             .groups = "drop") %>%
   pivot_wider(names_from = naam,
               values_from = totaal_aantal,
               values_fill = list(totaal_aantal = 0)) %>%
   full_join(bezoekenlijst_2023,
-            by = join_by(regio, jaar, plotnaam, periode_in_jaar)) %>%
+            by = join_by(landbouwstreek, plotnaam, jaar, stratum,
+                         periode_in_jaar)) %>%
   replace(is.na(.), 0) %>%
   mutate(jaar = factor(jaar)) %>%
-  group_by(jaar, periode_in_jaar, regio) %>%
+  group_by(jaar, periode_in_jaar, landbouwstreek, stratum) %>%
   summarise(across(.cols = where(~ is.numeric(.x) && min(.x) == 0),
                    .fns = ~sum(.x > 0) / n()),
             n = n(),
             .groups = "drop") %>%
   pivot_longer(cols = where(is.double),
                names_to = "naam",
-               values_to = "relfreq")
+               values_to = "relfreq") %>%
+  separate_wider_delim(stratum, " - ",
+                       names = c("openheid_klasse", "sbp")) %>%
+  full_join(select(gewichten_mas_2023, -n),
+            relationship = "many-to-many",
+            by = join_by(landbouwstreek, openheid_klasse, sbp)) %>%
+  mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
+  distinct()
 ```
 
-Overzicht van relatieve frequenties van de 20 meest frequente soorten in een bepaalde regio. Elk punt staat voor een relatieve frequentie in een bepaald jaar en een bepaalde telperiode van dat jaar. Enkel data met broedcode > 0 zijn weerhouden tenzij voor roofvogels.
+Overzicht van relatieve frequenties van de 20 meest frequente soorten in een bepaalde regio.
+Elk punt staat voor een relatieve frequentie in een bepaalde telperiode.
+We nemen een gewogen gemiddelde per landbouwstreek waarbij de gewichten afhankelijk zijn van regio (in het geval van de Leemstreek, westelijk vs. oostelijk) en stratum.
+Over de telperiodes heen mogen we wel een ongewogen gemiddelde nemen want dit zijn replicaten.
 
 ```{r}
 library(ggtext)
@@ -588,20 +613,19 @@ highlight <- function(x, pat, color="black", family="") {
 
 ```{r}
 freq_to_plot <- relfreqs_vogels %>%
-  group_by(regio, naam) %>%
-  mutate(
-    w = n / sum(n),
-    gemiddelde_freq = weighted.mean(relfreq, w)) %>%
+  group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
+  summarise(gemiddelde_freq = weighted.mean(relfreq, w)) %>%
   ungroup() %>%
   mutate(naam = reorder(naam, gemiddelde_freq, decreasing = FALSE)) %>%
   filter(as.numeric(naam) > length(unique(naam)) - 20 |
            naam %in% doelsoorten)
+
 freq_to_plot %>%
   ggplot() +
     geom_vline(xintercept = 0, alpha = 0.2, linetype = "dashed") +
     geom_hline(yintercept = length(unique(freq_to_plot$naam)) - 20 + 0.5,
                alpha = 0.2, linetype = "dashed") +
-    geom_point(aes(x = relfreq, y = naam, colour = regio),
+    geom_point(aes(x = gemiddelde_freq, y = naam, colour = landbouwstreek),
                size = 1) +
     labs(y = "", x = "Relatieve frequentie", colour = "Regio") +
     scale_y_discrete(labels = function(x) highlight(x, doelsoorten, "red")) +
@@ -612,19 +636,21 @@ freq_to_plot %>%
     guides(colour = guide_legend(override.aes = list(size = 2)))
 ```
 
-Top 20 van soorten die in termen van verschil in gemiddelde relatieve frequentie van voorkomen meer voorkomen in de Zandleemstreek dan in de Westelijke leemstreek:
+Top 20 van soorten die in termen van verschil in gemiddelde relatieve frequentie van voorkomen meer voorkomen in de Zandleemstreek dan in de Leemstreek:
 
 ```{r}
 relfreqs_vogels %>%
-  group_by(regio, naam) %>%
-  mutate(
-    w = n / sum(n),
-    gemiddelde_freq = weighted.mean(relfreq, w)) %>%
-  distinct(regio, naam, gemiddelde_freq) %>%
-  pivot_wider(names_from = regio,
+  group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
+  summarise(gemiddelde_freq_w = weighted.mean(relfreq, w)) %>%
+  ungroup() %>%
+  group_by(landbouwstreek, jaar, naam) %>%
+  summarise(gemiddelde_freq = mean(gemiddelde_freq_w)) %>%
+  ungroup() %>%
+  distinct(landbouwstreek, naam, gemiddelde_freq) %>%
+  pivot_wider(names_from = landbouwstreek,
               values_from = gemiddelde_freq,
               values_fill = 0) %>%
-  mutate(verschilfreq = `Zandleemstreek` - `Westelijke leemstreek`) %>%
+  mutate(verschilfreq = `Zandleemstreek` - `Leemstreek`) %>%
   ungroup() %>%
   slice_max(verschilfreq, n = 20) %>%
   kable(digits = 2)
@@ -632,11 +658,13 @@ relfreqs_vogels %>%
 
 ```{r}
 relfreq_diff_zn <- relfreqs_vogels %>%
-  select(-n) %>%
-  pivot_wider(names_from = regio,
-              values_from = relfreq,
+  group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
+  summarise(gemiddelde_freq = weighted.mean(relfreq, w)) %>%
+  ungroup() %>%
+  pivot_wider(names_from = landbouwstreek,
+              values_from = gemiddelde_freq,
               values_fill = 0) %>%
-  mutate(verschilfreq = `Zandleemstreek` - `Westelijke leemstreek`) %>%
+  mutate(verschilfreq = `Zandleemstreek` - `Leemstreek`) %>%
   mutate(naam = reorder(naam, verschilfreq, FUN = "mean",
                         decreasing = FALSE)) %>%
   filter(as.numeric(naam) > length(unique(naam)) - 20 |
@@ -663,49 +691,53 @@ relfreq_diff_zn %>%
     guides(colour = guide_legend(override.aes = list(size = 3)))
 ```
 
-Top 20 van soorten die in termen van verschil in gemiddelde relatieve frequentie van voorkomen meer voorkomen in de Westelijke leemstreek dan in de Zandleemstreek:
+Top 20 van soorten die in termen van verschil in gemiddelde relatieve frequentie van voorkomen meer voorkomen in de Leemstreek dan in de Zandleemstreek:
 
 ```{r}
 relfreqs_vogels %>%
-  group_by(regio, naam) %>%
-  mutate(
-    w = n / sum(n),
-    gemiddelde_freq = weighted.mean(relfreq, w)) %>%
-  distinct(regio, naam, gemiddelde_freq) %>%
-  pivot_wider(names_from = regio,
+  group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
+  summarise(gemiddelde_freq_w = weighted.mean(relfreq, w)) %>%
+  ungroup() %>%
+  group_by(landbouwstreek, jaar, naam) %>%
+  summarise(gemiddelde_freq = mean(gemiddelde_freq_w)) %>%
+  ungroup() %>%
+  distinct(landbouwstreek, naam, gemiddelde_freq) %>%
+  pivot_wider(names_from = landbouwstreek,
               values_from = gemiddelde_freq,
               values_fill = 0) %>%
-  mutate(verschilfreq = `Westelijke leemstreek` - `Zandleemstreek`) %>%
+  mutate(verschilfreq = `Leemstreek` - `Zandleemstreek`) %>%
   ungroup() %>%
   slice_max(verschilfreq, n = 20) %>%
   kable(digits = 2)
 ```
 
 ```{r}
-relfreq_diff_wl <- relfreqs_vogels %>%
-  select(-n) %>%
-  pivot_wider(names_from = regio,
-              values_from = relfreq,
+relfreq_diff_lm <- relfreqs_vogels %>%
+  group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
+  summarise(gemiddelde_freq = weighted.mean(relfreq, w)) %>%
+  ungroup() %>%
+  pivot_wider(names_from = landbouwstreek,
+              values_from = gemiddelde_freq,
               values_fill = 0) %>%
-  mutate(verschilfreq = `Westelijke leemstreek` - `Zandleemstreek`) %>%
+  mutate(verschilfreq = `Leemstreek` - `Zandleemstreek`) %>%
   mutate(naam = reorder(naam, verschilfreq, FUN = "mean",
                         decreasing = FALSE)) %>%
   filter(as.numeric(naam) > length(unique(naam)) - 20 |
            naam %in% doelsoorten)
 
-relfreq_diff_wl %>%
+relfreq_diff_lm %>%
   ggplot() +
     geom_vline(xintercept = 0,
                colour = "lightgrey") +
-    geom_hline(yintercept = length(unique(relfreq_diff_wl$naam)) - 20 + 0.5,
+    geom_hline(yintercept = length(unique(relfreq_diff_lm$naam)) - 20 + 0.5,
                alpha = 0.2, linetype = "dashed") +
     geom_point(aes(x = verschilfreq, y = naam),
                size = 1) +
     labs(y = "", x = "Verschil in relatieve frequentie",
-         title = "Algemener in de Westelijke leemstreek") +
+         title = "Algemener in de Leemstreek") +
     scale_y_discrete(labels = function(x) highlight(x, doelsoorten, "red")) +
-    coord_cartesian(xlim = c(0 - abs(max(relfreq_diff_wl$verschilfreq)),
-                             0 + abs(max(relfreq_diff_wl$verschilfreq)))) +
+    coord_cartesian(xlim = c(0 - abs(max(relfreq_diff_lm$verschilfreq)),
+                             0 + abs(max(relfreq_diff_lm$verschilfreq)))) +
     scale_x_continuous(breaks = seq(-1, 1, 0.05)) +
     theme(legend.position = "top",
           axis.text = element_text(size = 8),
@@ -714,27 +746,29 @@ relfreq_diff_wl %>%
     guides(colour = guide_legend(override.aes = list(size = 3)))
 ```
 
-Top twintig van beide kanten in 1 figuur.
+Top 10 van beide kanten in 1 figuur.
 
 ```{r}
 relfreq_diff_total <- relfreqs_vogels %>%
-  select(-n) %>%
-  pivot_wider(names_from = regio,
-              values_from = relfreq,
+  group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
+  summarise(gemiddelde_freq = weighted.mean(relfreq, w)) %>%
+  ungroup() %>%
+  pivot_wider(names_from = landbouwstreek,
+              values_from = gemiddelde_freq,
               values_fill = 0) %>%
-  mutate(verschilfreq = `Zandleemstreek` - `Westelijke leemstreek`) %>%
+  mutate(verschilfreq = `Zandleemstreek` - `Leemstreek`) %>%
   mutate(naam = reorder(naam, verschilfreq, FUN = "mean",
                         decreasing = FALSE)) %>%
-  filter(as.numeric(naam) > length(unique(naam)) - 20 |
-           as.numeric(naam) <= 20 |
+  filter(as.numeric(naam) > length(unique(naam)) - 10 |
+           as.numeric(naam) <= 10 |
            naam %in% doelsoorten)
 
 relfreq_diff_total %>%
   ggplot() +
     geom_vline(xintercept = 0,
                colour = "lightgrey") +
-    geom_hline(yintercept = c(20.5,
-                length(unique(relfreq_diff_total$naam)) - 20 + 0.5),
+    geom_hline(yintercept = c(10.5,
+                length(unique(relfreq_diff_total$naam)) - 10 + 0.5),
                alpha = 0.2, linetype = "dashed") +
     geom_point(aes(x = verschilfreq, y = naam),
                size = 1) +
@@ -750,24 +784,24 @@ relfreq_diff_total %>%
     guides(colour = guide_legend(override.aes = list(size = 3))) +
     annotate("segment",
              x = c(abs(max(relfreq_diff_zn$verschilfreq))),
-             y = c(length(unique(relfreq_diff_total$naam)) - 20 + 1),
+             y = c(length(unique(relfreq_diff_total$naam)) - 10 + 1),
              xend = c(abs(max(relfreq_diff_zn$verschilfreq))),
-             yend = c(length(unique(relfreq_diff_total$naam)) - 20 + 3),
+             yend = c(length(unique(relfreq_diff_total$naam)) - 10 + 3),
              arrow = arrow(type = "closed", length = unit(0.015, "npc")),
              colour = "black") +
     annotate("segment",
            x = c(abs(max(relfreq_diff_zn$verschilfreq))),
-           y = c(20.5 - 0.5),
+           y = c(10.5 - 0.5),
            xend = c(abs(max(relfreq_diff_zn$verschilfreq))),
-           yend = c(20.5 - 2.5),
+           yend = c(10.5 - 2.5),
            arrow = arrow(type = "closed", length = unit(0.015, "npc")),
            colour = "black") +
     annotate("text", label = c("Zandleemstrek"),
              x = c(abs(max(relfreq_diff_zn$verschilfreq)) + 0.01),
-             y = c(length(unique(relfreq_diff_total$naam)) - 20 + 1),
+             y = c(length(unique(relfreq_diff_total$naam)) - 10 + 1),
              size = 2, hjust = "left", colour = "black", angle = 90) +
-    annotate("text", label = c("Westelijke leemstreek"),
+    annotate("text", label = c("Leemstreek"),
            x = c(abs(max(relfreq_diff_zn$verschilfreq)) + 0.01),
-           y = c(20.5 - 0.5),
+           y = c(10.5 - 0.5),
            size = 2, hjust = "right", colour = "black", angle = 90)
 ```
