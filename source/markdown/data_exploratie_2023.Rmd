@@ -843,6 +843,10 @@ relfreq_diff_total %>%
            size = 2, hjust = "right", colour = "black", angle = 90)
 ```
 
+## Doelsoorten
+
+
+
 # Zoogdieren 2023
 
 ```{r}
@@ -1205,4 +1209,37 @@ relfreq_diff_zn %>%
              x = -0.01,
              y = 0.6,
              size = 2, hjust = "right", colour = "black")
+```
+
+## Haas
+
+We bekijken Haas in meer detail.
+
+```{r}
+mas_2023_zoogdieren %>%
+  st_drop_geometry() %>%
+  filter(naam == "Haas") %>%
+  group_by(landbouwstreek, jaar, periode_in_jaar) %>%
+  summarise(totaal_aantal = sum(aantal),
+            .groups = "drop") %>%
+  ggplot(aes(x = periode_in_jaar, y = totaal_aantal)) +
+    geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
+    geom_bar(stat = "identity") +
+    geom_text(aes(label = totaal_aantal),
+              position = position_dodge(width = 0.9), vjust = -0.25) +
+    facet_wrap(~landbouwstreek) +
+    labs(y = "Aantal individuen", x = "Telperiode", fill = "Jaar")
+```
+
+```{r}
+relfreqs_zoogdieren %>%
+  filter(naam == "Haas") %>%
+  ggplot() +
+    geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
+    geom_point(aes(y = relfreq, x = stratum, shape = periode_in_jaar),
+               size = 3, position = position_dodge(width = 0.3)) +
+    scale_y_continuous(limits = c(0, NA)) +
+    labs(y = "Relatieve frequentie", x = "", shape = "Telperiode") +
+    facet_grid(~landbouwstreek) +
+    theme(legend.position = "top")
 ```
