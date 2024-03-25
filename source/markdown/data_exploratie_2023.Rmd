@@ -45,8 +45,11 @@ data_path <- here("data", "mas")
 media_folder <- here("media", "exploratie_2023")
 dir.create(media_folder, showWarnings = FALSE)
 
+devices <- c("pdf", "png")
+
 # Source
 source(here("source", "R", "roofvogels_f.R"))
+source(here("source", "R", "save_figure.R"))
 ```
 
 # Doel
@@ -363,11 +366,8 @@ p <- mas_2023_vogels %>%
     facet_wrap(~regio) +
     labs(x = "Telperiode", y = "Aantal telpunten")
 
-ggsave(here(media_folder, "tellingen_vogels_2023.pdf"),
-       p,
-       dpi = 300,
-       width = 8,
-       height = 6)
+save_figure(p, here(media_folder, "tellingen_vogels_2023"), devices,
+            dpi = 300, width = 8, height = 6)
 
 p
 ```
@@ -406,11 +406,8 @@ p <- mas_2023_vogels %>%
     geom_boxplot() +
     labs(x = "Telperiode", y = "Aantal soorten per telpunt", fill = "Regio")
 
-ggsave(here(media_folder, "soorten_vogels_2023.pdf"),
-       p,
-       dpi = 300,
-       width = 8,
-       height = 6)
+save_figure(p, here(media_folder, "soorten_vogels_2023"), devices,
+            dpi = 300, width = 8, height = 6)
 
 p
 ```
@@ -431,11 +428,8 @@ p <- mas_2023_vogels %>%
     facet_wrap(~regio) +
     labs(x = "Telperiode", y = "Aantal waarnemingen per telpunt")
 
-ggsave(here(media_folder, "waarnemingen_tot_vogels_2023.pdf"),
-       p,
-       dpi = 300,
-       width = 8,
-       height = 6)
+save_figure(p, here(media_folder, "waarnemingen_tot_vogels_2023"), devices,
+            dpi = 300, width = 8, height = 6)
 
 p
 ```
@@ -451,11 +445,8 @@ p <- mas_2023_vogels %>%
     geom_boxplot() +
     labs(x = "Telperiode", y = "Aantal waarnemingen", fill = "Regio")
 
-ggsave(here(media_folder, "waarnemingen_vogels_2023.pdf"),
-       p,
-       dpi = 300,
-       width = 8,
-       height = 6)
+save_figure(p, here(media_folder, "waarnemingen_vogels_2023"), devices,
+            dpi = 300, width = 8, height = 6)
 
 p
 ```
@@ -661,11 +652,8 @@ cum_p2 <- cum_aantal_spec_strat %>%
 # Combine cumulative species plots
 p <- gridExtra::grid.arrange(cum_p1, cum_p2)
 
-ggsave(here(media_folder, "cum_soorten_vogels_2023.pdf"),
-       p,
-       dpi = 300,
-       width = 8,
-       height = 8)
+save_figure(p, here(media_folder, "cum_soorten_vogels_2023"), devices,
+            dpi = 300, width = 8, height = 8)
 ```
 
 Een overzicht van het aantal soorten per telpunt in de Westelijke leemstreek en de Zandleemstreek.
@@ -704,11 +692,8 @@ mas_2023_vogels %>%
     facet_wrap(~landbouwstreek) +
     labs(y = "Aantal soorten per telpunt", x = "", colour = "Telperiode")
 
-ggsave(here(media_folder, "aantal_soorten_vogels_strat_2023.pdf"),
-       p,
-       dpi = 300,
-       width = 8,
-       height = 6)
+save_figure(p, here(media_folder, "aantal_soorten_vogels_strat_2023"), devices,
+            dpi = 300, width = 8, height = 6)
 
 p
 ```
@@ -868,11 +853,8 @@ p <- freq_to_plot %>%
           panel.spacing = unit(0.7, "lines")) +
     guides(colour = guide_legend(override.aes = list(size = 2)))
 
-ggsave(here(media_folder, "vogelfreqs_2023.pdf"),
-       p,
-       dpi = 300,
-       width = 8,
-       height = 6)
+save_figure(p, here(media_folder, "vogelfreqs_2023"), devices,
+            dpi = 300, width = 8, height = 6)
 
 p
 ```
@@ -1082,11 +1064,8 @@ p <- relfreq_diff_total %>%
            y = c(10.5 - 0.5),
            size = 2, hjust = "right", colour = "black", angle = 90)
 
-ggsave(here(media_folder, "vogelfreqs_diff_2023.pdf"),
-       p,
-       dpi = 300,
-       width = 8,
-       height = 6)
+save_figure(p, here(media_folder, "vogelfreqs_diff_2023"), devices,
+            dpi = 300, width = 8, height = 6)
 
 p
 ```
@@ -1146,11 +1125,8 @@ p <- relfreqs_vogels %>%
     theme(legend.position = "top") +
     guides(colour = guide_legend(override.aes = list(size = 2)))
 
-ggsave(here(media_folder, "vogelfreqs_2023_doelsoorten.pdf"),
-       p,
-       dpi = 300,
-       width = 8,
-       height = 7)
+save_figure(p, here(media_folder, "vogelfreqs_2023_doelsoorten"), devices,
+            dpi = 300, width = 8, height = 7)
 
 p
 ```
@@ -1201,11 +1177,8 @@ p <- mas_2023_zoogdieren %>%
     facet_wrap(~regio) +
     labs(x = "Telperiode", y = "Aantal waarnemingen")
 
-ggsave(here(media_folder, "waarnemingen_tot_zoogdieren_2023.pdf"),
-       p,
-       dpi = 300,
-       width = 8,
-       height = 6)
+save_figure(p, here(media_folder, "waarnemingen_tot_zoogdieren_2023"), devices,
+            dpi = 300, width = 8, height = 6)
 
 p
 ```
@@ -1368,11 +1341,8 @@ cum_p2 <- cum_aantal_spec_strat %>%
 # Combine cumulative species plots
 p <- gridExtra::grid.arrange(cum_p1, cum_p2)
 
-ggsave(here(media_folder, "cum_soorten_zoogdieren_2023.pdf"),
-       p,
-       dpi = 300,
-       width = 8,
-       height = 8)
+save_figure(p, here(media_folder, "cum_soorten_zoogdieren_2023"), devices,
+            dpi = 300, width = 8, height = 8)
 ```
 
 Voor elke soort kunnen we de relatieve frequentie ($P$) berekenen als de proportie telpunten waarin de soort aanwezig is per telperiode, stratum en regio.
@@ -1480,11 +1450,8 @@ p <- freq_to_plot %>%
           panel.spacing = unit(0.7, "lines")) +
     guides(colour = guide_legend(override.aes = list(size = 2)))
 
-ggsave(here(media_folder, "zoogdierfreqs_2023.pdf"),
-       p,
-       dpi = 300,
-       width = 8,
-       height = 6)
+save_figure(p, here(media_folder, "zoogdierfreqs_2023"), devices,
+            dpi = 300, width = 8, height = 6)
 
 p
 ```
@@ -1574,11 +1541,8 @@ p <- relfreq_diff_zn %>%
              y = 0.6,
              size = 2, hjust = "right", colour = "black")
 
-ggsave(here(media_folder, "zoogdierfreqs_diff_2023.pdf"),
-       p,
-       dpi = 300,
-       width = 8,
-       height = 6)
+save_figure(p, here(media_folder, "zoogdierfreqs_diff_2023"), devices,
+            dpi = 300, width = 8, height = 6)
 
 p
 ```
@@ -1604,11 +1568,8 @@ p <- mas_2023_zoogdieren %>%
     facet_wrap(~landbouwstreek) +
     labs(y = "Aantal individuen", x = "Telperiode", fill = "Jaar")
 
-ggsave(here(media_folder, "aantal_hazen_2023.pdf"),
-       p,
-       dpi = 300,
-       width = 8,
-       height = 6)
+save_figure(p, here(media_folder, "aantal_hazen_2023"), devices,
+            dpi = 300, width = 8, height = 6)
 
 p
 ```
@@ -1628,11 +1589,8 @@ p <- relfreqs_zoogdieren %>%
     facet_grid(~landbouwstreek) +
     theme(legend.position = "top")
 
-ggsave(here(media_folder, "relfreq_haas_2023.pdf"),
-       p,
-       dpi = 300,
-       width = 8,
-       height = 6)
+save_figure(p, here(media_folder, "relfreq_haas_2023"), devices,
+            dpi = 300, width = 8, height = 6)
 
 p
 ```
