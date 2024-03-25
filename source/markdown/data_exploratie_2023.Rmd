@@ -272,17 +272,20 @@ mas_2023_vogels <- mas_2023_clean %>%
 
 ## Enkele cijfers
 
+We bekijken eerst enkele cijfers per stratum.
+
 ```{r}
+# Calculate number of plots, observations and species per stratum
 summary_vogels_2023 <- mas_2023_vogels %>%
   st_drop_geometry() %>%
   group_by(regio, jaar) %>%
   mutate(aantal_soorten_regiojaar = n_distinct(naam)) %>%
   group_by(regio, jaar, openheid_klasse, sbp) %>%
   mutate(aantal_waarnemingen = n_distinct(oid), 
-         aantal_plots = n_distinct(plotid), 
+         aantal_telpunten = n_distinct(plotid), 
          aantal_soorten_stratum = n_distinct(naam)) %>%
   ungroup() %>%
-  distinct(regio, jaar, openheid_klasse, sbp, aantal_waarnemingen, aantal_plots,
+  distinct(regio, jaar, openheid_klasse, sbp, aantal_waarnemingen, aantal_telpunten,
            aantal_soorten_stratum, aantal_soorten_regiojaar) %>%
   arrange(regio, jaar, openheid_klasse, sbp)
 
@@ -293,6 +296,7 @@ summary_vogels_2023 %>%
 De meeste telpunten werden in alle telperiodes aangedaan.
 
 ```{r}
+# Number of plots counted in each period
 mas_2023_vogels %>%
   st_drop_geometry() %>%
   group_by(regio, jaar, periode_in_jaar) %>%
@@ -304,6 +308,19 @@ mas_2023_vogels %>%
               position = position_dodge(width = 0.9), vjust = -0.25) +
     facet_wrap(~regio) +
     labs(x = "Telperiode", y = "Aantal telpunten")
+```
+
+Enkel in de Oostelijke leemstreek is er een telpunt waarvan we data van 1 periode hebben en 2 waarvan we data van 3 periodes hebben.
+
+```{r}
+# Count number of counting periods
+mas_2023_vogels %>%
+  st_drop_geometry() %>%
+  group_by(regio, jaar, plotnaam) %>%
+  summarise(aantal_periodes = n_distinct(periode_in_jaar),
+            .groups = "drop") %>%
+  count(regio, jaar, aantal_periodes, name = aantal_telpunten) %>%
+  kable()
 ```
 
 We kijken ook naar het aantal waarnemingen.
@@ -326,6 +343,7 @@ Voor verdere analyses groeperen we de Westelijke en Oostelijke leemstreek tot de
 We lezen de gewichten van de strata in zodat we eventueel kunnen rekening houden met onderlingen proporties per stratum.
 
 ```{r}
+# Read in stratum weights sampling frame
 gewichten_oostelijke_leemstreek <- read_csv(
   here("data", "steekproefkaders", "gewichten_oostelijke_leemstreek.csv"))
 gewichten_westelijke_leemstreek <- read_csv(
@@ -335,8 +353,10 @@ gewichten_zandleemstreek <- read_csv(
 ```
 
 We groeperen de gewichten per landbouwstreek (berekening proporties per landbouwstreek).
+De som per landbouwstreek is dus 1.
 
 ```{r}
+# Group weigths for Leemstreek
 gewichten_mas_2023 <- bind_rows(gewichten_oostelijke_leemstreek,
           gewichten_westelijke_leemstreek,
           gewichten_zandleemstreek) %>%
@@ -349,6 +369,7 @@ gewichten_mas_2023 <- bind_rows(gewichten_oostelijke_leemstreek,
   ungroup() %>%
   select(landbouwstreek, regio, openheid_klasse, sbp, n, w)
 
+# Recalculate weights per agricultural region
 gewicht_per_landbouwstreek <- gewichten_mas_2023 %>%
   group_by(landbouwstreek) %>%
   summarise(n = sum(n),
@@ -360,10 +381,10 @@ gewichten_mas_2023 %>%
 ```
 
 ```{r}
+# Add weigths to dataset
 mas_2023_vogels <- full_join(mas_2023_vogels, gewichten_mas_2023,
                              by = join_by(regio, openheid_klasse, sbp))
 ```
-
 
 ## Soortendiversiteit
 
