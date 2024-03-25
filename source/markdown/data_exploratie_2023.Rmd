@@ -364,7 +364,7 @@ p <- mas_2023_vogels %>%
     geom_text(aes(label = aantal_telpunten),
               position = position_dodge(width = 0.9), vjust = -0.25) +
     facet_wrap(~regio) +
-    labs(x = "Telperiode", y = "Aantal telpunten")
+    labs(x = "Telperiode", y = "Totaal aantal telpunten")
 
 save_figure(p, here(media_folder, "tellingen_vogels_2023"), devices,
             dpi = 300, width = 8, height = 6)
@@ -426,7 +426,7 @@ p <- mas_2023_vogels %>%
     geom_text(aes(label = aantal_waarnemingen),
               position = position_dodge(width = 0.9), vjust = -0.25) +
     facet_wrap(~regio) +
-    labs(x = "Telperiode", y = "Aantal waarnemingen per telpunt")
+    labs(x = "Telperiode", y = "Totaal aantal waarnemingen")
 
 save_figure(p, here(media_folder, "waarnemingen_tot_vogels_2023"), devices,
             dpi = 300, width = 8, height = 6)
@@ -443,7 +443,7 @@ p <- mas_2023_vogels %>%
   ggplot(aes(x = periode_in_jaar, y = n, fill = regio)) +
     geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
     geom_boxplot() +
-    labs(x = "Telperiode", y = "Aantal waarnemingen", fill = "Regio")
+    labs(x = "Telperiode", y = "Aantal waarnemingen per telpunt", fill = "Regio")
 
 save_figure(p, here(media_folder, "waarnemingen_vogels_2023"), devices,
             dpi = 300, width = 8, height = 6)
@@ -1175,7 +1175,7 @@ p <- mas_2023_zoogdieren %>%
     geom_text(aes(label = aantal_waarnemingen),
               position = position_dodge(width = 0.9), vjust = -0.25) +
     facet_wrap(~regio) +
-    labs(x = "Telperiode", y = "Aantal waarnemingen")
+    labs(x = "Telperiode", y = "Totaal aantal waarnemingen")
 
 save_figure(p, here(media_folder, "waarnemingen_tot_zoogdieren_2023"), devices,
             dpi = 300, width = 8, height = 6)
@@ -1566,7 +1566,7 @@ p <- mas_2023_zoogdieren %>%
     geom_text(aes(label = totaal_aantal),
               position = position_dodge(width = 0.9), vjust = -0.25) +
     facet_wrap(~landbouwstreek) +
-    labs(y = "Aantal individuen", x = "Telperiode", fill = "Jaar")
+    labs(y = "Totaal aantal individuen", x = "Telperiode", fill = "Jaar")
 
 save_figure(p, here(media_folder, "aantal_hazen_2023"), devices,
             dpi = 300, width = 8, height = 6)
