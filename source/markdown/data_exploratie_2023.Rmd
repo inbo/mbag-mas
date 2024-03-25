@@ -42,8 +42,8 @@ conflicted::conflicts_prefer(dplyr::lag)
 
 # Paths
 data_path <- here("data", "mas")
-media_path <- here("media", "exploratie_2023")
-dir.create(media_path, showWarnings = FALSE)
+media_folder <- here("media", "exploratie_2023")
+dir.create(media_folder, showWarnings = FALSE)
 
 # Source
 source(here("source", "R", "roofvogels_f.R"))
@@ -208,7 +208,7 @@ Hier de tellingen waarbij minstens 50 % van de waarnemingen buiten de telcirkel 
 test_dist_df %>%
   filter(afval_prop >= 0.5) %>%
   arrange(afval_prop) %>%
-  kable()
+  kable(digits = 3)
 ```
 
 ```{r}
@@ -341,6 +341,8 @@ summary_vogels_2023 <- mas_2023_vogels %>%
            aantal_soorten_stratum, aantal_soorten_regiojaar) %>%
   arrange(regio, jaar, openheid_klasse, sbp)
 
+write_csv(summary_vogels_2023, here(media_folder, "summary_vogels_2023.csv"))
+
 summary_vogels_2023 %>%
   kable()
 ```
@@ -349,7 +351,7 @@ De meeste telpunten werden in alle telperiodes aangedaan.
 
 ```{r}
 # Number of plots counted in each period
-mas_2023_vogels %>%
+p <- mas_2023_vogels %>%
   st_drop_geometry() %>%
   group_by(regio, jaar, periode_in_jaar) %>%
   summarise(aantal_telpunten = n_distinct(plotnaam),
@@ -360,6 +362,14 @@ mas_2023_vogels %>%
               position = position_dodge(width = 0.9), vjust = -0.25) +
     facet_wrap(~regio) +
     labs(x = "Telperiode", y = "Aantal telpunten")
+
+ggsave(here(media_folder, "tellingen_vogels_2023.pdf"),
+       p,
+       dpi = 300,
+       width = 8,
+       height = 6)
+
+p
 ```
 
 Enkel in de Oostelijke leemstreek is er een telpunt waarvan we data van 1 periode hebben en 2 waarvan we data van 3 periodes hebben.
@@ -376,15 +386,40 @@ mas_2023_vogels %>%
 ```
 
 VL0194 werd in principe 3x geteld maar deze had verschillende waarnemingen verder dan 300 meter.
-Dit telpunt wordt weggelaten voor analyses in volgende secties.
+Dit telpunt wordt weggelaten voor verdere analyses.
 Ol_2214.11 werd niet in telperiode 4 geteld.
 VL0209 werd niet in telperiode 4 geteld.
+
+```{r}
+mas_2023_vogels <- mas_2023_vogels %>%
+  filter(plotnaam != "VL0194")
+```
+
+We kijken naar het aantal soorten.
+
+```{r}
+p <- mas_2023_vogels %>%
+  group_by(regio, jaar, periode_in_jaar, plotnaam) %>%
+  summarise(n = n_distinct(naam), .groups = "drop") %>%
+  ggplot(aes(x = periode_in_jaar, y = n, fill = regio)) +
+    geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
+    geom_boxplot() +
+    labs(x = "Telperiode", y = "Aantal soorten per telpunt", fill = "Regio")
+
+ggsave(here(media_folder, "soorten_vogels_2023.pdf"),
+       p,
+       dpi = 300,
+       width = 8,
+       height = 6)
+
+p
+```
 
 We kijken ook naar het aantal waarnemingen.
 
 ```{r}
 # Number of observations counted in each period
-mas_2023_vogels %>%
+p <- mas_2023_vogels %>%
   st_drop_geometry() %>%
   group_by(regio, jaar, periode_in_jaar) %>%
   summarise(aantal_waarnemingen = n_distinct(oid),
@@ -394,7 +429,35 @@ mas_2023_vogels %>%
     geom_text(aes(label = aantal_waarnemingen),
               position = position_dodge(width = 0.9), vjust = -0.25) +
     facet_wrap(~regio) +
-    labs(x = "Telperiode", y = "Aantal waarnemingen")
+    labs(x = "Telperiode", y = "Aantal waarnemingen per telpunt")
+
+ggsave(here(media_folder, "waarnemingen_tot_vogels_2023.pdf"),
+       p,
+       dpi = 300,
+       width = 8,
+       height = 6)
+
+p
+```
+
+
+```{r}
+# Number of observations counted in each period
+p <- mas_2023_vogels %>%
+  group_by(regio, jaar, periode_in_jaar, plotnaam) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  ggplot(aes(x = periode_in_jaar, y = n, fill = regio)) +
+    geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
+    geom_boxplot() +
+    labs(x = "Telperiode", y = "Aantal waarnemingen", fill = "Regio")
+
+ggsave(here(media_folder, "waarnemingen_vogels_2023.pdf"),
+       p,
+       dpi = 300,
+       width = 8,
+       height = 6)
+
+p
 ```
 
 Voor verdere analyses groeperen we de Westelijke en Oostelijke leemstreek tot de Leemstreek.
@@ -441,8 +504,7 @@ gewichten_mas_2023 %>%
 ```{r}
 # Add weigths to dataset
 mas_2023_vogels <- full_join(mas_2023_vogels, gewichten_mas_2023,
-                             by = join_by(regio, openheid_klasse, sbp)) %>%
-  filter(plotnaam != "VL0194")
+                             by = join_by(regio, openheid_klasse, sbp))
 ```
 
 ## Soortendiversiteit
@@ -470,7 +532,6 @@ cum_aantal_spec_strat <- mas_2023_vogels %>%
 jaar <- 2023 # year is 2023
 cum_p1 <- cum_aantal_spec_strat %>%
   ggplot(aes(x = datum, y = cum_sum, colour = landbouwstreek)) +
-    geom_line(linewidth = 1) +
     # Add shade for counting periods
     annotate("rect",
            xmin = ymd(paste(jaar, r1_start, sep = "-")),
@@ -516,6 +577,8 @@ cum_p1 <- cum_aantal_spec_strat %>%
                 ymd(paste(jaar, r4_start, sep = "-"))) / 2,
            y = 0,
            vjust = -1) +
+    # Add line
+    geom_line(linewidth = 1) +
     labs(x = "", y = "Totaal aantal soorten", colour = "Regio") +
     theme(legend.position = "bottom")
 ```
@@ -542,7 +605,6 @@ cum_aantal_spec_strat <- mas_2023_vogels %>%
 cum_p2 <- cum_aantal_spec_strat %>%
   mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
   ggplot(aes(x = datum, y = cum_sum, colour = stratum)) +
-    geom_line(linewidth = 1) +
     # Add shade for counting periods
     annotate("rect",
            xmin = ymd(paste(jaar, r1_start, sep = "-")),
@@ -588,6 +650,8 @@ cum_p2 <- cum_aantal_spec_strat %>%
                 ymd(paste(jaar, r4_start, sep = "-"))) / 2,
            y = 0,
            vjust = -1) +
+    # Add line
+    geom_line(linewidth = 1) +
     facet_wrap(~landbouwstreek) +
     labs(x = "", y = "Totaal aantal soorten", colour = "Regio") +
     theme(legend.position = "bottom")
@@ -596,12 +660,36 @@ cum_p2 <- cum_aantal_spec_strat %>%
 ```{r}
 # Combine cumulative species plots
 gridExtra::grid.arrange(cum_p1, cum_p2)
+
+p <- gridExtra::grid.arrange(cum_p1, cum_p2)
+
+ggsave(here(media_folder, "cum_soorten_vogels_2023.pdf"),
+       p,
+       dpi = 300,
+       width = 8,
+       height = 8)
 ```
 
 Een overzicht van het aantal soorten per telpunt in de Westelijke leemstreek en de Zandleemstreek.
 
 ```{r}
 # Calculate the number of species per stratum per period per region
+p <- mas_2023_vogels %>%
+  st_drop_geometry() %>%
+  group_by(landbouwstreek, jaar, plotnaam, openheid_klasse, sbp, periode_in_jaar,
+           naam) %>%
+  summarise(totaal_aantal = sum(aantal),
+            .groups = "drop_last") %>%
+  summarise(aantal_soorten = n(),
+            .groups = "drop") %>%
+  mutate(stratum = paste(openheid_klasse, sbp, sep = " -\n")) %>%
+  ggplot() +
+    geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
+    geom_boxplot(aes(x = stratum, y = aantal_soorten,
+                     colour = periode_in_jaar)) +
+    facet_wrap(~landbouwstreek) +
+    labs(y = "Aantal soorten per telpunt", x = "", colour = "Telperiode")
+
 mas_2023_vogels %>%
   st_drop_geometry() %>%
   group_by(landbouwstreek, jaar, plotnaam, openheid_klasse, sbp, periode_in_jaar,
@@ -617,6 +705,14 @@ mas_2023_vogels %>%
                      colour = periode_in_jaar)) +
     facet_wrap(~landbouwstreek) +
     labs(y = "Aantal soorten per telpunt", x = "", colour = "Telperiode")
+
+ggsave(here(media_folder, "aantal_soorten_vogels_strat_2023.pdf"),
+       p,
+       dpi = 300,
+       width = 8,
+       height = 6)
+
+p
 ```
 
 Om welke soorten gaat het?
@@ -694,7 +790,7 @@ relfreqs_vogels <- mas_2023_vogels %>%
   distinct()
 ```
 
-Overzicht van relatieve frequenties van de 20 meest frequente soorten in een bepaalde regio (gewogen gemiddelde per stratum).
+Overzicht van relatieve frequenties van de 20 meest frequente soorten (of doelsoorten) in een bepaalde regio (gewogen gemiddelde per stratum).
 Elk punt staat voor een relatieve frequentie in een bepaalde telperiode.
 We nemen een gewogen gemiddelde per landbouwstreek waarbij de gewichten afhankelijk zijn van regio (in het geval van de Leemstreek, westelijk vs. oostelijk) en stratum.
 Over de telperiodes heen mogen we wel een ongewogen gemiddelde nemen want dit zijn replicaten.
@@ -709,7 +805,7 @@ highlight <- function(x, pat, color="black", family="") {
 ```
 
 ```{r}
-relfreqs_vogels %>%
+relfreq_vogels_regio <- relfreqs_vogels %>%
   # Calculate frequency per region, per period as a weighted average
   group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
   summarise(gemiddelde_freq = weighted.mean(relfreq, w)) %>%
@@ -726,12 +822,18 @@ relfreqs_vogels %>%
   mutate(naam = reorder(naam, order_var,
                         decreasing = FALSE)) %>%
   select(-c(n, w)) %>%
-  # Get 20 most frequent species
-  slice_max(naam, n = 20 * 2) %>%
   pivot_wider(names_from = "landbouwstreek",
               values_from = "gemiddelde_freq") %>%
   select(naam, Leemstreek, Zandleemstreek, gewogen_gemiddelde = order_var) %>%
   arrange(desc(gewogen_gemiddelde)) %>%
+  rownames_to_column(var = "rang") %>%
+  mutate(rang = as.numeric(rang))
+
+write_csv(relfreq_vogels_regio, here(media_folder, "relfreq_vogels_regio.csv"))
+  
+# Get 20 most frequent species or goal species
+relfreq_vogels_regio %>%
+  filter(rang <= 20 | naam %in% doelsoorten) %>%
   kable(digits = 3)
 ```
 
@@ -753,7 +855,7 @@ freq_to_plot <- relfreqs_vogels %>%
   filter(as.numeric(naam) > length(unique(naam)) - 20 |
            naam %in% doelsoorten)
 
-freq_to_plot %>%
+p <- freq_to_plot %>%
   ggplot() +
     geom_vline(xintercept = 0, alpha = 0.2, linetype = "dashed") +
     geom_hline(yintercept = length(unique(freq_to_plot$naam)) - 20 + 0.5,
@@ -767,6 +869,14 @@ freq_to_plot %>%
           axis.text.y = element_markdown(),
           panel.spacing = unit(0.7, "lines")) +
     guides(colour = guide_legend(override.aes = list(size = 2)))
+
+ggsave(here(media_folder, "vogelfreqs_2023.pdf"),
+       p,
+       dpi = 300,
+       width = 8,
+       height = 6)
+
+p
 ```
 
 Top 20 van soorten die in termen van verschil in gemiddelde relatieve frequentie van voorkomen meer voorkomen in de Zandleemstreek dan in de Leemstreek:
@@ -789,6 +899,28 @@ relfreqs_vogels %>%
   ungroup() %>%
   slice_max(verschilfreq, n = 20) %>%
   kable(digits = 2)
+```
+
+```{r}
+# Write out full csv
+relfreqs_vogels %>%
+  group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
+  summarise(gemiddelde_freq_w = weighted.mean(relfreq, w)) %>%
+  ungroup() %>%
+  group_by(landbouwstreek, jaar, naam) %>%
+  summarise(gemiddelde_freq = mean(gemiddelde_freq_w)) %>%
+  ungroup() %>%
+  distinct(landbouwstreek, naam, gemiddelde_freq) %>%
+  pivot_wider(names_from = landbouwstreek,
+              values_from = gemiddelde_freq,
+              values_fill = 0) %>%
+  mutate(verschilfreq = `Zandleemstreek` - `Leemstreek`) %>%
+  ungroup() %>%
+  arrange(desc(verschilfreq)) %>%
+  rownames_to_column(var = "rang") %>%
+  mutate(rang = as.numeric(rang)) %>%
+  select(rang, naam, Zandleemstreek, Leemstreek, verschilfreq) %>%
+  write_csv(here(media_folder, "relfreq_vogels_diff.csv"))
 ```
 
 ```{r}
@@ -909,7 +1041,7 @@ relfreq_diff_total <- relfreqs_vogels %>%
            as.numeric(naam) <= 10 |
            naam %in% doelsoorten)
 
-relfreq_diff_total %>%
+p <- relfreq_diff_total %>%
   ggplot() +
     geom_vline(xintercept = 0,
                colour = "lightgrey") +
@@ -951,6 +1083,14 @@ relfreq_diff_total %>%
            x = c(abs(max(relfreq_diff_zn$verschilfreq)) + 0.01),
            y = c(10.5 - 0.5),
            size = 2, hjust = "right", colour = "black", angle = 90)
+
+ggsave(here(media_folder, "vogelfreqs_diff_2023.pdf"),
+       p,
+       dpi = 300,
+       width = 8,
+       height = 6)
+
+p
 ```
 
 ## Doelsoorten
