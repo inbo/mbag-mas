@@ -659,8 +659,6 @@ cum_p2 <- cum_aantal_spec_strat %>%
 
 ```{r}
 # Combine cumulative species plots
-gridExtra::grid.arrange(cum_p1, cum_p2)
-
 p <- gridExtra::grid.arrange(cum_p1, cum_p2)
 
 ggsave(here(media_folder, "cum_soorten_vogels_2023.pdf"),
@@ -1181,6 +1179,8 @@ summary_zoogdieren_2023 <- mas_2023_zoogdieren %>%
            aantal_soorten_stratum, aantal_soorten_regiojaar) %>%
   arrange(regio, jaar, openheid_klasse, sbp)
 
+write_csv(summary_zoogdieren_2023, here(media_folder, "summary_zoogdieren_2023.csv"))
+
 summary_zoogdieren_2023 %>%
   kable()
 ```
@@ -1189,7 +1189,7 @@ We kijken naar het aantal waarnemingen.
 
 ```{r}
 # Number of observations counted in each period
-mas_2023_zoogdieren %>%
+p <- mas_2023_zoogdieren %>%
   st_drop_geometry() %>%
   group_by(regio, jaar, periode_in_jaar) %>%
   summarise(aantal_waarnemingen = n_distinct(oid),
@@ -1200,6 +1200,14 @@ mas_2023_zoogdieren %>%
               position = position_dodge(width = 0.9), vjust = -0.25) +
     facet_wrap(~regio) +
     labs(x = "Telperiode", y = "Aantal waarnemingen")
+
+ggsave(here(media_folder, "waarnemingen_tot_zoogdieren_2023.pdf"),
+       p,
+       dpi = 300,
+       width = 8,
+       height = 6)
+
+p
 ```
 
 Voor verdere analyses groeperen we de Westelijke en Oostelijke leemstreek tot de Leemstreek.
@@ -1358,7 +1366,13 @@ cum_p2 <- cum_aantal_spec_strat %>%
 
 ```{r}
 # Combine cumulative species plots
-gridExtra::grid.arrange(cum_p1, cum_p2)
+p <- gridExtra::grid.arrange(cum_p1, cum_p2)
+
+ggsave(here(media_folder, "cum_soorten_zoogdieren_2023.pdf"),
+       p,
+       dpi = 300,
+       width = 8,
+       height = 8)
 ```
 
 Voor elke soort kunnen we de relatieve frequentie ($P$) berekenen als de proportie telpunten waarin de soort aanwezig is per telperiode, stratum en regio.
@@ -1407,7 +1421,7 @@ We nemen een gewogen gemiddelde per landbouwstreek waarbij de gewichten afhankel
 Over de telperiodes heen mogen we wel een ongewogen gemiddelde nemen want dit zijn replicaten.
 
 ```{r}
-relfreqs_zoogdieren %>%
+relfreq_zoogdieren_regio <- relfreqs_zoogdieren %>%
   # Calculate frequency per region, per period as a weighted average
   group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
   summarise(gemiddelde_freq = weighted.mean(relfreq, w)) %>%
@@ -1428,6 +1442,13 @@ relfreqs_zoogdieren %>%
               values_from = "gemiddelde_freq") %>%
   select(naam, Leemstreek, Zandleemstreek, gewogen_gemiddelde = order_var) %>%
   arrange(desc(gewogen_gemiddelde)) %>%
+  rownames_to_column(var = "rang") %>%
+  mutate(rang = as.numeric(rang))
+
+write_csv(relfreq_zoogdieren_regio,
+          here(media_folder, "relfreq_zoogdieren_regio.csv"))
+
+relfreq_zoogdieren_regio %>%
   kable(digits = 5)
 ```
 
@@ -1446,7 +1467,7 @@ freq_to_plot <- relfreqs_zoogdieren %>%
   mutate(naam = reorder(naam, order_var,
                         decreasing = FALSE))
 
-freq_to_plot %>%
+p <- freq_to_plot %>%
   ggplot() +
     geom_vline(xintercept = 0, alpha = 0.2, linetype = "dashed") +
     geom_point(aes(x = gemiddelde_freq, y = naam, colour = landbouwstreek),
@@ -1458,6 +1479,14 @@ freq_to_plot %>%
           axis.text.y = element_markdown(),
           panel.spacing = unit(0.7, "lines")) +
     guides(colour = guide_legend(override.aes = list(size = 2)))
+
+ggsave(here(media_folder, "zoogdierfreqs_2023.pdf"),
+       p,
+       dpi = 300,
+       width = 8,
+       height = 6)
+
+p
 ```
 
 Top 20 van soorten die in termen van verschil in gemiddelde relatieve frequentie van voorkomen meer voorkomen in de Zandleemstreek dan in de Leemstreek:
@@ -1465,7 +1494,7 @@ Top 20 van soorten die in termen van verschil in gemiddelde relatieve frequentie
 ```{r}
 # Calculate relative frequency per region per period as weighted mean
 # Calculate difference between regions
-relfreqs_zoogdieren %>%
+relfreqs_zoogdieren_diff <- relfreqs_zoogdieren %>%
   group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
   summarise(gemiddelde_freq_w = weighted.mean(relfreq, w)) %>%
   ungroup() %>%
@@ -1479,6 +1508,15 @@ relfreqs_zoogdieren %>%
   mutate(verschilfreq = `Zandleemstreek` - `Leemstreek`) %>%
   ungroup() %>%
   arrange(desc(verschilfreq)) %>%
+  rownames_to_column(var = "rang") %>%
+  mutate(rang = as.numeric(rang)) %>%
+  select(rang, naam, Zandleemstreek, Leemstreek, verschilfreq)
+
+
+write_csv(relfreqs_zoogdieren_diff,
+          here(media_folder, "relfreq_zoogdieren_diff.csv"))
+  
+relfreqs_zoogdieren_diff %>%
   kable(digits = 2)
 ```
 
@@ -1496,7 +1534,7 @@ relfreq_diff_zn <- relfreqs_zoogdieren %>%
   mutate(naam = reorder(naam, verschilfreq, FUN = "mean",
                         decreasing = FALSE))
 
-relfreq_diff_zn %>%
+p <- relfreq_diff_zn %>%
   ggplot() +
     geom_vline(xintercept = 0,
                colour = "lightgrey") +
@@ -1535,6 +1573,14 @@ relfreq_diff_zn %>%
              x = -0.01,
              y = 0.6,
              size = 2, hjust = "right", colour = "black")
+
+ggsave(here(media_folder, "zoogdierfreqs_diff_2023.pdf"),
+       p,
+       dpi = 300,
+       width = 8,
+       height = 6)
+
+p
 ```
 
 ## Haas
@@ -1544,7 +1590,7 @@ Er worden in beide regio's meest individuen gespot in periode 3, dan 1, dan 4 en
 
 ```{r}
 # Count number of individuals per region and period for Hare
-mas_2023_zoogdieren %>%
+p <- mas_2023_zoogdieren %>%
   st_drop_geometry() %>%
   filter(naam == "Haas") %>%
   group_by(landbouwstreek, jaar, periode_in_jaar) %>%
@@ -1557,13 +1603,21 @@ mas_2023_zoogdieren %>%
               position = position_dodge(width = 0.9), vjust = -0.25) +
     facet_wrap(~landbouwstreek) +
     labs(y = "Aantal individuen", x = "Telperiode", fill = "Jaar")
+
+ggsave(here(media_folder, "aantal_hazen_2023.pdf"),
+       p,
+       dpi = 300,
+       width = 8,
+       height = 6)
+
+p
 ```
 
 De relatieve frequenties liggen hoger in open landschap voor beide streken.
 
 ```{r}
 # Visualise rel. freq. per region, stratum and period for Hare
-relfreqs_zoogdieren %>%
+p <- relfreqs_zoogdieren %>%
   filter(naam == "Haas") %>%
   ggplot() +
     geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
@@ -1573,4 +1627,12 @@ relfreqs_zoogdieren %>%
     labs(y = "Relatieve frequentie", x = "", shape = "Telperiode") +
     facet_grid(~landbouwstreek) +
     theme(legend.position = "top")
+
+ggsave(here(media_folder, "relfreq_haas_2023.pdf"),
+       p,
+       dpi = 300,
+       width = 8,
+       height = 6)
+
+p
 ```
