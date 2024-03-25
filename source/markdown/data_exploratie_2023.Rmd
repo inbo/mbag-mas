@@ -327,6 +327,11 @@ mas_2023_vogels %>%
   kable()
 ```
 
+VL0194 werd in principe 3x geteld maar deze had verschillende waarnemingen verder dan 300 meter.
+Dit telpunt wordt weggelaten voor analyses in volgende secties.
+Ol_2214.11 werd niet in telperiode 4 geteld.
+VL0209 werd niet in telperiode 4 geteld.
+
 We kijken ook naar het aantal waarnemingen.
 
 ```{r}
@@ -388,7 +393,8 @@ gewichten_mas_2023 %>%
 ```{r}
 # Add weigths to dataset
 mas_2023_vogels <- full_join(mas_2023_vogels, gewichten_mas_2023,
-                             by = join_by(regio, openheid_klasse, sbp))
+                             by = join_by(regio, openheid_klasse, sbp)) %>%
+  filter(plotnaam != "VL0194")
 ```
 
 ## Soortendiversiteit
