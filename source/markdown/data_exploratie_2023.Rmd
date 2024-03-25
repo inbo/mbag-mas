@@ -164,6 +164,54 @@ mas_controle_afstand <- mas_telperiodes %>%
 We selecteren vervolgens alle waarnemingen binnen een afstand van 300 m.
 
 ```{r}
+test_dist_df <- mas_telperiodes %>%
+  full_join(mas_controle_afstand, 
+            by = join_by(oid, plotnaam, naam, jaar, distance2plot, regio)) %>%
+  select(-c(distance2plot, geometry.telpunt, waarneme)) %>%
+  rename(distance2plot = calc_distance) %>%
+  st_drop_geometry() %>%
+  mutate(test_var = distance2plot > 300) %>%
+  group_by(regio, plotnaam, periode_in_jaar) %>%
+  summarise(afval_n = sum(test_var),
+            aantal_waarnemingen = n(),
+            afval_prop = sum(test_var) / n()) %>%
+  ungroup()
+```
+
+Over het algemeen vallen er weinig waarnemingen weg.
+
+```{r}
+test_dist_df %>%
+  ggplot() +
+    geom_bar(aes(x = afval_n)) +
+    labs(x = "Aantal waarnemingen die wegvallen per telpunt per telperiode",
+         y = "Frequentie")
+```
+
+In sommige gevallen valt wel een grote proportie van het aantal waarnemingen weg per telling (nullen weggelaten).
+
+```{r}
+test_dist_df %>%
+  filter(afval_prop > 0) %>%
+  ggplot() +
+    geom_histogram(aes(x = afval_prop)) +
+    scale_y_continuous(breaks = seq(0, 100, 5)) +
+    labs(x = paste("Proportie aantal waarnemingen die wegvallen",
+                   "per telpunt per telperiode", sep = "\n"),
+         y = "Frequentie")
+```
+
+Deze gevallen moeten misschien apart bekeken worden.
+Hier de tellingen waarbij minstens 50 % van de waarnemingen buiten de telcirkel (afstand > 300 m).
+
+```{r}
+test_dist_df %>%
+  filter(afval_prop >= 0.5) %>%
+  arrange(afval_prop) %>%
+  kable()
+```
+
+```{r}
 mas_distance <- mas_telperiodes %>%
   full_join(mas_controle_afstand, 
             by = join_by(oid, plotnaam, naam, jaar, distance2plot, regio)) %>%
