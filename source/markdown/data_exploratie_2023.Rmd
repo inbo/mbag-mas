@@ -1128,7 +1128,7 @@ relfreqs_doelsoorten %>%
 We ordenen volgens gewogen gemiddelde.
 
 ```{r}
-relfreqs_vogels %>%
+p <- relfreqs_vogels %>%
   filter(naam %in% doelsoorten) %>% 
   full_join(relfreqs_doelsoorten %>%
               pivot_longer(cols = c("Leemstreek", "Zandleemstreek"),
@@ -1147,6 +1147,14 @@ relfreqs_vogels %>%
     facet_grid(~landbouwstreek) +
     theme(legend.position = "top") +
     guides(colour = guide_legend(override.aes = list(size = 2)))
+
+ggsave(here(media_folder, "vogelfreqs_2023_doelsoorten.pdf"),
+       p,
+       dpi = 300,
+       width = 8,
+       height = 7)
+
+p
 ```
 
 # Zoogdieren 2023
