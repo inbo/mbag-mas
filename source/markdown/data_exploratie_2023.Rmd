@@ -269,8 +269,9 @@ glimpse(mas_2023_clean)
 # Vogels 2023
 
 ```{r}
+# Select birds
 mas_2023_vogels <- mas_2023_clean %>%
-  filter(soortgrp == 2)  # vogels
+  filter(soortgrp == 2)  # birds
 ```
 
 ## Enkele cijfers
@@ -604,7 +605,7 @@ bezoekenlijst_2023 <- mas_2023_vogels %>%
 relfreqs_vogels <- mas_2023_vogels %>%
   mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
   st_drop_geometry() %>%
-  # Only keep breeding birds exept for predators
+  # Only keep breeding birds except for predators
   filter(ifelse(naam %in% roofvogels_f(), wrntype >= 0L, wrntype > 0L)) %>%
   # Number of individuals per species per plot
   group_by(landbouwstreek, plotnaam, jaar, stratum, periode_in_jaar, naam) %>%
@@ -902,24 +903,29 @@ We bekijken de relatieve frequenties van de doelsoorten in meer detail (per stra
 
 ```{r}
 relfreqs_doelsoorten <- relfreqs_vogels %>%
-  filter(naam %in% doelsoorten) %>% 
+  filter(naam %in% doelsoorten) %>% # only goal species
+  # Calculate frequency per region, per period as a weighted average
   group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
   summarise(gemiddelde_freq = weighted.mean(relfreq, w)) %>%
   ungroup() %>%
+  # Calculate frequency per region as unweighted average
   group_by(landbouwstreek, jaar, naam) %>%
   summarise(gemiddelde_freq = mean(gemiddelde_freq)) %>%
   ungroup() %>%
-  full_join(gewicht_per_landbouwstreek) %>%
+  # Add weights of regions to calculate average over regions
+  full_join(gewicht_per_landbouwstreek, by = join_by(landbouwstreek)) %>%
   group_by(jaar, naam) %>%
   mutate(order_var = weighted.mean(gemiddelde_freq, w)) %>%
   ungroup() %>%
   mutate(naam = reorder(naam, order_var,
                         decreasing = FALSE)) %>%
   select(-c(n, w)) %>%
-  rename(gemiddelde_freq_regio = order_var)
+  pivot_wider(names_from = "landbouwstreek",
+              values_from = "gemiddelde_freq") %>%
+  select(naam, Leemstreek, Zandleemstreek, gewogen_gemiddelde = order_var)
 
 relfreqs_doelsoorten %>%
-  arrange(desc(naam), desc(gemiddelde_freq)) %>%
+  arrange(desc(gewogen_gemiddelde)) %>%
   kable(digits = 3)
 ```
 
@@ -929,9 +935,12 @@ We ordenen volgens gewogen gemiddelde.
 relfreqs_vogels %>%
   filter(naam %in% doelsoorten) %>% 
   full_join(relfreqs_doelsoorten %>%
-              distinct(landbouwstreek, naam, gemiddelde_freq_regio),
+              pivot_longer(cols = c("Leemstreek", "Zandleemstreek"),
+                           names_to = "landbouwstreek",
+                           values_to = "gemiddelde_freq") %>%
+              distinct(landbouwstreek, naam, gewogen_gemiddelde),
             by = join_by(landbouwstreek, naam)) %>%
-  mutate(naam = reorder(naam, gemiddelde_freq_regio,
+  mutate(naam = reorder(naam, gewogen_gemiddelde,
                         decreasing = FALSE)) %>%
   ggplot() +
     geom_vline(xintercept = 0, alpha = 0.2, linetype = "dashed") +
@@ -947,8 +956,9 @@ relfreqs_vogels %>%
 # Zoogdieren 2023
 
 ```{r}
+# Select mammals
 mas_2023_zoogdieren <- mas_2023_clean %>%
-  filter(soortgrp == 1)  # zoogdieren
+  filter(soortgrp == 1)  # mammals
 ```
 
 ## Enkele cijfers
