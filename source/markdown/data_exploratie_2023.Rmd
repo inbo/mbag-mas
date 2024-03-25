@@ -323,13 +323,14 @@ mas_2023_vogels %>%
   group_by(regio, jaar, plotnaam) %>%
   summarise(aantal_periodes = n_distinct(periode_in_jaar),
             .groups = "drop") %>%
-  count(regio, jaar, aantal_periodes, name = aantal_telpunten) %>%
+  count(regio, jaar, aantal_periodes, name = "aantal_telpunten") %>%
   kable()
 ```
 
 We kijken ook naar het aantal waarnemingen.
 
 ```{r}
+# Number of observations counted in each period
 mas_2023_vogels %>%
   st_drop_geometry() %>%
   group_by(regio, jaar, periode_in_jaar) %>%
@@ -614,6 +615,7 @@ relfreqs_vogels <- mas_2023_vogels %>%
   pivot_wider(names_from = naam,
               values_from = totaal_aantal,
               values_fill = list(totaal_aantal = 0)) %>%
+  # Add absences
   full_join(bezoekenlijst_2023,
             by = join_by(landbouwstreek, plotnaam, jaar, stratum,
                          periode_in_jaar)) %>%
@@ -672,10 +674,10 @@ relfreqs_vogels %>%
   select(-c(n, w)) %>%
   # Get 20 most frequent species
   slice_max(naam, n = 20 * 2) %>%
-  arrange(desc(naam), desc(gemiddelde_freq)) %>%
   pivot_wider(names_from = "landbouwstreek",
               values_from = "gemiddelde_freq") %>%
   select(naam, Leemstreek, Zandleemstreek, gewogen_gemiddelde = order_var) %>%
+  arrange(desc(gewogen_gemiddelde)) %>%
   kable(digits = 3)
 ```
 
@@ -964,6 +966,7 @@ mas_2023_zoogdieren <- mas_2023_clean %>%
 ## Enkele cijfers
 
 ```{r}
+# Calculate number of observations and species per stratum
 summary_zoogdieren_2023 <- mas_2023_zoogdieren %>%
   st_drop_geometry() %>%
   group_by(regio, jaar) %>%
@@ -983,6 +986,7 @@ summary_zoogdieren_2023 %>%
 We kijken naar het aantal waarnemingen.
 
 ```{r}
+# Number of observations counted in each period
 mas_2023_zoogdieren %>%
   st_drop_geometry() %>%
   group_by(regio, jaar, periode_in_jaar) %>%
@@ -999,6 +1003,7 @@ mas_2023_zoogdieren %>%
 Voor verdere analyses groeperen we de Westelijke en Oostelijke leemstreek tot de Leemstreek.
 
 ```{r}
+# Add weigths to dataset
 mas_2023_zoogdieren <- full_join(mas_2023_zoogdieren, gewichten_mas_2023,
                                  by = join_by(regio, openheid_klasse, sbp))
 ```
@@ -1009,6 +1014,8 @@ mas_2023_zoogdieren <- full_join(mas_2023_zoogdieren, gewichten_mas_2023,
 Het aantal soorten neemt vooral toe in de eerste twee telperiodes.
 
 ```{r}
+# Calculate the cumulative number of species over time for each agricultural
+# region
 cum_aantal_spec_strat <- mas_2023_zoogdieren %>% 
   st_drop_geometry() %>%
   group_by(landbouwstreek, naam) %>% 
@@ -1023,7 +1030,7 @@ cum_aantal_spec_strat <- mas_2023_zoogdieren %>%
   mutate(cum_sum = cumsum(n_spec)) %>%
   ungroup()
 
-jaar <- 2023
+# Create plot per region
 cum_p1 <- cum_aantal_spec_strat %>%
   ggplot(aes(x = datum, y = cum_sum, colour = landbouwstreek)) +
     annotate("rect",
@@ -1078,6 +1085,7 @@ cum_p1 <- cum_aantal_spec_strat %>%
 We bekijken dit ook per stratum.
 
 ```{r}
+# Calculate the cumulative number of species over time for each stratum
 cum_aantal_spec_strat <- mas_2023_zoogdieren %>% 
   st_drop_geometry() %>%
   group_by(landbouwstreek, openheid_klasse, sbp, naam) %>% 
@@ -1092,7 +1100,7 @@ cum_aantal_spec_strat <- mas_2023_zoogdieren %>%
   mutate(cum_sum = cumsum(n_spec)) %>%
   ungroup()
 
-jaar <- 2023
+# Create plot per stratum
 cum_p2 <- cum_aantal_spec_strat %>%
   mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
   ggplot(aes(x = datum, y = cum_sum, colour = stratum)) +
@@ -1147,36 +1155,32 @@ cum_p2 <- cum_aantal_spec_strat %>%
 ```
 
 ```{r}
+# Combine cumulative species plots
 gridExtra::grid.arrange(cum_p1, cum_p2)
 ```
 
 Voor elke soort kunnen we de relatieve frequentie ($P$) berekenen als de proportie telpunten waarin de soort aanwezig is per telperiode, stratum en regio.
-Een relatieve frequentie van 0,5 wil dus zeggen dat de soort in 50 % van de telpunten gezien is.
-
-$$
-P = \sum_{i=1}^{N} I(n_i > 0) / N
-$$
-
-Waarbij $N$ het totaal aantal telpunten is in een bepaalde telperiode, stratum en regio en $n_i$ het aantal individuen van de beschouwde soort waargenomen aan telpunt $i$.
-$I(\cdot)$ is de indicatorfunctie die 1 geeft als $n_i > 0$ en 0 anderzijds.
-We selecteerden enkel waarnemingen met broedcode groter dan nul.
-Voor roofzoogdieren hielden we geen rekening met broedcode, omdat we voor deze soorten meer algemeen geïnteresseerd zijn in predatiedruk op de akkerzoogdieren.
 
 ```{r}
+# Calculate relative frequencies
+# We want a number for each species for each region, stratum, period
 relfreqs_zoogdieren <- mas_2023_zoogdieren %>%
   mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
   st_drop_geometry() %>%
+  # Number of individuals per species per plot
   group_by(landbouwstreek, plotnaam, jaar, stratum, periode_in_jaar, naam) %>%
   summarise(totaal_aantal = sum(aantal),
             .groups = "drop") %>%
   pivot_wider(names_from = naam,
               values_from = totaal_aantal,
               values_fill = list(totaal_aantal = 0)) %>%
+  # Add absences
   full_join(bezoekenlijst_2023,
             by = join_by(landbouwstreek, plotnaam, jaar, stratum,
                          periode_in_jaar)) %>%
   replace(is.na(.), 0) %>%
   mutate(jaar = factor(jaar)) %>%
+  # Calculate relative frequency for all species and pivot back to long format
   group_by(jaar, periode_in_jaar, landbouwstreek, stratum) %>%
   summarise(across(.cols = where(~ is.numeric(.x) && min(.x) == 0),
                    .fns = ~sum(.x > 0) / n()),
@@ -1187,6 +1191,7 @@ relfreqs_zoogdieren <- mas_2023_zoogdieren %>%
                values_to = "relfreq") %>%
   separate_wider_delim(stratum, " - ",
                        names = c("openheid_klasse", "sbp")) %>%
+  # Add stratum weights
   full_join(select(gewichten_mas_2023, -n),
             relationship = "many-to-many",
             by = join_by(landbouwstreek, openheid_klasse, sbp)) %>%
@@ -1201,12 +1206,15 @@ Over de telperiodes heen mogen we wel een ongewogen gemiddelde nemen want dit zi
 
 ```{r}
 relfreqs_zoogdieren %>%
+  # Calculate frequency per region, per period as a weighted average
   group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
   summarise(gemiddelde_freq = weighted.mean(relfreq, w)) %>%
   ungroup() %>%
+  # Calculate frequency per region as unweighted average
   group_by(landbouwstreek, jaar, naam) %>%
   summarise(gemiddelde_freq = mean(gemiddelde_freq)) %>%
   ungroup() %>%
+  # Add weights of regions to calculate average over regions
   full_join(gewicht_per_landbouwstreek) %>%
   group_by(jaar, naam) %>%
   mutate(order_var = weighted.mean(gemiddelde_freq, w)) %>%
@@ -1214,14 +1222,17 @@ relfreqs_zoogdieren %>%
   mutate(naam = reorder(naam, order_var,
                         decreasing = FALSE)) %>%
   select(-c(n, w)) %>%
-  rename(gemiddelde_freq_regio = order_var) %>%
-  arrange(desc(naam), desc(gemiddelde_freq)) %>%
+  pivot_wider(names_from = "landbouwstreek",
+              values_from = "gemiddelde_freq") %>%
+  select(naam, Leemstreek, Zandleemstreek, gewogen_gemiddelde = order_var) %>%
+  arrange(desc(gewogen_gemiddelde)) %>%
   kable(digits = 5)
 ```
 
 In de volgende figuur is elk punt een relatieve frequentie per telperiode.
 
 ```{r}
+# Calculate relative frequency per region per period as weighted mean
 freq_to_plot <- relfreqs_zoogdieren %>%
   group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
   summarise(gemiddelde_freq = weighted.mean(relfreq, w)) %>%
@@ -1250,6 +1261,8 @@ freq_to_plot %>%
 Top 20 van soorten die in termen van verschil in gemiddelde relatieve frequentie van voorkomen meer voorkomen in de Zandleemstreek dan in de Leemstreek:
 
 ```{r}
+# Calculate relative frequency per region per period as weighted mean
+# Calculate difference between regions
 relfreqs_zoogdieren %>%
   group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
   summarise(gemiddelde_freq_w = weighted.mean(relfreq, w)) %>%
@@ -1268,6 +1281,8 @@ relfreqs_zoogdieren %>%
 ```
 
 ```{r}
+# Calculate relative frequency per region per period as weighted mean
+# Calculate difference between regions
 relfreq_diff_zn <- relfreqs_zoogdieren %>%
   group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
   summarise(gemiddelde_freq = weighted.mean(relfreq, w)) %>%
@@ -1295,6 +1310,7 @@ relfreq_diff_zn %>%
           axis.text.y = element_markdown(),
           panel.spacing = unit(1.2, "lines")) +
     guides(colour = guide_legend(override.aes = list(size = 3))) +
+    # Add arrows to indicate direction commonness in regions
     annotate("segment",
              x = 0.01,
              y = 0.75,
@@ -1322,8 +1338,10 @@ relfreq_diff_zn %>%
 ## Haas
 
 We bekijken Haas in meer detail.
+Er worden in beide regio's meest individuen gespot in periode 3, dan 1, dan 4 en dan 2.
 
 ```{r}
+# Count number of individuals per region and period for Hare
 mas_2023_zoogdieren %>%
   st_drop_geometry() %>%
   filter(naam == "Haas") %>%
@@ -1339,7 +1357,10 @@ mas_2023_zoogdieren %>%
     labs(y = "Aantal individuen", x = "Telperiode", fill = "Jaar")
 ```
 
+De relatieve frequenties liggen hoger in open landschap voor beide streken.
+
 ```{r}
+# Visualise rel. freq. per region, stratum and period for Hare
 relfreqs_zoogdieren %>%
   filter(naam == "Haas") %>%
   ggplot() +
