@@ -1226,28 +1226,6 @@ Top 20 van soorten die in termen van ratio in gemiddelde relatieve frequentie va
 ```{r}
 # Calculate relative frequency per region per period as weighted mean
 # Calculate ratio between regions
-relfreqs_vogels %>%
-  group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
-  summarise(gemiddelde_freq_w = weighted.mean(relfreq, w)) %>%
-  ungroup() %>%
-  group_by(landbouwstreek, jaar, naam) %>%
-  summarise(gemiddelde_freq = mean(gemiddelde_freq_w)) %>%
-  ungroup() %>%
-  distinct(landbouwstreek, naam, gemiddelde_freq) %>%
-  pivot_wider(
-    names_from = landbouwstreek,
-    values_from = gemiddelde_freq,
-    values_fill = 0
-  ) %>%
-  mutate(ratiofreq = `Zandleemstreek` / `Leemstreek`) %>%
-  ungroup() %>%
-  filter(!is.infinite(ratiofreq)) %>%
-  slice_max(ratiofreq, n = 20) %>%
-  kable(digits = 5)
-```
-
-```{r}
-# Write out full csv
 relfreq_vogels_ratio <- relfreqs_vogels %>%
   group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
   summarise(gemiddelde_freq_w = weighted.mean(relfreq, w)) %>%
@@ -1263,12 +1241,30 @@ relfreq_vogels_ratio <- relfreqs_vogels %>%
   ) %>%
   mutate(ratiofreq = `Zandleemstreek` / `Leemstreek`) %>%
   ungroup() %>%
-  arrange(desc(ratiofreq)) %>%
+  arrange(desc(ratiofreq), desc(Zandleemstreek), Leemstreek) %>%
   rownames_to_column(var = "rang") %>%
-  mutate(rang = as.numeric(rang)) %>%
-  select(rang, naam, Zandleemstreek, Leemstreek, ratiofreq)
+  mutate(rang = as.numeric(rang),
+         ratio_zn_lm = ratiofreq,
+         ratio_lm_zn = 1 / ratiofreq) %>%
+  select(rang, naam, Zandleemstreek, Leemstreek, ratio_zn_lm, ratio_lm_zn)
 
 write_csv(relfreq_vogels_ratio, here(media_folder, "relfreq_vogels_ratio.csv"))
+```
+
+```{r}
+# Top 20 most frequent species
+relfreq_vogels_ratio %>%
+  filter(!is.infinite(ratio_zn_lm)) %>%
+  slice_max(ratio_zn_lm, n = 20) %>%
+  kable(digits = 5)
+```
+
+De volgende soorten zijn enkel in de Zandleemstreek gezien.
+
+```{r}
+relfreq_vogels_ratio %>%
+  filter(is.infinite(ratio_zn_lm)) %>%
+  kable(digits = 5)
 ```
 
 We sorteren volgens de ratio van de gemiddelde frequentie.
@@ -1285,12 +1281,12 @@ relfreq_ratio_zn <- relfreqs_vogels %>%
     values_from = gemiddelde_freq,
     values_fill = 0
   ) %>%
-  mutate(ratiofreq = `Zandleemstreek` / `Leemstreek`) %>%
+  mutate(ratio_zn_lm = `Zandleemstreek` / `Leemstreek`) %>%
   # Retrieve 20 most common species + goal species
   full_join(relfreq_vogels_ratio %>%
-              select(rang, naam, ratiofreq_mean = ratiofreq),
+              select(rang, naam, ratio_zn_lm_mean = ratio_zn_lm),
             by = join_by(naam)) %>%
-  filter(!is.infinite(ratiofreq_mean)) %>%
+  filter(!is.infinite(ratio_zn_lm_mean)) %>%
   mutate(naam = reorder(naam, rang, decreasing = TRUE)) %>%
   filter(as.numeric(naam) > length(unique(naam)) - 20 |
     naam %in% doelsoorten)
@@ -1305,7 +1301,7 @@ relfreq_ratio_zn %>%
     yintercept = length(unique(relfreq_ratio_zn$naam)) - 20 + 0.5,
     alpha = 0.2, linetype = "dashed"
   ) +
-  geom_point(aes(x = ratiofreq, y = naam),
+  geom_point(aes(x = ratio_zn_lm, y = naam),
     size = 1
   ) +
   labs(
@@ -1325,25 +1321,19 @@ relfreq_ratio_zn %>%
 Top 20 van soorten die in termen van ratio in gemiddelde relatieve frequentie van voorkomen meer voorkomen in de Leemstreek dan in de Zandleemstreek (uitgesloten soorten die slechts in 1 van de 2 landbouwstreken voorkomen):
 
 ```{r}
-# Calculate relative frequency per region per period as weighted mean
-# Calculate ratio between regions
-relfreqs_vogels %>%
-  group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
-  summarise(gemiddelde_freq_w = weighted.mean(relfreq, w)) %>%
-  ungroup() %>%
-  group_by(landbouwstreek, jaar, naam) %>%
-  summarise(gemiddelde_freq = mean(gemiddelde_freq_w)) %>%
-  ungroup() %>%
-  distinct(landbouwstreek, naam, gemiddelde_freq) %>%
-  pivot_wider(
-    names_from = landbouwstreek,
-    values_from = gemiddelde_freq,
-    values_fill = 0
-  ) %>%
-  mutate(ratiofreq = `Leemstreek` / `Zandleemstreek`) %>%
-  ungroup() %>%
-  filter(!is.infinite(ratiofreq)) %>%
-  slice_max(ratiofreq, n = 20) %>%
+# Top 20 most frequent species
+relfreq_vogels_ratio %>%
+  filter(!is.infinite(ratio_lm_zn)) %>%
+  slice_max(ratio_lm_zn, n = 20) %>%
+  kable(digits = 5)
+```
+
+De volgende soorten zijn enkel in de Leemstreek gezien.
+
+```{r}
+relfreq_vogels_ratio %>%
+  filter(is.infinite(ratio_lm_zn)) %>%
+  arrange(desc(rang)) %>%
   kable(digits = 5)
 ```
 
@@ -1361,12 +1351,13 @@ relfreq_ratio_lm <- relfreqs_vogels %>%
     values_from = gemiddelde_freq,
     values_fill = 0
   ) %>%
-  mutate(ratiofreq = `Leemstreek` / `Zandleemstreek`) %>%
+  mutate(ratio_lm_zn = `Leemstreek` / `Zandleemstreek`) %>%
   # Retrieve 20 most common species + goal species
   full_join(relfreq_vogels_ratio %>%
-              select(rang, naam, ratiofreq_mean = ratiofreq),
+              select(rang, naam, ratio_lm_zn_mean = ratio_lm_zn),
             by = join_by(naam)) %>%
-  filter(ratiofreq_mean != 0) %>%
+  filter(ratio_lm_zn_mean != 0) %>%
+  filter(!is.infinite(ratio_lm_zn_mean)) %>%
   mutate(naam = reorder(naam, rang, decreasing = FALSE)) %>%
   filter(as.numeric(naam) > length(unique(naam)) - 20 |
     naam %in% doelsoorten)
@@ -1381,7 +1372,7 @@ relfreq_ratio_lm %>%
     yintercept = length(unique(relfreq_ratio_lm$naam)) - 20 + 0.5,
     alpha = 0.2, linetype = "dashed"
   ) +
-  geom_point(aes(x = ratiofreq, y = naam),
+  geom_point(aes(x = ratio_lm_zn, y = naam),
     size = 1
   ) +
   labs(
@@ -1396,97 +1387,6 @@ relfreq_ratio_lm %>%
     panel.spacing = unit(1.2, "lines")
   ) +
   guides(colour = guide_legend(override.aes = list(size = 3)))
-```
-
-Top 10 van beide kanten in 1 figuur.
-
-```{r}
-# Calculate relative frequency per region per period as weighted mean
-# Calculate ratio between regions
-relfreq_ratio_total <- relfreqs_vogels %>%
-  group_by(landbouwstreek, jaar, periode_in_jaar, naam) %>%
-  summarise(gemiddelde_freq = weighted.mean(relfreq, w)) %>%
-  ungroup() %>%
-  pivot_wider(
-    names_from = landbouwstreek,
-    values_from = gemiddelde_freq,
-    values_fill = 0
-  ) %>%
-  mutate(ratiofreq = `Zandleemstreek` / `Leemstreek`) %>%
-  # Retrieve 20 most common species IN BOTH DIRECTIONS + goal species
-  mutate(naam = reorder(naam, ratiofreq,
-    FUN = "mean",
-    decreasing = FALSE
-  )) %>%
-  filter(as.numeric(naam) > length(unique(naam)) - 10 |
-    as.numeric(naam) <= 10 |
-    naam %in% doelsoorten)
-
-p <- relfreq_ratio_total %>%
-  ggplot() +
-  geom_vline(
-    xintercept = 0,
-    colour = "lightgrey"
-  ) +
-  geom_hline(
-    yintercept = c(
-      10.5,
-      length(unique(relfreq_ratio_total$naam)) - 10 + 0.5
-    ),
-    alpha = 0.2, linetype = "dashed"
-  ) +
-  geom_point(aes(x = ratiofreq, y = naam),
-    size = 1
-  ) +
-  labs(y = "", x = "Ratio van relatieve frequenties") +
-  scale_y_discrete(labels = function(x) highlight(x, doelsoorten, "red")) +
-  coord_cartesian(xlim = c(
-    0 - abs(max(relfreq_ratio_zn$ratiofreq)),
-    0 + abs(max(relfreq_ratio_zn$ratiofreq))
-  )) +
-  scale_x_continuous(breaks = seq(-1, 1, 0.05)) +
-  theme(
-    legend.position = "top",
-    axis.text = element_text(size = 8),
-    axis.text.y = element_markdown(),
-    panel.spacing = unit(1.2, "lines")
-  ) +
-  guides(colour = guide_legend(override.aes = list(size = 3))) +
-  # Add arrows to indicate direction commonness in regions
-  annotate("segment",
-    x = c(abs(max(relfreq_ratio_zn$ratiofreq))),
-    y = c(length(unique(relfreq_ratio_total$naam)) - 10 + 1),
-    xend = c(abs(max(relfreq_ratio_zn$ratiofreq))),
-    yend = c(length(unique(relfreq_ratio_total$naam)) - 10 + 3),
-    arrow = arrow(type = "closed", length = unit(0.015, "npc")),
-    colour = "black"
-  ) +
-  annotate("segment",
-    x = c(abs(max(relfreq_ratio_zn$ratiofreq))),
-    y = c(10.5 - 0.5),
-    xend = c(abs(max(relfreq_ratio_zn$ratiofreq))),
-    yend = c(10.5 - 2.5),
-    arrow = arrow(type = "closed", length = unit(0.015, "npc")),
-    colour = "black"
-  ) +
-  annotate("text",
-    label = c("Zandleemstreek"),
-    x = c(abs(max(relfreq_ratio_zn$ratiofreq)) + 0.01),
-    y = c(length(unique(relfreq_ratio_total$naam)) - 10 + 1),
-    size = 2, hjust = "left", colour = "black", angle = 90
-  ) +
-  annotate("text",
-    label = c("Leemstreek"),
-    x = c(abs(max(relfreq_ratio_zn$ratiofreq)) + 0.01),
-    y = c(10.5 - 0.5),
-    size = 2, hjust = "right", colour = "black", angle = 90
-  )
-
-save_figure(p, here(media_folder, "vogelfreqs_ratio_2023"), devices,
-  dpi = 300, width = 8, height = 6
-)
-
-p
 ```
 
 ## Doelsoorten
