@@ -54,7 +54,7 @@ source(here("source", "R", "save_figure.R"))
 
 # Doel
 
-Exploratie gegevens Zandleemstreek en Westelijke leemstreek 2023 voor eerste rapport MBAG.
+Exploratie gegevens van de telputen die in 2023 reeds zijn geteld die deel uitmaken van MBAG. Het gaat over telpunten in de Zandleemstreek, de Westelijke leemstreek en de Oostelijke leemstreek.
 
 
 # Inlezen data
@@ -107,7 +107,7 @@ mas_31370_pipeline <-
 ## Data selectie
 ### Landbouwstreken
 
-We selecteren de data van de Zandleemstreek en de Westelijke leemstreek.
+We selecteren de data van de Zandleemstreek en de Westelijke en Oostelijke leemstreek.
 Dit doen we door te joinen met de steekproef.
 
 ```{r}
