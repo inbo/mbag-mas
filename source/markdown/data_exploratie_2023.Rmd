@@ -70,7 +70,7 @@ In een later stadium worden deze best in een analysepijplijn (bv. targets) gegot
 
 ## CRS
 
-De CRS moet aangepast worden naar van Amersfoort naar Lambert 72. Dit doen we via een specifieke pipeline, zie: https://inbo.github.io/tutorials/tutorials/spatial_transform_crs_2/
+De CRS moet aangepast worden van Amersfoort naar Lambert 72. Dit doen we via een specifieke pipeline, zie: https://inbo.github.io/tutorials/tutorials/spatial_transform_crs_2/
 
 ```{r}
 pipelines <- sf_proj_pipelines("EPSG:28992", "EPSG:31370")
@@ -676,21 +676,6 @@ p <- mas_2023_vogels %>%
     facet_wrap(~landbouwstreek) +
     labs(y = "Aantal soorten per telpunt", x = "", colour = "Telperiode")
 
-mas_2023_vogels %>%
-  st_drop_geometry() %>%
-  group_by(landbouwstreek, jaar, plotnaam, openheid_klasse, sbp, periode_in_jaar,
-           naam) %>%
-  summarise(totaal_aantal = sum(aantal),
-            .groups = "drop_last") %>%
-  summarise(aantal_soorten = n(),
-            .groups = "drop") %>%
-  mutate(stratum = paste(openheid_klasse, sbp, sep = " -\n")) %>%
-  ggplot() +
-    geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
-    geom_boxplot(aes(x = stratum, y = aantal_soorten,
-                     colour = periode_in_jaar)) +
-    facet_wrap(~landbouwstreek) +
-    labs(y = "Aantal soorten per telpunt", x = "", colour = "Telperiode")
 
 save_figure(p, here(media_folder, "aantal_soorten_vogels_strat_2023"), devices,
             dpi = 300, width = 8, height = 6)
