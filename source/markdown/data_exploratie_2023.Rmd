@@ -54,7 +54,7 @@ source(here("source", "R", "save_figure.R"))
 
 # Doel
 
-Exploratie gegevens van de telputen die in 2023 reeds zijn geteld die deel uitmaken van MBAG. Het gaat over telpunten in de Zandleemstreek, de Westelijke leemstreek en de Oostelijke leemstreek.
+Exploratie gegevens van de telpunten die in 2023 reeds zijn geteld die deel uitmaken van MBAG. Het gaat over telpunten in de Zandleemstreek, de Westelijke leemstreek en de Oostelijke leemstreek.
 
 
 # Inlezen data
