@@ -469,37 +469,12 @@ We kijken ook naar het aantal waarnemingen.
 ```{r}
 # Number of observations counted in each period
 p <- mas_2023_vogels %>%
-  st_drop_geometry() %>%
-  group_by(regio, jaar, periode_in_jaar) %>%
-  summarise(
-    aantal_waarnemingen = n_distinct(oid),
-    .groups = "drop"
-  ) %>%
-  ggplot(aes(x = periode_in_jaar, y = aantal_waarnemingen)) +
-  geom_bar(stat = "identity") +
-  geom_text(aes(label = aantal_waarnemingen),
-    position = position_dodge(width = 0.9), vjust = -0.25
-  ) +
-  facet_wrap(~regio) +
-  labs(x = "Telperiode", y = "Totaal aantal waarnemingen")
-
-save_figure(p, here(media_folder, "waarnemingen_tot_vogels_2023"), devices,
-  dpi = 300, width = 8, height = 6
-)
-
-p
-```
-
-
-```{r}
-# Number of observations counted in each period
-p <- mas_2023_vogels %>%
-  group_by(regio, jaar, periode_in_jaar, plotnaam) %>%
-  summarise(n = n(), .groups = "drop") %>%
-  ggplot(aes(x = periode_in_jaar, y = n, fill = regio)) +
+  count(regio, jaar, periode_in_jaar, plotnaam) %>%
+  ggplot(aes(x = periode_in_jaar, y = n)) +
   geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
   geom_boxplot() +
-  labs(x = "Telperiode", y = "Aantal waarnemingen per telpunt", fill = "Regio")
+  facet_wrap(~regio) +
+  labs(x = "Telperiode", y = "Aantal waarnemingen per telpunt")
 
 save_figure(p, here(media_folder, "waarnemingen_vogels_2023"), devices,
   dpi = 300, width = 8, height = 6
@@ -1356,21 +1331,14 @@ We kijken naar het aantal waarnemingen.
 ```{r}
 # Number of observations counted in each period
 p <- mas_2023_zoogdieren %>%
-  st_drop_geometry() %>%
-  group_by(regio, jaar, periode_in_jaar) %>%
-  summarise(
-    aantal_waarnemingen = n_distinct(oid),
-    .groups = "drop"
-  ) %>%
-  ggplot(aes(x = periode_in_jaar, y = aantal_waarnemingen)) +
-  geom_bar(stat = "identity") +
-  geom_text(aes(label = aantal_waarnemingen),
-    position = position_dodge(width = 0.9), vjust = -0.25
-  ) +
+  count(regio, jaar, periode_in_jaar, plotnaam) %>%
+  ggplot(aes(x = periode_in_jaar, y = n)) +
+  geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
+  geom_boxplot() +
   facet_wrap(~regio) +
-  labs(x = "Telperiode", y = "Totaal aantal waarnemingen")
+  labs(x = "Telperiode", y = "Aantal waarnemingen per telpunt")
 
-save_figure(p, here(media_folder, "waarnemingen_tot_zoogdieren_2023"), devices,
+save_figure(p, here(media_folder, "waarnemingen_zoogdieren_2023"), devices,
   dpi = 300, width = 8, height = 6
 )
 
