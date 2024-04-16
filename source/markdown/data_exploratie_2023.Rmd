@@ -1243,9 +1243,11 @@ relfreq_vogels_ratio <- relfreqs_vogels %>%
   ungroup() %>%
   arrange(desc(ratiofreq), desc(Zandleemstreek), Leemstreek) %>%
   rownames_to_column(var = "rang") %>%
-  mutate(rang = as.numeric(rang),
-         ratio_zn_lm = ratiofreq,
-         ratio_lm_zn = 1 / ratiofreq) %>%
+  mutate(
+    rang = as.numeric(rang),
+    ratio_zn_lm = ratiofreq,
+    ratio_lm_zn = 1 / ratiofreq
+  ) %>%
   select(rang, naam, Zandleemstreek, Leemstreek, ratio_zn_lm, ratio_lm_zn)
 
 write_csv(relfreq_vogels_ratio, here(media_folder, "relfreq_vogels_ratio.csv"))
@@ -1275,9 +1277,11 @@ relfreq_ratio_zn <- relfreqs_vogels %>%
   ) %>%
   mutate(ratio_zn_lm = `Zandleemstreek` / `Leemstreek`) %>%
   # Retrieve 20 most common species + goal species
-  full_join(relfreq_vogels_ratio %>%
-              select(rang, naam, ratio_zn_lm_mean = ratio_zn_lm),
-            by = join_by(naam)) %>%
+  full_join(
+    relfreq_vogels_ratio %>%
+      select(rang, naam, ratio_zn_lm_mean = ratio_zn_lm),
+    by = join_by(naam)
+  ) %>%
   filter(!is.infinite(ratio_zn_lm_mean)) %>%
   mutate(naam = reorder(naam, rang, decreasing = TRUE)) %>%
   filter(as.numeric(naam) > length(unique(naam)) - 20 |
@@ -1350,9 +1354,11 @@ relfreq_ratio_lm <- relfreqs_vogels %>%
   ) %>%
   mutate(ratio_lm_zn = `Leemstreek` / `Zandleemstreek`) %>%
   # Retrieve 20 most common species + goal species
-  full_join(relfreq_vogels_ratio %>%
-              select(rang, naam, ratio_lm_zn_mean = ratio_lm_zn),
-            by = join_by(naam)) %>%
+  full_join(
+    relfreq_vogels_ratio %>%
+      select(rang, naam, ratio_lm_zn_mean = ratio_lm_zn),
+    by = join_by(naam)
+  ) %>%
   filter(ratio_lm_zn_mean != 0) %>%
   filter(!is.infinite(ratio_lm_zn_mean)) %>%
   mutate(naam = reorder(naam, rang, decreasing = FALSE)) %>%
