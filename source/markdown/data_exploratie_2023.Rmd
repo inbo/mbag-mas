@@ -1259,15 +1259,7 @@ relfreq_vogels_ratio %>%
   kable(digits = 5)
 ```
 
-De volgende soorten zijn enkel in de Zandleemstreek gezien.
-
-```{r}
-relfreq_vogels_ratio %>%
-  filter(is.infinite(ratio_zn_lm)) %>%
-  kable(digits = 5)
-```
-
-We sorteren volgens de ratio van de gemiddelde frequentie.
+We visualiseren dit via ratio's per telperiode.
 
 ```{r}
 # Calculate relative frequency per region per period as weighted mean
@@ -1291,7 +1283,7 @@ relfreq_ratio_zn <- relfreqs_vogels %>%
   filter(as.numeric(naam) > length(unique(naam)) - 20 |
     naam %in% doelsoorten)
 
-relfreq_ratio_zn %>%
+p <- relfreq_ratio_zn %>%
   ggplot() +
   geom_vline(
     xintercept = 0,
@@ -1316,6 +1308,20 @@ relfreq_ratio_zn %>%
     panel.spacing = unit(1.2, "lines")
   ) +
   guides(colour = guide_legend(override.aes = list(size = 3)))
+
+save_figure(p, here(media_folder, "vogelfreqs_ratio_zn_lm_2023"), devices,
+  dpi = 300, width = 8, height = 6
+)
+
+p
+```
+
+De volgende soorten zijn enkel in de Zandleemstreek gezien.
+
+```{r}
+relfreq_vogels_ratio %>%
+  filter(is.infinite(ratio_zn_lm)) %>%
+  kable(digits = 5)
 ```
 
 Top 20 van soorten die in termen van ratio in gemiddelde relatieve frequentie van voorkomen meer voorkomen in de Leemstreek dan in de Zandleemstreek (uitgesloten soorten die slechts in 1 van de 2 landbouwstreken voorkomen):
@@ -1328,16 +1334,7 @@ relfreq_vogels_ratio %>%
   kable(digits = 5)
 ```
 
-De volgende soorten zijn enkel in de Leemstreek gezien.
-
-```{r}
-relfreq_vogels_ratio %>%
-  filter(is.infinite(ratio_lm_zn)) %>%
-  arrange(desc(rang)) %>%
-  kable(digits = 5)
-```
-
-We sorteren volgens de ratio van de gemiddelde frequentie.
+We visualiseren dit via ratio's per telperiode.
 
 ```{r}
 # Calculate relative frequency per region per period as weighted mean
@@ -1362,7 +1359,7 @@ relfreq_ratio_lm <- relfreqs_vogels %>%
   filter(as.numeric(naam) > length(unique(naam)) - 20 |
     naam %in% doelsoorten)
 
-relfreq_ratio_lm %>%
+p <- relfreq_ratio_lm %>%
   ggplot() +
   geom_vline(
     xintercept = 0,
@@ -1387,6 +1384,21 @@ relfreq_ratio_lm %>%
     panel.spacing = unit(1.2, "lines")
   ) +
   guides(colour = guide_legend(override.aes = list(size = 3)))
+
+save_figure(p, here(media_folder, "vogelfreqs_ratio_lm_zn_2023"), devices,
+  dpi = 300, width = 8, height = 6
+)
+
+p
+```
+
+De volgende soorten zijn enkel in de Leemstreek gezien.
+
+```{r}
+relfreq_vogels_ratio %>%
+  filter(is.infinite(ratio_lm_zn)) %>%
+  arrange(desc(rang)) %>%
+  kable(digits = 5)
 ```
 
 ## Doelsoorten
