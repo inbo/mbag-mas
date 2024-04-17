@@ -19,13 +19,13 @@ tar_option_set(
 
 # Set directory locations
 target_dir <- rprojroot::find_root_file(
-  "source", "targets", "data_preparations",
+  "source", "targets", "data_preparation",
   criterion = rprojroot::is_git_root)
 mbag_dir <- rprojroot::find_root_file(
   criterion = rprojroot::is_git_root)
 
 # Source custom functions
-# source(file.path(mbag_dir, "source", "R", ".R"))
+lapply(list.files(file.path(target_dir, "R"), full.names = TRUE), source)
 
 # Target list
 list(
@@ -34,7 +34,7 @@ list(
     read_counts_sovon(mbag_dir, "20230810_qgis_export_sovon_wfs_2023.geojson")
   ),
   tar_target(
-    name = model,
-    command = coefficients(lm(y ~ x, data = data))
+    name = crs_pipeline,
+    command = amersfoort_to_lambert72(mas_counts_sovon_file)
   )
 )
