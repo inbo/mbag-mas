@@ -348,6 +348,15 @@ Het aantal telpunten kan groot genoeg zijn om uitspraken te doen op schaal van d
 
 We besluiten in de Weidestreek wel een steekproef te nemen zoals beschreven in \@ref(meetnet-ontwerp) met het verschil dat we hier een allocatie gebruikten evenredig aan de oppervlakte van elk stratum.
 
+Via de berekening van Chi-kwadraattoetsingsgrootheid vergeleken we scenario's met verschillende steekproefgroottes en verschillende minimale afstanden tussen telpunten.
+Een lagere toetsingsgrootheid voor een bepaald scenario betekende een betere overeenkomst van de allocatieproporties tussen de steekproef van het scenario en het originele steekproefkader.
+Het beste scenario was een steekproeftrekking van 91 punten om 58 punten over te houden bij een uitdunning van 400 m.
+Dit wil zeggen dat voor elk punt binnen hetzelfde stratum nagegaan werd of een punt met grotere rangorde op minder dan 400 m afstand lag.
+Als dit het geval was, werd het punt met de lagere rangorde weerhouden.
+Voor alle andere landbouwregio's werd een afstand van 600 m gehanteerd zodat er geen overlap is tussen telpunten (zie Sectie \@ref(nabehandeling)).
+We laten voor de Weidestreek dus wel overlap toe om genoeg telpunten over te houden.
+Na manuele controle behielden we 50 van de 58 punten.
+
 [^02_uitrol_meetnet-1]: Met uitzondering van de Duinen en de Weidestreek.
     Deze worden apart besproken in Sectie \@ref(overige-streken).
 
