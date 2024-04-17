@@ -29,9 +29,9 @@ mbag_dir <- rprojroot::find_root_file(
 
 # Target list
 list(
-  tar_target(
-    name = data,
-    command = tibble(x = rnorm(100), y = rnorm(100))
+  tarchetypes::tar_file(
+    mas_counts_sovon_file,
+    read_counts_sovon(mbag_dir, "20230810_qgis_export_sovon_wfs_2023.geojson")
   ),
   tar_target(
     name = model,
