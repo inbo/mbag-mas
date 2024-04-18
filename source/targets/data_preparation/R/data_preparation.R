@@ -33,7 +33,7 @@ amersfoort_to_lambert72 <- function(sf_object) {
 }
 
 # Function to remove data counted twice at the same spot
-process_double_counted_data <- function(counts_df, profs) {
+process_double_counted_data <- function(counts_df) {
   # Professional bird counters
   profs <- c("WVNT00", "JJNN16", "NOVN00", "ETBX00")
   profs_2022 <- "RPLT02" # professional after 2022
@@ -79,6 +79,28 @@ process_double_counted_data <- function(counts_df, profs) {
     out_df <- counts_df %>%
       rename(waarnemer = waarneme)
   }
+
+  return(out_df)
+}
+
+# Change Dutch subspecies names to common names
+adjust_subspecies_names_nl <- function(counts_df) {
+  out_df <- counts_df %>%
+    mutate(
+      naam = case_when(
+        tolower(naam) %in% tolower(c("gele kwikstaart (spec)",
+                                     "engelse kwikstaart"))
+        ~ "Gele Kwikstaart",
+        tolower(naam) %in% tolower(c("witte kwikstaart (spec)",
+                                     "Rouwkwikstaart"))
+        ~ "Witte Kwikstaart",
+        tolower(naam) == tolower("canadese gans spec.")
+        ~ "Grote Canadese Gans",
+        tolower(naam) == tolower("Witsterblauwborst")
+        ~ "Blauwborst",
+        TRUE ~ naam
+      )
+    )
 
   return(out_df)
 }
