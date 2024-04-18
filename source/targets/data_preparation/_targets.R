@@ -7,6 +7,7 @@
 library(targets)
 library(tarchetypes)
 library(dplyr)
+library(readr)
 library(sf)
 
 # Set target options
@@ -37,17 +38,33 @@ lapply(list.files(file.path(target_dir, "R"), full.names = TRUE), source)
 # Target list
 list(
   tarchetypes::tar_file(
-    mas_counts_sovon_file,
-    path_to_counts_sovon(
+    name = mas_counts_sovon_file,
+    command = path_to_counts_sovon(
       proj_path = mbag_dir,
-      file = "20230810_qgis_export_sovon_wfs_2023.geojson")
+      file = "20230810_qgis_export_sovon_wfs_2023.geojson"
+      )
   ),
   tar_target(
     name = mas_counts_sovon,
-    command = st_read(mas_counts_sovon_file)
+    command = sf::st_read(
+      mas_counts_sovon_file
+      )
   ),
   tar_target(
     name = crs_pipeline,
-    command = amersfoort_to_lambert72(mas_counts_sovon)
+    command = amersfoort_to_lambert72(
+      mas_counts_sovon
+      )
+  ),
+  tarchetypes::tar_file(
+    name = sample_file,
+    command = path_to_samples(
+      proj_path = mbag_dir,
+      file = "steekproef_avimap_mbag_piloot.csv"
+      )
+  ),
+  tar_target(
+    name = sample,
+    command = readr::read_csv(sample_file)
   )
 )
