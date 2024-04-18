@@ -65,6 +65,16 @@ list(
   ),
   tar_target(
     name = sample,
-    command = readr::read_csv(sample_file)
+    command = readr::read_csv(
+      file = sample_file
+      )
+  ),
+  tar_target(
+    name = select_sampled_points,
+    command = dplyr::inner_join(
+      x = crs_pipeline,
+      y = sample,
+      by =  dplyr::join_by(plotnaam == pointid)
+      )
   )
 )
