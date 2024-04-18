@@ -103,5 +103,11 @@ list(
     command = process_double_counted_data(
       counts_df = select_species_groups
     )
+  ),
+  tar_target(
+    name = remove_subspecies_names,
+    command = adjust_subspecies_names_nl(
+      remove_double_counts
+    )
   )
 )
