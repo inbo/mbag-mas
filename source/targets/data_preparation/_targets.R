@@ -97,5 +97,11 @@ list(
       select_within_radius,
       soortgrp %in% 1:2
     )
+  ),
+  tar_target(
+    name = remove_double_counts,
+    command = process_double_counted_data(
+      counts_df = select_species_groups
+    )
   )
 )
