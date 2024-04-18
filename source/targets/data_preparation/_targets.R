@@ -42,33 +42,33 @@ list(
     command = path_to_counts_sovon(
       proj_path = mbag_dir,
       file = "20230810_qgis_export_sovon_wfs_2023.geojson"
-      )
+    )
   ),
   tar_target(
     name = mas_counts_sovon,
     command = sf::st_read(
       mas_counts_sovon_file
-      )
+    )
   ),
   tar_target(
     name = crs_pipeline,
     command = amersfoort_to_lambert72(
       mas_counts_sovon
-      )
+    )
   ),
   tarchetypes::tar_file(
     name = sample_file,
     command = path_to_samples(
       proj_path = mbag_dir,
       file = "steekproef_avimap_mbag_piloot.csv"
-      )
+    )
   ),
   tar_target(
     name = sample,
     command = readr::read_csv(
       file = sample_file,
       show_col_types = FALSE
-      )
+    )
   ),
   tar_target(
     name = select_sampled_points,
@@ -76,19 +76,26 @@ list(
       x = crs_pipeline,
       y = sample,
       by =  dplyr::join_by(plotnaam == pointid)
-      )
+    )
   ),
   tar_target(
     name = select_time_periods,
     command = select_within_time_periods(
       counts_df = select_sampled_points
-      )
+    )
   ),
   tar_target(
     name = select_within_radius,
     command = select_within_circle_radius(
       counts_df = select_time_periods,
       radius = 300
-      )
+    )
+  ),
+  tar_target(
+    name = select_species_groups,
+    command = dplyr::filter(
+      select_within_radius,
+      soortgrp %in% 1:2
+    )
   )
 )
