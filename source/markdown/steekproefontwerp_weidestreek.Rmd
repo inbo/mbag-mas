@@ -1042,8 +1042,10 @@ Uiteindelijk moeten we tot een CSV komen waarbij enkel de punten *behouden* van 
 weidestreek_avimap_df <- read_csv(file.path(
   "data",
   "processed",
-  "MAS netwerk Vlaanderen- steekproef_weidestreek_telpunten-final.csv"
-))
+  "MAS netwerk Vlaanderen- weidestreek_telpunten_final.csv"
+)) %>% 
+  select(-naam, - beschrijving) %>% 
+  rename("naam" = Naam)
 
 weidestreek_avimap_sf <- st_as_sf(weidestreek_avimap_df,
   wkt = "WKT",
