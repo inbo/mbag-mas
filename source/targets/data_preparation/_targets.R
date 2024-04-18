@@ -83,5 +83,12 @@ list(
     command = select_within_time_periods(
       counts_df = select_sampled_points
       )
+  ),
+  tar_target(
+    name = select_within_radius,
+    command = select_within_radius(
+      counts_df = select_time_periods,
+      radius = 300
+    )
   )
 )
