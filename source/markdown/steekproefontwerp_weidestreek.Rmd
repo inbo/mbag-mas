@@ -76,7 +76,8 @@ We selecteren OL en HOL binnen de perimeter.
 
 ```{r}
 selectie_openheid_klasses <- tar_read(selectie_openheid_klasses,
-  store = targets_store) %>%
+  store = targets_store
+) %>%
   reduce(rbind)
 
 mapview(perimeters_data, color = "red", alpha.regions = 0, legend = FALSE) +
@@ -169,7 +170,8 @@ In groen de exclusiekaart en rood OL en HOL binnen de perimeter.
 
 ```{r}
 exclusie_osm_landgebruiken <- tar_read(exclusie_osm_landgebruiken,
-  store = targets_store) %>%
+  store = targets_store
+) %>%
   reduce(rbind)
 ```
 
@@ -304,7 +306,8 @@ Voor elk potentieel telpunt / telcirkel:
 
 ```{r}
 telcirkels_selectie_landgebruik <- tar_read(telcirkels_selectie_landgebruik,
-                                            store = targets_store)
+  store = targets_store
+)
 ```
 
 We gebruiken volgende regel als criterium voor telpunten die in aanmerkingen komen voor wat betreft de samenstelling van het landgebruik in een buffer van 300 m rond het punt:
@@ -354,8 +357,10 @@ mapview(perimeters_data,
     legend = FALSE
   ) +
   mapview(paden, legend = FALSE) +
-  mapview(exclusie_punten, col.regions = "black",
-          legend = FALSE)
+  mapview(exclusie_punten,
+    col.regions = "black",
+    legend = FALSE
+  )
 ```
 
 ### Exclusie op basis van zichtbaarheid
@@ -368,7 +373,8 @@ We verwijderen telpunten waar de cumulatieve "viewshed visibility index" (cvvi) 
 
 ```{r}
 punten_zichtbaarheid <- tar_read(punten_zichtbaarheid,
-                                 store = targets_store) %>%
+  store = targets_store
+) %>%
   reduce(rbind)
 
 plus_visibility <- add_openheid_landschap_to_frame(
@@ -404,7 +410,8 @@ Er waren geen beheerovereenkomsten afgesloten in het weidegebied in 2022:
 
 ```{r}
 steekproefkader_finaal <- tar_read(steekproefkader_finaal,
-                                   store = targets_store) %>%
+  store = targets_store
+) %>%
   reduce(rbind)
 ```
 
@@ -436,8 +443,11 @@ Toch is er nog een beetje HGL over maar in de allocatie zullen deze punten wegva
 
 ```{r landschap-openheid}
 openheid_classified <- rast(
-  here("data", "dem",
-       "openness300m_chm_res25_c300_mean_vlaanderen_classified.tif")) %>%
+  here(
+    "data", "dem",
+    "openness300m_chm_res25_c300_mean_vlaanderen_classified.tif"
+  )
+) %>%
   crop(perimeters_data) %>%
   mask(terra::vect(perimeters_data))
 ```
@@ -774,56 +784,66 @@ balansvergelijking <- steekproefkader_finaal %>%
   filter(openheid_klasse %in% c("OL", "HOL")) %>%
   mutate(puntenset = "volledig steekproefkader") %>%
   mutate(sbp_akkervogels = ifelse(is_sbp,
-                                  "binnen sbp",
-                                  "buiten sbp")) %>% 
-  bind_rows(steekproef %>% 
-              mutate(puntenset = "steekproef") %>%
-  mutate(sbp_akkervogels = ifelse(is_sbp,
-                                  "binnen sbp",
-                                  "buiten sbp"))) %>%
+    "binnen sbp",
+    "buiten sbp"
+  )) %>%
+  bind_rows(steekproef %>%
+    mutate(puntenset = "steekproef") %>%
+    mutate(sbp_akkervogels = ifelse(is_sbp,
+      "binnen sbp",
+      "buiten sbp"
+    ))) %>%
   cbind(st_coordinates(.)) %>%
   mutate(puntenset = factor(puntenset, levels = c("volledig steekproefkader", "steekproef")))
 
 count_df_weidestreek <- balansvergelijking %>%
   group_by(puntenset, openheid_klasse, sbp_akkervogels) %>%
-  summarise(max_openheid = max(openheid_waarde),
-            max_x = max(X),
-            max_y = max(Y),
-            n = n(),
-            .groups = "drop")
+  summarise(
+    max_openheid = max(openheid_waarde),
+    max_x = max(X),
+    max_y = max(Y),
+    n = n(),
+    .groups = "drop"
+  )
 ```
 
 ```{r}
 balansvergelijking %>%
   ggplot(aes(x = sbp_akkervogels, y = openheid_waarde)) +
-    geom_boxplot(aes(fill = puntenset)) +
-    geom_label(data = count_df_weidestreek,
-               aes(y = max_openheid + 0.01, label = paste("n =", n)),
-               size = 3, position = position_dodge2(width = 0.75)) +
-    facet_grid(~ openheid_klasse) +
-    labs(fill = "Legende")
+  geom_boxplot(aes(fill = puntenset)) +
+  geom_label(
+    data = count_df_weidestreek,
+    aes(y = max_openheid + 0.01, label = paste("n =", n)),
+    size = 3, position = position_dodge2(width = 0.75)
+  ) +
+  facet_grid(~openheid_klasse) +
+  labs(fill = "Legende")
 ```
 
 ```{r}
 balansvergelijking %>%
   ggplot(aes(x = sbp_akkervogels, y = X)) +
-    geom_boxplot(aes(fill = puntenset)) +
-    geom_label(data = count_df_weidestreek,
-               aes(y = max_x + 2000, label = paste("n =", n)),
-               size = 3, position = position_dodge2(width = 0.75)) +
-    facet_grid(~ openheid_klasse) +
-    labs(fill = "Legende")
+  geom_boxplot(aes(fill = puntenset)) +
+  geom_label(
+    data = count_df_weidestreek,
+    aes(y = max_x + 2000, label = paste("n =", n)),
+    size = 3, position = position_dodge2(width = 0.75)
+  ) +
+  facet_grid(~openheid_klasse) +
+  labs(fill = "Legende")
 ```
 
 ```{r}
 balansvergelijking %>%
   ggplot(aes(x = sbp_akkervogels, y = Y)) +
-    geom_boxplot(aes(fill = puntenset)) +
-    geom_label(data = count_df_weidestreek,
-               aes(y = max_y + 2000, label = paste("n =", n)),
-               size = 3, position = position_dodge2(width = 0.75)) +
-    facet_grid(~ openheid_klasse) +
-    labs(fill = "Legende")
+  geom_boxplot(aes(fill = puntenset)) +
+  geom_label(
+    data = count_df_weidestreek,
+    aes(y = max_y + 2000, label = paste("n =", n)),
+    size = 3, position = position_dodge2(width = 0.75)
+  ) +
+  facet_grid(~openheid_klasse) +
+  labs(fill = "Legende")
 ```
 
 We zien dat de steekproef een goede afspiegeling is van de volledige populatie (boxplots voor steekproef en volledig steekproefkader zijn gelijkend).
@@ -868,35 +888,39 @@ Omdat we nu een nieuwe laag van SBP gebruiken, moeten we dit stratum opnieuw ber
 ```{r}
 ol <- selectie_openheid(
   gebied = perimeters_data,
-  ol_strata = c("OL")) %>%
-    mutate(openheid_klasse = "OL")
+  ol_strata = c("OL")
+) %>%
+  mutate(openheid_klasse = "OL")
 
 hol <- selectie_openheid(
   gebied = perimeters_data,
-  ol_strata = c("HOL")) %>%
-    mutate(openheid_klasse = "HOL")
+  ol_strata = c("HOL")
+) %>%
+  mutate(openheid_klasse = "HOL")
 
 ol_hol <- rbind(ol, hol) %>%
-    select(openheid_klasse)
+  select(openheid_klasse)
 
 # inlezen bestaande punten
 oude_cirkels <- read_sf(here(
   "data",
   "SOVON",
   "avimap_601_0_MAS_Vlaanderen_telpunten_xy.shp"
-)) %>% 
+)) %>%
   st_transform(crs = 31370) %>%
   st_filter(perimeters_data) %>%
   mutate(is_sbp = st_intersects(.,
-                                st_union(sbp_akkervogels),
-                                sparse = FALSE) %>%
-           as.logical()
+    st_union(sbp_akkervogels),
+    sparse = FALSE
   ) %>%
+    as.logical()) %>%
   st_join(ol_hol) %>%
   rename(definitief_punt = naam) %>%
-  select(definitief_punt, openheid_klasse, is_sbp) %>% 
-  mutate(sbp = ifelse(is_sbp == TRUE, "binnen", "buiten"),
-         openheid_sbp = paste(openheid_klasse, sbp, "plan", sep = " "))
+  select(definitief_punt, openheid_klasse, is_sbp) %>%
+  mutate(
+    sbp = ifelse(is_sbp == TRUE, "binnen", "buiten"),
+    openheid_sbp = paste(openheid_klasse, sbp, "plan", sep = " ")
+  )
 
 oude_cirkels_buffer <- oude_cirkels %>%
   st_buffer(300)
@@ -922,7 +946,7 @@ Er zijn geen punten die overlappen voor minstens 50 % en tot hetzelfde stratum b
 # welke punten overlappen minstens 50 %
 intersect <- st_intersection(oude_cirkels_buffer, cirkels_weidestreek) %>%
   mutate(intersect_area = st_area(.) %>%
-           units::drop_units()) %>%
+    units::drop_units()) %>%
   filter(
     intersect_area >= 0.5 * 300 * 300 * pi, # 50 %
     openheid_sbp == openheid_sbp.1
@@ -1043,8 +1067,8 @@ weidestreek_avimap_df <- read_csv(file.path(
   "data",
   "processed",
   "MAS netwerk Vlaanderen- weidestreek_telpunten_final.csv"
-)) %>% 
-  select(-naam, - beschrijving) %>% 
+)) %>%
+  select(-naam, -beschrijving) %>%
   rename("naam" = Naam)
 
 weidestreek_avimap_sf <- st_as_sf(weidestreek_avimap_df,

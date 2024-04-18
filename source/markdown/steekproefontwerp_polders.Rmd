@@ -60,23 +60,23 @@ De code maakt een intersectie tussen landbouwstreek polders (heel België) en co
 
 ```{r, class.source = "fold-show", eval=FALSE}
 # library(sf)
-# 
+#
 # # Lees in polygonen landbouwstreken
 # landbouwstreken <- read_sf(file.path(mbag_dir,
 #                                      "data",
 #                                      "landbouwstreken",
 #                                      "Lbstrbel.shp")) |>
 #   st_transform(crs = 31370)
-# 
+#
 # # Behoud polders
 # vlaanderen <- read_sf("S:/Vlaanderen/Grenzen/Administratief/Vlaanderen_met_kust_EEZ.shp") |>
 #   st_transform(crs = 31370)
-# 
+#
 # pold_vlaanderen <- st_intersection(landbouwstreken, vlaanderen) |>
 #   filter(NAAM == "Polders") |>
 #   mutate(section = NA) |>
 #   select(Naam = NAAM, section, geom = geometry)
-# 
+#
 # st_write(obj = pold_vlaanderen,
 #          dsn = path_to_perimeters("za_kp_po_perimeters.gpkg"),
 #          append = TRUE)
@@ -84,7 +84,7 @@ De code maakt een intersectie tussen landbouwstreek polders (heel België) en co
 
 
 ```{r}
-perimeters_data <- tar_read(perimeters_data, store = targets_store) %>% 
+perimeters_data <- tar_read(perimeters_data, store = targets_store) %>%
   filter(Naam == "Polders")
 
 mapview(perimeters_data, color = "red", alpha.regions = 0, legend = FALSE)
@@ -108,8 +108,9 @@ We selecteren OL en HOL binnen de perimeter.
 
 ```{r}
 selectie_openheid_klasses <- tar_read(selectie_openheid_klasses,
-  store = targets_store) %>%
-  reduce(rbind) %>% 
+  store = targets_store
+) %>%
+  reduce(rbind) %>%
   filter(Naam == "Polders")
 
 mapview(perimeters_data, color = "red", alpha.regions = 0, legend = FALSE) +
@@ -202,7 +203,8 @@ In groen de exclusiekaart en rood OL en HOL binnen de perimeter.
 
 ```{r}
 exclusie_osm_landgebruiken <- tar_read(exclusie_osm_landgebruiken,
-  store = targets_store) %>%
+  store = targets_store
+) %>%
   reduce(rbind) %>%
   filter(Naam == "Polders")
 
@@ -360,7 +362,8 @@ Voor elk potentieel telpunt / telcirkel:
 
 ```{r}
 telcirkels_selectie_landgebruik <- tar_read(telcirkels_selectie_landgebruik,
-                                            store = targets_store) %>%
+  store = targets_store
+) %>%
   filter(startsWith(pointid, abbreviate("Polders", 2)))
 ```
 
@@ -412,8 +415,10 @@ mapview(st_crop(perimeters_data, detail),
     legend = FALSE
   ) +
   mapview(st_crop(paden, detail), legend = FALSE) +
-  mapview(st_crop(exclusie_punten, detail), col.regions = "black",
-          legend = FALSE)
+  mapview(st_crop(exclusie_punten, detail),
+    col.regions = "black",
+    legend = FALSE
+  )
 ```
 
 ### Exclusie op basis van zichtbaarheid
@@ -426,7 +431,8 @@ We verwijderen telpunten waar de cumulatieve "viewshed visibility index" (cvvi) 
 
 ```{r}
 punten_zichtbaarheid <- tar_read(punten_zichtbaarheid,
-                                 store = targets_store) %>%
+  store = targets_store
+) %>%
   reduce(rbind) %>%
   filter(Naam == "Polders")
 
@@ -474,7 +480,8 @@ Eventueel verder opgesplitst in winter, zomer en jaarrond maatregelen.
 
 ```{r bo-sbp}
 steekproefkader_finaal <- tar_read(steekproefkader_finaal,
-                                   store = targets_store) %>%
+  store = targets_store
+) %>%
   reduce(rbind) %>%
   filter(Naam == "Polders")
 ```
@@ -526,8 +533,11 @@ Toch is er nog een beetje HGL over maar in de allocatie zullen deze punten wegva
 
 ```{r landschap-openheid}
 openheid_classified <- rast(
-  here("data", "dem",
-       "openness300m_chm_res25_c300_mean_vlaanderen_classified.tif")) %>%
+  here(
+    "data", "dem",
+    "openness300m_chm_res25_c300_mean_vlaanderen_classified.tif"
+  )
+) %>%
   crop(perimeters_data) %>%
   mask(terra::vect(perimeters_data))
 ```
@@ -585,18 +595,22 @@ layer4 <- st_read("C:/Users/ward_langeraert/Downloads/lu_sbp_pgs/lu_sbp_pgs.shp"
 
 layer12 <- bind_rows(layer1, layer2) %>%
   summarise() %>%
-  mutate(soort = "Grauwe kiekendief",
-         gebied = "nieuw 2023") %>%
+  mutate(
+    soort = "Grauwe kiekendief",
+    gebied = "nieuw 2023"
+  ) %>%
   select(everything(), geometry)
 layer123 <- bind_rows(layer12, layer3 %>%
-                        filter(soort == "Grauwe kiekendief") %>%
-                        select(soort, gebied))
+  filter(soort == "Grauwe kiekendief") %>%
+  select(soort, gebied))
 
 layer_sbp <- bind_rows(layer123, layer4 %>%
-                         select(soort, gebied))
+  select(soort, gebied))
 
-st_write(layer_sbp,
-         path_to_sbp_akkervogels("sbp_overige_soorten.shp"))
+st_write(
+  layer_sbp,
+  path_to_sbp_akkervogels("sbp_overige_soorten.shp")
+)
 ```
 
 
@@ -890,8 +904,9 @@ allocatie <- tar_read(allocatie_df, store = targets_store) %>%
 
 allocatie %>%
   mutate(steekproeftrekking = ifelse(popsize < 2000,
-                                     round(popsize / 5),
-                                     round(popsize / 20))) %>%
+    round(popsize / 5),
+    round(popsize / 20)
+  )) %>%
   select(-c(openheid_sbp, targetsize, excess)) %>%
   kable(digits = 3)
 ```
@@ -968,11 +983,15 @@ balansvergelijking <- do.call(rbind, lapply(min_n_per_stratum, first_samples,
   )) %>%
   cbind(st_coordinates(.)) %>%
   mutate(fillvar = factor(puntenset,
-                          levels = c(paste("eerste",
-                                           c(20, 50, 100, 200),
-                                           "per stratum",
-                                           sep = " "), 
-                                     "volledige steekproefkader")))
+    levels = c(
+      paste("eerste",
+        c(20, 50, 100, 200),
+        "per stratum",
+        sep = " "
+      ),
+      "volledige steekproefkader"
+    )
+  ))
 
 balansvergelijking %>%
   st_drop_geometry() %>%
@@ -992,7 +1011,7 @@ balansvergelijking %>%
     x = sbp_akkervogels, y = openheid_waarde,
     fill = fillvar
   )) +
-  facet_grid( ~ openheid_klasse) +
+  facet_grid(~openheid_klasse) +
   theme(legend.title = element_blank())
 ```
 
@@ -1112,35 +1131,39 @@ Omdat we nu een nieuwe laag van SBP gebruiken, moeten we dit stratum opnieuw ber
 ```{r}
 ol <- selectie_openheid(
   gebied = perimeters_data,
-  ol_strata = c("OL")) %>%
-    mutate(openheid_klasse = "OL")
+  ol_strata = c("OL")
+) %>%
+  mutate(openheid_klasse = "OL")
 
 hol <- selectie_openheid(
   gebied = perimeters_data,
-  ol_strata = c("HOL")) %>%
-    mutate(openheid_klasse = "HOL")
+  ol_strata = c("HOL")
+) %>%
+  mutate(openheid_klasse = "HOL")
 
 ol_hol <- rbind(ol, hol) %>%
-    select(openheid_klasse)
+  select(openheid_klasse)
 
 # inlezen bestaande punten
 oude_cirkels <- read_sf(here(
   "data",
   "SOVON",
   "avimap_601_0_MAS_Vlaanderen_telpunten_xy.shp"
-)) %>% 
+)) %>%
   st_transform(crs = 31370) %>%
   st_filter(perimeters_data) %>%
   mutate(is_sbp = st_intersects(.,
-                                st_union(sbp_akkervogels),
-                                sparse = FALSE) %>%
-           as.logical()
+    st_union(sbp_akkervogels),
+    sparse = FALSE
   ) %>%
+    as.logical()) %>%
   st_join(ol_hol) %>%
   rename(definitief_punt = naam) %>%
-  select(definitief_punt, openheid_klasse, is_sbp) %>% 
-  mutate(sbp = ifelse(is_sbp == TRUE, "binnen", "buiten"),
-         openheid_sbp = paste(openheid_klasse, sbp, "plan", sep = " "))
+  select(definitief_punt, openheid_klasse, is_sbp) %>%
+  mutate(
+    sbp = ifelse(is_sbp == TRUE, "binnen", "buiten"),
+    openheid_sbp = paste(openheid_klasse, sbp, "plan", sep = " ")
+  )
 
 oude_cirkels_buffer <- oude_cirkels %>%
   st_buffer(300)
@@ -1167,7 +1190,7 @@ Er zijn een aantal punten die overlappen voor minstens 50 % en tot hetzelfde str
 # welke punten overlappen minstens 50 %
 intersect <- st_intersection(oude_cirkels_buffer, cirkels_polders) %>%
   mutate(intersect_area = st_area(.) %>%
-           units::drop_units()) %>%
+    units::drop_units()) %>%
   filter(
     intersect_area >= 0.5 * 300 * 300 * pi, # 50 %
     openheid_sbp == openheid_sbp.1
@@ -1198,8 +1221,8 @@ mapview(oude_cirkels_buffer %>% filter(definitief_punt %in% intersect$definitief
 
 Controle bestaande punten in steekproef:
 ```{r}
-steekproef %>% 
-  filter(!str_detect(pointid, "Pl")) %>% 
+steekproef %>%
+  filter(!str_detect(pointid, "Pl")) %>%
   kable()
 ```
 
@@ -1314,11 +1337,13 @@ polders_avimap_df <- read_csv(file.path(
   "data",
   "processed",
   "MAS netwerk Vlaanderen- steekproef_polders_telpunten_uncut.csv"
-)) %>% 
-  filter(beslissing %in% c("behouden", "vervangen door bestaand")) %>% 
-  select(-naam, - beschrijving) %>% 
-  rename("naam" = Naam,
-         "pointid_from_targets" = pointid) %>% 
+)) %>%
+  filter(beslissing %in% c("behouden", "vervangen door bestaand")) %>%
+  select(-naam, -beschrijving) %>%
+  rename(
+    "naam" = Naam,
+    "pointid_from_targets" = pointid
+  ) %>%
   mutate(pointid = ifelse(is.na(vervanging_id), pointid_from_targets, vervanging_id))
 
 
