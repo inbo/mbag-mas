@@ -66,7 +66,8 @@ list(
   tar_target(
     name = sample,
     command = readr::read_csv(
-      file = sample_file
+      file = sample_file,
+      show_col_types = FALSE
       )
   ),
   tar_target(
