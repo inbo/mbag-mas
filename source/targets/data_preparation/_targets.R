@@ -17,6 +17,11 @@ tar_option_set(
   workspace_on_error = TRUE
 )
 
+# Conflicts
+conflicted::conflicts_prefer(dplyr::filter)
+conflicted::conflicts_prefer(dplyr::select)
+conflicted::conflicts_prefer(dplyr::lag)
+
 # Set directory locations
 target_dir <- rprojroot::find_root_file(
   "source", "targets", "data_preparation",
