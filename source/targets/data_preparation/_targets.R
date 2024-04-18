@@ -86,9 +86,9 @@ list(
   ),
   tar_target(
     name = select_within_radius,
-    command = select_within_radius(
+    command = select_within_circle_radius(
       counts_df = select_time_periods,
       radius = 300
-    )
+      )
   )
 )

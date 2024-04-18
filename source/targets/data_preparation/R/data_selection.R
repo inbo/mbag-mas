@@ -39,7 +39,7 @@ select_within_time_periods <- function(counts_df) {
 }
 
 # Select data within circle radius
-select_within_radius <- function(counts_df, radius = 300) {
+select_within_circle_radius <- function(counts_df, radius = 300) {
   # Create dataframe with geometry for each count location
   sampling_points <- counts_df %>%
     st_drop_geometry() %>%
