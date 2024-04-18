@@ -37,3 +37,31 @@ select_within_time_periods <- function(counts_df) {
 
   return(out_df)
 }
+
+# Select data within circle radius
+select_within_radius <- function(counts_df, radius = 300) {
+  # Create dataframe with geometry for each count location
+  sampling_points <- counts_df %>%
+    st_drop_geometry() %>%
+    distinct(plotnaam, regio, x_coord, y_coord) %>%
+    st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+    as_tibble() %>%
+    rename(geometry.point = geometry)
+
+  # Calculate distances between observation locations (geometry)
+  # and count locations (geometry.point)
+  # Select data within radius distance
+  obs_to_point_distances <- counts_df %>%
+    full_join(sampling_points, by = join_by(plotnaam, regio)) %>%
+    mutate(
+      calc_distance = st_distance(.$geometry, .$geometry.point,
+                                  by_element = TRUE
+      ),
+      calc_distance = round(units::drop_units(calc_distance))
+    ) %>%
+    select(-c(distance2plot, geometry.point)) %>%
+    rename(distance2plot = calc_distance) %>%
+    filter(distance2plot <= radius)
+
+  return(obs_to_point_distances)
+}
