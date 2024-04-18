@@ -1,11 +1,13 @@
 amersfoort_to_lambert72 <- function(sf_object) {
+  sf_proj_network(TRUE)
+
   # Transform CRS according to specific pipeline
   # see https://inbo.github.io/tutorials/tutorials/spatial_transform_crs_2/
   pipelines <- sf_proj_pipelines("EPSG:28992", "EPSG:31370")
 
   # We select the pipeline with lowest accuracy, by filtering on accuracy
   chosen_pipeline_definition <- pipelines %>%
-    filter(accuracy < 0.02) %>% # choose lowest!
+    slice_min(accuracy, n = 1) %>%
     pull(definition)
 
   # Transform according to most accurate pipeline
