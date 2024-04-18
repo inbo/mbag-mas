@@ -76,5 +76,11 @@ list(
       y = sample,
       by =  dplyr::join_by(plotnaam == pointid)
       )
+  ),
+  tar_target(
+    name = select_time_periods,
+    command = select_within_time_periods(
+      counts_df = select_sampled_points
+      )
   )
 )
