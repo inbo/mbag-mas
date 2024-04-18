@@ -38,24 +38,26 @@ process_double_counted_data <- function(counts_df) {
   profs <- c("WVNT00", "JJNN16", "NOVN00", "ETBX00")
   profs_2022 <- "RPLT02" # professional after 2022
 
+  counts_df_state_pro <- counts_df %>%
+    rename(waarnemer = waarneme) %>%
+    mutate(status_teller = ifelse(
+      (waarnemer %in% profs) | (waarnemer %in% profs_2022 & jaar >= 2022),
+      "professioneel", "vrijwilliger"))
+
   # Identify points counted more than once per period
-  doubles_df <- counts_df %>%
+  doubles_df <- counts_df_state_pro %>%
     st_drop_geometry() %>%
     group_by(plotnaam, jaar, periode_in_jaar) %>%
     summarize(aantal_teldagen = n_distinct(doy),
-              aantal_waarnemers = n_distinct(waarneme),
+              aantal_waarnemers = n_distinct(waarnemer),
               .groups = "drop") %>%
     filter(aantal_teldagen > 1 | aantal_waarnemers > 1)
 
   if (nrow(doubles_df) != 0) {
-    out_df <- counts_df %>%
-      rename(waarnemer = waarneme) %>%
+    out_df <- counts_df_state_pro %>%
       semi_join(doubles_df, by = c("plotnaam", "jaar", "periode_in_jaar")) %>%
       # Calculate variables to validate count data in case of doubles
       group_by(plotid, jaar, periode_in_jaar) %>%
-      mutate(status_teller = ifelse(
-        (waarnemer %in% profs) | (waarnemer %in% profs_2022 & jaar == 2022),
-        "professioneel", "vrijwilliger")) %>%
       mutate(prof_in_period = any(status_teller == "professioneel"),
              max_doy = (doy == max(doy))
       ) %>%
@@ -70,14 +72,13 @@ process_double_counted_data <- function(counts_df) {
       filter(isTRUE(keep)) %>%
       ungroup() %>%
       # Add non-double count data
-      bind_rows(counts_df %>%
+      bind_rows(counts_df_state_pro %>%
                   anti_join(doubles_df,
                             by = c("plotnaam", "jaar", "periode_in_jaar"))) %>%
       # Remove added columns
       select(-c(prof_in_period, max_doy, keep))
   } else {
-    out_df <- counts_df %>%
-      rename(waarnemer = waarneme)
+    out_df <- counts_df_state_pro
   }
 
   return(out_df)
