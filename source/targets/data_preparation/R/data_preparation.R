@@ -31,3 +31,8 @@ amersfoort_to_lambert72 <- function(sf_object) {
 
   return(out_sf)
 }
+
+# Function to remove data counted twice at the same spot
+process_double_counted_data <- function(counts_df, profs) {
+
+}
