@@ -6,6 +6,8 @@
 # Load packages required to define the pipeline
 library(targets)
 library(tarchetypes)
+library(dplyr)
+library(sf)
 
 # Set target options
 tar_option_set(
@@ -36,10 +38,16 @@ lapply(list.files(file.path(target_dir, "R"), full.names = TRUE), source)
 list(
   tarchetypes::tar_file(
     mas_counts_sovon_file,
-    read_counts_sovon(mbag_dir, "20230810_qgis_export_sovon_wfs_2023.geojson")
+    path_to_counts_sovon(
+      proj_path = mbag_dir,
+      file = "20230810_qgis_export_sovon_wfs_2023.geojson")
+  ),
+  tar_target(
+    name = mas_counts_sovon,
+    command = st_read(mas_counts_sovon_file)
   ),
   tar_target(
     name = crs_pipeline,
-    command = amersfoort_to_lambert72(mas_counts_sovon_file)
+    command = amersfoort_to_lambert72(mas_counts_sovon)
   )
 )
