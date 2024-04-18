@@ -54,9 +54,12 @@ source(here("source", "R", "steekproeftrekking_nabehandeling.R"))
 ```{r, results="hide"}
 landbouwstreken <- st_read(here("data", "landbouwstreken", "Lbstrvl.gpkg"))
 landbouwstreken <- landbouwstreken %>%
-  mutate(Naam = ifelse(startsWith(NAAM, "Weidestreek"),
-                       "Weidestreek", NAAM),
-         section = NA) %>%
+  mutate(
+    Naam = ifelse(startsWith(NAAM, "Weidestreek"),
+      "Weidestreek", NAAM
+    ),
+    section = NA
+  ) %>%
   select(Naam, section) %>%
   st_transform(31370)
 ```
@@ -93,16 +96,16 @@ We kijken hoeveel open en halfopen landschap er aanwezig is in de Duinen en de W
 ```{r}
 openheid_sf <- lapply(kleine_landbouwstreken, function(streek) {
   df_ol <- selectie_openheid(
-      gebied = streek,
-      ol_strata = c("OL")
-      ) %>%
+    gebied = streek,
+    ol_strata = c("OL")
+  ) %>%
     mutate(openheid = "OL")
   df_hol <- selectie_openheid(
-      gebied = streek,
-      ol_strata = c("HOL")
-      ) %>%
+    gebied = streek,
+    ol_strata = c("HOL")
+  ) %>%
     mutate(openheid = "HOL")
-  
+
   bind_rows(df_ol, df_hol)
 })
 ```
@@ -110,9 +113,9 @@ openheid_sf <- lapply(kleine_landbouwstreken, function(streek) {
 ```{r}
 selectie_openheid_klasses <- lapply(kleine_landbouwstreken, function(streek) {
   selectie_openheid(
-      gebied = streek,
-      ol_strata = c("OL", "HOL")
-      )
+    gebied = streek,
+    ol_strata = c("OL", "HOL")
+  )
 })
 ```
 
@@ -133,8 +136,10 @@ Een dikke 50 % hiervan is open en halfopen landschap, maar op basis van de versp
 ```{r}
 openheid_sf$Duinen %>%
   rowwise() %>%
-  mutate(area = st_area(geom),
-         prop_area = area / area_duinen) %>%
+  mutate(
+    area = st_area(geom),
+    prop_area = area / area_duinen
+  ) %>%
   st_drop_geometry() %>%
   select(Naam, openheid, area, prop_area) %>%
   kable()
@@ -159,8 +164,10 @@ Een dikke 60 % hiervan is open en halfopen landschap.
 ```{r}
 openheid_sf$Weidestreek %>%
   rowwise() %>%
-  mutate(area = st_area(geom),
-         prop_area = area / area_weidestreek) %>%
+  mutate(
+    area = st_area(geom),
+    prop_area = area / area_weidestreek
+  ) %>%
   st_drop_geometry() %>%
   select(Naam, openheid, area, prop_area) %>%
   kable()
@@ -177,22 +184,28 @@ OSM kaart gedownload op 27/02/2024.
 
 ```{r, cache=TRUE, results="hide"}
 exclusie_osm_duinen <- exclusie_landgebruik_osm(
-    gebied = selectie_openheid_klasses$Duinen,
-    osmdata = path_to_osm_download(),
-    landuse = c("residential", "military", "industrial", "cemetery",
-                "railway", "commercial", "farmyard"),
-    leisure = c("park"),
-    buffer_poly = 0,
-    layer_poly = list(aeroway = c("aerodrome")),
-    update_osm_layer = FALSE)
+  gebied = selectie_openheid_klasses$Duinen,
+  osmdata = path_to_osm_download(),
+  landuse = c(
+    "residential", "military", "industrial", "cemetery",
+    "railway", "commercial", "farmyard"
+  ),
+  leisure = c("park"),
+  buffer_poly = 0,
+  layer_poly = list(aeroway = c("aerodrome")),
+  update_osm_layer = FALSE
+)
 
 exclusie_osm_weidestreek <- exclusie_landgebruik_osm(
-    gebied = selectie_openheid_klasses$Weidestreek,
-    osmdata = path_to_osm_download(),
-    landuse = c("residential", "military", "industrial", "cemetery",
-                "railway", "commercial", "farmyard"),
-    leisure = c("park"),
-    update_osm_layer = FALSE)
+  gebied = selectie_openheid_klasses$Weidestreek,
+  osmdata = path_to_osm_download(),
+  landuse = c(
+    "residential", "military", "industrial", "cemetery",
+    "railway", "commercial", "farmyard"
+  ),
+  leisure = c("park"),
+  update_osm_layer = FALSE
+)
 
 exclusie_osm_landgebruiken <- list(
   Duinen = exclusie_osm_duinen,
@@ -206,11 +219,11 @@ In groen duiden we de exclusielaag aan. Het gaat vooral om industriegebied, sted
 
 ```{r}
 mapview(
-    kleine_landbouwstreken$Duinen,
-    color = "red",
-    alpha.regions = 0,
-    legend = FALSE
-  ) +
+  kleine_landbouwstreken$Duinen,
+  color = "red",
+  alpha.regions = 0,
+  legend = FALSE
+) +
   mapview(
     selectie_openheid_klasses$Duinen,
     col.regions = "red",
@@ -228,11 +241,11 @@ Niet veel exclusie. Wel langs sporen en stedelijk gebied.
 
 ```{r}
 mapview(
-    kleine_landbouwstreken$Weidestreek,
-    color = "red",
-    alpha.regions = 0,
-    legend = FALSE
-  ) +
+  kleine_landbouwstreken$Weidestreek,
+  color = "red",
+  alpha.regions = 0,
+  legend = FALSE
+) +
   mapview(
     selectie_openheid_klasses$Weidestreek,
     col.regions = "red",
@@ -259,7 +272,7 @@ paden <- lapply(names(selectie_openheid_klasses), function(i) {
     historic_exclude = NULL,
     waterway = NULL,
     update_osm_layer = FALSE
-    )
+  )
 })
 names(paden) <- names(selectie_openheid_klasses)
 ```
@@ -270,11 +283,11 @@ In blauw tonen we de paden die overblijven.
 
 ```{r}
 mapview(
-    kleine_landbouwstreken$Duinen,
-    color = "red",
-    alpha.regions = 0,
-    legend = FALSE
-  ) +
+  kleine_landbouwstreken$Duinen,
+  color = "red",
+  alpha.regions = 0,
+  legend = FALSE
+) +
   mapview(
     selectie_openheid_klasses$Duinen,
     col.regions = "red",
@@ -293,9 +306,10 @@ detail_westkant <- c(
   "xmin" = 21500,
   "ymin" = 197000,
   "xmax" = 50000,
-  "ymax" = 217000)
+  "ymax" = 217000
+)
 
-detail_westkant_sf <- tibble(geometry = st_as_sfc(st_bbox(detail_westkant))) %>% 
+detail_westkant_sf <- tibble(geometry = st_as_sfc(st_bbox(detail_westkant))) %>%
   st_as_sf() %>%
   st_set_crs(31370)
 
@@ -303,12 +317,12 @@ mapview::mapviewOptions(fgb = FALSE) # opslaan werkt anders niet
 dir.create("media/steekproeftrekking", showWarnings = FALSE)
 
 m <- mapview(
-    st_crop(kleine_landbouwstreken$Duinen, detail_westkant_sf),
-    color = "red",
-    alpha.regions = 0,
-    legend = FALSE,
-    lwd = 1
-  ) +
+  st_crop(kleine_landbouwstreken$Duinen, detail_westkant_sf),
+  color = "red",
+  alpha.regions = 0,
+  legend = FALSE,
+  lwd = 1
+) +
   mapview(
     st_crop(selectie_openheid_klasses$Duinen, detail_westkant_sf),
     col.regions = "red",
@@ -321,10 +335,13 @@ m <- mapview(
   ) +
   mapview(
     st_crop(paden$Duinen, detail_westkant_sf),
-    legend = FALSE)
+    legend = FALSE
+  )
 
-mapview::mapshot(m, file = here("media", "steekproeftrekking",
-                                "afbakening_duinen_west.png"))
+mapview::mapshot(m, file = here(
+  "media", "steekproeftrekking",
+  "afbakening_duinen_west.png"
+))
 ```
 
 ```{r}
@@ -333,9 +350,10 @@ detail_oostkant <- c(
   "xmin" = 50000,
   "ymin" = 213000,
   "xmax" = 82000,
-  "ymax" = 230000)
+  "ymax" = 230000
+)
 
-detail_oostkant_sf <- tibble(geometry = st_as_sfc(st_bbox(detail_oostkant))) %>% 
+detail_oostkant_sf <- tibble(geometry = st_as_sfc(st_bbox(detail_oostkant))) %>%
   st_as_sf() %>%
   st_set_crs(31370)
 
@@ -343,12 +361,12 @@ mapview::mapviewOptions(fgb = FALSE) # opslaan werkt anders niet
 dir.create("media/steekproeftrekking", showWarnings = FALSE)
 
 m <- mapview(
-    st_crop(kleine_landbouwstreken$Duinen, detail_oostkant_sf),
-    color = "red",
-    alpha.regions = 0,
-    legend = FALSE,
-    lwd = 1
-  ) +
+  st_crop(kleine_landbouwstreken$Duinen, detail_oostkant_sf),
+  color = "red",
+  alpha.regions = 0,
+  legend = FALSE,
+  lwd = 1
+) +
   mapview(
     st_crop(selectie_openheid_klasses$Duinen, detail_oostkant_sf),
     col.regions = "red",
@@ -361,29 +379,38 @@ m <- mapview(
   ) +
   mapview(
     st_crop(paden$Duinen, detail_oostkant_sf),
-    legend = FALSE)
+    legend = FALSE
+  )
 
-mapview::mapshot(m, file = here("media", "steekproeftrekking",
-                                "afbakening_duinen_oost.png"))
+mapview::mapshot(m, file = here(
+  "media", "steekproeftrekking",
+  "afbakening_duinen_oost.png"
+))
 ```
 
 ```{r}
-plot1 <- png::readPNG(here("media", "steekproeftrekking",
-                           "afbakening_duinen_west.png"))
-plot2 <- png::readPNG(here("media", "steekproeftrekking",
-                           "afbakening_duinen_oost.png"))
+plot1 <- png::readPNG(here(
+  "media", "steekproeftrekking",
+  "afbakening_duinen_west.png"
+))
+plot2 <- png::readPNG(here(
+  "media", "steekproeftrekking",
+  "afbakening_duinen_oost.png"
+))
 
 p <- cowplot::plot_grid(
   grid::rasterGrob(plot1),
   grid::rasterGrob(plot2),
-  nrow = 1, labels = c("A.", "B."))
+  nrow = 1, labels = c("A.", "B.")
+)
 
 
 ggsave(here("media", "steekproeftrekking", "afbakening_duinen_totaal.png"),
-       p,
-       dpi = 300,
-       width = 8,
-       height = 4)
+  p,
+  dpi = 300,
+  width = 8,
+  height = 4
+)
 ```
 
 
@@ -400,11 +427,11 @@ paden$Duinen %>%
 
 ```{r}
 mapview(
-    kleine_landbouwstreken$Weidestreek,
-    color = "red",
-    alpha.regions = 0,
-    legend = FALSE
-  ) +
+  kleine_landbouwstreken$Weidestreek,
+  color = "red",
+  alpha.regions = 0,
+  legend = FALSE
+) +
   mapview(
     selectie_openheid_klasses$Weidestreek,
     col.regions = "red",
@@ -419,12 +446,12 @@ mapview(
 
 ```{r}
 m <- mapview(
-    kleine_landbouwstreken$Weidestreek,
-    color = "red",
-    alpha.regions = 0,
-    legend = FALSE,
-    lwd = 2
-  ) +
+  kleine_landbouwstreken$Weidestreek,
+  color = "red",
+  alpha.regions = 0,
+  legend = FALSE,
+  lwd = 2
+) +
   mapview(
     selectie_openheid_klasses$Weidestreek,
     col.regions = "red",
@@ -437,10 +464,13 @@ m <- mapview(
   ) +
   mapview(
     paden$Weidestreek,
-    legend = FALSE)
+    legend = FALSE
+  )
 
-mapview::mapshot(m, file = here("media", "steekproeftrekking",
-                                "afbakening_weidestreek.png"))
+mapview::mapshot(m, file = here(
+  "media", "steekproeftrekking",
+  "afbakening_weidestreek.png"
+))
 ```
 
 ```{r}
@@ -463,7 +493,7 @@ punten <- lapply(names(paden), function(i) {
     gebieden = kleine_landbouwstreken[[i]],
     interpoint_distance = 50,
     border_distance = 300
-    )
+  )
 })
 names(punten) <- names(paden)
 ```
@@ -472,11 +502,11 @@ names(punten) <- names(paden)
 
 ```{r}
 mapview(
-    kleine_landbouwstreken$Duinen,
-    color = "red",
-    alpha.regions = 0,
-    legend = FALSE
-  ) +
+  kleine_landbouwstreken$Duinen,
+  color = "red",
+  alpha.regions = 0,
+  legend = FALSE
+) +
   mapview(
     selectie_openheid_klasses$Duinen,
     col.regions = "red",
@@ -503,11 +533,11 @@ punten$Duinen %>%
 
 ```{r}
 mapview(
-    kleine_landbouwstreken$Weidestreek,
-    color = "red",
-    alpha.regions = 0,
-    legend = FALSE
-  ) +
+  kleine_landbouwstreken$Weidestreek,
+  color = "red",
+  alpha.regions = 0,
+  legend = FALSE
+) +
   mapview(
     selectie_openheid_klasses$Weidestreek,
     col.regions = "red",
@@ -545,7 +575,7 @@ telcirkels_landgebruik <- lapply(punten, function(streek) {
     radius = 300,
     file = path_to_lum(jaar = 2019),
     legend = read_legend_lum(file = path_to_legend_lum())
-    )
+  )
 })
 
 # Classificatie landgebruik
@@ -556,7 +586,7 @@ telcirkels_selectie_landgebruik <- lapply(telcirkels_landgebruik, function(stree
     max_prop_overige = 0.5,
     min_prop_akker = 0.3,
     min_prop_akker_grasland = 0.4
-    )
+  )
 })
 
 # Selecteer op landgebruik
@@ -564,7 +594,7 @@ selectie_landgebruik <- lapply(names(punten), function(i) {
   selectie_landgebruik_vito(
     punten_sf = punten[[i]],
     selectie_df = telcirkels_selectie_landgebruik[[i]]
-    )
+  )
 })
 names(selectie_landgebruik) <- names(punten)
 
@@ -603,11 +633,11 @@ De kaart toont de punten die op deze manier niet meer in aanmerkingen komen.
 
 ```{r}
 mapview(
-    kleine_landbouwstreken$Duinen,
-    color = "red",
-    alpha.regions = 0,
-    legend = FALSE
-  ) +
+  kleine_landbouwstreken$Duinen,
+  color = "red",
+  alpha.regions = 0,
+  legend = FALSE
+) +
   mapview(
     selectie_openheid_klasses$Duinen,
     col.regions = "red",
@@ -618,8 +648,10 @@ mapview(
     legend = FALSE
   ) +
   mapview(paden$Duinen, legend = FALSE) +
-  mapview(exclusie_punten$Duinen, col.regions = "black",
-          legend = FALSE)
+  mapview(exclusie_punten$Duinen,
+    col.regions = "black",
+    legend = FALSE
+  )
 ```
 
 ### Weidestreek
@@ -643,11 +675,11 @@ De kaart toont de punten die op deze manier niet meer in aanmerkingen komen.
 
 ```{r}
 mapview(
-    kleine_landbouwstreken$Weidestreek,
-    color = "red",
-    alpha.regions = 0,
-    legend = FALSE
-  ) +
+  kleine_landbouwstreken$Weidestreek,
+  color = "red",
+  alpha.regions = 0,
+  legend = FALSE
+) +
   mapview(
     selectie_openheid_klasses$Weidestreek,
     col.regions = "red",
@@ -658,8 +690,10 @@ mapview(
     legend = FALSE
   ) +
   mapview(paden$Weidestreek, legend = FALSE) +
-  mapview(exclusie_punten$Weidestreek, col.regions = "black",
-          legend = FALSE)
+  mapview(exclusie_punten$Weidestreek,
+    col.regions = "black",
+    legend = FALSE
+  )
 ```
 
 ## Selectie zichtbaarheid
@@ -677,7 +711,7 @@ punten_zichtbaarheid <- lapply(selectie_landgebruik, function(streek) {
     punten_sf = streek,
     resolution = 5,
     spacing = 10
-    )
+  )
 })
 
 # Filter slechte zichtbaarheid
@@ -685,7 +719,7 @@ punten_selectie_zichtbaarheid <- lapply(punten_zichtbaarheid, function(streek) {
   filter_zichtbaarheid(
     punten_sf = streek,
     min_cvvi = 0.1
-    )
+  )
 })
 ```
 
@@ -721,7 +755,7 @@ plus_sb <- lapply(punten_selectie_zichtbaarheid, function(streek) {
   add_bo_to_frame(
     punten_df = streek,
     path_bo = path_to_bo(jaar = 2022)
-    )
+  )
 })
 
 # Voeg stratum openheid landschap toe
@@ -732,7 +766,7 @@ plus_openheid_landschap <- lapply(names(plus_sb), function(i) {
     gebied = kleine_landbouwstreken[[i]],
     cutlevels = c(1.25, 1.35, 1.51),
     class_labels = c("GL", "HGL", "HOL", "OL")
-    )
+  )
 })
 names(plus_openheid_landschap) <- names(plus_sb)
 
@@ -741,15 +775,17 @@ sbp_akkervogels_duinen <- read_sbp_akkervogels(
   path = path_to_sbp_akkervogels(file = "akkervogelgebieden2022.shp"),
   gebied = kleine_landbouwstreken$Duinen,
   path_extra_soorten = path_to_sbp_akkervogels(file = "sbp_overige_soorten.shp"),
-  extra_soorten = c("hamster", "bruine kiekendief", "zomertortel",
-                    "grauwe kiekendief")
+  extra_soorten = c(
+    "hamster", "bruine kiekendief", "zomertortel",
+    "grauwe kiekendief"
   )
+)
 
 sbp_akkervogels_weidestreek <- read_sbp_others(
   path_to_sbp_akkervogels(file = "sbp_overige_soorten.shp"),
   soorten = c("hamster", "bruine kiekendief", "zomertortel", "grauwe kiekendief"),
   gebied = kleine_landbouwstreken$Weidestreek
-  ) %>%
+) %>%
   summarise()
 
 sbp_akkervogels <- list(
@@ -762,10 +798,11 @@ steekproefkader_finaal <- lapply(names(plus_openheid_landschap), function(i) {
   add_stratum_sbp(
     punten_sf = plus_openheid_landschap[[i]],
     sbp = sbp_akkervogels[[i]]
-    ) %>%
+  ) %>%
     filter(openheid_klasse %in% c("OL", "HOL")) %>%
-    mutate(sbp = ifelse(is_sbp, "binnen", "buiten"),
-           stratum = paste(openheid_klasse, sbp, sep = " - ")
+    mutate(
+      sbp = ifelse(is_sbp, "binnen", "buiten"),
+      stratum = paste(openheid_klasse, sbp, sep = " - ")
     )
 })
 names(steekproefkader_finaal) <- names(plus_openheid_landschap)
@@ -794,11 +831,11 @@ In de Duinen zien we dat het steekproefkader vooral in twee gebieden gelocalisee
 
 ```{r}
 mapview(
-    kleine_landbouwstreken$Duinen,
-    color = "red",
-    alpha.regions = 0,
-    legend = FALSE
-  ) +
+  kleine_landbouwstreken$Duinen,
+  color = "red",
+  alpha.regions = 0,
+  legend = FALSE
+) +
   mapview(steekproefkader_finaal$Duinen, zcol = "stratum", layer = "stratum")
 ```
 
@@ -808,9 +845,10 @@ detail_west <- c(
   "xmin" = 34000,
   "ymin" = 203000,
   "xmax" = 40500,
-  "ymax" = 208000)
+  "ymax" = 208000
+)
 
-detail_west_sf <- tibble(geometry = st_as_sfc(st_bbox(detail_west))) %>% 
+detail_west_sf <- tibble(geometry = st_as_sfc(st_bbox(detail_west))) %>%
   st_as_sf() %>%
   st_set_crs(31370)
 
@@ -818,20 +856,25 @@ mapview::mapviewOptions(fgb = FALSE) # opslaan werkt anders niet
 dir.create("media/steekproeftrekking", showWarnings = FALSE)
 
 m <- mapview(
-    st_crop(kleine_landbouwstreken$Duinen, detail_west_sf),
-    color = "red",
-    alpha.regions = 0,
-    legend = FALSE,
-    lwd = 2
-  ) +
+  st_crop(kleine_landbouwstreken$Duinen, detail_west_sf),
+  color = "red",
+  alpha.regions = 0,
+  legend = FALSE,
+  lwd = 2
+) +
   mapview(st_crop(steekproefkader_finaal$Duinen, detail_west_sf),
-          zcol = "stratum",
-          layer = "stratum") +
-  mapview(detail_west_sf, color = "purple", alpha.regions = 0, legend = FALSE,
-          lwd = 2)
+    zcol = "stratum",
+    layer = "stratum"
+  ) +
+  mapview(detail_west_sf,
+    color = "purple", alpha.regions = 0, legend = FALSE,
+    lwd = 2
+  )
 
-mapview::mapshot(m, file = here("media", "steekproeftrekking",
-                                "steekproefkader_duinen_west.png"))
+mapview::mapshot(m, file = here(
+  "media", "steekproeftrekking",
+  "steekproefkader_duinen_west.png"
+))
 ```
 
 ```{r}
@@ -839,88 +882,114 @@ detail_east <- c(
   "xmin" = 77000,
   "ymin" = 225000,
   "xmax" = 81500,
-  "ymax" = 230000)
+  "ymax" = 230000
+)
 
-detail_east_sf <- tibble(geometry = st_as_sfc(st_bbox(detail_east))) %>% 
+detail_east_sf <- tibble(geometry = st_as_sfc(st_bbox(detail_east))) %>%
   st_as_sf() %>%
   st_set_crs(31370)
 
 m <- mapview(
-    st_crop(kleine_landbouwstreken$Duinen, detail_east_sf),
-    color = "red",
-    alpha.regions = 0,
-    legend = FALSE,
-    lwd = 2
-  ) +
+  st_crop(kleine_landbouwstreken$Duinen, detail_east_sf),
+  color = "red",
+  alpha.regions = 0,
+  legend = FALSE,
+  lwd = 2
+) +
   mapview(st_crop(steekproefkader_finaal$Duinen, detail_east_sf),
-          zcol = "stratum",
-          layer = "stratum") +
-  mapview(detail_east_sf, color = "purple", alpha.regions = 0, legend = FALSE,
-          lwd = 2)
+    zcol = "stratum",
+    layer = "stratum"
+  ) +
+  mapview(detail_east_sf,
+    color = "purple", alpha.regions = 0, legend = FALSE,
+    lwd = 2
+  )
 
-mapview::mapshot(m, file = here("media", "steekproeftrekking",
-                                "steekproefkader_duinen_oost.png"))
+mapview::mapshot(m, file = here(
+  "media", "steekproeftrekking",
+  "steekproefkader_duinen_oost.png"
+))
 ```
 
 ```{r}
 m <- mapview(
-    kleine_landbouwstreken$Duinen,
-    color = "red",
-    alpha.regions = 0,
-    legend = FALSE,
+  kleine_landbouwstreken$Duinen,
+  color = "red",
+  alpha.regions = 0,
+  legend = FALSE,
+  lwd = 1
+) +
+  mapview(steekproefkader_finaal$Duinen,
+    zcol = "stratum",
+    layer = "stratum"
+  ) +
+  mapview(detail_east_sf,
+    color = "purple", alpha.regions = 0, legend = FALSE,
     lwd = 1
   ) +
-  mapview(steekproefkader_finaal$Duinen,
-          zcol = "stratum",
-          layer = "stratum") +
-  mapview(detail_east_sf, color = "purple", alpha.regions = 0, legend = FALSE,
-          lwd = 1) +
-  mapview(detail_west_sf, color = "purple", alpha.regions = 0, legend = FALSE,
-          lwd = 1)
+  mapview(detail_west_sf,
+    color = "purple", alpha.regions = 0, legend = FALSE,
+    lwd = 1
+  )
 
-mapview::mapshot(m, file = here("media", "steekproeftrekking",
-                                "steekproefkader_duinen.png"))
+mapview::mapshot(m, file = here(
+  "media", "steekproeftrekking",
+  "steekproefkader_duinen.png"
+))
 ```
 
 ```{r}
-plot1 <- png::readPNG(here("media", "steekproeftrekking",
-                           "steekproefkader_duinen_west.png"))
-plot2 <- png::readPNG(here("media", "steekproeftrekking",
-                           "steekproefkader_duinen_oost.png"))
-plot3 <- png::readPNG(here("media", "steekproeftrekking",
-                           "steekproefkader_duinen.png"))
+plot1 <- png::readPNG(here(
+  "media", "steekproeftrekking",
+  "steekproefkader_duinen_west.png"
+))
+plot2 <- png::readPNG(here(
+  "media", "steekproeftrekking",
+  "steekproefkader_duinen_oost.png"
+))
+plot3 <- png::readPNG(here(
+  "media", "steekproeftrekking",
+  "steekproefkader_duinen.png"
+))
 
 p <- cowplot::plot_grid(
   grid::rasterGrob(plot3),
   cowplot::plot_grid(grid::rasterGrob(plot1), grid::rasterGrob(plot2),
-                     labels = c("A.", "B.")),
-  ncol = 1)
+    labels = c("A.", "B.")
+  ),
+  ncol = 1
+)
 
 
 plots <- cowplot::align_plots(
   grid::rasterGrob(plot3), grid::rasterGrob(plot1),
-  align = "v", axis = "l")
+  align = "v", axis = "l"
+)
 # then build the bottom row
 bottom_row <- cowplot::plot_grid(
   grid::rasterGrob(plot1), grid::rasterGrob(plot2),
-  labels = c("A.", "B."), label_size = 12)
+  labels = c("A.", "B."), label_size = 12
+)
 
 p <- cowplot::plot_grid(plots[[1]], bottom_row, ncol = 1)
 
-p <- cowplot::ggdraw(p) + 
+p <- cowplot::ggdraw(p) +
   geom_text(
-    data = data.frame(x = c(0.38, 0.64),
-                      y = c(0.72, 0.88),
-                      label = c("A.", "B.")),
+    data = data.frame(
+      x = c(0.38, 0.64),
+      y = c(0.72, 0.88),
+      label = c("A.", "B.")
+    ),
     aes(x, y, label = label), size = 3,
     inherit.aes = FALSE
   )
 
 ggsave(here("media", "steekproeftrekking", "steekproefkader_duinen_totaal.png"),
-       p,
-       dpi = 300,
-       width = 9,
-       height = 8)
+  p,
+  dpi = 300,
+  width = 9,
+  height = 8
+)
 ```
 
 ## Weidestreek
@@ -943,33 +1012,37 @@ In de Weidestreek zien we een relatief goede spreiding van punten. Er is vooral 
 
 ```{r}
 mapview(
-    kleine_landbouwstreken$Weidestreek,
-    color = "red",
-    alpha.regions = 0,
-    legend = FALSE
-  ) +
+  kleine_landbouwstreken$Weidestreek,
+  color = "red",
+  alpha.regions = 0,
+  legend = FALSE
+) +
   mapview(
     steekproefkader_finaal$Weidestreek,
     zcol = "stratum",
-    layer = "stratum")
+    layer = "stratum"
+  )
 ```
 
 ```{r}
 m <- mapview(
-    kleine_landbouwstreken$Weidestreek,
-    color = "red",
-    alpha.regions = 0,
-    legend = FALSE,
-    lwd = 2
-  ) +
+  kleine_landbouwstreken$Weidestreek,
+  color = "red",
+  alpha.regions = 0,
+  legend = FALSE,
+  lwd = 2
+) +
   mapview(
     steekproefkader_finaal$Weidestreek,
     zcol = "stratum",
     layer = "stratum",
-    cex = 4)
+    cex = 4
+  )
 
-mapview::mapshot(m, file = here("media", "steekproeftrekking",
-                                "steekproefkader_weidestreek.png"))
+mapview::mapshot(m, file = here(
+  "media", "steekproeftrekking",
+  "steekproefkader_weidestreek.png"
+))
 ```
 
 # Conclusie steekproefkader
@@ -1008,17 +1081,20 @@ allocatie_df <- lapply(names(steekproefkader_finaal), function(i) {
     allocatie_binnen_sbp = allocatie_binnen_sbp[[i]],
     allocatie_leemstreek = 0,
     ol_strata = c("OL", "HOL")
-    )
+  )
 })
 names(allocatie_df) <- names(steekproefkader_finaal)
 
 # Voeg steekproefkader toe aan allocatie tabel
-steekproefkader_per_stratum <- lapply(names(steekproefkader_finaal),
-                                      function(i) {
-  steekproefkader_finaal[[i]] %>%
-    semi_join(allocatie_df[[i]] %>% select(Naam, is_sbp, openheid_klasse),
-              by = c("Naam", "is_sbp", "openheid_klasse"))
-})
+steekproefkader_per_stratum <- lapply(
+  names(steekproefkader_finaal),
+  function(i) {
+    steekproefkader_finaal[[i]] %>%
+      semi_join(allocatie_df[[i]] %>% select(Naam, is_sbp, openheid_klasse),
+        by = c("Naam", "is_sbp", "openheid_klasse")
+      )
+  }
+)
 names(steekproefkader_per_stratum) <- names(steekproefkader_finaal)
 
 # Neem ruimtelijk gebalanceerde steekproef
@@ -1028,7 +1104,7 @@ steekproef <- lapply(steekproefkader_per_stratum, function(streek) {
     sample_size = 50,
     sample_size_multiplication = 2,
     balance = c("X", "Y")
-    )
+  )
 })
 ```
 
@@ -1038,8 +1114,10 @@ De allocatie tabel ziet er als volgt uit.
 
 ```{r}
 allocatie_df$Duinen %>%
-  select(Naam, openheid_klasse, is_sbp, popsize, allocatie_gebied,
-         allocatie_sbp, allocatie_openheid, allocatie, samplesize) %>%
+  select(
+    Naam, openheid_klasse, is_sbp, popsize, allocatie_gebied,
+    allocatie_sbp, allocatie_openheid, allocatie, samplesize
+  ) %>%
   kable(digits = 3)
 ```
 
@@ -1057,13 +1135,14 @@ Hier tonen we enkel de eerste set:
 
 ```{r}
 mapview(
-    kleine_landbouwstreken$Duinen,
-    color = "red",
-    alpha.regions = 0,
-    legend = FALSE
-  ) +
-mapview(filter(steekproef$Duinen, batch == "eerste set"),
-        zcol = "stratum", layer = "stratum")
+  kleine_landbouwstreken$Duinen,
+  color = "red",
+  alpha.regions = 0,
+  legend = FALSE
+) +
+  mapview(filter(steekproef$Duinen, batch == "eerste set"),
+    zcol = "stratum", layer = "stratum"
+  )
 ```
 
 ### Weidestreek
@@ -1072,8 +1151,10 @@ De allocatie tabel ziet er als volgt uit.
 
 ```{r}
 allocatie_df$Weidestreek %>%
-  select(Naam, openheid_klasse, is_sbp, popsize, allocatie_gebied,
-         allocatie_sbp, allocatie_openheid, allocatie, samplesize) %>%
+  select(
+    Naam, openheid_klasse, is_sbp, popsize, allocatie_gebied,
+    allocatie_sbp, allocatie_openheid, allocatie, samplesize
+  ) %>%
   kable(digits = 3)
 ```
 
@@ -1091,13 +1172,14 @@ Hier tonen we enkel de eerste set:
 
 ```{r}
 mapview(
-    kleine_landbouwstreken$Weidestreek,
-    color = "red",
-    alpha.regions = 0,
-    legend = FALSE
-  ) +
-mapview(filter(steekproef$Weidestreek, batch == "eerste set"),
-        zcol = "stratum", layer = "stratum")
+  kleine_landbouwstreken$Weidestreek,
+  color = "red",
+  alpha.regions = 0,
+  legend = FALSE
+) +
+  mapview(filter(steekproef$Weidestreek, batch == "eerste set"),
+    zcol = "stratum", layer = "stratum"
+  )
 ```
 
 ## Uitdunnen steekproef
@@ -1109,7 +1191,7 @@ steekproef_thinned <- lapply(steekproef, function(streek) {
   thin_sample(
     sample = streek,
     thin_dist = 600
-    )
+  )
 })
 ```
 
@@ -1118,8 +1200,10 @@ steekproef_thinned <- lapply(steekproef, function(streek) {
 We zien een zeer sterke afname van aantal punten nadat we uitdunnen.
 
 ```{r}
-eerste_set_duinen <- nrow(filter(steekproef_thinned$Duinen,
-                                 batch == "eerste set"))
+eerste_set_duinen <- nrow(filter(
+  steekproef_thinned$Duinen,
+  batch == "eerste set"
+))
 steekproef_thinned$Duinen %>%
   st_drop_geometry() %>%
   count(openheid_klasse, is_sbp, batch) %>%
@@ -1130,13 +1214,14 @@ In de eerste set hebben we nu `r eerste_set_duinen` punten:
 
 ```{r}
 mapview(
-    kleine_landbouwstreken$Duinen,
-    color = "red",
-    alpha.regions = 0,
-    legend = FALSE
-  ) +
-mapview(filter(steekproef_thinned$Duinen, batch == "eerste set"),
-        zcol = "stratum", layer = "stratum")
+  kleine_landbouwstreken$Duinen,
+  color = "red",
+  alpha.regions = 0,
+  legend = FALSE
+) +
+  mapview(filter(steekproef_thinned$Duinen, batch == "eerste set"),
+    zcol = "stratum", layer = "stratum"
+  )
 ```
 
 We zien toch een groot verschil tussen de proporties in de steekproef (`prop_steekproef`) en de originele allocatie (`allocatie`) en bijgevolg het aantal punten (vergelijk `n_steekproef` met `samplesize`).
@@ -1149,7 +1234,8 @@ steekproef_thinned$Duinen %>%
   mutate(prop = n / sum(n)) %>%
   full_join(allocatie_df$Duinen) %>%
   select(Naam, openheid_klasse, is_sbp, allocatie, samplesize,
-         prop_steekproef = prop, n_steekproef = n) %>%
+    prop_steekproef = prop, n_steekproef = n
+  ) %>%
   kable()
 ```
 
@@ -1166,11 +1252,13 @@ balansvergelijking_duinen <- steekproef_thinned$Duinen %>%
 
 count_df_duinen <- balansvergelijking_duinen %>%
   group_by(fill_var, openheid_klasse, sbp_akkervogels) %>%
-  summarise(max_openheid = max(openheid_waarde),
-            max_x = max(X),
-            max_y = max(Y),
-            n = n(),
-            .groups = "drop")
+  summarise(
+    max_openheid = max(openheid_waarde),
+    max_x = max(X),
+    max_y = max(Y),
+    n = n(),
+    .groups = "drop"
+  )
 ```
 
 We zien vooral dat de steekproef buiten SBP niet helemaal representatief lijkt met het steekproefkader op vlak van openheid.
@@ -1178,12 +1266,14 @@ We zien vooral dat de steekproef buiten SBP niet helemaal representatief lijkt m
 ```{r}
 balansvergelijking_duinen %>%
   ggplot(aes(x = sbp_akkervogels, y = openheid_waarde)) +
-    geom_boxplot(aes(fill = fill_var)) +
-    geom_label(data = count_df_duinen,
-               aes(y = max_openheid + 0.01, label = paste("n =", n)),
-               size = 3, position = position_dodge2(width = 0.75)) +
-    facet_grid(~ openheid_klasse) +
-    labs(fill = "Legende")
+  geom_boxplot(aes(fill = fill_var)) +
+  geom_label(
+    data = count_df_duinen,
+    aes(y = max_openheid + 0.01, label = paste("n =", n)),
+    size = 3, position = position_dodge2(width = 0.75)
+  ) +
+  facet_grid(~openheid_klasse) +
+  labs(fill = "Legende")
 ```
 
 Als we naar longitude en latitude kijken, lijkt dit wel min of meer ok.
@@ -1191,23 +1281,27 @@ Als we naar longitude en latitude kijken, lijkt dit wel min of meer ok.
 ```{r}
 balansvergelijking_duinen %>%
   ggplot(aes(x = sbp_akkervogels, y = X)) +
-    geom_boxplot(aes(fill = fill_var)) +
-    geom_label(data = count_df_duinen,
-               aes(y = max_x + 2000, label = paste("n =", n)),
-               size = 3, position = position_dodge2(width = 0.75)) +
-    facet_grid(~ openheid_klasse) +
-    labs(fill = "Legende")
+  geom_boxplot(aes(fill = fill_var)) +
+  geom_label(
+    data = count_df_duinen,
+    aes(y = max_x + 2000, label = paste("n =", n)),
+    size = 3, position = position_dodge2(width = 0.75)
+  ) +
+  facet_grid(~openheid_klasse) +
+  labs(fill = "Legende")
 ```
 
 ```{r}
 balansvergelijking_duinen %>%
   ggplot(aes(x = sbp_akkervogels, y = Y)) +
-    geom_boxplot(aes(fill = fill_var)) +
-    geom_label(data = count_df_duinen,
-               aes(y = max_y + 2000, label = paste("n =", n)),
-               size = 3, position = position_dodge2(width = 0.75)) +
-    facet_grid(~ openheid_klasse) +
-    labs(fill = "Legende")
+  geom_boxplot(aes(fill = fill_var)) +
+  geom_label(
+    data = count_df_duinen,
+    aes(y = max_y + 2000, label = paste("n =", n)),
+    size = 3, position = position_dodge2(width = 0.75)
+  ) +
+  facet_grid(~openheid_klasse) +
+  labs(fill = "Legende")
 ```
 
 ### Weidestreek
@@ -1215,8 +1309,10 @@ balansvergelijking_duinen %>%
 We zien een zeer sterke afname van aantal punten nadat we uitdunnen.
 
 ```{r}
-eerste_set_weidestreek <- nrow(filter(steekproef_thinned$Weidestreek,
-                                      batch == "eerste set"))
+eerste_set_weidestreek <- nrow(filter(
+  steekproef_thinned$Weidestreek,
+  batch == "eerste set"
+))
 
 steekproef_thinned$Weidestreek %>%
   st_drop_geometry() %>%
@@ -1228,13 +1324,14 @@ In de eerste set hebben we nu `r eerste_set_weidestreek` punten:
 
 ```{r}
 mapview(
-    kleine_landbouwstreken$Weidestreek,
-    color = "red",
-    alpha.regions = 0,
-    legend = FALSE
-  ) +
-mapview(filter(steekproef_thinned$Weidestreek, batch == "eerste set"),
-        zcol = "stratum", layer = "stratum")
+  kleine_landbouwstreken$Weidestreek,
+  color = "red",
+  alpha.regions = 0,
+  legend = FALSE
+) +
+  mapview(filter(steekproef_thinned$Weidestreek, batch == "eerste set"),
+    zcol = "stratum", layer = "stratum"
+  )
 ```
 
 Er is geen extreem groot verschil tussen de proporties in de steekproef (`prop_steekproef`) en de originele allocatie (`allocatie`) en bijgevolg het aantal punten (vergelijk `n_steekproef` met `samplesize`).
@@ -1247,7 +1344,8 @@ steekproef_thinned$Weidestreek %>%
   mutate(prop = n / sum(n)) %>%
   full_join(allocatie_df$Weidestreek) %>%
   select(Naam, openheid_klasse, is_sbp, allocatie, samplesize,
-         prop_steekproef = prop, n_steekproef = n) %>%
+    prop_steekproef = prop, n_steekproef = n
+  ) %>%
   kable()
 ```
 
@@ -1264,11 +1362,13 @@ balansvergelijking_weidestreek <- steekproef_thinned$Weidestreek %>%
 
 count_df_weidestreek <- balansvergelijking_weidestreek %>%
   group_by(fill_var, openheid_klasse, sbp_akkervogels) %>%
-  summarise(max_openheid = max(openheid_waarde),
-            max_x = max(X),
-            max_y = max(Y),
-            n = n(),
-            .groups = "drop")
+  summarise(
+    max_openheid = max(openheid_waarde),
+    max_x = max(X),
+    max_y = max(Y),
+    n = n(),
+    .groups = "drop"
+  )
 ```
 
 We zien vooral dat de steekproef OL buiten SBP niet helemaal representatief lijkt met het steekproefkader op vlak van openheid.
@@ -1276,12 +1376,14 @@ We zien vooral dat de steekproef OL buiten SBP niet helemaal representatief lijk
 ```{r}
 balansvergelijking_weidestreek %>%
   ggplot(aes(x = sbp_akkervogels, y = openheid_waarde)) +
-    geom_boxplot(aes(fill = fill_var)) +
-    geom_label(data = count_df_weidestreek,
-               aes(y = max_openheid + 0.01, label = paste("n =", n)),
-               size = 3, position = position_dodge2(width = 0.75)) +
-    facet_grid(~ openheid_klasse) +
-    labs(fill = "Legende")
+  geom_boxplot(aes(fill = fill_var)) +
+  geom_label(
+    data = count_df_weidestreek,
+    aes(y = max_openheid + 0.01, label = paste("n =", n)),
+    size = 3, position = position_dodge2(width = 0.75)
+  ) +
+  facet_grid(~openheid_klasse) +
+  labs(fill = "Legende")
 ```
 
 Als we naar longitude en latitude kijken, lijkt dit wel min of meer ok.
@@ -1289,23 +1391,27 @@ Als we naar longitude en latitude kijken, lijkt dit wel min of meer ok.
 ```{r}
 balansvergelijking_weidestreek %>%
   ggplot(aes(x = sbp_akkervogels, y = X)) +
-    geom_boxplot(aes(fill = fill_var)) +
-    geom_label(data = count_df_weidestreek,
-               aes(y = max_x + 2000, label = paste("n =", n)),
-               size = 3, position = position_dodge2(width = 0.75)) +
-    facet_grid(~ openheid_klasse) +
-    labs(fill = "Legende")
+  geom_boxplot(aes(fill = fill_var)) +
+  geom_label(
+    data = count_df_weidestreek,
+    aes(y = max_x + 2000, label = paste("n =", n)),
+    size = 3, position = position_dodge2(width = 0.75)
+  ) +
+  facet_grid(~openheid_klasse) +
+  labs(fill = "Legende")
 ```
 
 ```{r}
 balansvergelijking_weidestreek %>%
   ggplot(aes(x = sbp_akkervogels, y = Y)) +
-    geom_boxplot(aes(fill = fill_var)) +
-    geom_label(data = count_df_weidestreek,
-               aes(y = max_y + 2000, label = paste("n =", n)),
-               size = 3, position = position_dodge2(width = 0.75)) +
-    facet_grid(~ openheid_klasse) +
-    labs(fill = "Legende")
+  geom_boxplot(aes(fill = fill_var)) +
+  geom_label(
+    data = count_df_weidestreek,
+    aes(y = max_y + 2000, label = paste("n =", n)),
+    size = 3, position = position_dodge2(width = 0.75)
+  ) +
+  facet_grid(~openheid_klasse) +
+  labs(fill = "Legende")
 ```
 
 # Conclusie steekproeftrekking
@@ -1348,7 +1454,7 @@ calc_chisq <- function(observed, expected) {
   calc_df <- tibble(observed = observed, expected = expected) %>%
     rowwise() %>%
     mutate(single_chi = (observed - expected)^2 / expected)
-  
+
   sum(calc_df$single_chi)
 }
 ```
@@ -1358,7 +1464,7 @@ out_list <- vector(mode = "list", length = length(sizes))
 
 for (i in seq_along(sizes)) {
   extended_size <- sizes[i]
-  
+
   allocatie_extended <- allocatie(
     steekproefkader = steekproefkader_finaal$Weidestreek,
     min_samplesize = 0,
@@ -1367,34 +1473,37 @@ for (i in seq_along(sizes)) {
     allocatie_binnen_sbp = allocatie_binnen_sbp$Weidestreek,
     allocatie_leemstreek = 0,
     ol_strata = c("OL", "HOL")
-    )
-  
+  )
+
   steekproef_extended <- draw_sample(
     sampling_frame = steekproefkader_per_stratum$Weidestreek,
     sample_size = extended_size,
     sample_size_multiplication = 1,
     balance = c("X", "Y")
-    )
+  )
 
   steekproef_extended_thinned <- thin_sample(
     sample = steekproef_extended,
     thin_dist = 600
-    )
-  
+  )
+
   summary_df <- steekproef_extended_thinned %>%
     st_drop_geometry() %>%
     count(openheid_klasse, is_sbp) %>%
     mutate(prop = n / sum(n)) %>%
     full_join(allocatie_extended, by = join_by(openheid_klasse, is_sbp)) %>%
     select(Naam, openheid_klasse, is_sbp, allocatie, samplesize,
-           prop_steekproef = prop, n_steekproef = n) %>%
+      prop_steekproef = prop, n_steekproef = n
+    ) %>%
     mutate(expected = allocatie * sum(n_steekproef))
-  
+
   out_list[[i]] <- tibble(
     steekproef_grootte = extended_size,
     finale_grootte = nrow(steekproef_extended_thinned),
-    chisq = calc_chisq(observed = summary_df$n_steekproef,
-                       expected = summary_df$expected)
+    chisq = calc_chisq(
+      observed = summary_df$n_steekproef,
+      expected = summary_df$expected
+    )
   )
 }
 
@@ -1405,13 +1514,18 @@ chi_squared_df <- do.call(rbind.data.frame, out_list)
 ggplot(chi_squared_df, aes(x = steekproef_grootte, y = chisq)) +
   geom_point(aes(fill = finale_grootte), shape = 21, size = 3) +
   geom_text(aes(label = finale_grootte),
-            position = position_nudge(x = -0.3, y = 0.1)) +
-  scale_x_continuous(minor_breaks = sizes,
-                     breaks = seq(min(sizes), max(sizes), 5)) +
+    position = position_nudge(x = -0.3, y = 0.1)
+  ) +
+  scale_x_continuous(
+    minor_breaks = sizes,
+    breaks = seq(min(sizes), max(sizes), 5)
+  ) +
   scale_fill_gradientn(colours = c("firebrick", "yellow2", "green")) +
-  labs(x = "Initiële steekproefgrootte",
-       y = "Chi-kwadraattoetsingsgrootheid",
-       fill = "Finale\nsteekproef-\ngrootte")
+  labs(
+    x = "Initiële steekproefgrootte",
+    y = "Chi-kwadraattoetsingsgrootheid",
+    fill = "Finale\nsteekproef-\ngrootte"
+  )
 ```
 
 Wat als we spelen met de thinning?
@@ -1421,17 +1535,21 @@ thinning <- seq(400, 550, by = 50)
 ```
 
 ```{r, results='hide'}
-out_list_thinning <- vector(mode = "list",
-                            length = length(sizes) * length(thinning))
+out_list_thinning <- vector(
+  mode = "list",
+  length = length(sizes) * length(thinning)
+)
 
 for (j in seq_along(thinning)) {
   thin <- thinning[j]
   for (i in seq_along(sizes)) {
     extended_size <- sizes[i]
-    
-    print(paste0("Steekproefgrootte: ", extended_size,
-                 ". Thinning: ", thin, "."))
-    
+
+    print(paste0(
+      "Steekproefgrootte: ", extended_size,
+      ". Thinning: ", thin, "."
+    ))
+
     allocatie_extended <- allocatie(
       steekproefkader = steekproefkader_finaal$Weidestreek,
       min_samplesize = 0,
@@ -1440,34 +1558,37 @@ for (j in seq_along(thinning)) {
       allocatie_binnen_sbp = allocatie_binnen_sbp$Weidestreek,
       allocatie_leemstreek = 0,
       ol_strata = c("OL", "HOL")
-      )
-    
+    )
+
     steekproef_extended <- draw_sample(
       sampling_frame = steekproefkader_per_stratum$Weidestreek,
       sample_size = extended_size,
       sample_size_multiplication = 1,
       balance = c("X", "Y")
-      )
-  
+    )
+
     steekproef_extended_thinned <- thin_sample(
       sample = steekproef_extended,
       thin_dist = thin
-      )
-    
+    )
+
     summary_df <- steekproef_extended_thinned %>%
       st_drop_geometry() %>%
       count(openheid_klasse, is_sbp) %>%
       mutate(prop = n / sum(n)) %>%
       full_join(allocatie_extended, by = join_by(openheid_klasse, is_sbp)) %>%
       select(Naam, openheid_klasse, is_sbp, allocatie, samplesize,
-             prop_steekproef = prop, n_steekproef = n) %>%
+        prop_steekproef = prop, n_steekproef = n
+      ) %>%
       mutate(expected = allocatie * sum(n_steekproef))
-    
+
     out_list_thinning[[i + (j - 1) * length(sizes)]] <- tibble(
       steekproef_grootte = extended_size,
       finale_grootte = nrow(steekproef_extended_thinned),
-      chisq = calc_chisq(observed = summary_df$n_steekproef,
-                         expected = summary_df$expected),
+      chisq = calc_chisq(
+        observed = summary_df$n_steekproef,
+        expected = summary_df$expected
+      ),
       thinning = thin
     )
   }
@@ -1480,22 +1601,29 @@ chi_squared_df_thinning <- do.call(rbind.data.frame, out_list_thinning)
 ggplot(chi_squared_df_thinning, aes(x = steekproef_grootte, y = chisq)) +
   geom_point(aes(fill = finale_grootte), shape = 21, size = 3) +
   geom_text(aes(label = finale_grootte),
-            position = position_nudge(x = -0.3, y = 0.2)) +
-  scale_x_continuous(minor_breaks = sizes,
-                     breaks = seq(min(sizes), max(sizes), 5)) +
+    position = position_nudge(x = -0.3, y = 0.2)
+  ) +
+  scale_x_continuous(
+    minor_breaks = sizes,
+    breaks = seq(min(sizes), max(sizes), 5)
+  ) +
   scale_fill_gradientn(colours = c("firebrick", "yellow2", "green")) +
   facet_wrap(~thinning, ncol = 2) +
-  labs(x = "Initiële steekproefgrootte",
-       y = "Chi-kwadraattoetsingsgrootheid",
-       fill = "Finale\nsteekproef-\ngrootte")
+  labs(
+    x = "Initiële steekproefgrootte",
+    y = "Chi-kwadraattoetsingsgrootheid",
+    fill = "Finale\nsteekproef-\ngrootte"
+  )
 ```
 
 We bekijken de steekproefgroottes met Chi-kwadraattoetsingsgrootheid kleiner dan 1 en finale steekproefgrootte minstens 50:
 
 ```{r}
 chi_squared_df_thinning %>%
-  filter(chisq < 1,
-         finale_grootte >= 50) %>%
+  filter(
+    chisq < 1,
+    finale_grootte >= 50
+  ) %>%
   arrange(desc(finale_grootte)) %>%
   kable()
 ```
@@ -1511,19 +1639,19 @@ allocatie_extended <- allocatie(
   allocatie_binnen_sbp = allocatie_binnen_sbp$Weidestreek,
   allocatie_leemstreek = 0,
   ol_strata = c("OL", "HOL")
-  )
+)
 
 steekproef_extended <- draw_sample(
   sampling_frame = steekproefkader_per_stratum$Weidestreek,
   sample_size = 91,
   sample_size_multiplication = 1,
   balance = c("X", "Y")
-  )
-  
+)
+
 steekproef_extended_thinned <- thin_sample(
   sample = steekproef_extended,
   thin_dist = 400
-  )
+)
 ```
 
 Er is inderdaad een goede overeenkomst tussen de proporties in de steekproef (`prop_steekproef`) en de originele allocatie (`allocatie`).
@@ -1536,7 +1664,8 @@ steekproef_extended_thinned %>%
   mutate(prop = n / sum(n)) %>%
   full_join(allocatie_extended) %>%
   select(Naam, openheid_klasse, is_sbp, allocatie, samplesize,
-         prop_steekproef = prop, n_steekproef = n) %>%
+    prop_steekproef = prop, n_steekproef = n
+  ) %>%
   kable()
 ```
 
@@ -1552,11 +1681,13 @@ balansvergelijking_weidestreek2 <- steekproef_extended_thinned %>%
 
 count_df_weidestreek2 <- balansvergelijking_weidestreek2 %>%
   group_by(fill_var, openheid_klasse, sbp_akkervogels) %>%
-  summarise(max_openheid = max(openheid_waarde),
-            max_x = max(X),
-            max_y = max(Y),
-            n = n(),
-            .groups = "drop")
+  summarise(
+    max_openheid = max(openheid_waarde),
+    max_x = max(X),
+    max_y = max(Y),
+    n = n(),
+    .groups = "drop"
+  )
 ```
 
 We zien vooral dat de steekproef relatief goed overeenkomt met het steekproefkader op vlak van openheid.
@@ -1564,12 +1695,14 @@ We zien vooral dat de steekproef relatief goed overeenkomt met het steekproefkad
 ```{r}
 balansvergelijking_weidestreek2 %>%
   ggplot(aes(x = sbp_akkervogels, y = openheid_waarde)) +
-    geom_boxplot(aes(fill = fill_var)) +
-    geom_label(data = count_df_weidestreek2,
-               aes(y = max_openheid + 0.01, label = paste("n =", n)),
-               size = 3, position = position_dodge2(width = 0.75)) +
-    facet_grid(~ openheid_klasse) +
-    labs(fill = "Legende")
+  geom_boxplot(aes(fill = fill_var)) +
+  geom_label(
+    data = count_df_weidestreek2,
+    aes(y = max_openheid + 0.01, label = paste("n =", n)),
+    size = 3, position = position_dodge2(width = 0.75)
+  ) +
+  facet_grid(~openheid_klasse) +
+  labs(fill = "Legende")
 ```
 
 Als we naar longitude en latitude kijken, lijkt dit wel min of meer ok. Opnieuw is er voor OL buiten SBP niet zo'n goede match, maar dit is ook maar 1 punt dus het is onmogelijk een goede vergelijking te maken.
@@ -1577,21 +1710,25 @@ Als we naar longitude en latitude kijken, lijkt dit wel min of meer ok. Opnieuw 
 ```{r}
 balansvergelijking_weidestreek2 %>%
   ggplot(aes(x = sbp_akkervogels, y = X)) +
-    geom_boxplot(aes(fill = fill_var)) +
-    geom_label(data = count_df_weidestreek2,
-               aes(y = max_x + 2000, label = paste("n =", n)),
-               size = 3, position = position_dodge2(width = 0.75)) +
-    facet_grid(~ openheid_klasse) +
-    labs(fill = "Legende")
+  geom_boxplot(aes(fill = fill_var)) +
+  geom_label(
+    data = count_df_weidestreek2,
+    aes(y = max_x + 2000, label = paste("n =", n)),
+    size = 3, position = position_dodge2(width = 0.75)
+  ) +
+  facet_grid(~openheid_klasse) +
+  labs(fill = "Legende")
 ```
 
 ```{r}
 balansvergelijking_weidestreek2 %>%
   ggplot(aes(x = sbp_akkervogels, y = Y)) +
-    geom_boxplot(aes(fill = fill_var)) +
-    geom_label(data = count_df_weidestreek2,
-               aes(y = max_y + 2000, label = paste("n =", n)),
-               size = 3, position = position_dodge2(width = 0.75)) +
-    facet_grid(~ openheid_klasse) +
-    labs(fill = "Legende")
+  geom_boxplot(aes(fill = fill_var)) +
+  geom_label(
+    data = count_df_weidestreek2,
+    aes(y = max_y + 2000, label = paste("n =", n)),
+    size = 3, position = position_dodge2(width = 0.75)
+  ) +
+  facet_grid(~openheid_klasse) +
+  labs(fill = "Legende")
 ```
