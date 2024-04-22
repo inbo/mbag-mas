@@ -585,7 +585,8 @@ telcirkels_landgebruik <- lapply(punten, function(streek) {
 })
 
 # Classificatie landgebruik
-telcirkels_selectie_landgebruik <- lapply(telcirkels_landgebruik, function(streek) {
+telcirkels_selectie_landgebruik <- lapply(telcirkels_landgebruik,
+                                          function(streek) {
   punten_selectie_landgebruik(
     lum_extract_result = streek,
     legend_rast = read_legend_lum(file = path_to_legend_lum()),
@@ -780,7 +781,9 @@ names(plus_openheid_landschap) <- names(plus_sb)
 sbp_akkervogels_duinen <- read_sbp_akkervogels(
   path = path_to_sbp_akkervogels(file = "akkervogelgebieden2022.shp"),
   gebied = kleine_landbouwstreken$Duinen,
-  path_extra_soorten = path_to_sbp_akkervogels(file = "sbp_overige_soorten.shp"),
+  path_extra_soorten = path_to_sbp_akkervogels(
+    file = "sbp_overige_soorten.shp"
+    ),
   extra_soorten = c(
     "hamster", "bruine kiekendief", "zomertortel",
     "grauwe kiekendief"
