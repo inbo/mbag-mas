@@ -1213,11 +1213,12 @@ intersect %>%
 
 ```{r}
 # visualisatie
-mapview(oude_cirkels_buffer %>% filter(definitief_punt %in% intersect$definitief_punt),
-  col.regions = "red", layer = "bestaande punten"
+mapview(oude_cirkels_buffer %>%
+          filter(definitief_punt %in% intersect$definitief_punt),
+        col.regions = "red", layer = "bestaande punten"
 ) +
   mapview(cirkels_zandstreek %>% filter(pointid %in% intersect$pointid),
-    layer = "nieuwe punten"
+          layer = "nieuwe punten"
   )
 ```
 
@@ -1346,7 +1347,9 @@ zandstreek_avimap_df <- read_csv(file.path(
     "naam" = Naam,
     "pointid_from_targets" = pointid
   ) %>%
-  mutate(pointid = ifelse(is.na(vervanging_id), pointid_from_targets, vervanging_id))
+  mutate(pointid = ifelse(is.na(vervanging_id),
+                          pointid_from_targets,
+                          vervanging_id))
 
 zandstreek_avimap_sf <- st_as_sf(zandstreek_avimap_df,
   wkt = "WKT",

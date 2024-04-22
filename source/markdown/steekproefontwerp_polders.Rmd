@@ -1211,11 +1211,12 @@ intersect %>%
 
 ```{r}
 # visualisatie
-mapview(oude_cirkels_buffer %>% filter(definitief_punt %in% intersect$definitief_punt),
-  col.regions = "red", layer = "bestaande punten"
+mapview(oude_cirkels_buffer %>%
+          filter(definitief_punt %in% intersect$definitief_punt),
+        col.regions = "red", layer = "bestaande punten"
 ) +
   mapview(cirkels_polders %>% filter(pointid %in% intersect$pointid),
-    layer = "nieuwe punten"
+          layer = "nieuwe punten"
   )
 ```
 
@@ -1344,7 +1345,9 @@ polders_avimap_df <- read_csv(file.path(
     "naam" = Naam,
     "pointid_from_targets" = pointid
   ) %>%
-  mutate(pointid = ifelse(is.na(vervanging_id), pointid_from_targets, vervanging_id))
+  mutate(pointid = ifelse(is.na(vervanging_id),
+                          pointid_from_targets,
+                          vervanging_id))
 
 
 polders_avimap_sf <- st_as_sf(polders_avimap_df,

@@ -122,7 +122,10 @@ selectie_openheid_klasses <- lapply(kleine_landbouwstreken, function(streek) {
 ### Duinen
 
 ```{r}
-mapview(kleine_landbouwstreken$Duinen, color = "red", alpha.regions = 0, legend = FALSE) +
+mapview(kleine_landbouwstreken$Duinen,
+        color = "red",
+        alpha.regions = 0,
+        legend = FALSE) +
   mapview(openheid_sf$Duinen, zcol = "openheid", layer = "openheid")
 ```
 
@@ -150,7 +153,10 @@ openheid_sf$Duinen %>%
 ### Weidestreek
 
 ```{r}
-mapview(kleine_landbouwstreken$Weidestreek, color = "red", alpha.regions = 0, legend = FALSE) +
+mapview(kleine_landbouwstreken$Weidestreek,
+        color = "red",
+        alpha.regions = 0,
+        legend = FALSE) +
   mapview(openheid_sf$Weidestreek, zcol = "openheid", layer = "openheid")
 ```
 
@@ -783,7 +789,8 @@ sbp_akkervogels_duinen <- read_sbp_akkervogels(
 
 sbp_akkervogels_weidestreek <- read_sbp_others(
   path_to_sbp_akkervogels(file = "sbp_overige_soorten.shp"),
-  soorten = c("hamster", "bruine kiekendief", "zomertortel", "grauwe kiekendief"),
+  soorten = c("hamster", "bruine kiekendief",
+              "zomertortel", "grauwe kiekendief"),
   gebied = kleine_landbouwstreken$Weidestreek
 ) %>%
   summarise()
@@ -1244,11 +1251,13 @@ balansvergelijking_duinen <- steekproef_thinned$Duinen %>%
   filter(batch == "eerste set") %>%
   select_at(names(steekproefkader_finaal$Duinen)) %>%
   mutate(fill_var = "steekproef") %>%
-  bind_rows(steekproefkader_finaal$Duinen %>% mutate(fill_var = "steekproefkader")) %>%
+  bind_rows(steekproefkader_finaal$Duinen %>%
+              mutate(fill_var = "steekproefkader")) %>%
   mutate(sbp_akkervogels = ifelse(is_sbp, "binnen SBP", "buiten SBP")) %>%
   cbind(st_coordinates(.)) %>%
   st_drop_geometry() %>%
-  mutate(fill_var = factor(fill_var, levels = c("steekproefkader", "steekproef")))
+  mutate(fill_var = factor(fill_var,
+                           levels = c("steekproefkader", "steekproef")))
 
 count_df_duinen <- balansvergelijking_duinen %>%
   group_by(fill_var, openheid_klasse, sbp_akkervogels) %>%
@@ -1354,11 +1363,13 @@ balansvergelijking_weidestreek <- steekproef_thinned$Weidestreek %>%
   filter(batch == "eerste set") %>%
   select_at(names(steekproefkader_finaal$Weidestreek)) %>%
   mutate(fill_var = "steekproef") %>%
-  bind_rows(steekproefkader_finaal$Weidestreek %>% mutate(fill_var = "steekproefkader")) %>%
+  bind_rows(steekproefkader_finaal$Weidestreek %>%
+              mutate(fill_var = "steekproefkader")) %>%
   mutate(sbp_akkervogels = ifelse(is_sbp, "binnen SBP", "buiten SBP")) %>%
   cbind(st_coordinates(.)) %>%
   st_drop_geometry() %>%
-  mutate(fill_var = factor(fill_var, levels = c("steekproefkader", "steekproef")))
+  mutate(fill_var = factor(fill_var,
+                           levels = c("steekproefkader", "steekproef")))
 
 count_df_weidestreek <- balansvergelijking_weidestreek %>%
   group_by(fill_var, openheid_klasse, sbp_akkervogels) %>%
@@ -1447,7 +1458,7 @@ sizes <- 40:100
 ```
 
 De vervolgvraag stelt zich of we een grotere finale steekproef kunnen bekomen door geen reservepunten te voorzien.
-We analiseren groottes van `r min(sizes)` tot `r max(sizes)`.
+We analyseren groottes van `r min(sizes)` tot `r max(sizes)`.
 
 ```{r}
 calc_chisq <- function(observed, expected) {
@@ -1673,11 +1684,13 @@ steekproef_extended_thinned %>%
 balansvergelijking_weidestreek2 <- steekproef_extended_thinned %>%
   select_at(names(steekproefkader_finaal$Weidestreek)) %>%
   mutate(fill_var = "steekproef") %>%
-  bind_rows(steekproefkader_finaal$Weidestreek %>% mutate(fill_var = "steekproefkader")) %>%
+  bind_rows(steekproefkader_finaal$Weidestreek %>%
+              mutate(fill_var = "steekproefkader")) %>%
   mutate(sbp_akkervogels = ifelse(is_sbp, "binnen SBP", "buiten SBP")) %>%
   cbind(st_coordinates(.)) %>%
   st_drop_geometry() %>%
-  mutate(fill_var = factor(fill_var, levels = c("steekproefkader", "steekproef")))
+  mutate(fill_var = factor(fill_var,
+                           levels = c("steekproefkader", "steekproef")))
 
 count_df_weidestreek2 <- balansvergelijking_weidestreek2 %>%
   group_by(fill_var, openheid_klasse, sbp_akkervogels) %>%
