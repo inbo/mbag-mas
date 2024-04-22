@@ -7,17 +7,20 @@ roofvogels_f <- function() {
     "Buizerd",
     "Grauwe Kiekendief",
     "Havik",
+    "Kerkuil",
     "Ransuil",
     "Rode Wouw",
+    "Slangenarend",
     "Slechtvalk",
     "Smelleken",
     "Sperwer",
     "Steenuil",
     "Steppekiekendief",
     "Torenvalk",
-    "Vale Gier",
     "Velduil",
+    "Visarend",
     "Wespendief",
+    "Zeearend",
     "Zwarte Wouw")
 
   return(roofvogels)
