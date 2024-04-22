@@ -80,8 +80,9 @@ glimpse(pipelines)
 ```
 
 ```{r}
-# We select the pipeline with lowest accuracy (< 0.02), by filtering on accuracy.
-# If the grids are installed, this should match the first line of the pipelines object.
+# We select the pipeline with lowest accuracy (< 0.02), by filtering on accuracy
+# If the grids are installed, this should match the first line of the pipelines
+# object.
 chosen_pipeline_definition <- pipelines %>%
   filter(accuracy < 0.02) %>%
   pull(definition)
@@ -488,10 +489,10 @@ We lezen de gewichten van de strata in zodat we eventueel kunnen rekening houden
 
 ```{r}
 # Read in stratum weights sampling frame
-gewichten_oostelijke_leemstreek <- read_csv(
+gewichten_ol <- read_csv(
   here("data", "steekproefkaders", "gewichten_oostelijke_leemstreek.csv")
 )
-gewichten_westelijke_leemstreek <- read_csv(
+gewichten_wl <- read_csv(
   here("data", "steekproefkaders", "gewichten_westelijke_leemstreek.csv")
 )
 gewichten_zandleemstreek <- read_csv(
@@ -505,8 +506,8 @@ De som per landbouwstreek is dus 1.
 ```{r}
 # Group weigths for Leemstreek
 gewichten_mas_2023 <- bind_rows(
-  gewichten_oostelijke_leemstreek,
-  gewichten_westelijke_leemstreek,
+  gewichten_ol,
+  gewichten_wl,
   gewichten_zandleemstreek
 ) %>%
   mutate(landbouwstreek = ifelse(grepl("\\sleemstreek$", regio),
@@ -1500,7 +1501,8 @@ summary_zoogdieren_2023 <- mas_2023_zoogdieren %>%
   ) %>%
   arrange(regio, jaar, openheid_klasse, sbp)
 
-write_csv(summary_zoogdieren_2023, here(media_folder, "summary_zoogdieren_2023.csv"))
+write_csv(summary_zoogdieren_2023,
+          here(media_folder, "summary_zoogdieren_2023.csv"))
 
 summary_zoogdieren_2023 %>%
   kable()
