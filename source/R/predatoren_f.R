@@ -39,5 +39,5 @@ kraaiachtigen_f <- function() {
 }
 
 predatoren_f <- function() {
-  return(c(roofvogels, kraaiachtigen))
+  return(c(roofvogels_f(), kraaiachtigen_f()))
 }
