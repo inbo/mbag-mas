@@ -1,0 +1,29 @@
+..generic:
+  git2rdata: 0.4.0
+  optimize: yes
+  NA string: NA
+  sorting: pointid
+  hash: 6d2d0b66bf91c0223088af5770388ff36e75c07e
+  data_hash: eafbe899938ba81bc2f5edd6d686958ec7cf9fe8
+WKT:
+  class: character
+beslissing:
+  class: character
+vervanging_id:
+  class: character
+pointid_from_targets:
+  class: character
+naam:
+  class: character
+openheid_sbp:
+  class: character
+sample_order:
+  class: numeric
+batch:
+  class: character
+zichtbaarheid:
+  class: numeric
+wegtype:
+  class: character
+pointid:
+  class: character

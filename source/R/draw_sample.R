@@ -22,13 +22,18 @@
 #' @importFrom sf st_coordinates st_drop_geometry
 draw_sample <- function(
   sampling_frame,
-  sample_size = round(nrow(sampling_frame) / 20),
+  sample_size,
   sample_size_multiplication = 1,
   balance = c("X", "Y"),
   ips,
   seed = 1234,
   ...
 ) {
+  if (missing(sample_size)) {
+    sample_size <- ifelse(nrow(sampling_frame) < 2000,
+                          nrow(sampling_frame) / 5,
+                          nrow(sampling_frame) / 20)
+  }
 
   sample_size_extra <- sample_size * sample_size_multiplication
 
