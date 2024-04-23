@@ -34,6 +34,7 @@ mbag_dir <- rprojroot::find_root_file(
 
 # Source custom functions
 lapply(list.files(file.path(target_dir, "R"), full.names = TRUE), source)
+source(file.path(mbag_dir, "source", "R", "predatoren_f.R"))
 
 # Target list
 list(
