@@ -9,20 +9,19 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Verkrijg data via SOVON WFS service
+# Download data via SOVON WFS service
 ## QGIS v3.24
-### Stappenplan
 
 1.  een account aanmaken via <https://www.vogelatlas.be/user/newuser>
 
     1.   Rechten aanvragen Sovon
 
-2.  open QGIS
+1.  open QGIS
     
-    1. zet project crs op EPSG:28992
-    1. kies `Kaartlagen` --\> `Databronnen beheren` --\> `WFS / OGC API objecten`
+    1. Zet project crs op EPSG:28992
+    1. Kies `Kaartlagen` --\> `Databronnen beheren` --\> `WFS / OGC API objecten`
 
-3.  klik `nieuw` in het dialoogvenster om een nieuwe WFS verbinding te maken
+1.  klik `nieuw` in het dialoogvenster om een nieuwe WFS verbinding te maken
 
     1.   Gebruik als naam `sovon` en als url `https://portal.sovon.nl/views/wfs/453/`
     1.   Klik op OK
@@ -31,28 +30,27 @@ knitr::opts_chunk$set(echo = TRUE)
 
     1.   Klik op verbinden
     1.   Selecteer de laag `ms:viewpoints`
-         -  TIP: je kaan ook een query aanvragen, bv.: SELECT * FROM viewpoints WHERE jaar = 2023
-    1.   vink het boxje aan 'Alleen objecten bevragen die het huidige zichtbare bereik overlappen'
+         -  Vraag een query aan voor data van het nieuwe jaar, bv.: `SELECT * FROM viewpoints WHERE jaar = 2024`
+    1.   Vink het boxje aan 'Alleen objecten bevragen die het huidige zichtbare bereik overlappen'
     1.   Klik op toevoegen
     1.   Geef je gebruikersnaam en paswoord
-    1.   Indien QGIS vraagt voor transformatie van EPSG:28992 naar een ander CRS, kan je dit best cancellen.
+    1.   Indien QGIS vraagt voor transformatie van EPSG:28992 naar een ander CRS, kan je dit best cancellen
 
-Als alles goed gaat worden nu alle data waar je toegang toe hebt gekregen gedownload (dit kan even duren).
+Als alles goed gaat, worden nu alle data waar je toegang toe hebt gedownload (dit kan even duren).
 Dit zijn de zogenaamde bezoekstippen.
 
 ## QGIS v3.26
-### Stappenplan
 
 1.  een account aanmaken via <https://www.vogelatlas.be/user/newuser>
 
     1.   Rechten aanvragen Sovon
 
-2.  open QGIS
+1.  open QGIS
     
-    1. zet project crs op EPSG:28992
-    1. kies `Kaartlagen` --\> `Databronnen beheren` --\> `WFS / OGC API objecten`
+    1. Zet project crs op EPSG:28992
+    1. Kies `Kaartlagen` --\> `Databronnen beheren` --\> `WFS / OGC API objecten`
 
-3.  klik `nieuw` in het dialoogvenster om een nieuwe WFS verbinding te maken
+1.  klik `nieuw` in het dialoogvenster om een nieuwe WFS verbinding te maken
 
     1.   Gebruik als naam `sovon` en als url `https://portal.sovon.nl/views/wfs/453/`
     1.   Klik op OK
@@ -62,16 +60,16 @@ Dit zijn de zogenaamde bezoekstippen.
     1.   Klik op Verbinden
     1.   Geef je gebruikersnaam en paswoord en kik op ok
     1.   Selecteer de laag `ms:viewpoints`
-         -  TIP: je kaan ook een query aanvragen, bv.: SELECT * FROM viewpoints WHERE jaar = 2023
-    1.   vink het boxje aan 'Alleen objecten bevragen die het huidige zichtbare bereik overlappen'
+         -  Vraag een query aan voor data van het nieuwe jaar, bv.: `SELECT * FROM viewpoints WHERE jaar = 2024`
+    1.   Vink het boxje aan 'Alleen objecten bevragen die het huidige zichtbare bereik overlappen'
     1.   Wijzig Coördinaten Referentiesysteem naar EPSG:28992
     1.   Klik op toevoegen
-    1.   Indien QGIS vraagt voor transformatie van EPSG:28992 naar een ander CRS, kan je dit best cancellen.
+    1.   Indien QGIS vraagt voor transformatie van EPSG:28992 naar een ander CRS, kan je dit best cancellen
 
-Als alles goed gaat worden nu alle data waar je toegang toe hebt gekregen gedownload (dit kan even duren).
+Als alles goed gaat, worden nu alle data waar je toegang toe hebt gedownload (dit kan even duren).
 Dit zijn de zogenaamde bezoekstippen.
 
-# Downloaden en opslaan van de data
+# Exporteren en verwerking van de data
 
 Wanneer alle data gedownload zijn, kan je deze laag exporteren:
 
