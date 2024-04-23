@@ -95,6 +95,6 @@ Bij het toevoegen van een nieuwe dataset van een jaar, zal de pipeline bijgevolg
 De volledige pipeline ziet er als volgt uit:
 
 ```{r}
-targets::tar_visnetwork()
+targets::tar_glimpse()
 ```
 
