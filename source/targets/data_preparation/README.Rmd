@@ -84,3 +84,17 @@ Wanneer alle data gedownload zijn, kan je deze laag exporteren:
     Elke folder mag slechts 1 bestand hebben met de data van dat jaar (zie verder).
 
 # Verwerking van de data 
+
+We verwerken de data via een pipeline met de [targets package](https://books.ropensci.org/targets/).
+Dit omvat data selectie, preparatie en berekening van variabelen.
+
+We maken gebruik van ["dynamic branching"](https://books.ropensci.org/targets/dynamic.html) in de targets pipeline.
+Dit is een manier om nieuwe targets te definiëren terwijl de pipeline actief is.
+Hierbij wordt een nieuwe target gemaakt voor elk bestand.
+Bij het toevoegen van een nieuwe dataset van een jaar, zal de pipeline bijgevolg enkel de berekeningen voor de data van het nieuwe jaar moeten doen en niet opnieuw de berekeningen voor de vorige jaren.
+De volledige pipeline ziet er als volgt uit:
+
+```{r}
+targets::tar_visnetwork()
+```
+
