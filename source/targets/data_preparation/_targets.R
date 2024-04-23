@@ -38,24 +38,28 @@ source(file.path(mbag_dir, "source", "R", "predatoren_f.R"))
 
 # Target list
 list(
-  tarchetypes::tar_file(
-    name = mas_counts_sovon_file,
-    command = path_to_counts_sovon(
-      proj_path = mbag_dir,
-      file = "20230810_qgis_export_sovon_wfs_2023.geojson"
+  tarchetypes::tar_files(
+    name = mas_counts_sovon_files,
+    command = paths_to_counts_sovon(
+      proj_path = target_dir
     )
   ),
   tar_target(
     name = mas_counts_sovon,
     command = sf::st_read(
-      mas_counts_sovon_file
-    )
+      dsn = mas_counts_sovon_files,
+      quiet = TRUE
+    ),
+    pattern = map(mas_counts_sovon_files),
+    iteration = "list"
   ),
   tar_target(
     name = crs_pipeline,
     command = amersfoort_to_lambert72(
       mas_counts_sovon
-    )
+    ),
+    pattern = map(mas_counts_sovon),
+    iteration = "list"
   ),
   tarchetypes::tar_file(
     name = sample_file,
@@ -77,44 +81,65 @@ list(
       x = crs_pipeline,
       y = sample,
       by =  dplyr::join_by(plotnaam == pointid)
-    )
+    ),
+    pattern = map(crs_pipeline),
+    iteration = "list"
   ),
   tar_target(
     name = select_time_periods,
     command = select_within_time_periods(
       counts_df = select_sampled_points
-    )
+    ),
+    pattern = map(select_sampled_points),
+    iteration = "list"
   ),
   tar_target(
     name = select_within_radius,
     command = select_within_circle_radius(
       counts_df = select_time_periods,
       radius = 300
-    )
+    ),
+    pattern = map(select_time_periods),
+    iteration = "list"
   ),
   tar_target(
     name = select_species_groups,
     command = dplyr::filter(
       select_within_radius,
       soortgrp %in% 1:2
-    )
+    ),
+    pattern = map(select_within_radius),
+    iteration = "list"
   ),
   tar_target(
     name = remove_double_counts,
     command = process_double_counted_data(
       counts_df = select_species_groups
-    )
+    ),
+    pattern = map(select_species_groups),
+    iteration = "list"
   ),
   tar_target(
     name = remove_subspecies_names,
     command = adjust_subspecies_names_nl(
       counts_df = remove_double_counts
-    )
+    ),
+    pattern = map(remove_double_counts),
+    iteration = "list"
+  ),
+  tar_target(
+    name = add_predator_variable,
+    command = add_predator_variables(
+      counts_df = remove_subspecies_names
+    ),
+    pattern = map(remove_subspecies_names),
+    iteration = "list"
   ),
   tar_target(
     name = mas_data_clean,
-    command = add_predator_variables(
-      counts_df = remove_subspecies_names
+    command = do.call(
+      what = rbind.data.frame,
+      args = add_predator_variable
     )
   )
 )
