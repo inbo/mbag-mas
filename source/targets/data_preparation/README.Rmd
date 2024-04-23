@@ -69,11 +69,18 @@ Dit zijn de zogenaamde bezoekstippen.
 Als alles goed gaat, worden nu alle data waar je toegang toe hebt gedownload (dit kan even duren).
 Dit zijn de zogenaamde bezoekstippen.
 
-# Exporteren en verwerking van de data
+# Exporteren en localisatie van de data
 
 Wanneer alle data gedownload zijn, kan je deze laag exporteren:
 
 1.  Zorg dat alle data zichtbaar zijn in de view
 
-2.  Selecteer `Kaartlagen` --\> `Opslaan als ...` en sla op als `Geojson` (of `Geopackage`) met als bestandsnaam `<YYYYMMDD_qgis_export_sovon_wfs>` en CRS `EPSG:28992`.
+1.  Selecteer `Kaartlagen` --\> `Opslaan als ...` en sla op als `.geojson` met als bestandsnaam `<YYYYMMDD_qgis_export_sovon_wfs_JAAR>` en CRS `EPSG:28992`.
+    `YYYYMMDD` is de datum van export, `JAAR` is het jaar wanneer de data verzameld is, zie SQL query.
     Klik op OK (dit kan even duren).
+    Sla het geojson-bestand op in de folder `mbag-mas/data/mas`.
+    
+1.  De finale export die je wilt gebruiken voor data preparatie en latere analyses sla je op in een folder met als naam `JAAR` onder `C:/R/git_repositories/mbag-mas/source/targets/data_preparation/data`.
+    Elke folder mag slechts 1 bestand hebben met de data van dat jaar (zie verder).
+
+# Verwerking van de data 
