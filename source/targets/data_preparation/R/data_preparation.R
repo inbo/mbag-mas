@@ -119,3 +119,26 @@ adjust_subspecies_names_nl <- function(counts_df) {
 
   return(out_df)
 }
+
+# Add predator variables to dataframe
+add_predator_variables <- function(counts_df) {
+  require("dplyr")
+  require("rlang")
+
+  # Load predator species
+  predatoren <- predatoren_f()
+
+  out_df <- counts_df %>%
+    # Calculate number of predators per observation
+    mutate(predator = ifelse(.data$naam %in% predatoren, "ja", "nee"),
+           predator_num = ifelse(.data$naam %in% predatoren,
+                                 .data$aantal,
+                                 0)) %>%
+    # Calculate number of predators per location and time
+    group_by(.data$plotnaam, .data$jaar, .data$periode_in_jaar) %>%
+    mutate(n_predators_plot = sum(.data$predator_num)) %>%
+    ungroup() %>%
+    select(-c("predator_num"))
+
+  return(out_df)
+}
