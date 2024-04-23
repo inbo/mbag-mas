@@ -108,7 +108,13 @@ list(
   tar_target(
     name = remove_subspecies_names,
     command = adjust_subspecies_names_nl(
-      remove_double_counts
+      counts_df = remove_double_counts
+    )
+  ),
+  tar_target(
+    name = mas_data_clean,
+    command = add_predator_variables(
+      counts_df = remove_subspecies_names
     )
   )
 )
