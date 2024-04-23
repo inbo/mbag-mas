@@ -1,5 +1,9 @@
 # Select data within periods of time frames
 select_within_time_periods <- function(counts_df) {
+  require("dplyr")
+  require("rlang")
+  require("lubridate")
+
   # Define valid periods
   r1_start <- "04-01"
   r1_stop <- "04-20"
@@ -13,7 +17,7 @@ select_within_time_periods <- function(counts_df) {
   # Select count data within time periods
   out_df <- counts_df %>%
     mutate(
-      datum = ymd(paste(jaar, maand, dag, sep = "-")),
+      datum = ymd(paste(.data$jaar, .data$maand, .data$dag, sep = "-")),
       periode_in_jaar = case_when(
         datum %within% interval(
           ymd(paste(jaar, r1_start, sep = "-")),
@@ -33,35 +37,39 @@ select_within_time_periods <- function(counts_df) {
         ) ~ "R4"
       )
     ) %>%
-    filter(!is.na(periode_in_jaar))
+    filter(!is.na(.data$periode_in_jaar))
 
   return(out_df)
 }
 
 # Select data within circle radius
 select_within_circle_radius <- function(counts_df, radius = 300) {
+  require("dplyr")
+  require("rlang")
+  require("sf")
+
   # Create dataframe with geometry for each count location
   sampling_points <- counts_df %>%
     st_drop_geometry() %>%
-    distinct(plotnaam, regio, x_coord, y_coord) %>%
+    distinct(.data$plotnaam, .data$regio, .data$x_coord, .data$y_coord) %>%
     st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
     as_tibble() %>%
-    rename(geometry.point = geometry)
+    rename(geometry.point = "geometry")
 
   # Calculate distances between observation locations (geometry)
   # and count locations (geometry.point)
   # Select data within radius distance
   obs_to_point_distances <- counts_df %>%
-    full_join(sampling_points, by = join_by(plotnaam, regio)) %>%
+    full_join(sampling_points, by = join_by("plotnaam", "regio")) %>%
     mutate(
-      calc_distance = st_distance(.$geometry, .$geometry.point,
+      calc_distance = st_distance(.data$geometry, .data$geometry.point,
                                   by_element = TRUE
       ),
-      calc_distance = round(units::drop_units(calc_distance))
+      calc_distance = round(units::drop_units(.data$calc_distance))
     ) %>%
-    select(-c(distance2plot, geometry.point)) %>%
-    rename(distance2plot = calc_distance) %>%
-    filter(distance2plot <= radius)
+    select(-c("distance2plot", "geometry.point")) %>%
+    rename(distance2plot = "calc_distance") %>%
+    filter(.data$distance2plot <= radius)
 
   return(obs_to_point_distances)
 }
