@@ -41,4 +41,17 @@ source(file.path(mbag_dir, "src", "R", "steekproefkader.R"))
 source(file.path(mbag_dir, "src", "R", "berekening_hulpvariabelen.R"))
 ```
 
+# Doel
+
+We willen voor het MBAG project een duidelijk overzicht van het steekproefkader en de steekproef.
+Hiervoor schrijven we voor 4 (groepen van) bestanden weg (als CSV-bestanden):
+
+1.  steekproefkader
+
+2.  gewichten steekproefkader per landbouwregio
+
+3.  steekproef
+
+4.  finale steekproef na manuele controle (punten die effectief zijn geteld)
+
 
