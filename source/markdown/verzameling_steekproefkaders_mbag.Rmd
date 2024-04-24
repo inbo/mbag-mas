@@ -75,61 +75,48 @@ steekproef_avimap_mbag_piloot <- read.csv(
 
 ## Kempen, Polders & Zandstreek
 
-```{r}
-target_store_za_kp_po <- here::here(
-  "source", "targets", "mas_steekproef_za_kp_po", "_targets")
-```
-
 Inlezen en preparatie steekproefkader.
 
 ```{r}
-steekproefkader_za_kp_po_raw <- tar_read(
-  steekproefkader_finaal,
-  store = target_store_za_kp_po) %>%
-  reduce(rbind)
+steekproefkader_za_kp_po_raw <- git2rdata::read_vc(
+  file.path(
+    "source", "targets", "mas_steekproef_za_kp_po", "output", "steekproefkader")
+  )
 
 # Prepare final dataframe
 steekproefkader_za_kp_po <- steekproefkader_za_kp_po_raw %>%
   mutate(sbp = ifelse(is_sbp, "binnen", "buiten"),
-         crs = 31370,
-         x_coord = st_coordinates(geometry)[,1],
-         y_coord = st_coordinates(geometry)[,2]) %>%
-  select(pointid, regio = Naam, area_prop_sb, openheid_klasse, sbp, x_coord,
-         y_coord, crs) %>%
-  filter(openheid_klasse %in% c("OL", "HOL")) %>%
-  st_drop_geometry()
+         crs = 31370) %>%
+  select(pointid, regio = Naam, area_prop_sb, openheid_klasse, sbp, x_coord = X,
+         y_coord = Y, crs) %>%
+  filter(openheid_klasse %in% c("OL", "HOL"))
 ```
+
+Inlezen en preparatie steekproef.
 
 
 
 ## Weidestreek
 
-```{r}
-target_store_weidestreek <- here::here(
-  "source", "targets", "mas_steekproef_weidestreek", "_targets")
-```
-
 Inlezen en preparatie steekproefkader.
 
 ```{r}
-steekproefkader_weidestreek_raw <- tar_read(
-  steekproefkader_finaal,
-  store = target_store_weidestreek) %>%
-  reduce(rbind)
+steekproefkader_weidestreek_raw <- git2rdata::read_vc(
+  file.path(
+    "source", "targets", "mas_steekproef_weidestreek", "output", "steekproefkader")
+  )
 
 # Prepare final dataframe
 steekproefkader_weidestreek <- steekproefkader_weidestreek_raw %>%
   mutate(Naam = "Weidestreek",
          sbp = ifelse(is_sbp, "binnen", "buiten"),
-         crs = 31370,
-         x_coord = st_coordinates(geometry)[,1],
-         y_coord = st_coordinates(geometry)[,2]) %>%
-  select(pointid, regio = Naam, area_prop_sb, openheid_klasse, sbp, x_coord,
-         y_coord, crs) %>%
-  filter(openheid_klasse %in% c("OL", "HOL")) %>%
-  st_drop_geometry()
+         crs = 31370) %>%
+  select(pointid, regio = Naam, area_prop_sb, openheid_klasse, sbp, x_coord = X,
+         y_coord = Y, crs) %>%
+  filter(openheid_klasse %in% c("OL", "HOL"))
 ```
 
+Inlezen en preparatie steekproef.
 
 
 # Uitschrijven datasets
