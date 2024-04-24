@@ -24,11 +24,8 @@ knitr::opts_knit$set(
 
 ```{r}
 # Packages
-library(knitr)
 library(tidyverse)
 library(sf)
-library(nngeo)
-library(mapview)
 
 # Conflicting packages
 conflicted::conflicts_prefer(dplyr::filter)
@@ -37,8 +34,7 @@ conflicted::conflicts_prefer(dplyr::lag)
 
 # Source
 mbag_dir <- here::here()
-source(file.path(mbag_dir, "src", "R", "steekproefkader.R"))
-source(file.path(mbag_dir, "src", "R", "berekening_hulpvariabelen.R"))
+data_path <- file.path(mbag_dir, "data", "steekproefkaders")
 ```
 
 # Doel
@@ -57,7 +53,24 @@ Hiervoor schrijven we voor 4 (groepen van) bestanden weg (als CSV-bestanden):
 # Data selectie en preparatie
 ## Leemstreek & Zandleemstreek
 
-https://github.com/inbo/mas-piloot
+Meetnetontwerp voor deze regio's maakte deel uit van de MAS-pilootstudie.
+Data selectie en preparatie voor deze regio's werd reeds gedaan in dat project.
+De code vind je in [deze repository](https://github.com/inbo/mas-piloot).
+We lezen de CSV-bestanden in.
+
+```{r}
+# Load sampling frame
+steekproefkader_mbag_piloot <- read.csv(
+  file.path(data_path, "steekproefkader_mbag_piloot.csv"))
+
+# Load samples
+steekproef_mbag_piloot <- read.csv(
+  file.path(data_path, "steekproef_mbag_piloot.csv"))
+
+# Load final samples
+steekproef_avimap_mbag_piloot <- read.csv(
+  file.path(data_path, "steekproef_avimap_mbag_piloot.csv"))
+```
 
 ## Kempen, Polders & Zandstreek
 
