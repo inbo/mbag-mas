@@ -39,7 +39,7 @@ knitr::opts_chunk$set(echo = TRUE)
 Als alles goed gaat, worden nu alle data waar je toegang toe hebt gedownload (dit kan even duren).
 Dit zijn de zogenaamde bezoekstippen.
 
-## QGIS v3.26
+## QGIS v3.26-3.28
 
 1.  een account aanmaken via <https://www.vogelatlas.be/user/newuser>
 
