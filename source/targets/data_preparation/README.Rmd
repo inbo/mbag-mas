@@ -30,7 +30,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
     1.   Klik op verbinden
     1.   Selecteer de laag `ms:viewpoints`
-         -  Vraag een query aan voor data van het nieuwe jaar, bv.: `SELECT * FROM viewpoints WHERE jaar = 2024`
+         -  Vraag een query aan ('Query maken') voor data van het nieuwe jaar, bv.: `SELECT * FROM viewpoints WHERE jaar = 2024`
     1.   Vink het boxje aan 'Alleen objecten bevragen die het huidige zichtbare bereik overlappen'
     1.   Klik op toevoegen
     1.   Geef je gebruikersnaam en paswoord
@@ -60,7 +60,7 @@ Dit zijn de zogenaamde bezoekstippen.
     1.   Klik op Verbinden
     1.   Geef je gebruikersnaam en paswoord en kik op ok
     1.   Selecteer de laag `ms:viewpoints`
-         -  Vraag een query aan voor data van het nieuwe jaar, bv.: `SELECT * FROM viewpoints WHERE jaar = 2024`
+         -  Vraag een query aan ('Query maken') voor data van het nieuwe jaar, bv.: `SELECT * FROM viewpoints WHERE jaar = 2024`
     1.   Vink het boxje aan 'Alleen objecten bevragen die het huidige zichtbare bereik overlappen'
     1.   Wijzig Coördinaten Referentiesysteem naar EPSG:28992
     1.   Klik op toevoegen
@@ -80,7 +80,7 @@ Wanneer alle data gedownload zijn, kan je deze laag exporteren:
     Klik op OK (dit kan even duren).
     Sla het geojson-bestand op in de folder `mbag-mas/data/mas`.
     
-1.  De finale export die je wilt gebruiken voor data preparatie en latere analyses sla je op in een folder met als naam `JAAR` onder `C:/R/git_repositories/mbag-mas/source/targets/data_preparation/data`.
+1.  De finale export die je wilt gebruiken voor data preparatie en latere analyses sla je op in een folder met als naam `JAAR` onder `mbag-mas/source/targets/data_preparation/data`.
     Elke folder mag slechts 1 bestand hebben met de data van dat jaar (zie verder).
 
 # Verwerking van de data 
@@ -97,4 +97,3 @@ De volledige pipeline ziet er als volgt uit:
 ```{r}
 targets::tar_glimpse()
 ```
-
