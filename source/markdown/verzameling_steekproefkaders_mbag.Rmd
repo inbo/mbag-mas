@@ -94,6 +94,23 @@ steekproefkader_za_kp_po <- steekproefkader_za_kp_po_raw %>%
 
 Inlezen en preparatie steekproef.
 
+```{r}
+steekproef_za_kp_po_raw <- git2rdata::read_vc(
+  file.path(
+    "source", "targets", "mas_steekproef_za_kp_po", "output", "steekproef")
+  )
+
+# Prepare final dataframe
+steekproef_za_kp_po <- steekproef_za_kp_po_raw %>%
+  st_drop_geometry() %>%
+  mutate(sbp = ifelse(is_sbp, "binnen", "buiten"),
+         crs = 31370) %>%
+  select(pointid, sample_order, batch, regio = Naam, area_prop_sb,
+         openheid_klasse, sbp, x_coord = X, y_coord = Y, crs)
+```
+
+Inlezen en preparatie finale punten die in avimap zijn ingevoerd.
+
 
 
 ## Weidestreek
@@ -117,6 +134,25 @@ steekproefkader_weidestreek <- steekproefkader_weidestreek_raw %>%
 ```
 
 Inlezen en preparatie steekproef.
+
+```{r}
+steekproef_weidestreek_raw <- git2rdata::read_vc(
+  file.path(
+    "source", "targets", "mas_steekproef_weidestreek", "output", "steekproef")
+  )
+
+# Prepare final dataframe
+steekproef_weidestreek <- steekproef_weidestreek_raw %>%
+  st_drop_geometry() %>%
+  mutate(Naam = "Weidestreek",
+         sbp = ifelse(is_sbp, "binnen", "buiten"),
+         crs = 31370) %>%
+  select(pointid, sample_order, batch, regio = Naam, area_prop_sb,
+         openheid_klasse, sbp, x_coord = X, y_coord = Y, crs)
+```
+
+Inlezen en preparatie finale punten die in avimap zijn ingevoerd.
+
 
 
 # Uitschrijven datasets
