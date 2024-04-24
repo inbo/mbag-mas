@@ -1,7 +1,15 @@
-# Path to raw data from SOVON
-path_to_counts_sovon <- function(proj_path, file) {
-  file_path <- file.path(proj_path, "data", "mas", file)
-  return(file_path)
+# Paths to raw data from SOVON
+paths_to_counts_sovon <- function(
+    proj_path,
+    pattern = "qgis_export_sovon_wfs") {
+  # List paths to all files
+  file_paths <- list.files(
+    file.path(proj_path, "data"),
+    pattern = pattern,
+    full.names = TRUE,
+    recursive = TRUE)
+
+  return(file_paths)
 }
 
 # Path to counting locations

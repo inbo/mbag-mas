@@ -1,0 +1,99 @@
+---
+title: "Procedure om data te downloaden van de SOVON WFS service en verwerking via targets pipeline"
+author: "Hans Van Calster & Ward Langeraert"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Download data via SOVON WFS service
+## QGIS v3.24
+
+1.  een account aanmaken via <https://www.vogelatlas.be/user/newuser>
+
+    1.   Rechten aanvragen Sovon
+
+1.  open QGIS
+    
+    1. Zet project crs op EPSG:28992
+    1. Kies `Kaartlagen` --\> `Databronnen beheren` --\> `WFS / OGC API objecten`
+
+1.  klik `nieuw` in het dialoogvenster om een nieuwe WFS verbinding te maken
+
+    1.   Gebruik als naam `sovon` en als url `https://portal.sovon.nl/views/wfs/453/`
+    1.   Klik op OK
+
+1.  Maak een verbinding met de zopas toegevoegde WFS service
+
+    1.   Klik op verbinden
+    1.   Selecteer de laag `ms:viewpoints`
+         -  Vraag een query aan ('Query maken') voor data van het nieuwe jaar, bv.: `SELECT * FROM viewpoints WHERE jaar = 2024`
+    1.   Vink het boxje aan 'Alleen objecten bevragen die het huidige zichtbare bereik overlappen'
+    1.   Klik op toevoegen
+    1.   Geef je gebruikersnaam en paswoord
+    1.   Indien QGIS vraagt voor transformatie van EPSG:28992 naar een ander CRS, kan je dit best cancellen
+
+Als alles goed gaat, worden nu alle data waar je toegang toe hebt gedownload (dit kan even duren).
+Dit zijn de zogenaamde bezoekstippen.
+
+## QGIS v3.26-3.28
+
+1.  een account aanmaken via <https://www.vogelatlas.be/user/newuser>
+
+    1.   Rechten aanvragen Sovon
+
+1.  open QGIS
+    
+    1. Zet project crs op EPSG:28992
+    1. Kies `Kaartlagen` --\> `Databronnen beheren` --\> `WFS / OGC API objecten`
+
+1.  klik `nieuw` in het dialoogvenster om een nieuwe WFS verbinding te maken
+
+    1.   Gebruik als naam `sovon` en als url `https://portal.sovon.nl/views/wfs/453/`
+    1.   Klik op OK
+
+1.  Maak een verbinding met de zopas toegevoegde WFS service
+
+    1.   Klik op Verbinden
+    1.   Geef je gebruikersnaam en paswoord en kik op ok
+    1.   Selecteer de laag `ms:viewpoints`
+         -  Vraag een query aan ('Query maken') voor data van het nieuwe jaar, bv.: `SELECT * FROM viewpoints WHERE jaar = 2024`
+    1.   Vink het boxje aan 'Alleen objecten bevragen die het huidige zichtbare bereik overlappen'
+    1.   Wijzig Coördinaten Referentiesysteem naar EPSG:28992
+    1.   Klik op toevoegen
+    1.   Indien QGIS vraagt voor transformatie van EPSG:28992 naar een ander CRS, kan je dit best cancellen
+
+Als alles goed gaat, worden nu alle data waar je toegang toe hebt gedownload (dit kan even duren).
+Dit zijn de zogenaamde bezoekstippen.
+
+# Exporteren en localisatie van de data
+
+Wanneer alle data gedownload zijn, kan je deze laag exporteren:
+
+1.  Zorg dat alle data zichtbaar zijn in de view
+
+1.  Selecteer `Kaartlagen` --\> `Opslaan als ...` en sla op als `.geojson` met als bestandsnaam `<YYYYMMDD_qgis_export_sovon_wfs_JAAR>` en CRS `EPSG:28992`.
+    `YYYYMMDD` is de datum van export, `JAAR` is het jaar wanneer de data verzameld is, zie SQL query.
+    Klik op OK (dit kan even duren).
+    Sla het geojson-bestand op in de folder `mbag-mas/data/mas`.
+    
+1.  De finale export die je wilt gebruiken voor data preparatie en latere analyses sla je op in een folder met als naam `JAAR` onder `mbag-mas/source/targets/data_preparation/data`.
+    Elke folder mag slechts 1 bestand hebben met de data van dat jaar (zie verder).
+
+# Verwerking van de data 
+
+We verwerken de data via een pipeline met de [targets package](https://books.ropensci.org/targets/).
+Dit omvat data selectie, preparatie en berekening van variabelen.
+
+We maken gebruik van ["dynamic branching"](https://books.ropensci.org/targets/dynamic.html) in de targets pipeline.
+Dit is een manier om nieuwe targets te definiëren terwijl de pipeline actief is.
+Hierbij wordt een nieuwe target gemaakt voor elk bestand.
+Bij het toevoegen van een nieuwe dataset van een jaar, zal de pipeline bijgevolg enkel de berekeningen voor de data van het nieuwe jaar moeten doen en niet opnieuw de berekeningen voor de vorige jaren.
+De volledige pipeline ziet er als volgt uit:
+
+```{r}
+targets::tar_glimpse()
+```
