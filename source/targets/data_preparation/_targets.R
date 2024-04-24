@@ -139,7 +139,7 @@ list(
     name = mas_data_clean,
     command = do.call(
       what = rbind.data.frame,
-      args = add_predator_variable
+      args = c(add_predator_variable, make.row.names = FALSE)
     )
   )
 )
