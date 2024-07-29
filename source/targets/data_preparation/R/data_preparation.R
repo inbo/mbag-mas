@@ -143,6 +143,7 @@ add_predator_variables <- function(counts_df) {
   return(out_df)
 }
 
+# Remove redundant columns
 remove_columns <- function(data_sf) {
   require(dplyr)
 
