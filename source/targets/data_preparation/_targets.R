@@ -136,10 +136,14 @@ list(
     iteration = "list"
   ),
   tar_target(
-    name = mas_data_clean,
+    name = mas_data_full,
     command = do.call(
       what = rbind.data.frame,
       args = c(add_predator_variable, make.row.names = FALSE)
     )
+  ),
+  tar_target(
+    name = mas_data_clean,
+    command = remove_columns(mas_data_full)
   )
 )

@@ -142,3 +142,20 @@ add_predator_variables <- function(counts_df) {
 
   return(out_df)
 }
+
+remove_columns <- function(data_sf) {
+  require(dplyr)
+
+  # Remove columns with all NA
+  out_sf <- data_sf[, colSums(is.na(data_sf)) < nrow(data_sf)]
+
+  # Remove redundant columns
+  out_sf <- out_sf %>%
+    dplyr::select(
+      -"broedcode",
+      -"periode",
+      -"periodeid")
+
+  return(out_sf)
+}
+
