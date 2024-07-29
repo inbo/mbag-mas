@@ -45,7 +45,7 @@ Voorlopig werken we met dit document tot we de finale workflow voor publicatie a
 
 # Darwin Core mapping
 
-We standardiseren de kolommen o.b.v. [Darwin Core-termen](https://dwc.tdwg.org/terms/).
+We standaardiseren de kolommen o.b.v. [Darwin Core-termen](https://dwc.tdwg.org/terms/).
 
 ## Data preparatie
 
@@ -221,7 +221,7 @@ taxon_core <- taxon_core %>%
 
 **Vragen**
 
-- We kunnen ook afwezigheiden toevoegen (`dwc_occurrenceStatus = "absent"` en `dwc_individualCount = 0`) aangezien alle vogels worden genoteerd op het moment van tellen vanaf dat telpunt. Hoe doen we dit?
+- We kunnen ook afwezigheden toevoegen (`dwc_occurrenceStatus = "absent"` en `dwc_individualCount = 0`) aangezien alle vogels worden genoteerd op het moment van tellen vanaf dat telpunt. Hoe doen we dit?
   - We kijken per jaar naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten per jaar. *Voordeel:* geen verandering als er data van een nieuw jaar bijkomt. *Nadeel:* niet volledig aangezien deze lijst niet volledig is.
   - We kijken over de hele dataset naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten. *Voordeel:* steeds meer volledige lijst van soorten. *Nadeel:* dataset zal elk jaar veranderen.
   - Afwezigheden toevoegen o.b.v. externe lijst?
