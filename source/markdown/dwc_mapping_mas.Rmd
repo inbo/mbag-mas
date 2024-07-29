@@ -1,0 +1,20 @@
+---
+title: "Darwin Core mapping MAS data"
+author: "Ward Langeraert"
+date: "`r Sys.Date()`"
+output:
+  bookdown::html_document2:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+editor_options: 
+  chunk_output_type: console
+---
+
+# Doel
+
+# Werkwijze
+
+# Darwin Core mapping
+
