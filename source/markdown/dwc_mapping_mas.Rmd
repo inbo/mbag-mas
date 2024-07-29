@@ -4,7 +4,7 @@ author: "Ward Langeraert"
 date: "`r Sys.Date()`"
 output:
   bookdown::html_document2:
-    code_folding: hide
+    code_folding: show
     toc: true
     toc_float: true
     toc_collapsed: true
@@ -58,6 +58,17 @@ raw_data <- tar_read(mas_data_clean, store = targets_store)
 glimpse(raw_data)
 ```
 
+We verwijderen kolommen gerelateerd aan de steekproef.
+
+```{r}
+raw_data <- raw_data %>%
+  select(
+    -"batch",
+    -"sample_order"
+  )
+```
+
+
 We passen de kolomnamen aan en nemen een kopie van de data.
 
 ```{r}
@@ -66,7 +77,7 @@ colnames(raw_data) <- paste0("raw_", colnames(raw_data))
 st_geometry(raw_data) <- "raw_geometry"
 
 # Generate taxon core by making a copy of raw_data
-taxon_core <- raw_data 
+taxon_core <- raw_data
 ```
 
 ## Ruimtelijke verwerking
@@ -111,7 +122,7 @@ taxon_core <- taxon_core %>%
   mutate(
     #dwc_type                = "Event",
     #dwc_datasetID           = "insert doi",
-    dwc_language             = "nl",
+    dwc_language             = "en",
     dwc_license              = paste0("http://creativecommons.org/publicdomain",
                                       "/zero/1.0/"),
     dwc_rightsHolder         = "INBO",
@@ -139,7 +150,7 @@ taxon_core <- taxon_core %>%
   - `dwc_datasetID`
   - `dwc_datasetName`
   - `dwc_samplingProtocol`
-- Is `dwc_language = "nl"` ok?
+- Is `dwc_language = "en"` ok?
 - Is `dwc_eventType = "Survey"` ok?
 
 ## Ongewijzigde waarden
@@ -149,28 +160,32 @@ Ongewijzigde waarden worden gebruikt voor Darwin Core-termen waarvan de inhoud e
 ```{r}
 taxon_core <- taxon_core %>%
   rename(
-    "dwc_vernacularName"   = "raw_naam",
-    "dwc_eventDate"        = "raw_datum",
-    "dwc_year"             = "raw_jaar",
-    "dwc_month"            = "raw_maand",
-    "dwc_day"              = "raw_dag",
-    "dwc_recordedBy"       = "raw_waarnemer",
-    "dwc_individualCount"  = "raw_aantal",
-    "dwc_locationID"       = "raw_plotnaam",
-    "dwc_varbatimBehavior" = "raw_wrntype_omschrijving"
+    "dwc_vernacularName"    = "raw_naam",
+    "dwc_eventDate"         = "raw_datum",
+    "dwc_year"              = "raw_jaar",
+    "dwc_month"             = "raw_maand",
+    "dwc_day"               = "raw_dag",
+    "dwc_recordedBy"        = "raw_waarnemer",
+    "dwc_individualCount"   = "raw_aantal",
+    "dwc_locationID"        = "raw_plotnaam",
+    "dwc_varbatimBehavior"  = "raw_wrntype_omschrijving",
+    "dwc_occurrenceRemarks" = "raw_opmerk",
+    "dwctaxonID"            = "raw_soortnr"
   )
 ```
 
 **Vragen**
 
 -  Ok dat `dwc_varbatimBehavior` de Nederlandstalige beschrijving is? De Engelstalige beschrijving wordt in de volgende sectie onder `dwc_behavior` aangemaakt. Of mag de Nederlandse beschrijving dan weg?
+-  Is `raw_soortnr` SOVON specifiek?
 
 ## Gewijzigde waarden
 
 Gewijzigde waarden worden gebruikt voor Darwin Core-termen waarvoor de inhoud in `raw_data` als basis wordt gebruikt, maar deze moet worden gestandaardiseerd. Dit geldt voor Darwin Core-termen waarvoor we een vocabulaire gebruiken of waar we willen transformeren voor de duidelijkheid of om duidelijke fouten te corrigeren.
 
 - We creëren een `dwc_occurrenceID` en een `dwc_occurrenceID`
-- We voegen `dwc_class` toe o.b.v. de `soortgrp
+- We voegen `dwc_class` toe o.b.v. de `soortgrp`
+- We voegen `dwc_occurrenceStatus` toe o.b.v. de `dwc_individualCount` 
 - We voegen `dwc_behavior` toe als Engelse vertaling van `dwc_varbatimBehavior`
 
 ```{r}
@@ -181,6 +196,8 @@ taxon_core <- taxon_core %>%
                          .data$dwc_eventDate,
                          .data$dwc_locationID),
     dwc_class = ifelse(.data$raw_soortgrp == 2, "Aves", "Mammalia"),
+    dwc_occurrenceStatus = ifelse(.data$dwc_individualCount > 0,
+                                  "Present", "Absent"),
     dwc_behavior = case_when(
       .data$dwc_varbatimBehavior == "Territoriaal gedrag" ~
         "Teritorial behaviour",
@@ -196,15 +213,56 @@ taxon_core <- taxon_core %>%
         "Pair in breeding habitat"
   )) %>%
   select(
+    -"raw_oid",
     -"raw_soortgrp",
     -"raw_wrntype"
   )
 ```
 
+**Vragen**
+
+- We kunnen ook afwezigheiden toevoegen (`dwc_occurrenceStatus = "absent"` en `dwc_individualCount = 0`) aangezien alle vogels worden genoteerd op het moment van tellen vanaf dat telpunt. Hoe doen we dit?
+  - We kijken per jaar naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten per jaar. *Voordeel:* geen verandering als er data van een nieuw jaar bijkomt. *Nadeel:* niet volledig aangezien deze lijst niet volledig is.
+  - We kijken over de hele dataset naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten. *Voordeel:* steeds meer volledige lijst van soorten. *Nadeel:* dataset zal elk jaar veranderen.
+  - Afwezigheden toevoegen o.b.v. externe lijst?
+  - ...
+
+# Conclusie
+## Opmerkingen
+
+De volgende kolommen van `raw_data` blijven over:
 
 ```{r}
-# Presence absence data
-taxon_core <- taxon_core
-# pivot add zeroes dwc_individualCount = ifelse(dwc_individualCount > 0, "Present", "Absent")
+sort(colnames(taxon_core)[grepl("^raw\\_", colnames(taxon_core))])
 ```
 
+- Locaties telpunten ook in dataset (`raw_x_coord`, `raw_y_coord`, `raw_crs`) --> Event versus occurrence dataset opsplitsen?
+- Afstand tot telpunt: `raw_distance2plot` --> welke term?
+- Zijn variabelen relevant om mee te geven?
+  - `raw_area_prop_sb` --> Overlap steekproefkader zenodo?
+  - `raw_sbp` --> Overlap steekproefkader zenodo?
+  - `raw_openheid_klasse` --> Overlap steekproefkader zenodo?
+  - `raw_regio` --> Overlap steekproefkader zenodo?
+  - `raw_predator`, `raw_n_predators_plot`: achteraf berekend, is de soort een predator of niet
+  - `raw_periode_in_jaar`: 1 van 4 telperiodes
+  - `raw_status_teller`: is de waarnemer een professional of een vrijwilliger?
+- Kan hier nog iets mee gedaan worden?
+  - `raw_doy`: day of year sinds januari
+  - `raw_plotid`: we gebruiken eigenlijk altijd plotnaam
+  - `raw_projectid`: is dit INBO of SOVON gerelateerd?
+
+Zo ziet de dataset er voorlopig uit:
+
+```{r}
+taxon_core_final <- taxon_core %>%
+  select(-starts_with("raw_")) %>%
+  rename_with(~ gsub("dwc\\_", "", .x))
+
+taxon_core_final %>%
+  glimpse()
+```
+
+## To do
+
+- Volgorde van de kolommen aanpassen
+- Hoe kunnen we de wetenschappelijke namen bekomen?
