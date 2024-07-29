@@ -63,6 +63,7 @@ We passen de kolomnamen aan en nemen een kopie van de data.
 ```{r}
 # Add prefix `raw_` to the column names of `raw_data`
 colnames(raw_data) <- paste0("raw_", colnames(raw_data))
+st_geometry(raw_data) <- "raw_geometry"
 
 # Generate taxon core by making a copy of raw_data
 taxon_core <- raw_data 
@@ -77,20 +78,26 @@ taxon_core <- raw_data
 ```{r}
 taxon_core <- taxon_core %>%
   # Remove Amersfoord coordinates
-  select(-"x_amersfoord", -"y_amersfoord") %>%
+  select(
+    -"raw_x_amersfoord",
+    -"raw_y_amersfoord"
+  ) %>%
   # Keep original X, Y as verbatim coordinates
   rename(
-    "dwc_verbatimLatitude" = "y_lambert",
-    "dwc_verbatimLongitude" = "x_lambert") %>%
+    "dwc_verbatimLatitude" = "raw_y_lambert",
+    "dwc_verbatimLongitude" = "raw_x_lambert"
+  ) %>%
   mutate(
     dwc_verbatimCoordinateSystem = "BD72 / Belgian Lambert 72",
-    dwc_verbatimSRS = "EPSG:31370") %>%
+    dwc_verbatimSRS = "EPSG:31370"
+  ) %>%
   # Convert to WGS 84 decimal coordinates
   st_transform(4326) %>%
   mutate(
-    dwc_decimalLatitude = round(st_coordinates(.data$geometry)[, 2], 5),
-    dwc_decimalLongitude = round(st_coordinates(.data$geometry)[, 1], 5),
-    dwc_geodeticDatum = "EPSG:4326") %>%
+    dwc_decimalLatitude = round(st_coordinates(.data$raw_geometry)[, 2], 5),
+    dwc_decimalLongitude = round(st_coordinates(.data$raw_geometry)[, 1], 5),
+    dwc_geodeticDatum = "EPSG:4326"
+  ) %>%
   st_drop_geometry()
 ```
 
@@ -102,25 +109,26 @@ Meestal ontbreken ze in `raw_data`.
 ```{r}
 taxon_core <- taxon_core %>%
   mutate(
-    #dwc_type = "Event",
-    #dwc_datasetID = "insert doi",
-    dwc_language = "nl",
-    dwc_license = "http://creativecommons.org/publicdomain/zero/1.0/",
-    dwc_rightsHolder = "INBO",
-    dwc_accessRights = "http://www.inbo.be/en/norms-for-data-use",
-    dwc_institutionCode = "INBO",
-    #dwc_datasetName = "name",
+    #dwc_type                = "Event",
+    #dwc_datasetID           = "insert doi",
+    dwc_language             = "nl",
+    dwc_license              = paste0("http://creativecommons.org/publicdomain",
+                                      "/zero/1.0/"),
+    dwc_rightsHolder         = "INBO",
+    dwc_accessRights         = "http://www.inbo.be/en/norms-for-data-use",
+    dwc_institutionCode      = "INBO",
+    #dwc_datasetName         = "name",
     dwc_ownerInstitutionCode = "INBO",
-    dwc_kingdom = "Animalia",
-    dwc_nomenclaturalCode = "ICZN",
-    dwc_taxonRank = "species",
-    dwc_eventType = "Survey",
-    #dwc_samplingProtocol = "...",
-    dwc_continent = "Europe",
-    dwc_country = "Belgium",
-    dwc_stateProvince = "Flanders",
-    dwc_countryCode = "BE",
-    dwc_basisOfRecord = "HumanObservation"
+    dwc_kingdom              = "Animalia",
+    dwc_nomenclaturalCode    = "ICZN",
+    dwc_taxonRank            = "species",
+    dwc_eventType            = "Survey",
+    #dwc_samplingProtocol    = "...",
+    dwc_continent            = "Europe",
+    dwc_country              = "Belgium",
+    dwc_stateProvince        = "Flanders",
+    dwc_countryCode          = "BE",
+    dwc_basisOfRecord        = "HumanObservation"
   )
 ```
 
@@ -132,22 +140,24 @@ taxon_core <- taxon_core %>%
   - `dwc_datasetName`
   - `dwc_samplingProtocol`
 - Is `dwc_language = "nl"` ok?
+- Is `dwc_eventType = "Survey"` ok?
 
 ## Ongewijzigde waarden
+
 Ongewijzigde waarden worden gebruikt voor Darwin Core-termen waarvan de inhoud een exacte kopie is van het overeenkomstige veld in `raw_data`.
 
 ```{r}
 taxon_core <- taxon_core %>%
   rename(
-    "dwc_vernacularName"   = "naam",
-    "dwc_eventDate"        = "datum",
-    "dwc_year"             = "jaar",
-    "dwc_month"            = "maand",
-    "dwc_day"              = "dag",
-    "dwc_recordedBy"       = "waarnemer",
-    "dwc_individualCount"  = "aantal",
-    "dwc_locationID"       = "plotnaam",
-    "dwc_varbatimBehavior" = "wrntype_omschrijving"
+    "dwc_vernacularName"   = "raw_naam",
+    "dwc_eventDate"        = "raw_datum",
+    "dwc_year"             = "raw_jaar",
+    "dwc_month"            = "raw_maand",
+    "dwc_day"              = "raw_dag",
+    "dwc_recordedBy"       = "raw_waarnemer",
+    "dwc_individualCount"  = "raw_aantal",
+    "dwc_locationID"       = "raw_plotnaam",
+    "dwc_varbatimBehavior" = "raw_wrntype_omschrijving"
   )
 ```
 
@@ -155,14 +165,22 @@ taxon_core <- taxon_core %>%
 
 -  Ok dat `dwc_varbatimBehavior` de Nederlandstalige beschrijving is? De Engelstalige beschrijving wordt in de volgende sectie onder `dwc_behavior` aangemaakt. Of mag de Nederlandse beschrijving dan weg?
 
-## Aangepaste waarden
+## Gewijzigde waarden
+
+Gewijzigde waarden worden gebruikt voor Darwin Core-termen waarvoor de inhoud in `raw_data` als basis wordt gebruikt, maar deze moet worden gestandaardiseerd. Dit geldt voor Darwin Core-termen waarvoor we een vocabulaire gebruiken of waar we willen transformeren voor de duidelijkheid of om duidelijke fouten te corrigeren.
+
+- We creëren een `dwc_occurrenceID` en een `dwc_occurrenceID`
+- We voegen `dwc_class` toe o.b.v. de `soortgrp
+- We voegen `dwc_behavior` toe als Engelse vertaling van `dwc_varbatimBehavior`
 
 ```{r}
 taxon_core <- taxon_core %>%
   mutate(
-    dwc_occurrenceID = paste0("MBAG:MAS:", oid),
-    dwc_eventID = paste0("MBAG:MAS:", dwc_eventDate, dwc_locationID),
-    dwc_class = ifelse(.data$soortgrp == 2, "Aves", "Mammalia"),
+    dwc_occurrenceID = paste0("MBAG:MAS:", .data$raw_oid),
+    dwc_eventID = paste0("MBAG:MAS:",
+                         .data$dwc_eventDate,
+                         .data$dwc_locationID),
+    dwc_class = ifelse(.data$raw_soortgrp == 2, "Aves", "Mammalia"),
     dwc_behavior = case_when(
       .data$dwc_varbatimBehavior == "Territoriaal gedrag" ~
         "Teritorial behaviour",
@@ -176,10 +194,15 @@ taxon_core <- taxon_core %>%
         "Nest-indicating behaviour",
       .data$dwc_varbatimBehavior == "Paar in broedbiotoop" ~
         "Pair in breeding habitat"
-    )) %>%
-  select(-"soortgrp",
-         -"wrntype")
+  )) %>%
+  select(
+    -"raw_soortgrp",
+    -"raw_wrntype"
+  )
+```
 
+
+```{r}
 # Presence absence data
 taxon_core <- taxon_core
 # pivot add zeroes dwc_individualCount = ifelse(dwc_individualCount > 0, "Present", "Absent")
