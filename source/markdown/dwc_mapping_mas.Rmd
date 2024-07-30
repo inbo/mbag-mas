@@ -237,8 +237,15 @@ taxon_core <- taxon_core %>%
 # Nabewerking
 ## Taxon matching
 
-- soortcodes zijn avimapcodes
-- "Voor de latijnse namen is het iets moeilijker, je kan hier een gist van Damiano checken. https://gist.github.com/damianooldoni/3fa9cc1ffa67377a9757df097d48d19f"
+De soortcodes in `dwctaxonID` zijn avimapcodes.
+We moeten matchen op de Nederlandstalige soortnamen in `dwc_vernacularName`.
+Dit doen we via aangepaste code van in [deze gist](https://gist.github.com/damianooldoni/3fa9cc1ffa67377a9757df097d48d19f).
+
+Een voorbeeldje waar het mis loopt.
+Voor de Haas lukt het niet om een match te vinden.
+Voor onzekere soorten, bv. Veldmuis/Aardmuis kiest de code voor de eerste match.
+
+Voor zoogdieren lijkt deze code dus niet te werken.
 
 ```{r}
 example_specs <- c(
@@ -248,6 +255,8 @@ example_specs <- c(
   "Spreeuw",
   "Haas",
   "Steltkluut",
+  "Veldmuis",
+  "Aardmuis",
   "Veldmuis/Aardmuis",
   "Houtduif"
   )
@@ -261,6 +270,10 @@ map_taxa_from_vernacular(
   vernacular_name_df = vernacular_names_df,
   vernacular_name_col = "dwc_vernacularName")
 ```
+
+We testen de code uit voor alle soorten in de data.
+
+
 
 
 ## Volgorde kolommen
