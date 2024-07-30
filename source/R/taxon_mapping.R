@@ -1,7 +1,9 @@
 # Function to determine the structure of the data frames in the list
 get_df_structure <- function(df_list) {
+  require(dplyr)
+
   non_na_df <- df_list %>% compact() %>% first()
-  empty_df <- map(non_na_df, ~ NA)
+  empty_df <- purrr::map(non_na_df, ~ NA)
   empty_df <- as_tibble(empty_df)
   return(empty_df)
 }
@@ -30,6 +32,8 @@ map_taxa_from_vernacular <- function(
     vernacular_name_col,
     out_cols = "scientificName",
     ...) {
+  require(dplyr)
+  require(tidyr)
 
   # Match vernacular names to get taxonomic info
   matched_names_df <- vernacular_name_df %>%
@@ -39,22 +43,23 @@ map_taxa_from_vernacular <- function(
     nest() %>%
 
     # find scientific name for each (distinct) vernacular name
-    mutate(taxon_df = map(.data[[vernacular_name_col]],
-                          match_vernacular_name,
-                          ...))
+    mutate(taxon_df = purrr::map(
+      .data[[vernacular_name_col]],
+      match_vernacular_name,
+      ...))
 
   # Create output dataframe
   out_df <- matched_names_df %>%
 
     # Unnest taxon dataframes
-    mutate(taxon_df = map(.data$taxon_df, ~ {
-        # Unnesting only possible if all dataframes have the same structure
-        if (all(is.na(.x))) {
-          get_df_structure(matched_names_df$taxon_df)
-        } else {
-          .x
-        }
-      })
+    mutate(taxon_df = purrr::map(.data$taxon_df, ~ {
+      # Unnesting only possible if all dataframes have the same structure
+      if (all(is.na(.x))) {
+        get_df_structure(matched_names_df$taxon_df)
+      } else {
+        .x
+      }
+    })
     ) %>%
     unnest("taxon_df") %>%
     ungroup() %>%
