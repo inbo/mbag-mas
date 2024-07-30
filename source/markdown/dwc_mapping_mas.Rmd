@@ -291,16 +291,29 @@ species_matching_mas %>%
 Voor meeste soorten komt het goed uit, maar voor een aantal soorten niet als de Nederlandse soortnaam in de wetenschappelijke naam voorkomt of in de auteursnaam.
 Het ziet er niet naar uit dat we het niet zullen kunnen automatiseren:
 
-Voor Vink en Haas vinden we bv. geen soortnaam die matched.
-Voor Merel bv. is er ook geen mogelijkheid om automatisch de juiste naam te selecteren (zelfs als je een filter voor Aves zou inbouwen).
-
 ```{r}
-rgbif::name_lookup(
-  "Merel",
-  datasetKey = "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c",
-  rank = "SPECIES",
-  higherTaxonKey = 1)$data
+example_specs <- c(
+  "Roodborst",
+  "Hop",
+  "Hop"
+  )
+
+vernacular_names_df <- tibble(
+  id = seq_along(example_specs),
+  dwc_vernacularName = example_specs,
+  dwc_class = c("Aves", "Aves", NA),
+  dwc_kingdom = c("Animalia", "Animalia", "Plantae")
+)
+
+map_taxa_from_vernacular(
+  vernacular_name_df = vernacular_names_df,
+  vernacular_name_col = "dwc_vernacularName",
+  filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
+  rank = "SPECIES")
 ```
+
+Voor Vink en Haas vinden we bv. geen soortnaam die matched.
+
 
 ## Volgorde kolommen
 
