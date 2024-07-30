@@ -293,7 +293,10 @@ species_matching_mas %>%
 ```
 
 Voor meeste soorten komt het goed uit, maar voor een aantal soorten niet als de Nederlandse soortnaam in de wetenschappelijke naam voorkomt of in de auteursnaam.
-Het ziet er niet naar uit dat we het niet zullen kunnen automatiseren:
+Het ziet er niet naar uit dat we het niet zullen kunnen automatiseren.
+
+Voor Vink en Haas vinden we geen soortnaam die matched.
+Voor Merel is er ook geen mogelijkheid om automatisch de juiste naam te selecteren (zelfs als je een filter voor Aves zou inbouwen).
 
 ```{r}
 rgbif::name_lookup(
