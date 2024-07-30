@@ -293,6 +293,15 @@ species_matching_mas %>%
 ```
 
 Voor meeste soorten komt het goed uit, maar voor een aantal soorten niet als de Nederlandse soortnaam in de wetenschappelijke naam voorkomt of in de auteursnaam.
+Het ziet er niet naar uit dat we het niet zullen kunnen automatiseren:
+
+```{r}
+rgbif::name_lookup(
+  "Merel",
+  datasetKey = "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c",
+  rank = "SPECIES",
+  higherTaxonKey = 1)$data
+```
 
 ## Volgorde kolommen
 
