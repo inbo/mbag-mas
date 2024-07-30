@@ -231,6 +231,23 @@ taxon_core <- taxon_core %>%
   - Afwezigheden toevoegen o.b.v. externe lijst?
   - ...
 
+# Nabewerking
+
+Volgorde van de kolommen aanpassen kan volgens:
+
+```
+col_order <- c( "type","language","license","rightsHolder","accessRights","datasetID"
+               ,"institutionCode","datasetName","basisOfRecord","occurrenceID","recordedBy"
+               ,"individualCount","organismQuantity","organismQuantityType","occurrenceStatus","occurrenceRemarks"
+               ,"samplingProtocol","samplingEffort"
+               ,"eventDate","continent","countryCode","municipality"
+               ,"verbatimLatitude","verbatimLongitude","verbatimCoordinateSystem","verbatimSRS"
+               ,"decimalLatitude","decimalLongitude","geodeticDatum","coordinateUncertaintyInMeters"
+               ,"identifiedBy","scientificName","kingdom","scientificNameAuthorship","taxonRank","nomenclaturalCode"
+               )
+occurrence <- occurrence[, col_order]
+```
+
 # Conclusie
 ## Opmerkingen
 
@@ -268,5 +285,4 @@ taxon_core_final %>%
 
 ## To do
 
-- Volgorde van de kolommen aanpassen
 - Hoe kunnen we de wetenschappelijke namen bekomen?
