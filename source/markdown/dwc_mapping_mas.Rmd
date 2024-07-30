@@ -302,6 +302,8 @@ species_matching_mas %>%
 Voor meeste soorten komt het goed uit, maar voor een paar soorten niet.
 Voor Vink en Haas vinden we bv. geen soortnaam die matched.
 
+> verhoog limit naar 5000!
+
 ## Volgorde kolommen
 
 Volgorde van de kolommen aanpassen kan volgens:
