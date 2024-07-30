@@ -267,14 +267,32 @@ vernacular_names_df <- tibble(
 )
 
 map_taxa_from_vernacular(
-  vernacular_name_df = vernacular_names_df,
-  vernacular_name_col = "dwc_vernacularName")
+  vernacular_name_df = taxon_core,
+  vernacular_name_col = "dwc_vernacularName",
+  rank = "SPECIES",
+  higherTaxonKey = 1)
 ```
 
 We testen de code uit voor alle soorten in de data.
 
+```{r}
+species_names_mas <- taxon_core %>%
+  distinct(dwctaxonID, dwc_vernacularName) %>%
+  arrange(dwc_vernacularName)
 
+species_matching_mas <- map_taxa_from_vernacular(
+  vernacular_name_df = species_names_mas,
+  vernacular_name_col = "dwc_vernacularName",
+  out_cols = c("scientificName", "family", "order", "class"),
+  rank = "SPECIES",
+  higherTaxonKey = 1) %>%
+  arrange(class, order, family, scientificName)
 
+species_matching_mas %>%
+  kable()
+```
+
+Voor meeste soorten komt het goed uit, maar voor een aantal soorten niet als de Nederlandse soortnaam in de wetenschappelijke naam voorkomt of in de auteursnaam.
 
 ## Volgorde kolommen
 
