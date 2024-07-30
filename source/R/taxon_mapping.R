@@ -10,13 +10,12 @@ get_df_structure <- function(df_list) {
 # input: a vernacular name
 # output: the best matched scientific name from the GBIF Backbone
 # NA_character_ if no match found
-match_vernacular_name <- function(vernacular_name) {
+match_vernacular_name <- function(vernacular_name, ...) {
   names <- rgbif::name_lookup(
     vernacular_name,
     datasetKey = "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c",
     limit = 1, # this returns the most likely taxon
-    rank = "SPECIES",
-    higherTaxonKey = 1)$data # Animalia
+    ...)$data
 
   if (nrow(names) > 0) {
     names
@@ -29,7 +28,8 @@ match_vernacular_name <- function(vernacular_name) {
 map_taxa_from_vernacular <- function(
     vernacular_name_df,
     vernacular_name_col,
-    out_cols = "scientificName") {
+    out_cols = "scientificName",
+    ...) {
 
   # Match vernacular names to get taxonomic info
   matched_names_df <- vernacular_name_df %>%
@@ -40,7 +40,8 @@ map_taxa_from_vernacular <- function(
 
     # find scientific name for each (distinct) vernacular name
     mutate(taxon_df = map(.data[[vernacular_name_col]],
-                          match_vernacular_name))
+                          match_vernacular_name,
+                          ...))
 
   # Create output dataframe
   out_df <- matched_names_df %>%
