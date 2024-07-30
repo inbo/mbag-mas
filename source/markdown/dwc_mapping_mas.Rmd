@@ -273,47 +273,34 @@ We testen de code uit voor alle soorten in de data.
 
 ```{r}
 species_names_mas <- taxon_core %>%
-  distinct(dwctaxonID, dwc_vernacularName) %>%
+  distinct(dwctaxonID, dwc_vernacularName, dwc_class, dwc_kingdom) %>%
   arrange(dwc_vernacularName)
 
-species_matching_mas <- map_taxa_from_vernacular(
-  vernacular_name_df = species_names_mas,
+# Number of rows per split
+rows_per_split <- 50
+
+# Create a list of tibbles with up to 50 rows each
+species_names_mas_list <- species_names_mas %>%
+  mutate(group = ceiling(row_number() / rows_per_split)) %>%
+  group_split(group) %>%
+  lapply(select, -group)  # Remove the 'group' column if not needed
+
+species_matching_mas_list <- lapply(
+  species_names_mas_list, map_taxa_from_vernacular,
   vernacular_name_col = "dwc_vernacularName",
   out_cols = c("scientificName", "family", "order", "class"),
   rank = "SPECIES",
-  higherTaxonKey = 1) %>%
+  filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"))
+
+species_matching_mas <- do.call(rbind.data.frame, species_matching_mas_list) %>%
   arrange(class, order, family, scientificName)
 
 species_matching_mas %>%
   kable()
 ```
 
-Voor meeste soorten komt het goed uit, maar voor een aantal soorten niet als de Nederlandse soortnaam in de wetenschappelijke naam voorkomt of in de auteursnaam.
-Het ziet er niet naar uit dat we het niet zullen kunnen automatiseren:
-
-```{r}
-example_specs <- c(
-  "Roodborst",
-  "Hop",
-  "Hop"
-  )
-
-vernacular_names_df <- tibble(
-  id = seq_along(example_specs),
-  dwc_vernacularName = example_specs,
-  dwc_class = c("Aves", "Aves", NA),
-  dwc_kingdom = c("Animalia", "Animalia", "Plantae")
-)
-
-map_taxa_from_vernacular(
-  vernacular_name_df = vernacular_names_df,
-  vernacular_name_col = "dwc_vernacularName",
-  filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
-  rank = "SPECIES")
-```
-
+Voor meeste soorten komt het goed uit, maar voor een paar soorten niet.
 Voor Vink en Haas vinden we bv. geen soortnaam die matched.
-
 
 ## Volgorde kolommen
 
