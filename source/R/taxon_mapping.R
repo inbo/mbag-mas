@@ -64,7 +64,7 @@ match_vernacular_name <- function(
       # Perform the inner join to select taxon data
       taxon_data <- vernacular_name_df %>%
         select(where(~ all(!is.na(.)))) %>%
-        inner_join(taxon_data, by = join_condition) %>%
+        inner_join(taxon_data, by = join_condition, keep = TRUE) %>%
         select(-all_of(setdiff(colnames(vernacular_name_df), cols_to_remove)))
 
       # Use species keys to select vernacular names
