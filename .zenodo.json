@@ -1,7 +1,7 @@
 {
   "access_right": "open",
   "title": "MBAG - MAS (akkervogels)",
-  "description": "<p>Repository voor de code met betrekking to steekproefdesign,\n-trekking, analyses … van de data afkomstig van het MAS protocol\n(akkervogels) binnen het MBAG project.<\/p>",
+  "description": "<p>De toestand van de biodiversiteit in het agrarisch gebied gaat achteruit, met negatieve gevolgen voor de biodiversiteit buiten het landbouwgebied, voor de landbouw zelf en voor de veerkracht tegenover klimaatverandering. Met het Meetnet Biodiversiteit Agrarisch Gebied (MBAG) trachten we deze toestand beter op te volgen, als basis voor gerichte maatregelen om de achteruitgang te keren. Dit deelproject legt de basis voor een meetnet voor agrarische soorten (MAS).<\/p> <p>Dit in kaart brengen gebeurt op een snelle en efficiënte manier via puntentellingen, waarbij alle vogels en zoogdieren (o.a. haas, ree en vos) worden genoteerd binnen een straal van 300 m, op vier momenten tijdens het broedseizoen. In 2023 bestrijken we de Leemstreek, de Moeren en de Zandleemstreek, in 2024 willen we een meetnet uitrollen met zeggingskracht over heel Vlaanderen.<\/p>",
   "keywords": [
     "MBAG",
     "MAS",
@@ -16,29 +16,29 @@
   "contributors": [
     {
       "name": "Langeraert, Ward",
-      "affiliation": "Research Institute for Nature and Forest (INBO)",
+      "affiliation": "Instituut voor Natuur- en Bosonderzoek (INBO)",
       "orcid": "0000-0002-5900-8109",
-      "type": "ContactPerson"
+      "type": "contactperson"
     },
     {
-      "name": "Research Institute for Nature and Forest (INBO)",
-      "type": "RightsHolder"
+      "name": "Instituut voor Natuur- en Bosonderzoek (INBO)",
+      "type": "rightsholder"
     }
   ],
   "creators": [
     {
       "name": "Langeraert, Ward",
-      "affiliation": "Research Institute for Nature and Forest (INBO)",
+      "affiliation": "Instituut voor Natuur- en Bosonderzoek (INBO)",
       "orcid": "0000-0002-5900-8109"
     },
     {
       "name": "Cartuyvels, Emma",
-      "affiliation": "Research Institute for Nature and Forest (INBO)",
+      "affiliation": "Instituut voor Natuur- en Bosonderzoek (INBO)",
       "orcid": "0000-0001-7856-6360"
     },
     {
       "name": "Van Calster, Hans",
-      "affiliation": "Research Institute for Nature and Forest (INBO)",
+      "affiliation": "Instituut voor Natuur- en Bosonderzoek (INBO)",
       "orcid": "0000-0001-8595-8426"
     }
   ],

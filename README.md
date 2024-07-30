@@ -1,4 +1,3 @@
-<!-- spell-check: ignore:start -->
 <!-- badges: start -->
 ![GitHub](https://img.shields.io/github/license/inbo/mbag-mas)
 ![GitHub repo size](https://img.shields.io/github/repo-size/inbo/mbag-mas)
@@ -18,7 +17,6 @@ Instituut voor Natuur- en Bosonderzoek (INBO)[^cph][^fnd]
 [^inbo.be]: Instituut voor Natuur- en Bosonderzoek (INBO)
 
 **keywords**: MBAG; MAS; akkervogels; biodiversiteit; beheerovereenkomsten; meetnet
-<!-- spell-check: ignore:end -->
 
 <!-- community: inbo -->
 
