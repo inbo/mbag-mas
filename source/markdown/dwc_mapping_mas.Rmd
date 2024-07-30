@@ -232,6 +232,12 @@ taxon_core <- taxon_core %>%
   - ...
 
 # Nabewerking
+## Taxon matching
+
+- soortcodes zijn avimapcodes
+- "Voor de latijnse namen is het iets moeilijker, je kan hier een gist van Damiano checken. https://gist.github.com/damianooldoni/3fa9cc1ffa67377a9757df097d48d19f"
+
+## Volgorde kolommen
 
 Volgorde van de kolommen aanpassen kan volgens:
 
@@ -282,7 +288,3 @@ taxon_core_final <- taxon_core %>%
 taxon_core_final %>%
   glimpse()
 ```
-
-## To do
-
-- Hoe kunnen we de wetenschappelijke namen bekomen?
