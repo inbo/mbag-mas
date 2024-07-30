@@ -242,9 +242,6 @@ Dit doen we via aangepaste code van in [deze gist](https://gist.github.com/damia
 
 Een voorbeeldje waar het mis loopt.
 Voor de Haas lukt het niet om een match te vinden.
-Voor onzekere soorten, bv. Veldmuis/Aardmuis kiest de code voor de eerste match.
-
-Voor zoogdieren lijkt deze code dus niet te werken.
 
 ```{r}
 example_specs <- c(
@@ -266,7 +263,7 @@ vernacular_names_df <- tibble(
 )
 
 map_taxa_from_vernacular(
-  vernacular_name_df = taxon_core,
+  vernacular_name_df = vernacular_names_df,
   vernacular_name_col = "dwc_vernacularName",
   rank = "SPECIES",
   higherTaxonKey = 1)
@@ -303,6 +300,20 @@ rgbif::name_lookup(
   datasetKey = "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c",
   rank = "SPECIES",
   higherTaxonKey = 1)$data
+
+test <- rgbif::name_lookup(
+  "Merel",
+  datasetKey = "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c",
+  rank = "SPECIES",
+  higherTaxonKey = 1)
+
+df_name <- find_df_name(test$names, "Merel")
+
+rgbif::name_lookup(
+  "Merel",
+  datasetKey = "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c",
+  rank = "SPECIES",
+  higherTaxonKey = 1)
 ```
 
 ## Volgorde kolommen

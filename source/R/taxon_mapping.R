@@ -8,19 +8,45 @@ get_df_structure <- function(df_list) {
   return(empty_df)
 }
 
+# Function to find the name of the element containing the value
+find_df_name <- function(df_list, search_value) {
+  require(dplyr)
+
+  # Check if the value is present in each dataframe
+  contains_value <- purrr::map_lgl(df_list, function(df) {
+    vernacular_names <- df %>% pull(.data$vernacularName)
+
+    any(grepl(paste0("^", search_value), vernacular_names))
+  })
+
+  # Get the name of the first dataframe containing the value
+  df_name <- names(df_list)[which(contains_value)][1]
+
+  # Return the name
+  return(df_name)
+}
+
 # https://gist.github.com/damianooldoni/3fa9cc1ffa67377a9757df097d48d19f
 # input: a vernacular name
 # output: the best matched scientific name from the GBIF Backbone
 # NA_character_ if no match found
 match_vernacular_name <- function(vernacular_name, ...) {
-  names <- rgbif::name_lookup(
+  gbif_lookup <- rgbif::name_lookup(
     vernacular_name,
     datasetKey = "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c",
-    limit = 1, # this returns the most likely taxon
-    ...)$data
+    ...)
 
-  if (nrow(names) > 0) {
-    names
+  if (nrow(gbif_lookup$data) > 0) {
+    if (nrow(gbif_lookup$data) > 1) {
+      taxon_key <- find_df_name(gbif_lookup$names, vernacular_name)
+      if (length(taxon_key) == 0) {
+        NA_character_
+      } else {
+        subset(gbif_lookup$data, key == taxon_key)
+      }
+    } else {
+      gbif_lookup$data
+    }
   } else {
     NA_character_
   }
