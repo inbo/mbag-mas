@@ -300,20 +300,6 @@ rgbif::name_lookup(
   datasetKey = "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c",
   rank = "SPECIES",
   higherTaxonKey = 1)$data
-
-test <- rgbif::name_lookup(
-  "Merel",
-  datasetKey = "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c",
-  rank = "SPECIES",
-  higherTaxonKey = 1)
-
-df_name <- find_df_name(test$names, "Merel")
-
-rgbif::name_lookup(
-  "Merel",
-  datasetKey = "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c",
-  rank = "SPECIES",
-  higherTaxonKey = 1)
 ```
 
 ## Volgorde kolommen
