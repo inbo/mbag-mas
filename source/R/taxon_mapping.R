@@ -1,6 +1,6 @@
 # Function to determine the structure of the data frames in the list
 get_structure <- function(df_list) {
-  non_na_df <- df_list %>% compact() %>% .[[1]]
+  non_na_df <- df_list %>% compact() %>% first()
   empty_df <- map(non_na_df, ~ NA)
   empty_df <- as_tibble(empty_df)
   return(empty_df)
@@ -25,24 +25,31 @@ get_vernacular_name <- function(vernacular_name) {
 
 map_taxa_from_vernacular <- function(
     vernacular_name_df,
-    vernacular_name_col = "dwc_vernacularName") {
+    vernacular_name_col) {
 
   n_vernacular_names_df <- vernacular_names_df %>%
 
     # group  by vernacular name and compact the data
-    group_by(vernacular_name) %>%
+    group_by(.data[[vernacular_name_col]]) %>%
     nest() %>%
 
     # find scientific name for each (distinct) vernacular name
-    mutate(scientificName = map(vernacular_name, get_vernacular_name))
+    mutate(scientificName = map(.data[[vernacular_name_col]],
+                                get_vernacular_name))
 
 
   # Determine the structure of the data frames
   empty_df <- get_structure(n_vernacular_names_df$scientificName)
 
   out_df <- n_vernacular_names_df %>%
-    mutate(scientificName = map(scientificName, ~
-                                  if(all(is.na(.))) empty_df else .)) %>%
+    mutate(scientificName = map(scientificName, ~ {
+        if (all(is.na(.x))) {
+          empty_df
+        } else {
+          .x
+        }
+      })
+    ) %>%
     unnest(scientificName) %>%
     # ungroup result
     ungroup() %>%
@@ -50,14 +57,14 @@ map_taxa_from_vernacular <- function(
     select(-one_of("data")) %>%
 
     # add other columns from input df vernacular_names_df
-    right_join(vernacular_names_df, by = "vernacular_name") %>%
+    right_join(vernacular_name_df, by = vernacular_name_col) %>%
 
     # set new column scientificName at the right side
-    select(all_of(names(vernacular_names_df)), scientificName) %>%
+    select(all_of(names(vernacular_name_df)), scientificName) %>%
 
     # reorder rows based on original order in input df
-    right_join(vernacular_names_df,
-               by = names(vernacular_names_df))
+    right_join(vernacular_name_df,
+               by = names(vernacular_name_df))
 
   return(out_df)
 }
