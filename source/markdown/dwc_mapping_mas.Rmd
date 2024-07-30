@@ -184,7 +184,6 @@ taxon_core <- taxon_core %>%
 **Vragen**
 
 -  Ok dat `dwc_varbatimBehavior` de Nederlandstalige beschrijving is? De Engelstalige beschrijving wordt in de volgende sectie onder `dwc_behavior` aangemaakt. Of mag de Nederlandse beschrijving dan weg?
--  Is `raw_soortnr` SOVON specifiek?
 
 ## Gewijzigde waarden
 
@@ -238,7 +237,7 @@ taxon_core <- taxon_core %>%
 ## Taxon matching
 
 De soortcodes in `dwctaxonID` zijn avimapcodes.
-We moeten matchen op de Nederlandstalige soortnamen in `dwc_vernacularName`.
+We kunnen enkel matchen op de Nederlandstalige soortnamen in `dwc_vernacularName`.
 Dit doen we via aangepaste code van in [deze gist](https://gist.github.com/damianooldoni/3fa9cc1ffa67377a9757df097d48d19f).
 
 Een voorbeeldje waar het mis loopt.
@@ -293,10 +292,10 @@ species_matching_mas %>%
 ```
 
 Voor meeste soorten komt het goed uit, maar voor een aantal soorten niet als de Nederlandse soortnaam in de wetenschappelijke naam voorkomt of in de auteursnaam.
-Het ziet er niet naar uit dat we het niet zullen kunnen automatiseren.
+Het ziet er niet naar uit dat we het niet zullen kunnen automatiseren:
 
-Voor Vink en Haas vinden we geen soortnaam die matched.
-Voor Merel is er ook geen mogelijkheid om automatisch de juiste naam te selecteren (zelfs als je een filter voor Aves zou inbouwen).
+Voor Vink en Haas vinden we bv. geen soortnaam die matched.
+Voor Merel bv. is er ook geen mogelijkheid om automatisch de juiste naam te selecteren (zelfs als je een filter voor Aves zou inbouwen).
 
 ```{r}
 rgbif::name_lookup(
