@@ -239,68 +239,161 @@ taxon_core <- taxon_core %>%
 De soortcodes in `dwctaxonID` zijn avimapcodes.
 We kunnen enkel matchen op de Nederlandstalige soortnamen in `dwc_vernacularName`.
 Dit doen we via aangepaste code van in [deze gist](https://gist.github.com/damianooldoni/3fa9cc1ffa67377a9757df097d48d19f).
-
-Een voorbeeldje waar het mis loopt.
-Voor de Haas lukt het niet om een match te vinden.
+Een voorbeeldje:
 
 ```{r}
 example_specs <- c(
   "Gele Kwikstaart",
   "Spreeuw",
-  "Spreeuw",
-  "Spreeuw",
+  "Roodborst",
+  "Eekhoorn",
+  "Merel",
+  "Hop",
+  "Hop",
   "Haas",
-  "Steltkluut",
   "Veldmuis",
   "Aardmuis",
-  "Veldmuis/Aardmuis",
-  "Houtduif"
+  "Veldmuis/Aardmuis"
   )
 
-vernacular_names_df <- tibble(
+example_df <- tibble(
   id = seq_along(example_specs),
-  dwc_vernacularName = example_specs
+  dwc_vernacularName = example_specs,
+  dwc_class = c("Aves", "Aves", "Aves", "Mammalia", "Aves", "Aves",
+                NA, "Mammalia", "Mammalia", "Mammalia", "Mammalia"),
+  dwc_kingdom = c(rep("Animalia", 6), "Plantae", rep("Animalia", 4))
 )
 
-map_taxa_from_vernacular(
-  vernacular_name_df = vernacular_names_df,
-  vernacular_name_col = "dwc_vernacularName",
-  rank = "SPECIES",
-  higherTaxonKey = 1)
+example_df
 ```
+
+Als we voor de eerste beste match gaan, zien we verschillende fouten optreden:
+
+```{r}
+map_taxa_from_vernacular(
+  vernacular_name_df = example_df,
+  vernacular_name_col = "dwc_vernacularName",
+  out_cols = c("scientificName", "family", "order", "class"),
+  limit = 1)
+```
+
+- Roodborst is een insect die ook die Nederlandse naam heeft
+- Eekhoorn is een ondersoort
+- Merel is een slang die merel in zijn wetenschappelijke soortnaam heeft
+- Hop is een virus
+- Haas is een genus die haas in auteur heeft
+- Veldmuis/Aardmuis matched met Aardmuis
+
+We nemen de default limit (100).
+We zijn niet tevreden met eerste beste match, maar gaan met een specifieke regex door meerdere vernacular names zoeken (Merel zal bv. ook niet met Indische merel matchen).
+
+```{r}
+map_taxa_from_vernacular(
+  vernacular_name_df = example_df,
+  vernacular_name_col = "dwc_vernacularName",
+  out_cols = c("scientificName", "family", "class"))
+```
+
+- Roodborst is een insect die ook die Nederlandse naam heeft
+- Eekhoorn is een ondersoort
+- Hop is in beide gevallen een plant
+- Haas wordt niet teruggevonden
+
+We specificeren dat we enkel soortnamen willen:
+
+```{r}
+map_taxa_from_vernacular(
+  vernacular_name_df = example_df,
+  vernacular_name_col = "dwc_vernacularName",
+  out_cols = c("scientificName", "family", "class"),
+  rank = "SPECIES")
+```
+
+- Roodborst is een insect die ook die Nederlandse naam heeft
+- Eekhoorn is een vlinder
+- Hop is in beide gevallen een plant
+- Haas wordt niet teruggevonden
+
+We geven taxonomische info van klasse en rijk mee aan de matching:
+
+```{r}
+map_taxa_from_vernacular(
+  vernacular_name_df = example_df,
+  vernacular_name_col = "dwc_vernacularName",
+  out_cols = c("scientificName", "family", "class"),
+  rank = "SPECIES",
+  filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"))
+```
+
+- Haas wordt niet teruggevonden
+
+Voor Haas vinden we geen goeie match. Deze naam komt te vaak terug in soortnamen/auteurs. We verhogen de limit:
+
+```{r}
+map_taxa_from_vernacular(
+  vernacular_name_df = example_df,
+  vernacular_name_col = "dwc_vernacularName",
+  out_cols = c("scientificName", "family", "class"),
+  filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
+  rank = "SPECIES",
+  limit = 1000)
+```
+
+Uiteindelijk vinden we de wetenschappelijke naam voor Haas.
+Voor Veldmuis/Aardmuis vinden we geen match wat logisch is.
 
 We testen de code uit voor alle soorten in de data.
 
 ```{r}
 species_names_mas <- taxon_core %>%
-  distinct(dwctaxonID, dwc_vernacularName) %>%
+  distinct(dwctaxonID, dwc_vernacularName, dwc_class, dwc_kingdom) %>%
   arrange(dwc_vernacularName)
 
-species_matching_mas <- map_taxa_from_vernacular(
-  vernacular_name_df = species_names_mas,
+# Number of rows per split
+rows_per_split <- 50
+
+# Create a list of tibbles with up to 50 rows each
+species_names_mas_list <- species_names_mas %>%
+  mutate(group = ceiling(row_number() / rows_per_split)) %>%
+  group_split(group) %>%
+  lapply(select, -group)  # Remove the group column
+
+species_matching_mas_list <- lapply(
+  species_names_mas_list, map_taxa_from_vernacular,
   vernacular_name_col = "dwc_vernacularName",
-  out_cols = c("scientificName", "family", "order", "class"),
+  out_cols = c("scientificName", "family", "class"),
+  filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
   rank = "SPECIES",
-  higherTaxonKey = 1) %>%
-  arrange(class, order, family, scientificName)
+  limit = 1000)
+
+species_matching_mas <- do.call(rbind.data.frame, species_matching_mas_list) %>%
+  arrange(class, family, scientificName)
 
 species_matching_mas %>%
   kable()
 ```
 
-Voor meeste soorten komt het goed uit, maar voor een aantal soorten niet als de Nederlandse soortnaam in de wetenschappelijke naam voorkomt of in de auteursnaam.
-Het ziet er niet naar uit dat we het niet zullen kunnen automatiseren:
-
-Voor Vink en Haas vinden we bv. geen soortnaam die matched.
-Voor Merel bv. is er ook geen mogelijkheid om automatisch de juiste naam te selecteren (zelfs als je een filter voor Aves zou inbouwen).
+Voor meeste soorten komt het goed uit, maar voor een paar soorten niet.
+We proberen apart voor de resterende soorten.
+We verwijderen `rank = "SPECIES"` en verhogen de limit naar 5000.
 
 ```{r}
-rgbif::name_lookup(
-  "Merel",
-  datasetKey = "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c",
-  rank = "SPECIES",
-  higherTaxonKey = 1)$data
+species_matching_mas_rest <- species_matching_mas %>%
+  filter(is.na(scientificName)) %>%
+  select(dwctaxonID, dwc_vernacularName, dwc_class, dwc_kingdom) %>%
+  map_taxa_from_vernacular(
+    vernacular_name_col = "dwc_vernacularName",
+    out_cols = c("scientificName", "family", "class"),
+    filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
+    limit = 5000) %>%
+  arrange(class, family, scientificName)
+
+species_matching_mas_rest %>%
+  kable()
 ```
+
+Nu hebben we namen voor alle taxa.
+Enkel Veldmuis/Aardmuis niet, wat prima is.
 
 ## Volgorde kolommen
 
