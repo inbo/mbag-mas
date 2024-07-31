@@ -27,6 +27,7 @@ knitr::opts_knit$set(
 library(tidyverse)
 library(sf)
 library(targets)
+library(nngeo)
 
 # Conflicting packages
 conflicted::conflicts_prefer(dplyr::filter)
@@ -36,6 +37,10 @@ conflicted::conflicts_prefer(dplyr::lag)
 # Source
 mbag_dir <- here::here()
 data_path <- file.path(mbag_dir, "data", "steekproefkaders")
+
+source(file.path(mbag_dir, "source", "R", "berekening_hulpvariabelen.R"))
+source(file.path(mbag_dir, "source", "R", "steekproefkader.R"))
+source(file.path(mbag_dir, "source", "R", "steekproeftrekking_nabehandeling.R"))
 ```
 
 # Doel
@@ -114,31 +119,96 @@ steekproef_za_kp_po <- steekproef_za_kp_po_raw %>%
 -samenvoegen
 
 ```{r}
-read.csv(
-  file.path(
-    data_path,
-    "manual_check_johannes",
-    "MAS netwerk Vlaanderen- steekproef_kempen_telpunten_uncut.csv")) %>%
-  filter(sample_order <= 50,
-         !startsWith(vervanging_id, "Km") & vervanging_id != "")
-
-read.csv(
+oud_zandstreek <- read.csv(
   file.path(
     data_path,
     "manual_check_johannes",
     "MAS netwerk Vlaanderen- steekproef_zandstreek_telpunten_uncut.csv")) %>%
   filter(sample_order <= 50,
-         !startsWith(vervanging_id, "Zn") & vervanging_id != "")
+         !startsWith(vervanging_id, "Zn") & vervanging_id != "") %>%
+  select(regio = Naam, pointid = vervanging_id, openheid_sbp)
 
-read.csv(
+oud_kempen <- read.csv(
+  file.path(
+    data_path,
+    "manual_check_johannes",
+    "MAS netwerk Vlaanderen- steekproef_kempen_telpunten_uncut.csv")) %>%
+  filter(sample_order <= 50,
+         !startsWith(vervanging_id, "Km") & vervanging_id != "") %>%
+  select(regio = Naam, pointid = vervanging_id, openheid_sbp)
+
+oud_polders <- read.csv(
   file.path(
     data_path,
     "manual_check_johannes",
     "MAS netwerk Vlaanderen- steekproef_polders_telpunten_uncut.csv")) %>%
   filter(sample_order <= 50,
-         !startsWith(vervanging_id, "Pl") & vervanging_id != "")
+         !startsWith(vervanging_id, "Pl") & vervanging_id != "") %>%
+  select(regio = Naam, pointid = vervanging_id, openheid_sbp)
+
+oude_punten_za_kp_po <- bind_rows(
+    oud_zandstreek,
+    oud_kempen,
+    oud_polders
+  ) %>%
+  left_join(steekproef_za_kp_po)
+
+oude_punten_za_kp_po
 ```
 
+> Probleem! Sommige oude telpunten zaten niet in steekproef. Blijkbaar waren er 2 bestanden met ouden punten en is enkel avimap_601_0_MAS_Vlaanderen_telpunten_xy.shp gebruikt.
+
+We voegen de locaties toe aan de oude punten.
+
+```{r}
+extra_oude_punten <- st_read(
+  path_to_existing(file = "avimap_601_0_MAS_Vlaanderen_telpunten_xy.shp")
+  ) %>%
+  distinct(naam, geometry) %>%
+  st_transform(31370) %>%
+  mutate(x_coord = st_coordinates(.data$geometry)[, 1],
+         y_coord = st_coordinates(.data$geometry)[, 2])
+
+oude_punten_za_kp_po_sf <- oude_punten_za_kp_po %>%
+  filter(is.na(x_coord)) %>%
+  select(-x_coord, -y_coord) %>%
+  inner_join(extra_oude_punten, by = join_by(pointid == naam)) %>%
+  mutate(crs = 31370) %>%
+  st_sf()
+```
+
+We berekenen de sbp variabele.
+
+```{r}
+perimeters_za_kp_po <- st_read(path_to_perimeters("za_kp_po_perimeters.gpkg"))
+sbp_akkervogels <- lapply(perimeters_za_kp_po$Naam, function(regio) {
+  read_sbp_akkervogels(
+      path = path_to_sbp_akkervogels(file = "akkervogelgebieden2022.shp"),
+      gebied = perimeters_za_kp_po %>% filter(Naam == regio),
+      path_extra_soorten = path_to_sbp_akkervogels(
+        file = "sbp_overige_soorten.shp"),
+      extra_soorten = c("hamster",
+                        "bruine kiekendief",
+                        "zomertortel", 
+                        "grauwe kiekendief")
+      )
+})
+
+sbp_akkervogels_joined <- do.call(rbind.data.frame, sbp_akkervogels)
+
+oude_punten_sbp <- oude_punten_za_kp_po_sf %>%
+  mutate(
+    is_sbp = st_intersects(.data$geometry,
+                           st_union(sbp_akkervogels_joined),
+                           sparse = FALSE) %>%
+           as.logical(),
+    sbp = ifelse(.data$is_sbp, "binnen", "buiten")
+  ) %>%
+  select(-is_sbp)
+```
+
+
+> gelijkaardig bij zandleemstreek?
 
 ## Weidestreek
 
