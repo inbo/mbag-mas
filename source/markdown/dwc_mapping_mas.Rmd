@@ -377,11 +377,22 @@ species_matching_mas %>%
 
 Voor meeste soorten komt het goed uit, maar voor een paar soorten niet.
 We proberen apart voor de resterende soorten.
+We verwijderen `rank = "SPECIES"` en verhogen de limit naar 5000.
 
 ```{r}
-species_matching_mas
+species_matching_mas %>%
+  filter(is.na(scientificName)) %>%
+  select(dwctaxonID, dwc_vernacularName, dwc_class, dwc_kingdom) %>%
+  map_taxa_from_vernacular(
+    vernacular_name_col = "dwc_vernacularName",
+    out_cols = c("scientificName", "family", "class"),
+    filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
+    limit = 5000) %>%
+  arrange(class, family, scientificName)
 ```
 
+Nu hebben we namen voor alle taxa.
+Enkel Veldmuis/Aardmuis niet, wat prima is.
 
 ## Volgorde kolommen
 
