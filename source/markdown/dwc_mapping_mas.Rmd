@@ -380,7 +380,7 @@ We proberen apart voor de resterende soorten.
 We verwijderen `rank = "SPECIES"` en verhogen de limit naar 5000.
 
 ```{r}
-species_matching_mas %>%
+species_matching_mas_rest <- species_matching_mas %>%
   filter(is.na(scientificName)) %>%
   select(dwctaxonID, dwc_vernacularName, dwc_class, dwc_kingdom) %>%
   map_taxa_from_vernacular(
@@ -389,6 +389,9 @@ species_matching_mas %>%
     filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
     limit = 5000) %>%
   arrange(class, family, scientificName)
+
+species_matching_mas_rest %>%
+  kable()
 ```
 
 Nu hebben we namen voor alle taxa.
