@@ -43,14 +43,49 @@ process_double_counted_data <- function(counts_df) {
   require("rlang")
 
   # Professional bird counters
-  profs <- c("WVNT00", "JJNN16", "NOVN00", "ETBX00")
-  profs_2022 <- "RPLT02" # professional after 2022
+  profs <- c("WVNT00", # professional from the start
+             "JJNN16",
+             "NOVN00",
+             "ETBX00")
+  profs_2022 <- "RPLT02"    # professional after 2022
+  profs_2023 <- c("KLMS02", # professional after 2023
+                  "KLMS02",
+                  "ETON01",
+                  "BDMR00",
+                  "DDMR00",
+                  "PADS02",
+                  "PCAS00",
+                  "BOPE01")
+  profs_2024 <- c("KLMS02", # professional after 2024
+                  "ETON01",
+                  "BDMR00",
+                  "DDMR00",
+                  "BOPE01",
+                  "DDMR01",
+                  "AIST00",
+                  "MJCS03",
+                  "TGSS02",
+                  "WVNN05",
+                  "BBMS01",
+                  "WKPN01",
+                  "RDLK00",
+                  "ABNS05",
+                  "IJCS01",
+                  "DVRN00",
+                  "JPNS04",
+                  "LBRH01",
+                  "RLJE00",
+                  "ETBX00",
+                  "LHNN03",
+                  "SDST00")
 
   counts_df_state_pro <- counts_df %>%
     rename(waarnemer = "waarneme") %>%
     mutate(status_teller = ifelse(
       (.data$waarnemer %in% profs) |
-        (.data$waarnemer %in% profs_2022 & .data$jaar >= 2022),
+        (.data$waarnemer %in% profs_2022 & .data$jaar >= 2022) |
+        (.data$waarnemer %in% profs_2023 & .data$jaar >= 2023) |
+        (.data$waarnemer %in% profs_2024 & .data$jaar >= 2024),
       "professioneel", "vrijwilliger"))
 
   # Identify points counted more than once per period
