@@ -114,7 +114,29 @@ steekproef_za_kp_po <- steekproef_za_kp_po_raw %>%
 -samenvoegen
 
 ```{r}
+read.csv(
+  file.path(
+    data_path,
+    "manual_check_johannes",
+    "MAS netwerk Vlaanderen- steekproef_kempen_telpunten_uncut.csv")) %>%
+  filter(sample_order <= 50,
+         !startsWith(vervanging_id, "Km") & vervanging_id != "")
 
+read.csv(
+  file.path(
+    data_path,
+    "manual_check_johannes",
+    "MAS netwerk Vlaanderen- steekproef_zandstreek_telpunten_uncut.csv")) %>%
+  filter(sample_order <= 50,
+         !startsWith(vervanging_id, "Zn") & vervanging_id != "")
+
+read.csv(
+  file.path(
+    data_path,
+    "manual_check_johannes",
+    "MAS netwerk Vlaanderen- steekproef_polders_telpunten_uncut.csv")) %>%
+  filter(sample_order <= 50,
+         !startsWith(vervanging_id, "Pl") & vervanging_id != "")
 ```
 
 
