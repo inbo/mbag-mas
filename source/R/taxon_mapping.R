@@ -2,7 +2,7 @@
 get_df_structure <- function(df_list) {
   require("dplyr")
 
-  non_na_df <- df_list %>% compact() %>% first()
+  non_na_df <- df_list %>% plyr::compact() %>% first()
   empty_df <- purrr::map(non_na_df, ~ NA)
   empty_df <- as_tibble(empty_df)
   return(empty_df)
@@ -143,7 +143,7 @@ map_taxa_from_vernacular <- function(
 
     # Add other columns from input df
     right_join(vernacular_name_df,
-               by = all_of(c(vernacular_name_col, group_cols))
+               by = c(vernacular_name_col, group_cols)
                ) %>%
 
     # Set desired column(s) at the right side
