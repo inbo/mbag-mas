@@ -1,8 +1,8 @@
 # to be continued
 dwc_mapping <- function(data_sf) {
-  require(dplyr)
-  require(rlang)
-  require(sf)
+  require("dplyr")
+  require("rlang")
+  require("sf")
 
   # Data cleaning: remove rows with all NA's and unnecessary columns
   data_sf <- data_sf[, colSums(is.na(data_sf)) < nrow(data_sf)]

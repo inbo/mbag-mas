@@ -1,6 +1,6 @@
 # Function to determine the structure of the data frames in the list
 get_df_structure <- function(df_list) {
-  require(dplyr)
+  require("dplyr")
 
   non_na_df <- df_list %>% compact() %>% first()
   empty_df <- purrr::map(non_na_df, ~ NA)
@@ -10,7 +10,7 @@ get_df_structure <- function(df_list) {
 
 # Function to find the name of the element containing the value
 find_df_name <- function(df_list, search_value) {
-  require(dplyr)
+  require("dplyr")
 
   # Check if the value is present in each dataframe
   contains_value <- purrr::map_lgl(df_list, function(df) {
@@ -27,10 +27,8 @@ find_df_name <- function(df_list, search_value) {
   return(df_name)
 }
 
+# Inspired by:
 # https://gist.github.com/damianooldoni/3fa9cc1ffa67377a9757df097d48d19f
-# input: a vernacular name
-# output: the best matched scientific name from the GBIF Backbone
-# NA_character_ if no match found
 match_vernacular_name <- function(
     vernacular_name_df,
     filter_cols = NULL,
@@ -81,7 +79,7 @@ match_vernacular_name <- function(
         NA_character_
       # Return match with taxon key
       } else {
-        subset(taxon_data, key == taxon_key)
+        taxon_data[taxon_data$key == taxon_key, ]
       }
 
     # Return if only 1 match was found initially
@@ -102,8 +100,8 @@ map_taxa_from_vernacular <- function(
     out_cols = "scientificName",
     filter_cols = NULL,
     ...) {
-  require(dplyr)
-  require(tidyr)
+  require("dplyr")
+  require("tidyr")
 
   group_cols <- unlist(filter_cols, use.names = FALSE)
 
@@ -118,7 +116,7 @@ map_taxa_from_vernacular <- function(
 
     # find scientific name for each (distinct) vernacular name
     mutate(taxon_df = purrr::map(
-      match_df,
+      .data$match_df,
       match_vernacular_name,
       filter_cols = filter_cols,
       ...)) %>%
@@ -144,7 +142,9 @@ map_taxa_from_vernacular <- function(
     ungroup() %>%
 
     # Add other columns from input df
-    right_join(vernacular_name_df, by = all_of(c(vernacular_name_col, group_cols))) %>%
+    right_join(vernacular_name_df,
+               by = all_of(c(vernacular_name_col, group_cols))
+               ) %>%
 
     # Set desired column(s) at the right side
     select(all_of(names(vernacular_name_df)), all_of(out_cols)) %>%
