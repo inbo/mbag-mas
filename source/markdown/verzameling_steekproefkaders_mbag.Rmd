@@ -109,8 +109,13 @@ steekproef_za_kp_po <- steekproef_za_kp_po_raw %>%
          openheid_klasse, sbp, x_coord = X, y_coord = Y, crs)
 ```
 
-Inlezen en preparatie finale punten die in avimap zijn ingevoerd.
+- in uncut in vervanging id kijken voor oude punten met volgnr <= 50
+- in final kijken voor finale punten
+-samenvoegen
 
+```{r}
+
+```
 
 
 ## Weidestreek
@@ -153,9 +158,13 @@ steekproef_weidestreek <- steekproef_weidestreek_raw %>%
 
 Inlezen en preparatie finale punten die in avimap zijn ingevoerd.
 
+- zie MAS netwerk Vlaanderen- weidestreek_kempen_telpunten-final.csv
 
 
 # Uitschrijven datasets
+
+> zandleemstreek, zandstreek en weidestreek pointids aanpassen!
+
 ## Steekproefkader
 
 Dit is een CSV-bestand van alle steekproefkaders.
