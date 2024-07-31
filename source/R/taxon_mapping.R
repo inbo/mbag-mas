@@ -20,7 +20,7 @@ find_df_name <- function(df_list, search_value) {
               ignore.case = TRUE))
   })
 
-  # Get the name of the first dataframe containing the value
+  # Get the name of the best match containing the value
   df_name <- names(df_list)[which(contains_value)][1]
 
   # Return the name
@@ -72,8 +72,7 @@ match_vernacular_name <- function(
       vernacular_names <- vernacular_names[indices]
     }
 
-    # Ifelse necessary??
-    # Search taxon key in vernacular names if multiple possibilities
+    # Search taxon key in vernacular names if limit > 1
     if (nrow(taxon_data) > 1) {
       taxon_key <- find_df_name(vernacular_names, vernacular_name)
 
@@ -99,7 +98,7 @@ match_vernacular_name <- function(
 # Input dataframe with vernacular names and get taxon information
 map_taxa_from_vernacular <- function(
     vernacular_name_df,
-    vernacular_name_col,
+    vernacular_name_col = "vernacularName",
     out_cols = "scientificName",
     filter_cols = NULL,
     ...) {
