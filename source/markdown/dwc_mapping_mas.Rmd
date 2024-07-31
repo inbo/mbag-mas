@@ -1,0 +1,489 @@
+---
+title: "Darwin Core mapping MAS data"
+author: "Ward Langeraert"
+date: "`r Sys.Date()`"
+output:
+  bookdown::html_document2:
+    code_folding: show
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+# set up
+library(knitr)
+opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  out.width = "100%"
+)
+opts_knit$set(root.dir = here::here())
+```
+
+```{r}
+# Packages
+library(tidyverse)
+library(targets)
+library(sf)
+library(here)
+
+# Source functions
+source(here("source", "R", "taxon_mapping.R"))
+
+# Path to target store
+targets_store <- here("source", "targets", "data_preparation", "_targets")
+```
+
+# Doel en werkwijze
+
+We willen de MAS data publiceren op GBIF.
+Hiervoor moeten we de dataset "publicatieklaar" maken.
+
+Deze workflow kan worden toegevoegd aan de targets pipeline.
+Voorlopig werken we met dit document tot we de finale workflow voor publicatie af hebben.
+
+# Darwin Core mapping
+
+We standaardiseren de kolommen o.b.v. [Darwin Core-termen](https://dwc.tdwg.org/terms/).
+
+## Data preparatie
+
+We lezen de input data in.
+
+```{r}
+raw_data <- tar_read(mas_data_clean, store = targets_store)
+
+# How does the data look like?
+glimpse(raw_data)
+```
+
+We verwijderen kolommen gerelateerd aan de steekproef.
+
+```{r}
+raw_data <- raw_data %>%
+  select(
+    -"batch",
+    -"sample_order"
+  )
+```
+
+
+We passen de kolomnamen aan en nemen een kopie van de data.
+
+```{r}
+# Add prefix `raw_` to the column names of `raw_data`
+colnames(raw_data) <- paste0("raw_", colnames(raw_data))
+st_geometry(raw_data) <- "raw_geometry"
+
+# Generate taxon core by making a copy of raw_data
+taxon_core <- raw_data
+```
+
+## Ruimtelijke verwerking
+
+- We verwijderen de Amersfoord coördinaten
+- We zetten de Lambert coördinaten om naar WGS 84 decimale coördinaten
+- We behouden de Lambert coördinaten als verbatim coördinaten
+
+```{r}
+taxon_core <- taxon_core %>%
+  # Remove Amersfoord coordinates
+  select(
+    -"raw_x_amersfoord",
+    -"raw_y_amersfoord"
+  ) %>%
+  # Keep original X, Y as verbatim coordinates
+  rename(
+    "dwc_verbatimLatitude" = "raw_y_lambert",
+    "dwc_verbatimLongitude" = "raw_x_lambert"
+  ) %>%
+  mutate(
+    dwc_verbatimCoordinateSystem = "BD72 / Belgian Lambert 72",
+    dwc_verbatimSRS = "EPSG:31370"
+  ) %>%
+  # Convert to WGS 84 decimal coordinates
+  st_transform(4326) %>%
+  mutate(
+    dwc_decimalLatitude = round(st_coordinates(.data$raw_geometry)[, 2], 5),
+    dwc_decimalLongitude = round(st_coordinates(.data$raw_geometry)[, 1], 5),
+    dwc_geodeticDatum = "EPSG:4326"
+  ) %>%
+  st_drop_geometry()
+```
+
+## Statische waarden
+
+Statische waarden worden gebruikt voor Darwin Core-termen die dezelfde waarde nodig hebben voor alle records.
+Meestal ontbreken ze in `raw_data`.
+
+```{r}
+taxon_core <- taxon_core %>%
+  mutate(
+    #dwc_type                = "Event",
+    #dwc_datasetID           = "insert doi",
+    dwc_language             = "en",
+    dwc_license              = paste0("http://creativecommons.org/publicdomain",
+                                      "/zero/1.0/"),
+    dwc_publisher            = "Research Institute for Nature and Forest (INBO)",
+    dwc_rightsHolder         = "INBO",
+    dwc_accessRights         = "http://www.inbo.be/en/norms-for-data-use",
+    dwc_institutionCode      = "INBO",
+    #dwc_datasetName         = "name",
+    dwc_ownerInstitutionCode = "INBO",
+    dwc_collectionCode       = "MAS",
+    dwc_kingdom              = "Animalia",
+    dwc_nomenclaturalCode    = "ICZN",
+    dwc_eventType            = "Survey",
+    #dwc_samplingProtocol    = "...",
+    #dwc_samplingEffort      = "...",
+    dwc_continent            = "Europe",
+    dwc_country              = "Belgium",
+    dwc_stateProvince        = "Flanders",
+    dwc_countryCode          = "BE",
+    dwc_basisOfRecord        = "HumanObservation"
+  )
+```
+
+**Vragen**
+
+- Wat vul ik in voor volgende termen?
+  - `dwc_type`
+  - `dwc_datasetID`
+  - `dwc_datasetName`
+  - `dwc_samplingProtocol`
+  - `dwc_samplingEffort`
+- Is `dwc_language = "en"` ok?
+- Is `dwc_eventType = "Survey"` ok?
+
+## Ongewijzigde waarden
+
+Ongewijzigde waarden worden gebruikt voor Darwin Core-termen waarvan de inhoud een exacte kopie is van het overeenkomstige veld in `raw_data`.
+
+```{r}
+taxon_core <- taxon_core %>%
+  rename(
+    "dwc_vernacularName"    = "raw_naam",
+    "dwc_eventDate"         = "raw_datum",
+    "dwc_year"              = "raw_jaar",
+    "dwc_month"             = "raw_maand",
+    "dwc_day"               = "raw_dag",
+    "dwc_recordedBy"        = "raw_waarnemer",
+    "dwc_individualCount"   = "raw_aantal",
+    "dwc_locationID"        = "raw_plotnaam",
+    "dwc_varbatimBehavior"  = "raw_wrntype_omschrijving",
+    "dwc_occurrenceRemarks" = "raw_opmerk",
+    "dwc_taxonID"            = "raw_soortnr"
+  )
+```
+
+**Vragen**
+
+-  Ok dat `dwc_varbatimBehavior` de Nederlandstalige beschrijving is? De Engelstalige beschrijving wordt in de volgende sectie onder `dwc_behavior` aangemaakt. Of mag de Nederlandse beschrijving dan weg?
+
+## Gewijzigde waarden
+
+Gewijzigde waarden worden gebruikt voor Darwin Core-termen waarvoor de inhoud in `raw_data` als basis wordt gebruikt, maar deze moet worden gestandaardiseerd. Dit geldt voor Darwin Core-termen waarvoor we een vocabulaire gebruiken of waar we willen transformeren voor de duidelijkheid of om duidelijke fouten te corrigeren.
+
+- We creëren een `dwc_occurrenceID` en een `dwc_occurrenceID`
+- We voegen `dwc_class` toe o.b.v. de `soortgrp`
+- We voegen `dwc_occurrenceStatus` toe o.b.v. de `dwc_individualCount` 
+- We voegen `dwc_behavior` toe als Engelse vertaling van `dwc_varbatimBehavior`
+
+```{r}
+taxon_core <- taxon_core %>%
+  mutate(
+    dwc_occurrenceID = paste0("MBAG:MAS:", .data$raw_oid),
+    dwc_eventID = paste0("MBAG:MAS:",
+                         .data$dwc_eventDate,
+                         .data$dwc_locationID),
+    dwc_class = ifelse(.data$raw_soortgrp == 2, "Aves", "Mammalia"),
+    dwc_occurrenceStatus = ifelse(.data$dwc_individualCount > 0,
+                                  "Present", "Absent"),
+    dwc_behavior = case_when(
+      .data$dwc_varbatimBehavior == "Territoriaal gedrag" ~
+        "Teritorial behaviour",
+      .data$dwc_varbatimBehavior == "Individu of groep niet plaatsgebonden" ~
+        "Individual or group not bound to a location",
+      .data$dwc_varbatimBehavior == "Volwassen individu in broedbiotoop" ~
+        "Adult individual in breeding habitat",
+      .data$dwc_varbatimBehavior == "Nestvondst" ~
+        "Nest discovery",
+      .data$dwc_varbatimBehavior == "Nest-aanduidend gedrag" ~
+        "Nest-indicating behaviour",
+      .data$dwc_varbatimBehavior == "Paar in broedbiotoop" ~
+        "Pair in breeding habitat"
+  )) %>%
+  select(
+    -"raw_oid",
+    -"raw_soortgrp",
+    -"raw_wrntype"
+  )
+```
+
+**Vragen**
+
+- We kunnen ook afwezigheden toevoegen (`dwc_occurrenceStatus = "absent"` en `dwc_individualCount = 0`) aangezien alle vogels worden genoteerd op het moment van tellen vanaf dat telpunt. Hoe doen we dit?
+  - We kijken per jaar naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten per jaar. *Voordeel:* geen verandering als er data van een nieuw jaar bijkomt. *Nadeel:* niet volledig aangezien deze lijst niet volledig is.
+  - We kijken over de hele dataset naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten. *Voordeel:* steeds meer volledige lijst van soorten. *Nadeel:* dataset zal elk jaar veranderen.
+  - Afwezigheden toevoegen o.b.v. externe lijst?
+  - ...
+
+# Nabewerking
+## Taxon matching
+
+De soortcodes in `dwc_taxonID` zijn avimapcodes.
+We kunnen enkel matchen op de Nederlandstalige soortnamen in `dwc_vernacularName`.
+Dit doen we via aangepaste code van in [deze gist](https://gist.github.com/damianooldoni/3fa9cc1ffa67377a9757df097d48d19f).
+Een voorbeeldje:
+
+```{r}
+example_specs <- c(
+  "Gele Kwikstaart",
+  "Spreeuw",
+  "Roodborst",
+  "Eekhoorn",
+  "Merel",
+  "Hop",
+  "Hop",
+  "Haas",
+  "Veldmuis",
+  "Aardmuis",
+  "Veldmuis/Aardmuis"
+  )
+
+example_df <- tibble(
+  id = seq_along(example_specs),
+  dwc_vernacularName = example_specs,
+  dwc_class = c("Aves", "Aves", "Aves", "Mammalia", "Aves", "Aves",
+                NA, "Mammalia", "Mammalia", "Mammalia", "Mammalia"),
+  dwc_kingdom = c(rep("Animalia", 6), "Plantae", rep("Animalia", 4))
+)
+
+example_df
+```
+
+Als we voor de eerste beste match gaan, zien we verschillende fouten optreden:
+
+```{r}
+map_taxa_from_vernacular(
+  vernacular_name_df = example_df,
+  vernacular_name_col = "dwc_vernacularName",
+  out_cols = c("scientificName", "family", "order", "class"),
+  limit = 1)
+```
+
+- Roodborst is een insect die ook die Nederlandse naam heeft
+- Eekhoorn is een ondersoort
+- Merel is een slang die merel in zijn wetenschappelijke soortnaam heeft
+- Hop is een virus
+- Haas is een genus die haas in auteur heeft
+- Veldmuis/Aardmuis matched met Aardmuis
+
+We nemen de default limit (100).
+We zijn niet tevreden met eerste beste match, maar gaan met een specifieke regex door meerdere vernacular names zoeken (Merel zal bv. ook niet met Indische merel matchen).
+
+```{r}
+map_taxa_from_vernacular(
+  vernacular_name_df = example_df,
+  vernacular_name_col = "dwc_vernacularName",
+  out_cols = c("scientificName", "family", "class"))
+```
+
+- Roodborst is een insect die ook die Nederlandse naam heeft
+- Eekhoorn is een ondersoort
+- Hop is in beide gevallen een plant
+- Haas wordt niet teruggevonden
+
+We specificeren dat we enkel soortnamen willen:
+
+```{r}
+map_taxa_from_vernacular(
+  vernacular_name_df = example_df,
+  vernacular_name_col = "dwc_vernacularName",
+  out_cols = c("scientificName", "family", "class"),
+  rank = "SPECIES")
+```
+
+- Roodborst is een insect die ook die Nederlandse naam heeft
+- Eekhoorn is een vlinder
+- Hop is in beide gevallen een plant
+- Haas wordt niet teruggevonden
+
+We geven taxonomische info van klasse en rijk mee aan de matching:
+
+```{r}
+map_taxa_from_vernacular(
+  vernacular_name_df = example_df,
+  vernacular_name_col = "dwc_vernacularName",
+  out_cols = c("scientificName", "family", "class"),
+  rank = "SPECIES",
+  filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"))
+```
+
+- Haas wordt niet teruggevonden
+
+Voor Haas vinden we geen goeie match. Deze naam komt te vaak terug in soortnamen/auteurs. We verhogen de limit:
+
+```{r}
+map_taxa_from_vernacular(
+  vernacular_name_df = example_df,
+  vernacular_name_col = "dwc_vernacularName",
+  out_cols = c("scientificName", "family", "class"),
+  filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
+  rank = "SPECIES",
+  limit = 1000)
+```
+
+Uiteindelijk vinden we de wetenschappelijke naam voor Haas.
+Voor Veldmuis/Aardmuis vinden we geen match wat logisch is.
+
+We testen de code uit voor alle soorten in de data.
+
+```{r}
+species_names_mas <- taxon_core %>%
+  distinct(dwc_taxonID, dwc_vernacularName, dwc_class, dwc_kingdom) %>%
+  arrange(dwc_vernacularName)
+
+# Number of rows per split
+rows_per_split <- 50
+
+# Create a list of tibbles with up to 50 rows each
+species_names_mas_list <- species_names_mas %>%
+  mutate(group = ceiling(row_number() / rows_per_split)) %>%
+  group_split(group) %>%
+  lapply(select, -group)  # Remove the group column
+
+species_matching_mas_list <- lapply(
+  species_names_mas_list, map_taxa_from_vernacular,
+  vernacular_name_col = "dwc_vernacularName",
+  out_cols = c("scientificName", "family", "class"),
+  filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
+  rank = "SPECIES",
+  limit = 1000)
+
+species_matching_mas <- do.call(rbind.data.frame, species_matching_mas_list) %>%
+  arrange(class, family, scientificName)
+
+species_matching_mas %>%
+  kable()
+```
+
+Voor meeste soorten komt het goed uit, maar voor een paar soorten niet.
+We proberen apart voor de resterende soorten.
+We verwijderen `rank = "SPECIES"` en verhogen de limit naar 5000.
+
+```{r}
+species_matching_mas_rest <- species_matching_mas %>%
+  filter(is.na(scientificName)) %>%
+  select(dwc_taxonID, dwc_vernacularName, dwc_class, dwc_kingdom) %>%
+  map_taxa_from_vernacular(
+    vernacular_name_col = "dwc_vernacularName",
+    out_cols = c("scientificName", "family", "class"),
+    filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
+    limit = 5000) %>%
+  arrange(class, family, scientificName)
+
+species_matching_mas_rest %>%
+  kable()
+```
+
+Nu hebben we namen voor alle taxa.
+Enkel Veldmuis/Aardmuis niet, wat prima is.
+
+```{r}
+species_matching_mas_list2 <- lapply(
+  species_names_mas_list, map_taxa_from_vernacular,
+  vernacular_name_col = "dwc_vernacularName",
+  out_cols = c("scientificName", "phylum", "order", "family", "genus",
+               "species", "authorship", "rank", "speciesKey"),
+  filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
+  rank = "SPECIES",
+  limit = 1000)
+
+species_matching_mas2 <- do.call(rbind.data.frame,
+                                 species_matching_mas_list2)
+
+species_matching_mas_rest2 <- species_matching_mas2 %>%
+  filter(is.na(scientificName)) %>%
+  select(dwc_taxonID, dwc_vernacularName, dwc_class, dwc_kingdom) %>%
+  map_taxa_from_vernacular(
+    vernacular_name_col = "dwc_vernacularName",
+    out_cols = c("scientificName", "phylum", "order", "family", "genus",
+                 "species", "authorship", "rank", "speciesKey"),
+    filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
+    limit = 5000)
+
+taxon_core <- rbind.data.frame(species_matching_mas2, species_matching_mas_rest2) %>%
+  full_join(taxon_core,
+            relationship = "many-to-many",
+            by = join_by(dwc_taxonID, dwc_vernacularName, dwc_class,
+                         dwc_kingdom)) %>%
+  rename(
+    "dwc_scientificNameID"         = "speciesKey",
+    "dwc_taxonRank"                = "rank",
+    "dwc_scientificNameAuthorship" = "authorship"
+  )
+```
+
+# Conclusie
+## Opmerkingen
+
+De volgende kolommen van `raw_data` blijven over:
+
+```{r}
+sort(colnames(taxon_core)[grepl("^raw\\_", colnames(taxon_core))])
+```
+
+- Locaties telpunten ook in dataset (`raw_x_coord`, `raw_y_coord`, `raw_crs`) --> Event versus occurrence dataset opsplitsen?
+- Afstand tot telpunt: `raw_distance2plot` --> welke term?
+- Zijn variabelen relevant om mee te geven?
+  - `raw_area_prop_sb` --> Overlap steekproefkader zenodo?
+  - `raw_sbp` --> Overlap steekproefkader zenodo?
+  - `raw_openheid_klasse` --> Overlap steekproefkader zenodo?
+  - `raw_regio` --> Overlap steekproefkader zenodo?
+  - `raw_predator`, `raw_n_predators_plot`: achteraf berekend, is de soort een predator of niet
+  - `raw_periode_in_jaar`: 1 van 4 telperiodes
+  - `raw_status_teller`: is de waarnemer een professional of een vrijwilliger?
+- Kan hier nog iets mee gedaan worden?
+  - `raw_doy`: day of year sinds januari
+  - `raw_plotid`: we gebruiken eigenlijk altijd plotnaam
+  - `raw_projectid`: is dit INBO of SOVON gerelateerd?
+- We missen nog een paar belangrijke kolommen
+  - `coordinateUncertaintyInMeters`
+  - ...
+
+Zo ziet de dataset er voorlopig uit:
+
+```{r}
+taxon_core_final <- taxon_core %>%
+  select(-starts_with("raw_")) %>%
+  rename_with(~ gsub("dwc\\_", "", .x))
+
+taxon_core_final %>%
+  glimpse()
+```
+
+# Uitschrijven data
+
+Volgorde van de kolommen aanpassen kan volgens:
+
+```
+col_order <- c("type", "language", "license", "rightsHolder", "accessRights",
+               "datasetID", "institutionCode","datasetName","basisOfRecord",
+               "occurrenceID","recordedBy", "individualCount",
+               "organismQuantity", "organismQuantityType", "occurrenceStatus",
+               "occurrenceRemarks" ,"samplingProtocol", "samplingEffort",
+               "eventDate", "continent", "countryCode", "municipality",
+               "verbatimLatitude", "verbatimLongitude",
+               "verbatimCoordinateSystem", "verbatimSRS" ,"decimalLatitude",
+               "decimalLongitude", "geodeticDatum",
+               "coordinateUncertaintyInMeters", "identifiedBy",
+               "scientificName", "kingdom", "scientificNameAuthorship",
+               "taxonRank", "nomenclaturalCode"
+               )
+taxon_core_final <- taxon_core_final[, col_order]
+```
