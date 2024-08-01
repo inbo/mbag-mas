@@ -362,6 +362,7 @@ species_matching_mas_list <- lapply(
   vernacular_name_col = "dwc_vernacularName",
   out_cols = c("scientificName", "family", "class"),
   filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
+  lang = "nld",
   rank = "SPECIES",
   limit = 1000)
 
@@ -384,6 +385,7 @@ species_matching_mas_rest <- species_matching_mas %>%
     vernacular_name_col = "dwc_vernacularName",
     out_cols = c("scientificName", "family", "class"),
     filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
+    lang = "nld",
     limit = 5000) %>%
   arrange(class, family, scientificName)
 
@@ -401,6 +403,7 @@ species_matching_mas_list2 <- lapply(
   out_cols = c("scientificName", "phylum", "order", "family", "genus",
                "species", "authorship", "rank", "speciesKey"),
   filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
+  lang = "nld",
   rank = "SPECIES",
   limit = 1000)
 
@@ -415,9 +418,12 @@ species_matching_mas_rest2 <- species_matching_mas2 %>%
     out_cols = c("scientificName", "phylum", "order", "family", "genus",
                  "species", "authorship", "rank", "speciesKey"),
     filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
+    lang = "nld",
     limit = 5000)
 
-taxon_core <- rbind.data.frame(species_matching_mas2, species_matching_mas_rest2) %>%
+taxon_core <- rbind.data.frame(species_matching_mas2 %>%
+                                 filter(!is.na(scientificName)),
+                               species_matching_mas_rest2) %>%
   full_join(taxon_core,
             relationship = "many-to-many",
             by = join_by(dwc_taxonID, dwc_vernacularName, dwc_class,
@@ -427,6 +433,79 @@ taxon_core <- rbind.data.frame(species_matching_mas2, species_matching_mas_rest2
     "dwc_taxonRank"                = "rank",
     "dwc_scientificNameAuthorship" = "authorship"
   )
+```
+
+We vergelijken met de soortenlijst die we van sovon doorkregen.
+
+```{r}
+soorten_wet_mas <- read_csv2(file.path("data", "SOVON", "soorten_wet_mas.csv"))
+
+test_wet_names <- rbind.data.frame(species_matching_mas2 %>%
+                   filter(!is.na(scientificName)),
+                 species_matching_mas_rest2) %>%
+  select("dwc_taxonID", "dwc_vernacularName", "scientificName",
+         "authorship") %>%
+  mutate(authorship = trimws(authorship)) %>%
+  rowwise() %>%
+  mutate(scientificName = gsub(authorship, "", scientificName),
+         dwc_scientificName = trimws(gsub("\\(.*?\\)", "", scientificName))
+  ) %>%
+  select(-"authorship", -"scientificName") %>%
+  left_join(soorten_wet_mas, by = join_by("dwc_taxonID" == "euring")) %>%
+  select(-"groepnr")
+```
+
+De volgende soorten zijn niet in de lijst van sovon aanwezig:
+
+```{r}
+missing_soorten_wet_mas <- test_wet_names %>%
+  filter(is.na(naam))
+
+missing_soorten_wet_mas %>%
+  select(euring = dwc_taxonID, naam = dwc_vernacularName) %>%
+  mutate(naam = ifelse(euring == 10170, "Gele kwikstaart (spec)", naam)) %>%
+  write_csv2(file.path("data", "SOVON", "missing_soorten_wet_mas.csv"))
+
+missing_soorten_wet_mas %>%
+  kable()
+```
+
+Hoe zit het met de wetenschappelijke namen van onze functie en van de lijst van sovon.
+Komen deze overeen?
+
+```{r}
+mismatches_wet_names <- test_wet_names %>%
+  filter(!is.na(naam)) %>%
+  mutate(test_wet = dwc_scientificName == wetenschap)
+
+mismatches_wet_names %>%
+  filter(!test_wet) %>%
+  kable()
+```
+
+Er zijn een aantal mismatches:
+
+1. Species versus subspecies
+  - op zich geen probleem
+2. Match met soorten van andere continenten omdat onze soortnaam ook aan die buitenlandse soort gekoppeld is
+  - Roodborsttapuit van Afrikaanse roodborsttapuit
+  - Staartmees van Birmese staartmees
+  - Watersnip van Amerikaanse watersnip
+  - Wintertaling van Amerikaanse wintertaling
+  - Zilvermeeuw van Amerikaanse zilvermeeuw
+3. Random
+- Brandgans van Bergeend
+
+
+```{r}
+map_taxa_from_vernacular(
+  species_names_mas %>% filter(dwc_vernacularName == "Roodborsttapuit"),
+  vernacular_name_col = "dwc_vernacularName",
+  out_cols = c("scientificName", "family", "class"),
+  filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
+  lang = "nld",
+  rank = "SPECIES",
+  limit = 1000)
 ```
 
 # Conclusie
