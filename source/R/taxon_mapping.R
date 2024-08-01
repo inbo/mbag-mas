@@ -1,4 +1,4 @@
-# Function to determine the structure of the data frames in the list
+# Function to determine the structure of the data frames in a list
 get_df_structure <- function(df_list) {
   require("dplyr")
 
@@ -8,35 +8,39 @@ get_df_structure <- function(df_list) {
   return(empty_df)
 }
 
-# Function to find the name of the element containing the value
+# Function to find the taxon keys that match search values best
 find_df_name <- function(df_list, search_value, lang = NA) {
   require("dplyr")
 
-  # Check if the value is present in each dataframe
+  # Check how many times the value is present in each dataframe
   contains_value <- purrr::map(df_list, function(df) {
     if (is.na(lang)) {
       vernacular_names <- df %>%
         pull(.data$vernacularName)
     } else {
       vernacular_names <- df %>%
-        filter(.data$language == lang) %>%
+        dplyr::filter(.data$language == lang) %>%
         pull(.data$vernacularName)
     }
 
+    # Count number of matches (exact match and ignore case)
     sum(grepl(paste0("^\\s*", search_value, "\\s*$"), vernacular_names,
               ignore.case = TRUE))
   })
 
-  # Get species key with most matches
+  # Sort species keys from most to least matches
   contains_value <- contains_value[order(unlist(contains_value),
                                          decreasing = TRUE)]
   contains_value <- contains_value[contains_value != 0]
+
+  # Get species key with most matches
   df_name <- names(contains_value)[1]
 
   # Return the name
   return(df_name)
 }
 
+# Match vernacular names with GBIF taxonomic backbone
 # Inspired by:
 # https://gist.github.com/damianooldoni/3fa9cc1ffa67377a9757df097d48d19f
 match_vernacular_name <- function(
