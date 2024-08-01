@@ -9,19 +9,28 @@ get_df_structure <- function(df_list) {
 }
 
 # Function to find the name of the element containing the value
-find_df_name <- function(df_list, search_value) {
+find_df_name <- function(df_list, search_value, lang = NA) {
   require("dplyr")
 
   # Check if the value is present in each dataframe
-  contains_value <- purrr::map_lgl(df_list, function(df) {
-    vernacular_names <- df %>% pull(.data$vernacularName)
+  contains_value <- purrr::map(df_list, function(df) {
+    if (is.na(lang)) {
+      vernacular_names <- df %>%
+        pull(.data$vernacularName)
+    } else {
+      vernacular_names <- df %>%
+        filter(.data$language == lang) %>%
+        pull(.data$vernacularName)
+    }
 
-    any(grepl(paste0("^\\s*", search_value, "\\s*$"), vernacular_names,
+    sum(grepl(paste0("^\\s*", search_value, "\\s*$"), vernacular_names,
               ignore.case = TRUE))
   })
 
-  # Get the name of the best match containing the value
-  df_name <- names(df_list)[which(contains_value)][1]
+  # Get species key with most matches
+  contains_value <- contains_value[order(unlist(contains_value),
+                                         decreasing = TRUE)]
+  df_name <- names(contains_value)[1]
 
   # Return the name
   return(df_name)
@@ -32,6 +41,7 @@ find_df_name <- function(df_list, search_value) {
 match_vernacular_name <- function(
     vernacular_name_df,
     filter_cols = NULL,
+    lang = NA,
     ...) {
   vernacular_name <- pull(vernacular_name_df[1])
 
@@ -63,6 +73,7 @@ match_vernacular_name <- function(
       taxon_data <- vernacular_name_df %>%
         select(where(~ all(!is.na(.)))) %>%
         inner_join(taxon_data, by = join_condition, keep = TRUE) %>%
+        filter(tolower(taxonomicStatus) == "accepted") %>%
         select(-all_of(setdiff(colnames(vernacular_name_df), cols_to_remove)))
 
       # Use species keys to select vernacular names
@@ -72,7 +83,7 @@ match_vernacular_name <- function(
 
     # Search taxon key in vernacular names if limit > 1
     if (nrow(taxon_data) > 1) {
-      taxon_key <- find_df_name(vernacular_names, vernacular_name)
+      taxon_key <- find_df_name(vernacular_names, vernacular_name, lang)
 
       # Return NA if no good match found
       if (length(taxon_key) == 0) {
@@ -99,6 +110,7 @@ map_taxa_from_vernacular <- function(
     vernacular_name_col = "vernacularName",
     out_cols = "scientificName",
     filter_cols = NULL,
+    lang = NA,
     ...) {
   require("dplyr")
   require("tidyr")
@@ -119,6 +131,7 @@ map_taxa_from_vernacular <- function(
       .data$match_df,
       match_vernacular_name,
       filter_cols = filter_cols,
+      lang = lang,
       ...)) %>%
     unnest("match_df") %>%
 
