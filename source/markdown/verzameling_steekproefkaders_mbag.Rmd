@@ -28,6 +28,7 @@ library(tidyverse)
 library(sf)
 library(targets)
 library(nngeo)
+library(terra)
 
 # Conflicting packages
 conflicted::conflicts_prefer(dplyr::filter)
@@ -116,7 +117,7 @@ steekproef_za_kp_po <- steekproef_za_kp_po_raw %>%
 
 - in uncut in vervanging id kijken voor oude punten met volgnr <= 50
 - in final kijken voor finale punten
--samenvoegen
+- samenvoegen
 
 ```{r}
 oud_zandstreek <- read.csv(
@@ -156,7 +157,8 @@ oude_punten_za_kp_po <- bind_rows(
 oude_punten_za_kp_po
 ```
 
-> Probleem! Sommige oude telpunten zaten niet in steekproef. Iets misgelopen in targets?
+> Probleem! Sommige oude telpunten zaten niet in steekproef. Wat is er misgelopen?
+> Johannes heeft deze handmatig toegevoegd. Zie mail 13 maart 2024 15:13 ...
 
 We voegen de locaties toe aan de oude punten.
 
@@ -207,8 +209,122 @@ oude_punten_sbp <- oude_punten_za_kp_po_sf %>%
   select(-is_sbp)
 ```
 
+We berekenen de openheid variabele:
 
-> gelijkaardig bij zandleemstreek?
+```{r}
+ol <- lapply(perimeters_za_kp_po$Naam, function(regio) {
+  selectie_openheid(
+      gebied = perimeters_za_kp_po %>%
+        filter(Naam == regio),
+      ol_strata = c("OL")
+    ) %>%
+    mutate(openheid_klasse = "OL")
+})
+
+hol <- lapply(perimeters_za_kp_po$Naam, function(regio) {
+  selectie_openheid(
+      gebied = perimeters_za_kp_po %>%
+        filter(Naam == regio),
+      ol_strata = c("HOL")
+    ) %>%
+    mutate(openheid_klasse = "HOL")
+})
+
+ol_hol <- rbind(do.call(rbind.data.frame, ol),
+                do.call(rbind.data.frame, hol)) %>%
+  select(openheid_klasse)
+
+
+extra_oude_punten_full <- oude_punten_sbp %>%
+  select(-openheid_klasse) %>%
+  st_join(ol_hol)
+```
+
+```{r}
+extra_oude_punten_full %>%
+  st_drop_geometry() %>%
+  mutate(openheid_sbp2 = paste(openheid_klasse, sbp, "plan"),
+         test = openheid_sbp == openheid_sbp2) %>%
+  select(regio, pointid, openheid_sbp, openheid_sbp2, test)
+```
+
+Van 3 van de 7 punten komt het stratum (`openheid_sbp2`) niet overeen met het originele punt (`openheid_sbp`).
+
+We berekenen overlap voor de punten:
+- "Zn_63159.9" vervangen door "Maaibos"
+- "Pl_13942.1" vervangen door "VL0048"
+- "Pl_11796.2.5" vervangen door "Pl_1188.2", en "Pl_1188.2" daarna door "Beerpolder"
+- "Pl_31984.3" vervangen door "Grote Geule"
+- "Pl_31984.3" vervangen door "DP KC"
+- "Pl_2761.2.1" vervangen door "NAP C"
+- "Pl_5258.6" vervangen door "Casteleynstraat"
+
+```{r}
+original_point <- steekproef_za_kp_po %>%
+  filter(pointid %in% c("Zn_63159.9", "Pl_13942.1", "Pl_1188.2", "Pl_2797.5",
+                        "Pl_31984.3", "Pl_2761.2.1", "Pl_5258.6")) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+  st_buffer(300) %>%
+  mutate(openheid_sbp = paste(openheid_klasse, sbp, "plan")) %>%
+  select(pointid, openheid_sbp)
+
+replacement_point <- extra_oude_punten_full %>%
+  mutate(openheid_sbp2 = paste(openheid_klasse, sbp, "plan")) %>%
+  filter(pointid %in% c("Maaibos", "VL0048", "Beerpolder", "Grote Geule",
+                        "DP KC", "NAP C", "Casteleynstraat")) %>%
+  st_buffer(300) %>%
+  select(pointid, openheid_sbp2)
+
+st_intersection(original_point, replacement_point) %>%
+  mutate(intersect_area = st_area(.) %>% units::drop_units(),
+         perc_overlap = intersect_area / (300 * 300 * pi)) %>%
+  st_drop_geometry() %>%
+  select(original = pointid, replacement = pointid.1,
+         original_stratum = openheid_sbp, replacement_stratum = openheid_sbp2,
+         perc_overlap) %>%
+  mutate(zelfde_stratum = ifelse(original_stratum == replacement_stratum,
+                                 "ja", "nee"),
+         overlap_meer50perc = ifelse(perc_overlap >= 0.5, "ja", "nee"),
+         geldig = ifelse(zelfde_stratum == "ja" & overlap_meer50perc == "ja",
+                         "ja", "nee")) %>%
+  kable()
+```
+
+Geen van deze zijn geldige punten.
+
+
+We voegen alles samen.
+
+```{r}
+oud_zandstreek <- read.csv(
+  file.path(
+    data_path,
+    "manual_check_johannes",
+    "MAS netwerk Vlaanderen- steekproef_zandstreek_telpunten_uncut.csv")) %>%
+  filter(sample_order <= 50,
+         !startsWith(vervanging_id, "Zn") & vervanging_id != "") %>%
+  select(regio = Naam, pointid = vervanging_id, openheid_sbp)
+
+oud_kempen <- read.csv(
+  file.path(
+    data_path,
+    "manual_check_johannes",
+    "MAS netwerk Vlaanderen- steekproef_kempen_telpunten_uncut.csv")) %>%
+  filter(sample_order <= 50,
+         !startsWith(vervanging_id, "Km") & vervanging_id != "") %>%
+  select(regio = Naam, pointid = vervanging_id, openheid_sbp)
+
+oud_polders <- read.csv(
+  file.path(
+    data_path,
+    "manual_check_johannes",
+    "MAS netwerk Vlaanderen- steekproef_polders_telpunten_uncut.csv")) %>%
+  filter(sample_order <= 50,
+         !startsWith(vervanging_id, "Pl") & vervanging_id != "") %>%
+  select(regio = Naam, pointid = vervanging_id, openheid_sbp)
+```
+
+
 
 ## Weidestreek
 
