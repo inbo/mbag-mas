@@ -293,7 +293,6 @@ map_taxa_from_vernacular(
   out_cols = c("scientificName", "family", "class"))
 ```
 
-- Roodborst is een insect die ook die Nederlandse naam heeft
 - Eekhoorn is een ondersoort
 - Hop is in beide gevallen een plant
 - Haas wordt niet teruggevonden
@@ -308,7 +307,6 @@ map_taxa_from_vernacular(
   rank = "SPECIES")
 ```
 
-- Roodborst is een insect die ook die Nederlandse naam heeft
 - Eekhoorn is een vlinder
 - Hop is in beide gevallen een plant
 - Haas wordt niet teruggevonden
