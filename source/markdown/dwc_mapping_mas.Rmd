@@ -363,7 +363,6 @@ species_matching_mas_list <- lapply(
   out_cols = c("scientificName", "family", "class"),
   filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
   lang = "nld",
-  rank = "SPECIES",
   status = c("ACCEPTED", "DOUBTFUL"),
   limit = 1000)
 
@@ -371,27 +370,6 @@ species_matching_mas <- do.call(rbind.data.frame, species_matching_mas_list) %>%
   arrange(class, family, scientificName)
 
 species_matching_mas %>%
-  kable()
-```
-
-Voor meeste soorten komt het goed uit, maar voor een paar soorten niet.
-We proberen apart voor de resterende soorten.
-We verwijderen `rank = "SPECIES"` en verhogen de limit naar 5000.
-
-```{r}
-species_matching_mas_rest <- species_matching_mas %>%
-  filter(is.na(scientificName)) %>%
-  select(dwc_taxonID, dwc_vernacularName, dwc_class, dwc_kingdom) %>%
-  map_taxa_from_vernacular(
-    vernacular_name_col = "dwc_vernacularName",
-    out_cols = c("scientificName", "family", "class"),
-    filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
-    lang = "nld",
-    status = c("ACCEPTED", "DOUBTFUL"),
-    limit = 5000) %>%
-  arrange(class, family, scientificName)
-
-species_matching_mas_rest %>%
   kable()
 ```
 
@@ -406,28 +384,13 @@ species_matching_mas_list2 <- lapply(
                "species", "authorship", "rank", "speciesKey"),
   filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
   lang = "nld",
-  rank = "SPECIES",
   status = c("ACCEPTED", "DOUBTFUL"),
   limit = 1000)
 
 species_matching_mas2 <- do.call(rbind.data.frame,
                                  species_matching_mas_list2)
 
-species_matching_mas_rest2 <- species_matching_mas2 %>%
-  filter(is.na(scientificName)) %>%
-  select(dwc_taxonID, dwc_vernacularName, dwc_class, dwc_kingdom) %>%
-  map_taxa_from_vernacular(
-    vernacular_name_col = "dwc_vernacularName",
-    out_cols = c("scientificName", "phylum", "order", "family", "genus",
-                 "species", "authorship", "rank", "speciesKey"),
-    filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
-    lang = "nld",
-    status = c("ACCEPTED", "DOUBTFUL"),
-    limit = 5000)
-
-taxon_core <- rbind.data.frame(species_matching_mas2 %>%
-                                 filter(!is.na(scientificName)),
-                               species_matching_mas_rest2) %>%
+taxon_core <- species_matching_mas2 %>%
   full_join(taxon_core,
             relationship = "many-to-many",
             by = join_by(dwc_taxonID, dwc_vernacularName, dwc_class,
@@ -491,10 +454,9 @@ Er zijn een aantal mismatches:
 
 1. Species versus subspecies
   - op zich geen probleem
-  - wel voor Stadsduif, want Columba livia is Rotsduif (?) --> hard coden?
-2. Genera
+2. Andere genera
   - Braamsluiper: geen data van Curruca curruca in GBIF tax. backbone
-  - Fluiter: met 2 ll'en is correct (? op wikipedia ook met 1 l)
+  - Fluiter: met 2 ll'en is correct (? op wikipedia ook met 1 l ...)
   - Grasmus: geen data van Curruca communis in GBIF tax. backbone
   - Matkop: zowel Parus montanus als Poecile montanus zelfde info in GBIF tax. backbone
 
