@@ -31,6 +31,9 @@ library(targets)
 library(sf)
 library(here)
 
+# Conflicts
+conflicted::conflicts_prefer(dplyr::filter)
+
 # Source functions
 source(here("source", "R", "taxon_mapping.R"))
 
@@ -405,9 +408,7 @@ We vergelijken met de soortenlijst die we van sovon doorkregen.
 ```{r}
 soorten_wet_mas <- read_csv2(file.path("data", "SOVON", "soorten_wet_mas.csv"))
 
-test_wet_names <- rbind.data.frame(species_matching_mas2 %>%
-                   filter(!is.na(scientificName)),
-                 species_matching_mas_rest2) %>%
+test_wet_names <- species_matching_mas2 %>%
   select("dwc_taxonID", "dwc_vernacularName", "scientificName",
          "authorship") %>%
   mutate(authorship = trimws(authorship)) %>%
@@ -459,7 +460,6 @@ Er zijn een aantal mismatches:
   - Matkop: zowel Parus montanus als Poecile montanus zelfde info in GBIF tax. backbone
 
 # Conclusie
-## Opmerkingen
 
 De volgende kolommen van `raw_data` blijven over:
 
