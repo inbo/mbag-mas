@@ -156,7 +156,7 @@ oude_punten_za_kp_po <- bind_rows(
 oude_punten_za_kp_po
 ```
 
-> Probleem! Sommige oude telpunten zaten niet in steekproef. Blijkbaar waren er 2 bestanden met ouden punten en is enkel avimap_601_0_MAS_Vlaanderen_telpunten_xy.shp gebruikt.
+> Probleem! Sommige oude telpunten zaten niet in steekproef. Iets misgelopen in targets?
 
 We voegen de locaties toe aan de oude punten.
 
