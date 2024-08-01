@@ -30,6 +30,7 @@ find_df_name <- function(df_list, search_value, lang = NA) {
   # Get species key with most matches
   contains_value <- contains_value[order(unlist(contains_value),
                                          decreasing = TRUE)]
+  contains_value <- contains_value[contains_value != 0]
   df_name <- names(contains_value)[1]
 
   # Return the name
@@ -73,7 +74,6 @@ match_vernacular_name <- function(
       taxon_data <- vernacular_name_df %>%
         select(where(~ all(!is.na(.)))) %>%
         inner_join(taxon_data, by = join_condition, keep = TRUE) %>%
-        filter(tolower(taxonomicStatus) == "accepted") %>%
         select(-all_of(setdiff(colnames(vernacular_name_df), cols_to_remove)))
 
       # Use species keys to select vernacular names
@@ -86,7 +86,7 @@ match_vernacular_name <- function(
       taxon_key <- find_df_name(vernacular_names, vernacular_name, lang)
 
       # Return NA if no good match found
-      if (length(taxon_key) == 0) {
+      if (is.na(taxon_key)) {
         NA_character_
       # Return match with taxon key
       } else {
