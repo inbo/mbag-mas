@@ -300,7 +300,7 @@ oud_zandstreek <- read.csv(
   file.path(
     data_path,
     "manual_check_johannes",
-    "MAS netwerk Vlaanderen- steekproef_zandstreek_telpunten_uncut.csv")) %>%
+    "MAS netwerk Vlaanderen- steekproef_zandstreek_telpunten_final.csv")) %>%
   filter(sample_order <= 50,
          !startsWith(vervanging_id, "Zn") & vervanging_id != "") %>%
   select(regio = Naam, pointid = vervanging_id, openheid_sbp)
@@ -309,7 +309,7 @@ oud_kempen <- read.csv(
   file.path(
     data_path,
     "manual_check_johannes",
-    "MAS netwerk Vlaanderen- steekproef_kempen_telpunten_uncut.csv")) %>%
+    "MAS netwerk Vlaanderen- steekproef_kempen_telpunten_final.csv")) %>%
   filter(sample_order <= 50,
          !startsWith(vervanging_id, "Km") & vervanging_id != "") %>%
   select(regio = Naam, pointid = vervanging_id, openheid_sbp)
@@ -318,7 +318,7 @@ oud_polders <- read.csv(
   file.path(
     data_path,
     "manual_check_johannes",
-    "MAS netwerk Vlaanderen- steekproef_polders_telpunten_uncut.csv")) %>%
+    "MAS netwerk Vlaanderen- steekproef_polders_telpunten_final.csv")) %>%
   filter(sample_order <= 50,
          !startsWith(vervanging_id, "Pl") & vervanging_id != "") %>%
   select(regio = Naam, pointid = vervanging_id, openheid_sbp)
