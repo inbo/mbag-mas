@@ -491,7 +491,7 @@ Er zijn een aantal mismatches:
 
 1. Species versus subspecies
   - op zich geen probleem
-  - wel voor Stadsduif, want Columba livia is Rotsduif (?)
+  - wel voor Stadsduif, want Columba livia is Rotsduif (?) --> hard coden?
 2. Genera
   - Braamsluiper: geen data van Curruca curruca in GBIF tax. backbone
   - Fluiter: met 2 ll'en is correct (? op wikipedia ook met 1 l)
