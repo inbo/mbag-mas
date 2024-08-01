@@ -364,6 +364,7 @@ species_matching_mas_list <- lapply(
   filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
   lang = "nld",
   rank = "SPECIES",
+  status = c("ACCEPTED", "DOUBTFUL"),
   limit = 1000)
 
 species_matching_mas <- do.call(rbind.data.frame, species_matching_mas_list) %>%
@@ -386,6 +387,7 @@ species_matching_mas_rest <- species_matching_mas %>%
     out_cols = c("scientificName", "family", "class"),
     filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
     lang = "nld",
+    status = c("ACCEPTED", "DOUBTFUL"),
     limit = 5000) %>%
   arrange(class, family, scientificName)
 
@@ -405,6 +407,7 @@ species_matching_mas_list2 <- lapply(
   filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
   lang = "nld",
   rank = "SPECIES",
+  status = c("ACCEPTED", "DOUBTFUL"),
   limit = 1000)
 
 species_matching_mas2 <- do.call(rbind.data.frame,
@@ -419,6 +422,7 @@ species_matching_mas_rest2 <- species_matching_mas2 %>%
                  "species", "authorship", "rank", "speciesKey"),
     filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
     lang = "nld",
+    status = c("ACCEPTED", "DOUBTFUL"),
     limit = 5000)
 
 taxon_core <- rbind.data.frame(species_matching_mas2 %>%
@@ -487,26 +491,12 @@ Er zijn een aantal mismatches:
 
 1. Species versus subspecies
   - op zich geen probleem
-2. Match met soorten van andere continenten omdat onze soortnaam ook aan die buitenlandse soort gekoppeld is
-  - Roodborsttapuit van Afrikaanse roodborsttapuit
-  - Staartmees van Birmese staartmees
-  - Watersnip van Amerikaanse watersnip
-  - Wintertaling van Amerikaanse wintertaling
-  - Zilvermeeuw van Amerikaanse zilvermeeuw
-3. Random
-- Brandgans van Bergeend
-
-
-```{r}
-map_taxa_from_vernacular(
-  species_names_mas %>% filter(dwc_vernacularName == "Roodborsttapuit"),
-  vernacular_name_col = "dwc_vernacularName",
-  out_cols = c("scientificName", "family", "class"),
-  filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
-  lang = "nld",
-  rank = "SPECIES",
-  limit = 1000)
-```
+  - wel voor Stadsduif, want Columba livia is Rotsduif (?)
+2. Genera
+  - Braamsluiper: geen data van Curruca curruca in GBIF tax. backbone
+  - Fluiter: met 2 ll'en is correct (? op wikipedia ook met 1 l)
+  - Grasmus: geen data van Curruca communis in GBIF tax. backbone
+  - Matkop: zowel Parus montanus als Poecile montanus zelfde info in GBIF tax. backbone
 
 # Conclusie
 ## Opmerkingen
