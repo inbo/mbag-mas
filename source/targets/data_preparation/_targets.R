@@ -65,7 +65,7 @@ list(
     name = sample_file,
     command = path_to_samples(
       proj_path = mbag_dir,
-      file = "steekproef_avimap_mbag_piloot.csv"
+      file = "steekproef_avimap_mbag_mas.csv"
     )
   ),
   tar_target(
