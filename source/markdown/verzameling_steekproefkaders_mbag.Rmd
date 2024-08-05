@@ -411,8 +411,10 @@ avimap_za_kp_po_final <- bind_rows(
 
 We voegen deze oude punten samen met de nieuwe punten.
 
-Km_45192.7 --> VL0432?
-Km_14981.5 --> VL0005?
+> Punten uit steekproefkader genomen in plaats van vervangpunten?
+
+Km_45192.7 was oorspronkelijk VL0432?
+Km_14981.5 was oorspronkelijk VL0005?
 
 ```{r}
 steekproef_avimap_za_kp_po <- avimap_za_kp_po_final %>%
@@ -446,7 +448,12 @@ steekproef_avimap_za_kp_po %>%
 
 > ???
 
+```
+data %>% st_drop_geometry() %>% distinct(plotnaam) %>% filter(grepl("^Km", plotnaam))
+```
+
 ## Weidestreek
+### Steekproefkader
 
 Inlezen en preparatie steekproefkader.
 
@@ -466,6 +473,29 @@ steekproefkader_weidestreek <- steekproefkader_weidestreek_raw %>%
   filter(openheid_klasse %in% c("OL", "HOL"))
 ```
 
+```{r}
+head(steekproefkader_weidestreek) %>%
+  kable(digits = 2)
+```
+
+### Gewichten steekproefkader
+
+```{r}
+gewichten_wd <- steekproefkader_weidestreek %>%
+  count(regio, openheid_klasse, sbp) %>%
+  group_by(openheid_klasse) %>%
+  mutate(prop_openheid = sum(n) / nrow(steekproefkader_weidestreek)) %>%
+  group_by(sbp) %>%
+  mutate(prop_sbp = sum(n) / nrow(steekproefkader_weidestreek)) %>%
+  ungroup() %>%
+  mutate(prop = n / nrow(steekproefkader_weidestreek))
+
+gewichten_wd %>%
+  kable(digits = 5)
+```
+
+### Steekproef
+
 Inlezen en preparatie steekproef.
 
 ```{r}
@@ -484,10 +514,31 @@ steekproef_weidestreek <- steekproef_weidestreek_raw %>%
          openheid_klasse, sbp, x_coord = X, y_coord = Y, crs)
 ```
 
+```{r}
+head(steekproef_weidestreek) %>%
+  kable(digits = 2)
+```
+
+### Finale steekproef na manuele controle
+
 Inlezen en preparatie finale punten die in avimap zijn ingevoerd.
 
-- zie MAS netwerk Vlaanderen- weidestreek_kempen_telpunten-final.csv
+```{r}
+weidestreek_avimap <- read.csv(
+  file.path(
+    mbag_punten_path,
+    "MAS netwerk Vlaanderen- weidestreek_telpunten_final.csv"))
 
+steekproef_avimap_weidestreek <-  weidestreek_avimap %>%
+  select(pointid) %>%
+  mutate(regio = "Weidestreek") %>%
+  inner_join(steekproef_weidestreek, by = join_by(pointid, regio)) 
+```
+
+```{r}
+head(steekproef_avimap_weidestreek) %>%
+  kable(digits = 2)
+```
 
 # Uitschrijven datasets
 
@@ -501,6 +552,7 @@ Dit is een CSV-bestand van alle steekproefkaders.
 ## Gewichten steekproefkader
 
 Dit zijn aparte CSV-bestanden voor elke regio.
+Of alles samen?
 
 ## Steekproef
 
