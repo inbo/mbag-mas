@@ -9,48 +9,20 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Download data via SOVON WFS service
-## QGIS v3.24
+# Downloaden van de data via Sovon WFS service
 
-1.  een account aanmaken via <https://www.vogelatlas.be/user/newuser>
+Data wordt geïmporteerd via [QGIS](https://qgis.org/).
+
+1.  Een account aanmaken via <https://www.vogelatlas.be/user/newuser>
 
     1.   Rechten aanvragen Sovon
 
-1.  open QGIS
+1.  Open QGIS
     
     1. Zet project crs op EPSG:28992
     1. Kies `Kaartlagen` --\> `Databronnen beheren` --\> `WFS / OGC API objecten`
 
-1.  klik `nieuw` in het dialoogvenster om een nieuwe WFS verbinding te maken
-
-    1.   Gebruik als naam `sovon` en als url `https://portal.sovon.nl/views/wfs/453/`
-    1.   Klik op OK
-
-1.  Maak een verbinding met de zopas toegevoegde WFS service
-
-    1.   Klik op verbinden
-    1.   Selecteer de laag `ms:viewpoints`
-         -  Vraag een query aan ('Query maken') voor data van het nieuwe jaar, bv.: `SELECT * FROM viewpoints WHERE jaar = 2024`
-    1.   Vink het boxje aan 'Alleen objecten bevragen die het huidige zichtbare bereik overlappen'
-    1.   Klik op toevoegen
-    1.   Geef je gebruikersnaam en paswoord
-    1.   Indien QGIS vraagt voor transformatie van EPSG:28992 naar een ander CRS, kan je dit best cancellen
-
-Als alles goed gaat, worden nu alle data waar je toegang toe hebt gedownload (dit kan even duren).
-Dit zijn de zogenaamde bezoekstippen.
-
-## QGIS v3.26-3.28
-
-1.  een account aanmaken via <https://www.vogelatlas.be/user/newuser>
-
-    1.   Rechten aanvragen Sovon
-
-1.  open QGIS
-    
-    1. Zet project crs op EPSG:28992
-    1. Kies `Kaartlagen` --\> `Databronnen beheren` --\> `WFS / OGC API objecten`
-
-1.  klik `nieuw` in het dialoogvenster om een nieuwe WFS verbinding te maken
+1.  Klik `nieuw` in het dialoogvenster om een nieuwe WFS verbinding te maken
 
     1.   Gebruik als naam `sovon` en als url `https://portal.sovon.nl/views/wfs/453/`
     1.   Klik op OK
@@ -58,7 +30,7 @@ Dit zijn de zogenaamde bezoekstippen.
 1.  Maak een verbinding met de zopas toegevoegde WFS service
 
     1.   Klik op Verbinden
-    1.   Geef je gebruikersnaam en paswoord en kik op ok
+    1.   Geef je gebruikersnaam en paswoord wanneer dit wordt gevraagd en klik op ok
     1.   Selecteer de laag `ms:viewpoints`
          -  Vraag een query aan ('Query maken') voor data van het nieuwe jaar, bv.: `SELECT * FROM viewpoints WHERE jaar = 2024`
     1.   Vink het boxje aan 'Alleen objecten bevragen die het huidige zichtbare bereik overlappen'
@@ -95,5 +67,5 @@ Bij het toevoegen van een nieuwe dataset van een jaar, zal de pipeline bijgevolg
 De volledige pipeline ziet er als volgt uit:
 
 ```{r}
-targets::tar_glimpse()
+targets::tar_visnetwork()
 ```
