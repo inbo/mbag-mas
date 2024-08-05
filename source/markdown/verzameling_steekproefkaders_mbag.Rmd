@@ -24,6 +24,7 @@ knitr::opts_knit$set(
 
 ```{r}
 # Packages
+library(knitr)
 library(tidyverse)
 library(sf)
 library(targets)
@@ -70,6 +71,14 @@ We lezen de CSV-bestanden in.
 steekproefkader_mbag_piloot <- read.csv(
   file.path(data_path, "steekproefkader_mbag_piloot.csv"))
 
+# Load weights strata
+gewichten_ol <- read.csv(file.path(data_path,
+                                   "gewichten_oostelijke_leemstreek.csv"))
+gewichten_wl <- read.csv(file.path(data_path,
+                                   "gewichten_westelijke_leemstreek.csv"))
+gewichten_zn <- read.csv(file.path(data_path,
+                                   "gewichten_zandleemstreek.csv"))
+
 # Load samples
 steekproef_mbag_piloot <- read.csv(
   file.path(data_path, "steekproef_mbag_piloot.csv"))
@@ -80,6 +89,7 @@ steekproef_avimap_mbag_piloot <- read.csv(
 ```
 
 ## Kempen, Polders & Zandstreek
+### Steekproefkader
 
 Inlezen en preparatie steekproefkader.
 
@@ -98,6 +108,72 @@ steekproefkader_za_kp_po <- steekproefkader_za_kp_po_raw %>%
   filter(openheid_klasse %in% c("OL", "HOL"))
 ```
 
+```{r}
+head(steekproefkader_za_kp_po) %>%
+  kable(digits = 2)
+```
+
+### Gewichten steekproefkader
+
+Zandstreek.
+
+```{r}
+steekproefkader_za <- steekproefkader_za_kp_po %>%
+  filter(regio == "Zandstreek")
+
+gewichten_za <- steekproefkader_za %>%
+  count(regio, openheid_klasse, sbp) %>%
+  group_by(openheid_klasse) %>%
+  mutate(prop_openheid = sum(n) / nrow(steekproefkader_za)) %>%
+  group_by(sbp) %>%
+  mutate(prop_sbp = sum(n) / nrow(steekproefkader_za)) %>%
+  ungroup() %>%
+  mutate(prop = n / nrow(steekproefkader_za))
+
+gewichten_za %>%
+  kable(digits = 5)
+```
+
+Kempen.
+
+```{r}
+steekproefkader_kp <- steekproefkader_za_kp_po %>%
+  filter(regio == "Kempen")
+
+gewichten_za <- steekproefkader_kp %>%
+  count(regio, openheid_klasse, sbp) %>%
+  group_by(openheid_klasse) %>%
+  mutate(prop_openheid = sum(n) / nrow(steekproefkader_kp)) %>%
+  group_by(sbp) %>%
+  mutate(prop_sbp = sum(n) / nrow(steekproefkader_kp)) %>%
+  ungroup() %>%
+  mutate(prop = n / nrow(steekproefkader_kp))
+
+gewichten_za %>%
+  kable(digits = 5)
+```
+
+Polders.
+
+```{r}
+steekproefkader_po <- steekproefkader_za_kp_po %>%
+  filter(regio == "Polders")
+
+gewichten_za <- steekproefkader_po %>%
+  count(regio, openheid_klasse, sbp) %>%
+  group_by(openheid_klasse) %>%
+  mutate(prop_openheid = sum(n) / nrow(steekproefkader_po)) %>%
+  group_by(sbp) %>%
+  mutate(prop_sbp = sum(n) / nrow(steekproefkader_po)) %>%
+  ungroup() %>%
+  mutate(prop = n / nrow(steekproefkader_po))
+
+gewichten_za %>%
+  kable(digits = 5)
+```
+
+### Steekproef
+
 Inlezen en preparatie steekproef.
 
 ```{r}
@@ -115,15 +191,25 @@ steekproef_za_kp_po <- steekproef_za_kp_po_raw %>%
          openheid_klasse, sbp, x_coord = X, y_coord = Y, crs)
 ```
 
-- in uncut in vervanging id kijken voor oude punten met volgnr <= 50
-- in final kijken voor finale punten
-- samenvoegen
+```{r}
+head(steekproef_za_kp_po) %>%
+  kable(digits = 2)
+```
+
+### Finale steekproef na manuele controle
+
+Inlezen en preparatie finale steekproef na manuele controle
+
+1. in uncut in vervanging id kijken voor oude punten met volgnr <= 50
+2. in final kijken voor finale punten
+3. samenvoegen
 
 ```{r}
+mbag_punten_path <- file.path(mbag_dir, "data", "processed")
+
 oud_zandstreek <- read.csv(
   file.path(
-    data_path,
-    "manual_check_johannes",
+    mbag_punten_path,
     "MAS netwerk Vlaanderen- steekproef_zandstreek_telpunten_uncut.csv")) %>%
   filter(sample_order <= 50,
          !startsWith(vervanging_id, "Zn") & vervanging_id != "") %>%
@@ -131,8 +217,7 @@ oud_zandstreek <- read.csv(
 
 oud_kempen <- read.csv(
   file.path(
-    data_path,
-    "manual_check_johannes",
+    mbag_punten_path,
     "MAS netwerk Vlaanderen- steekproef_kempen_telpunten_uncut.csv")) %>%
   filter(sample_order <= 50,
          !startsWith(vervanging_id, "Km") & vervanging_id != "") %>%
@@ -140,8 +225,7 @@ oud_kempen <- read.csv(
 
 oud_polders <- read.csv(
   file.path(
-    data_path,
-    "manual_check_johannes",
+    mbag_punten_path,
     "MAS netwerk Vlaanderen- steekproef_polders_telpunten_uncut.csv")) %>%
   filter(sample_order <= 50,
          !startsWith(vervanging_id, "Pl") & vervanging_id != "") %>%
@@ -293,38 +377,74 @@ st_intersection(original_point, replacement_point) %>%
 Geen van deze zijn geldige punten.
 
 
-We voegen alles samen.
+We lezen ouden en nieuwe telpunten in.
 
 ```{r}
-oud_zandstreek <- read.csv(
-  file.path(
-    data_path,
-    "manual_check_johannes",
-    "MAS netwerk Vlaanderen- steekproef_zandstreek_telpunten_final.csv")) %>%
-  filter(sample_order <= 50,
-         !startsWith(vervanging_id, "Zn") & vervanging_id != "") %>%
-  select(regio = Naam, pointid = vervanging_id, openheid_sbp)
+# Prepare extra existing locations
+avimap_za_kp_po_extra <- extra_oude_punten_full %>%
+  st_drop_geometry() %>%
+  bind_rows(oude_punten_za_kp_po %>% filter(!is.na(x_coord))) %>%
+  select(all_of(colnames(steekproef_za_kp_po)))
 
-oud_kempen <- read.csv(
+# Prepare selected new locations
+zandstreek_avimap <- read.csv(
   file.path(
-    data_path,
-    "manual_check_johannes",
-    "MAS netwerk Vlaanderen- steekproef_kempen_telpunten_final.csv")) %>%
-  filter(sample_order <= 50,
-         !startsWith(vervanging_id, "Km") & vervanging_id != "") %>%
-  select(regio = Naam, pointid = vervanging_id, openheid_sbp)
+    mbag_punten_path,
+    "MAS netwerk Vlaanderen- steekproef_zandstreek_telpunten-final.csv"))
 
-oud_polders <- read.csv(
+kempen_avimap <- read.csv(
   file.path(
-    data_path,
-    "manual_check_johannes",
-    "MAS netwerk Vlaanderen- steekproef_polders_telpunten_final.csv")) %>%
-  filter(sample_order <= 50,
-         !startsWith(vervanging_id, "Pl") & vervanging_id != "") %>%
-  select(regio = Naam, pointid = vervanging_id, openheid_sbp)
+    mbag_punten_path,
+    "MAS netwerk Vlaanderen- steekproef_kempen_telpunten-final.csv"))
+
+polders_avimap <- read.csv(
+  file.path(
+    mbag_punten_path,
+    "MAS netwerk Vlaanderen- steekproef_polders_telpunten-final.csv"))
+
+avimap_za_kp_po_final <- bind_rows(
+  zandstreek_avimap,
+  kempen_avimap,
+  polders_avimap
+)
 ```
 
+We voegen deze oude punten samen met de nieuwe punten.
 
+Km_45192.7 --> VL0432?
+Km_14981.5 --> VL0005?
+
+```{r}
+steekproef_avimap_za_kp_po <- avimap_za_kp_po_final %>%
+  select(pointid, regio = Naam) %>%
+  mutate(pointid = case_match(pointid,
+    "Km_45192.7" ~ "VL0432",
+    "Km_14981.5"~ "VL0005",
+    .default = pointid
+  )) %>%
+  inner_join(steekproef_za_kp_po, by = join_by(pointid, regio)) %>%
+  bind_rows(avimap_za_kp_po_extra)
+```
+
+Hoe ziet de dataset eruit?
+
+```{r}
+head(steekproef_avimap_za_kp_po) %>%
+  kable(digits = 2)
+```
+
+Hoeveel punten hebben we per stratum?
+
+```{r}
+steekproef_avimap_za_kp_po %>%
+  count(regio, openheid_klasse, sbp) %>%
+  group_by(regio) %>%
+  mutate(tot_regio = sum(n)) %>%
+  ungroup() %>%
+  kable()
+```
+
+> ???
 
 ## Weidestreek
 
@@ -372,6 +492,7 @@ Inlezen en preparatie finale punten die in avimap zijn ingevoerd.
 # Uitschrijven datasets
 
 > zandleemstreek, zandstreek en weidestreek pointids aanpassen!
+> arrange alles op logische manier
 
 ## Steekproefkader
 
