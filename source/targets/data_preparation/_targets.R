@@ -38,9 +38,9 @@ source(file.path(mbag_dir, "source", "R", "predatoren_f.R"))
 
 # Target list
 list(
-  tarchetypes::tar_files(
+  tarchetypes::tar_files_input(
     name = mas_counts_sovon_files,
-    command = paths_to_counts_sovon(
+    files = paths_to_counts_sovon(
       proj_path = target_dir
     )
   ),
