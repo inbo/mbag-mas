@@ -544,11 +544,23 @@ head(steekproef_avimap_weidestreek) %>%
 > zandleemstreek, zandstreek zelfde pointids
 > weidestreek pointids
 
-```
+Dubbels in steekproef.
+
+```{r}
 bind_rows(
     steekproef_mbag_piloot,
     steekproef_za_kp_po,
     steekproef_weidestreek) %>%
+    arrange(pointid, regio, openheid_klasse, sbp) %>% count(pointid) %>% filter(n > 1)
+```
+
+Geen dubbels in finale punten.
+
+```{r}
+bind_rows(
+    steekproef_avimap_mbag_piloot,
+    steekproef_avimap_za_kp_po,
+    steekproef_avimap_weidestreek) %>%
     arrange(pointid, regio, openheid_klasse, sbp) %>% count(pointid) %>% filter(n > 1)
 ```
 
