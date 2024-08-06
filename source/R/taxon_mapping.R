@@ -65,7 +65,7 @@ match_vernacular_name <- function(
   stop_loop <- FALSE
 
   # Loop until match is found or limit reaches maximum of 3000
-  while (limit < 3000 & isFALSE(stop_loop)) {
+  while (isFALSE(stop_loop) && limit < 3000) {
     # Lookup vernacular names in GBIF backbone
     gbif_lookup <- do.call(
       rgbif::name_lookup,
@@ -101,42 +101,43 @@ match_vernacular_name <- function(
         # Use species keys to select vernacular names
         indices <- names(vernacular_names) %in% taxon_data$key
         vernacular_names <- vernacular_names[indices]
-      }} else {
-        return(NA_character_)
-      }
-
-      # Increment limit if required
-      if (increment > 0 & length(vernacular_names) == 0) {
-        limit <- limit + increment
-      } else {
-        stop_loop <- TRUE
-      }
-    }
-
-
-    # Search taxon key in vernacular names
-    if (length(vernacular_names) > 0) {
-      taxon_key <- find_df_name(vernacular_names, vernacular_name, lang)
-
-      # Return NA if no good match found
-      if (is.na(taxon_key)) {
-        return(NA_character_)
-      # Return match with taxon key
-      } else {
-        out_data <- taxon_data[taxon_data$key == taxon_key, ]
-        out_data <- out_data[, colSums(is.na(out_data)) < nrow(out_data)]
-
-        if ("acceptedKey" %in% colnames(out_data)) {
-          taxon_key <- out_data %>% pull(acceptedKey)
-          return(rgbif::name_usage(taxon_key)$data)
-        } else {
-          taxon_key <- out_data %>% pull(key)
-          return(rgbif::name_usage(taxon_key)$data)
-        }
       }
     } else {
       return(NA_character_)
     }
+
+    # Increment limit if required
+    if (length(vernacular_names) == 0 && increment > 0) {
+      limit <- limit + increment
+    } else {
+      stop_loop <- TRUE
+    }
+  }
+
+
+  # Search taxon key in vernacular names
+  if (length(vernacular_names) > 0) {
+    taxon_key <- find_df_name(vernacular_names, vernacular_name, lang)
+
+    # Return NA if no good match found
+    if (is.na(taxon_key)) {
+      return(NA_character_)
+    # Return match with taxon key
+    } else {
+      out_data <- taxon_data[taxon_data$key == taxon_key, ]
+      out_data <- out_data[, colSums(is.na(out_data)) < nrow(out_data)]
+
+      if ("acceptedKey" %in% colnames(out_data)) {
+        taxon_key <- out_data %>% pull(.data$acceptedKey)
+        return(rgbif::name_usage(taxon_key)$data)
+      } else {
+        taxon_key <- out_data %>% pull(.data$key)
+        return(rgbif::name_usage(taxon_key)$data)
+      }
+    }
+  } else {
+    return(NA_character_)
+  }
 }
 
 # Input dataframe with vernacular names and get taxon information
