@@ -336,6 +336,7 @@ extra_oude_punten_full %>%
 Van 3 van de 7 punten komt het stratum (`openheid_sbp2`) niet overeen met het originele punt (`openheid_sbp`).
 
 We berekenen overlap voor de punten:
+
 - "Zn_63159.9" vervangen door "Maaibos"
 - "Pl_13942.1" vervangen door "VL0048"
 - "Pl_11796.2.5" vervangen door "Pl_1188.2", en "Pl_1188.2" daarna door "Beerpolder"
@@ -345,18 +346,23 @@ We berekenen overlap voor de punten:
 - "Pl_5258.6" vervangen door "Casteleynstraat"
 
 ```{r}
-original_point <- steekproef_za_kp_po %>%
+original_point <- steekproefkader_za_kp_po %>%
   filter(pointid %in% c("Zn_63159.9", "Pl_13942.1", "Pl_1188.2", "Pl_2797.5",
-                        "Pl_31984.3", "Pl_2761.2.1", "Pl_5258.6")) %>%
+                        "Pl_31984.3", "Pl_2761.2.1", "Pl_5258.6", "Pl_13884.1", 
+                        "Pl_2803.1", "Zn_8224.5")) %>%
   st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
   st_buffer(300) %>%
   mutate(openheid_sbp = paste(openheid_klasse, sbp, "plan")) %>%
   select(pointid, openheid_sbp)
 
 replacement_point <- extra_oude_punten_full %>%
+  bind_rows(oude_punten_za_kp_po %>%
+              filter(!is.na(x_coord)) %>%
+              st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370)) %>%
   mutate(openheid_sbp2 = paste(openheid_klasse, sbp, "plan")) %>%
   filter(pointid %in% c("Maaibos", "VL0048", "Beerpolder", "Grote Geule",
-                        "DP KC", "NAP C", "Casteleynstraat")) %>%
+                        "DP KC", "NAP C", "Casteleynstraat", "DM_176.6",
+                        "Turfbanken Verrebroek", "SGW")) %>%
   st_buffer(300) %>%
   select(pointid, openheid_sbp2)
 
@@ -414,8 +420,8 @@ We voegen deze oude punten samen met de nieuwe punten.
 
 > Punten uit steekproefkader genomen in plaats van vervangpunten?
 
-Km_45192.7 was oorspronkelijk VL0432? Km_45192.7 is geteld maar zit niet in steekproef
-Km_14981.5 was oorspronkelijk VL0005? Km_14981.5 is geteld maar zit niet in steekproef
+- Km_45192.7 was oorspronkelijk VL0432? Km_45192.7 is geteld maar zit niet in steekproef
+- Km_14981.5 was oorspronkelijk VL0005? Km_14981.5 is geteld maar zit niet in steekproef
 
 > voorlopig weglaten
 
@@ -448,6 +454,7 @@ steekproef_avimap_za_kp_po %>%
 > ???
 
 ```
+data <- st_read(file.path("data", "mas", "20240805_qgis_export_sovon_wfs_2024.geojson"))
 data %>% st_drop_geometry() %>% distinct(plotnaam) %>% filter(grepl("^Km", plotnaam))
 ```
 
