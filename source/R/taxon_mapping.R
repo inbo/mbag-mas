@@ -86,25 +86,42 @@ match_vernacular_name <- function(
     }
 
     # Search taxon key in vernacular names if limit > 1
-    if (nrow(taxon_data) > 1) {
+    if (nrow(taxon_data) > 1 && length(vernacular_names) > 0) {
       taxon_key <- find_df_name(vernacular_names, vernacular_name, lang)
 
       # Return NA if no good match found
       if (is.na(taxon_key)) {
-        NA_character_
+        return(NA_character_)
       # Return match with taxon key
       } else {
-        taxon_data[taxon_data$key == taxon_key, ]
+        out_data <- taxon_data[taxon_data$key == taxon_key, ]
+        out_data <- out_data[, colSums(is.na(out_data)) < nrow(out_data)]
+
+        if ("acceptedKey" %in% colnames(out_data)) {
+          taxon_key <- out_data %>% pull(acceptedKey)
+          return(rgbif::name_usage(taxon_key)$data)
+        } else {
+          taxon_key <- out_data %>% pull(key)
+          return(rgbif::name_usage(taxon_key)$data)
+        }
       }
 
     # Return if only 1 match was found initially
+    } else if (nrow(taxon_data) == 1 && length(vernacular_names) > 0) {
+      if ("acceptedKey" %in% colnames(taxon_data)) {
+        taxon_key <- taxon_data %>% pull(acceptedKey)
+        return(rgbif::name_usage(taxon_key)$data)
+      } else {
+        taxon_key <- taxon_data %>% pull(key)
+        return(rgbif::name_usage(taxon_key)$data)
+      }
     } else {
-      taxon_data
+      return(NA_character_)
     }
 
   # Return NA is no initial match found
   } else {
-    NA_character_
+    return(NA_character_)
   }
 }
 
