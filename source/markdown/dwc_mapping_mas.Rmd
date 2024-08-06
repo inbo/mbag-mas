@@ -269,45 +269,14 @@ example_df <- tibble(
 example_df
 ```
 
-Als we voor de eerste beste match gaan, zien we verschillende fouten optreden:
-
-```{r}
-map_taxa_from_vernacular(
-  vernacular_name_df = example_df,
-  vernacular_name_col = "dwc_vernacularName",
-  out_cols = c("scientificName", "family", "order", "class"),
-  limit = 1)
-```
-
-- Roodborst is een insect die ook die Nederlandse naam heeft
-- Eekhoorn is een ondersoort
-- Merel is een slang die merel in zijn wetenschappelijke soortnaam heeft
-- Hop is een virus
-- Haas is een genus die haas in auteur heeft
-- Veldmuis/Aardmuis matched met Aardmuis
-
+We zijn niet tevreden met eerste beste match, maar gaan met een specifieke regex door meerdere vernacular names zoeken (Gele Kwikstaart zal bv. niet met Grote Gele Kwikstaart matchen en Merel zal bv. ook niet met Indische Merel matchen).
 We nemen de default limit (100).
-We zijn niet tevreden met eerste beste match, maar gaan met een specifieke regex door meerdere vernacular names zoeken (Merel zal bv. ook niet met Indische merel matchen).
 
 ```{r}
 map_taxa_from_vernacular(
   vernacular_name_df = example_df,
   vernacular_name_col = "dwc_vernacularName",
   out_cols = c("scientificName", "family", "class"))
-```
-
-- Eekhoorn is een ondersoort
-- Hop is in beide gevallen een plant
-- Haas wordt niet teruggevonden
-
-We specificeren dat we enkel soortnamen willen:
-
-```{r}
-map_taxa_from_vernacular(
-  vernacular_name_df = example_df,
-  vernacular_name_col = "dwc_vernacularName",
-  out_cols = c("scientificName", "family", "class"),
-  rank = "SPECIES")
 ```
 
 - Eekhoorn is een vlinder
@@ -321,13 +290,12 @@ map_taxa_from_vernacular(
   vernacular_name_df = example_df,
   vernacular_name_col = "dwc_vernacularName",
   out_cols = c("scientificName", "family", "class"),
-  rank = "SPECIES",
   filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"))
 ```
 
 - Haas wordt niet teruggevonden
 
-Voor Haas vinden we geen goeie match. Deze naam komt te vaak terug in soortnamen/auteurs. We verhogen de limit:
+Voor Haas vinden we geen goeie match. Deze naam komt te vaak terug in soortnamen/auteurs. We verhogen de limit tot 1000 en verhogen deze met 200 tot we een match vinden (of de limiet van 3000 bereiken):
 
 ```{r}
 map_taxa_from_vernacular(
@@ -335,8 +303,8 @@ map_taxa_from_vernacular(
   vernacular_name_col = "dwc_vernacularName",
   out_cols = c("scientificName", "family", "class"),
   filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
-  rank = "SPECIES",
-  limit = 1000)
+  limit = 1000,
+  increment = 200)
 ```
 
 Uiteindelijk vinden we de wetenschappelijke naam voor Haas.
@@ -364,8 +332,8 @@ species_matching_mas_list <- lapply(
   out_cols = c("scientificName", "family", "class"),
   filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
   lang = "nld",
-  status = c("ACCEPTED", "DOUBTFUL"),
-  limit = 1000)
+  limit = 1000,
+  increment = 250)
 
 species_matching_mas <- do.call(rbind.data.frame, species_matching_mas_list) %>%
   arrange(class, family, scientificName)
@@ -385,8 +353,8 @@ species_matching_mas_list2 <- lapply(
                "species", "authorship", "rank", "speciesKey"),
   filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
   lang = "nld",
-  status = c("ACCEPTED", "DOUBTFUL"),
-  limit = 1000)
+  limit = 1000,
+  increment = 250)
 
 species_matching_mas2 <- do.call(rbind.data.frame,
                                  species_matching_mas_list2)
@@ -429,7 +397,6 @@ missing_soorten_wet_mas <- test_wet_names %>%
 
 missing_soorten_wet_mas %>%
   select(euring = dwc_taxonID, naam = dwc_vernacularName) %>%
-  mutate(naam = ifelse(euring == 10170, "Gele kwikstaart (spec)", naam)) %>%
   write_csv2(file.path("data", "SOVON", "missing_soorten_wet_mas.csv"))
 
 missing_soorten_wet_mas %>%

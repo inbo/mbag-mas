@@ -47,64 +47,96 @@ match_vernacular_name <- function(
     vernacular_name_df,
     filter_cols = NULL,
     lang = NA,
+    increment = 0,
     ...) {
+  # Get vernacular name
   vernacular_name <- pull(vernacular_name_df[1])
 
-  # Lookup vernacular names in GBIF backbone
-  gbif_lookup <- rgbif::name_lookup(
-    vernacular_name,
-    datasetKey = "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c",
-    ...)
-
-  # Return taxon data frame if match found
-  if (nrow(gbif_lookup$data) > 0) {
-    # Define vernacular names and taxon data
-    vernacular_names <- gbif_lookup$names
-    taxon_data <- gbif_lookup$data
-
-    # Use filter columns if provided
-    if (!is.null(filter_cols)) {
-      # In case of NA values
-      cols_to_remove <- vernacular_name_df %>%
-        select(where(~ any(is.na(.)))) %>%
-        colnames()
-      filter_cols <- filter_cols[!filter_cols %in% cols_to_remove]
-
-      # Create the join condition dynamically
-      join_condition <- stats::setNames(names(filter_cols),
-                                        unlist(filter_cols))
-
-      # Perform the inner join to select taxon data
-      taxon_data <- vernacular_name_df %>%
-        select(where(~ all(!is.na(.)))) %>%
-        inner_join(taxon_data, by = join_condition, keep = TRUE) %>%
-        select(-all_of(setdiff(colnames(vernacular_name_df), cols_to_remove)))
-
-      # Use species keys to select vernacular names
-      indices <- names(vernacular_names) %in% taxon_data$key
-      vernacular_names <- vernacular_names[indices]
-    }
-
-    # Search taxon key in vernacular names if limit > 1
-    if (nrow(taxon_data) > 1) {
-      taxon_key <- find_df_name(vernacular_names, vernacular_name, lang)
-
-      # Return NA if no good match found
-      if (is.na(taxon_key)) {
-        NA_character_
-      # Return match with taxon key
-      } else {
-        taxon_data[taxon_data$key == taxon_key, ]
-      }
-
-    # Return if only 1 match was found initially
-    } else {
-      taxon_data
-    }
-
-  # Return NA is no initial match found
+  # Get limit
+  dots <- list(...)
+  if ("limit" %in% names(list(...))) {
+    limit <- dots$limit
+    dots <- dots[names(dots) != "limit"]
   } else {
-    NA_character_
+    limit <- 100
+  }
+
+  # Loop variable
+  stop_loop <- FALSE
+
+  # Loop until match is found or limit reaches maximum of 3000
+  while (isFALSE(stop_loop) && limit < 3000) {
+    # Lookup vernacular names in GBIF backbone
+    gbif_lookup <- do.call(
+      rgbif::name_lookup,
+      c(list(vernacular_name),
+        list(datasetKey = "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c"),
+        list(limit = limit),
+        dots))
+
+    # Return taxon data frame if match found
+    if (nrow(gbif_lookup$data) > 0) {
+      # Define vernacular names and taxon data
+      vernacular_names <- gbif_lookup$names
+      taxon_data <- gbif_lookup$data
+
+      # Use filter columns if provided
+      if (!is.null(filter_cols)) {
+        # In case of NA values
+        cols_to_remove <- vernacular_name_df %>%
+          select(where(~ any(is.na(.)))) %>%
+          colnames()
+        filter_cols <- filter_cols[!filter_cols %in% cols_to_remove]
+
+        # Create the join condition dynamically
+        join_condition <- stats::setNames(names(filter_cols),
+                                          unlist(filter_cols))
+
+        # Perform the inner join to select taxon data
+        taxon_data <- vernacular_name_df %>%
+          select(where(~ all(!is.na(.)))) %>%
+          inner_join(taxon_data, by = join_condition, keep = TRUE) %>%
+          select(-all_of(setdiff(colnames(vernacular_name_df), cols_to_remove)))
+
+        # Use species keys to select vernacular names
+        indices <- names(vernacular_names) %in% taxon_data$key
+        vernacular_names <- vernacular_names[indices]
+      }
+    } else {
+      return(NA_character_)
+    }
+
+    # Increment limit if required
+    if (length(vernacular_names) == 0 && increment > 0) {
+      limit <- limit + increment
+    } else {
+      stop_loop <- TRUE
+    }
+  }
+
+
+  # Search taxon key in vernacular names
+  if (length(vernacular_names) > 0) {
+    taxon_key <- find_df_name(vernacular_names, vernacular_name, lang)
+
+    # Return NA if no good match found
+    if (is.na(taxon_key)) {
+      return(NA_character_)
+    # Return match with taxon key
+    } else {
+      out_data <- taxon_data[taxon_data$key == taxon_key, ]
+      out_data <- out_data[, colSums(is.na(out_data)) < nrow(out_data)]
+
+      if ("acceptedKey" %in% colnames(out_data)) {
+        taxon_key <- out_data %>% pull(.data$acceptedKey)
+        return(rgbif::name_usage(taxon_key)$data)
+      } else {
+        taxon_key <- out_data %>% pull(.data$key)
+        return(rgbif::name_usage(taxon_key)$data)
+      }
+    }
+  } else {
+    return(NA_character_)
   }
 }
 
@@ -115,6 +147,7 @@ map_taxa_from_vernacular <- function(
     out_cols = "scientificName",
     filter_cols = NULL,
     lang = NA,
+    increment = 0,
     ...) {
   require("dplyr")
   require("tidyr")
@@ -136,6 +169,7 @@ map_taxa_from_vernacular <- function(
       match_vernacular_name,
       filter_cols = filter_cols,
       lang = lang,
+      increment = increment,
       ...)) %>%
     unnest("match_df") %>%
 
