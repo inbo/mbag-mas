@@ -114,10 +114,55 @@ setdiff(sample$pointid, sample_visited$plotnaam)
 
 > Nagaan of deze bewust of onbewust niet geteld zijn
 
+Notities manuele controle Johannes:
+
+- Pl_25053.16: plek zelf moeilijk te gaan staan stoppen aan overkant weg wel
+- Pl_45612.2: OK geen privé weg maar langs bedrijf
+
 ### ...
 
+### Telpunten in finale dataset (mas_data_clean)
 
+```{r}
+mas_data_clean <- tar_read("mas_data_clean", store = targets_store)
+```
+
+Alle punten zijn nog altijd aanwezig:
+
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  distinct(plotnaam, regio, openheid_klasse, sbp) %>%
+  mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
+  count(regio, stratum, name = "n_stratum") %>%
+  group_by(regio) %>%
+  mutate(n_regio = sum(n_stratum)) %>%
+  ungroup() %>%
+  kable()
+```
 
 # Controle finale dataset
 
 ...
+
+
+```{r}
+count_per_period <- mas_data_clean %>%
+  st_drop_geometry() %>%
+  distinct(plotnaam, regio, periode_in_jaar, jaar) %>%
+  count(regio, periode_in_jaar, jaar, name = "n_period")
+
+for (reg in sort(unique(count_per_period$regio))) {
+  p <- count_per_period %>%
+    filter(regio == reg) %>%
+    ggplot(aes(x = periode_in_jaar, y = n_period)) +
+      geom_bar(stat = "identity") +
+      geom_text(aes(label = n_period),
+        position = position_dodge(width = 0.9), vjust = -0.25
+      ) +
+      facet_grid(rows = vars(regio), cols = vars(jaar)) +
+      labs(x = "Telperiode", y = "Aantal telpunten")
+  print(p)
+}
+  
+```
