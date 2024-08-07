@@ -29,6 +29,7 @@ opts_knit$set(root.dir = here::here())
 library(tidyverse)
 library(sf)
 library(mapview)
+library(leaflet)
 library(targets)
 
 # Conflicts
@@ -480,140 +481,145 @@ outside_circles_new <- outside_plots_new %>%
   st_buffer(300)
 ```
 
-
-```{r}
-for (reg in sort(unique(outside_observations_new$regio))) {
-  p <- outside_observations_new %>%
-      filter(regio == reg) %>%
-      distinct(regio, plotnaam, jaar, periode_in_jaar, outlier_perc) %>%
-      mutate(outlier_perc = round(outlier_perc, 1)) %>%
-      ggplot() +
-        geom_bar(aes(x = outlier_perc), width = 0.1) +
-        scale_x_continuous(breaks = seq(0, 1, 0.1)) +
-        coord_cartesian(xlim = c(0, 1) ) +
-        labs(x = "Procent waarnemingen buiten telcirkel per telling",
-             y = "Frequentie",
-             title = reg) +
-        facet_wrap(~jaar, ncol = 3)
-  print(p)
-}
-```
-
 Vooral in de Oostelijke leemstreek en de Polders zijn er verdachte cases.
+
+**Kempen, Weidestreek, Westelijke leemstreek, Zandleemstreek, Zandstreek**
+
 We controleren eerst alle andere regio's (per jaar per telronde).
 
-```{r, results='asis'}
+```{r}
+# Data preparation
 data <- outside_observations_new %>%
-          filter(regio != "Oostelijke leemstreek",
-                 regio != "Polders")
+  filter(regio != "Oostelijke leemstreek", regio != "Polders")
 
+# Create an empty leaflet map
+leaflet_map <- leaflet() %>%
+  addTiles()
+
+# Loop through each year and round, adding layers to the map
 for (j in sort(unique(data$jaar))) {
   data <- outside_observations_new %>%
-          filter(regio != "Oostelijke leemstreek",
-                 regio != "Polders",
-                 jaar == j)
+    filter(regio != "Oostelijke leemstreek", regio != "Polders", jaar == j)
   
   for (ronde in sort(unique(data$periode_in_jaar))) {
-    m <- mapview(
-        outside_circles_new %>%
-          filter(regio != "Oostelijke leemstreek",
-                 regio != "Polders",
-                 jaar == j,
-                 periode_in_jaar == ronde),
-        alpha.regions = 0.3, legend = FALSE
-        ) +
-      mapview(
-        outside_plots_new %>%
-          filter(regio != "Oostelijke leemstreek",
-                 regio != "Polders",
-                 jaar == j,
-                 periode_in_jaar == ronde),
-        cex = 3, col.regions = "black", legend = FALSE
-        ) +
-      mapview(
-        outside_observations_new %>%
-          filter(regio != "Oostelijke leemstreek",
-                 regio != "Polders",
-                 jaar == j,
-                 periode_in_jaar == ronde),
-        zcol = "outlier", layer = "Locatie t.o.v. telcirkel")
+    # Filter data for the current year and round
+    circles <- outside_circles_new %>%
+      filter(regio != "Oostelijke leemstreek",
+             regio != "Polders",
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    plots <- outside_plots_new %>%
+            filter(regio != "Oostelijke leemstreek",
+             regio != "Polders",
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    observations <- outside_observations_new %>%
+            filter(regio != "Oostelijke leemstreek",
+             regio != "Polders",
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
     
-    # Convert to leaflet object
-    leaflet_map <- m@map
-
     # Create title
     title <- paste("Jaar:", j, "- Ronde:", ronde)
-
-    # Add title to the map
-    leaflet_map <- leaflet_map %>%
-      leaflet::addControl(
-        html = title,
-        position = "topright",
-        className = "map-title"
-      )
     
-    # Render the leaflet map
-    htmltools::tagList(leaflet_map) %>%
-      print()
+    # Add the layers to the leaflet map with group names
+    leaflet_map <- leaflet_map %>%
+      addPolygons(data = circles, fillOpacity = 0.3, group = title) %>%
+      addCircleMarkers(data = plots, radius = 3, color = "black",
+                       group = title) %>%
+      addCircleMarkers(data = observations, fillOpacity = 0.8, radius = 5,
+                       color = ~ifelse(outlier == "binnen", "green", "red"),
+                       group = title)
   }
 }
+
+# Add layer control to toggle visibility of the facets
+leaflet_map <- leaflet_map %>%
+  addLayersControl(
+    overlayGroups = unique(paste("Jaar:", sort(unique(data$jaar)), "- Ronde:",
+                                 sort(unique(data$periode_in_jaar)))),
+    options = layersControlOptions(collapsed = FALSE)
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    colors = c("green", "red"),
+    labels = c("binnen", "buiten"),
+    title = "Locatie t.o.v. telcirkel")
+
+# Print the leaflet map
+leaflet_map
 ```
 
 Deze lijken allemaal ok.
 
+**Polders**
+
 In de Polders liggen er maximaal `r round(max(outside_observations %>% filter(regio == "Polders") %>% pull(outlier_perc)), 2)` procent waarnemingen buiten de telcirkel per telling.
 
-```{r, results='asis'}
+```{r}
+# Data preparation
 data <- outside_observations_new %>%
-          filter(regio == "Polders")
+  filter(regio == "Polders")
 
+# Create an empty leaflet map
+leaflet_map <- leaflet() %>%
+  addTiles()
+
+# Loop through each year and round, adding layers to the map
 for (j in sort(unique(data$jaar))) {
   data <- outside_observations_new %>%
-          filter(regio == "Polders",
-                 jaar == j)
+    filter(regio == "Polders", jaar == j)
   
   for (ronde in sort(unique(data$periode_in_jaar))) {
-    m <- mapview(
-        outside_circles_new %>%
-          filter(regio == "Polders",
-                 jaar == j,
-                 periode_in_jaar == ronde),
-        alpha.regions = 0.3, legend = FALSE
-        ) +
-      mapview(
-        outside_plots_new %>%
-          filter(regio == "Polders",
-                 jaar == j,
-                 periode_in_jaar == ronde),
-        cex = 3, col.regions = "black", legend = FALSE
-        ) +
-      mapview(
-        outside_observations_new %>%
-          filter(regio == "Polders",
-                 jaar == j,
-                 periode_in_jaar == ronde),
-        zcol = "outlier", layer = "Locatie t.o.v. telcirkel"
-        )
+    # Filter data for the current year and round
+    circles <- outside_circles_new %>%
+      filter(regio == "Polders",
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    plots <- outside_plots_new %>%
+      filter(regio == "Polders",
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    observations <- outside_observations_new %>%
+      filter(regio == "Polders",
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
     
-    # Convert to leaflet object
-    leaflet_map <- m@map
-
     # Create title
     title <- paste("Jaar:", j, "- Ronde:", ronde)
-
-    # Add title to the map
-    leaflet_map <- leaflet_map %>%
-      leaflet::addControl(
-        html = title,
-        position = "topright",
-        className = "map-title"
-      )
     
-    # Render the leaflet map
-    htmltools::tagList(leaflet_map) %>%
-      print()
+    # Add the layers to the leaflet map with group names
+    leaflet_map <- leaflet_map %>%
+      addPolygons(data = circles, fillOpacity = 0.3, group = title) %>%
+      addCircleMarkers(data = plots, radius = 3, color = "black",
+                       group = title) %>%
+      addCircleMarkers(data = observations, fillOpacity = 0.8, radius = 5,
+                       color = ~ifelse(outlier == "binnen", "green", "red"),
+                       group = title)
   }
 }
+
+# Add layer control to toggle visibility of the facets
+leaflet_map <- leaflet_map %>%
+  addLayersControl(
+    overlayGroups = unique(paste("Jaar:", sort(unique(data$jaar)), "- Ronde:",
+                                 sort(unique(data$periode_in_jaar)))),
+    options = layersControlOptions(collapsed = FALSE)
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    colors = c("green", "red"),
+    labels = c("binnen", "buiten"),
+    title = "Locatie t.o.v. telcirkel")
+
+# Print the leaflet map
+leaflet_map
 ```
 
 We zien een problematisch punt: Pl_49572. Alle andere lijken ok.
@@ -627,6 +633,71 @@ outside_observations_new %>%
 
 Het ziet ernaar uit dat Pl_49572 dezelfde naam heeft voor 2 locaties.
 In plaats van: Pl_25053.16 (x: 50279.09, y: 210998)
+
+**Oostelijke leemstreek**
+
+```{r}
+# Data preparation
+data <- outside_observations_new %>%
+  filter(regio == "Oostelijke leemstreek")
+
+# Create an empty leaflet map
+leaflet_map <- leaflet() %>%
+  addTiles()
+
+# Loop through each year and round, adding layers to the map
+for (j in sort(unique(data$jaar))) {
+  data <- outside_observations_new %>%
+    filter(regio == "Oostelijke leemstreek", jaar == j)
+  
+  for (ronde in sort(unique(data$periode_in_jaar))) {
+    # Filter data for the current year and round
+    circles <- outside_circles_new %>%
+      filter(regio == "Oostelijke leemstreek",
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    plots <- outside_plots_new %>%
+      filter(regio == "Oostelijke leemstreek",
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    observations <- outside_observations_new %>%
+      filter(regio == "Oostelijke leemstreek",
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    
+    # Create title
+    title <- paste("Jaar:", j, "- Ronde:", ronde)
+    
+    # Add the layers to the leaflet map with group names
+    leaflet_map <- leaflet_map %>%
+      addPolygons(data = circles, fillOpacity = 0.3, group = title) %>%
+      addCircleMarkers(data = plots, radius = 3, color = "black",
+                       group = title) %>%
+      addCircleMarkers(data = observations, fillOpacity = 0.8, radius = 5,
+                       color = ~ifelse(outlier == "binnen", "green", "red"),
+                       group = title)
+  }
+}
+
+# Add layer control to toggle visibility of the facets
+leaflet_map <- leaflet_map %>%
+  addLayersControl(
+    overlayGroups = unique(paste("Jaar:", sort(unique(data$jaar)), "- Ronde:",
+                                 sort(unique(data$periode_in_jaar)))),
+    options = layersControlOptions(collapsed = FALSE)
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    colors = c("green", "red"),
+    labels = c("binnen", "buiten"),
+    title = "Locatie t.o.v. telcirkel")
+
+# Print the leaflet map
+leaflet_map
+```
 
 
 
