@@ -48,7 +48,7 @@ dir.create(media_folder, showWarnings = FALSE)
 devices <- c("pdf", "png")
 
 # Source
-source(here("source", "R", "roofvogels_f.R"))
+source(here("source", "R", "predatoren_f.R"))
 source(here("source", "R", "save_figure.R"))
 ```
 
