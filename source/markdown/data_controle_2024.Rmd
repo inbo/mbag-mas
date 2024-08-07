@@ -60,13 +60,10 @@ In deze markdown controleren we
 We doen dit voor de data van 2018-2024.
 
 # Data preparatie workflow
-## Amersfoord naar Lambert coordinaten
+## Amersfoord naar Lambert coördinaten (crs_pipeline)
 
-```{r}
-mas_counts_sovon <- tar_read_sf("mas_counts_sovon", targets_store)
-crs_pipeline <- tar_read_sf("crs_pipeline", targets_store)
-  
-mapview(mas_counts_sovon) +
-  mapview(tar_read(crs_pipeline, store = targets_store), col.regions = "red")
-```
+In de eerste stap worden Amersfoord coördinaten naar Lambert coördinaten omgezet.
+Dit gebeurt via een functie die op verschillende datasets goed getest is.
+
+
 
