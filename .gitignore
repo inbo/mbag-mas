@@ -20,6 +20,8 @@
 *.shx
 *.xls*
 *_files
+*.pdf
+*.png
 docs
 libs
 renv/library
