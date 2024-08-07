@@ -29,15 +29,44 @@ opts_knit$set(root.dir = here::here())
 library(tidyverse)
 library(sf)
 library(mapview)
+library(targets)
 
 # Conflicts
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::select)
 
-# source
+# Source
+source(here::here("source", "R", "tar_read_sf.R"))
+
+# Paths
 mbag_dir <- here::here()
 targets_store <- here::here("source", "targets", "data_preparation", "_targets")
 ```
 
 # Doel
+
+Data cleaning en preparatie verloopt via een targets pipeline waarbij verschillende stappen elkaar opvolgen.
+
+```{r}
+tar_visnetwork(script = paste0(targets_store, ".R"),
+               store = targets_store)
+```
+
+In deze markdown controleren we 
+
+1. Of deze pipeline de verwachte stappen correct doorloopt
+2. De finale data op het einde van de pipeline voor onverwachte zaken, uitschieters ...
+
+We doen dit voor de data van 2018-2024.
+
+# Data preparatie workflow
+## Amersfoord naar Lambert coordinaten
+
+```{r}
+mas_counts_sovon <- tar_read_sf("mas_counts_sovon", targets_store)
+crs_pipeline <- tar_read_sf("crs_pipeline", targets_store)
+  
+mapview(mas_counts_sovon) +
+  mapview(tar_read(crs_pipeline, store = targets_store), col.regions = "red")
+```
 
