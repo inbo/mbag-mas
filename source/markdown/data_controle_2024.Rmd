@@ -489,17 +489,24 @@ We controleren eerst alle andere regio's (per jaar per telronde).
 
 ```{r}
 # Data preparation
-data <- outside_observations_new %>%
-  filter(regio != "Oostelijke leemstreek", regio != "Polders")
+years <- outside_observations_new %>%
+  filter(regio != "Oostelijke leemstreek",
+         regio != "Polders") %>%
+  distinct(jaar) %>%
+  pull()
 
 # Create an empty leaflet map
 leaflet_map <- leaflet() %>%
   addTiles()
 
 # Loop through each year and round, adding layers to the map
-for (j in sort(unique(data$jaar))) {
-  data <- outside_observations_new %>%
-    filter(regio != "Oostelijke leemstreek", regio != "Polders", jaar == j)
+for (j in sort(years)) {
+  periods <- outside_observations_new %>%
+    filter(regio != "Oostelijke leemstreek",
+         regio != "Polders",
+         jaar == j) %>%
+    distinct(periode_in_jaar) %>%
+    pull()
   
   for (ronde in sort(unique(data$periode_in_jaar))) {
     # Filter data for the current year and round
@@ -561,19 +568,24 @@ In de Polders liggen er maximaal `r round(max(outside_observations %>% filter(re
 
 ```{r}
 # Data preparation
-data <- outside_observations_new %>%
-  filter(regio == "Polders")
+years <- outside_observations_new %>%
+  filter(regio == "Polders") %>%
+  distinct(jaar) %>%
+  pull()
 
 # Create an empty leaflet map
 leaflet_map <- leaflet() %>%
   addTiles()
 
 # Loop through each year and round, adding layers to the map
-for (j in sort(unique(data$jaar))) {
-  data <- outside_observations_new %>%
-    filter(regio == "Polders", jaar == j)
+for (j in sort(years)) {
+  periods <- outside_observations_new %>%
+    filter(regio == "Polders",
+           jaar == j) %>%
+    distinct(periode_in_jaar) %>%
+    pull()
   
-  for (ronde in sort(unique(data$periode_in_jaar))) {
+  for (ronde in sort(periods)) {
     # Filter data for the current year and round
     circles <- outside_circles_new %>%
       filter(regio == "Polders",
@@ -638,19 +650,24 @@ In plaats van: Pl_25053.16 (x: 50279.09, y: 210998)
 
 ```{r}
 # Data preparation
-data <- outside_observations_new %>%
-  filter(regio == "Oostelijke leemstreek")
+years <- outside_observations_new %>%
+  filter(regio == "Oostelijke leemstreek") %>%
+  distinct(jaar) %>%
+  pull()
 
 # Create an empty leaflet map
 leaflet_map <- leaflet() %>%
   addTiles()
 
 # Loop through each year and round, adding layers to the map
-for (j in sort(unique(data$jaar))) {
-  data <- outside_observations_new %>%
-    filter(regio == "Oostelijke leemstreek", jaar == j)
+for (j in sort(years)) {
+  periods <- outside_observations_new %>%
+    filter(regio == "Oostelijke leemstreek",
+           jaar == j) %>%
+    distinct(periode_in_jaar) %>%
+    pull()
   
-  for (ronde in sort(unique(data$periode_in_jaar))) {
+  for (ronde in sort(periods)) {
     # Filter data for the current year and round
     circles <- outside_circles_new %>%
       filter(regio == "Oostelijke leemstreek",
