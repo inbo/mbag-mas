@@ -47,7 +47,7 @@ targets_store <- here::here("source", "targets", "data_preparation", "_targets")
 
 Data preparatie verloopt via een targets pipeline waarbij verschillende stappen elkaar opvolgen.
 
-```{r}
+```{r, message=FALSE}
 tar_visnetwork(script = paste0(targets_store, ".R"),
                store = targets_store)
 ```
@@ -115,12 +115,13 @@ setdiff(sample$pointid, sample_visited$plotnaam)
 
 > Nagaan of deze bewust of onbewust niet geteld zijn
 
+- Pl_25053.16 is verkeerdelijk ingegeven als Pl_49572
+
 Notities manuele controle Johannes:
 
-- Pl_25053.16: plek zelf moeilijk te gaan staan stoppen aan overkant weg wel
 - Pl_45612.2: OK geen privé weg maar langs bedrijf
 
-### Selecteer data binnen de telperiodes (select_time_periods)
+## Selecteer data binnen de telperiodes (select_time_periods)
 
 We selecteren data binnen de correcte telperiodes.
 Er zijn 4 telrondes:
@@ -391,7 +392,7 @@ select_sampled_points %>%
                       "tellingen_buiten_telrondes.csv"))
 ```
 
-### Selecteer data binnen telcirkel radius (select_within_radius)
+## Selecteer data binnen telcirkel radius (select_within_radius)
 
 We selecteren data binnen de telcirkels.
 Telcirkels hebben een radius van 300 m.
@@ -407,7 +408,7 @@ select_within_radius <- tar_read_sf(
   "select_within_radius", store = targets_store)
 ```
 
-In totaal vallen `r nrow(select_time_periods) - nrow(select_within_radius)` waarnemingen buiten de telperiodes.
+In totaal vallen `r nrow(calculate_obs_distance) - nrow(select_within_radius)` waarnemingen buiten de telcirkels.
 
 ```{r}
 obs_per_year <- select_time_periods %>%
@@ -424,25 +425,228 @@ obs_per_year %>%
   kable()
 ```
 
+Het gaat om veel waarnemingen.
+We visualiseren deze.
+
+```{r}
+outside_observations <- calculate_obs_distance %>%
+  group_by(regio, plotnaam, jaar, periode_in_jaar) %>%
+  mutate(max_dist = max(distance2plot)) %>%
+  ungroup() %>%
+  filter(max_dist > 300) %>%
+  mutate(outlier = ifelse(distance2plot > 300, "buiten", "binnen")) %>%
+  group_by(regio, plotnaam, jaar, periode_in_jaar) %>%
+  mutate(outlier_perc = sum(grepl("buiten", outlier)) / n()) %>%
+  ungroup() %>%
+  select(regio, plotnaam, jaar, periode_in_jaar, distance2plot,
+         outlier, outlier_perc, x_coord, y_coord)
+
+outside_plots <- outside_observations %>%
+  st_drop_geometry() %>%
+  distinct(regio, plotnaam, jaar, periode_in_jaar, x_coord, y_coord) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370)
+
+outside_circles <- outside_plots %>%
+  st_buffer(300)
+
+for (reg in sort(unique(outside_observations$regio))) {
+  p <- outside_observations %>%
+      filter(regio == reg) %>%
+      distinct(regio, plotnaam, jaar, periode_in_jaar, outlier_perc) %>%
+      ggplot() +
+        geom_histogram(aes(x = outlier_perc), bins = 20) +
+        coord_cartesian(xlim = c(0, 1)) +
+        labs(x = "Procent waarnemingen buiten telcirkel per telling",
+             y = "Frequentie",
+             title = reg) +
+        facet_wrap(~jaar, ncol = 3)
+  print(p)
+}
+```
+
+We stellen dat een verwijdering van > 20% van de waarnemingen per telling op een probleem kan wijzen.
+We filteren hierop en kijken wat overblijft.
+
+```{r}
+outside_observations_new <- outside_observations %>%
+  filter(outlier_perc > 0.2)
+
+outside_plots_new <- outside_observations_new %>%
+  st_drop_geometry() %>%
+  distinct(regio, plotnaam, jaar, periode_in_jaar, x_coord, y_coord) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370)
+
+outside_circles_new <- outside_plots_new %>%
+  st_buffer(300)
+```
 
 
-### Selecteer soortengroepen (select_species_groups)
+```{r}
+for (reg in sort(unique(outside_observations_new$regio))) {
+  p <- outside_observations_new %>%
+      filter(regio == reg) %>%
+      distinct(regio, plotnaam, jaar, periode_in_jaar, outlier_perc) %>%
+      mutate(outlier_perc = round(outlier_perc, 1)) %>%
+      ggplot() +
+        geom_bar(aes(x = outlier_perc), width = 0.1) +
+        scale_x_continuous(breaks = seq(0, 1, 0.1)) +
+        coord_cartesian(xlim = c(0, 1) ) +
+        labs(x = "Procent waarnemingen buiten telcirkel per telling",
+             y = "Frequentie",
+             title = reg) +
+        facet_wrap(~jaar, ncol = 3)
+  print(p)
+}
+```
+
+Vooral in de Oostelijke leemstreek en de Polders zijn er verdachte cases.
+We controleren eerst alle andere regio's (per jaar per telronde).
+
+```{r, results='asis'}
+data <- outside_observations_new %>%
+          filter(regio != "Oostelijke leemstreek",
+                 regio != "Polders")
+
+for (j in sort(unique(data$jaar))) {
+  data <- outside_observations_new %>%
+          filter(regio != "Oostelijke leemstreek",
+                 regio != "Polders",
+                 jaar == j)
+  
+  for (ronde in sort(unique(data$periode_in_jaar))) {
+    m <- mapview(
+        outside_circles_new %>%
+          filter(regio != "Oostelijke leemstreek",
+                 regio != "Polders",
+                 jaar == j,
+                 periode_in_jaar == ronde),
+        alpha.regions = 0.3, legend = FALSE
+        ) +
+      mapview(
+        outside_plots_new %>%
+          filter(regio != "Oostelijke leemstreek",
+                 regio != "Polders",
+                 jaar == j,
+                 periode_in_jaar == ronde),
+        cex = 3, col.regions = "black", legend = FALSE
+        ) +
+      mapview(
+        outside_observations_new %>%
+          filter(regio != "Oostelijke leemstreek",
+                 regio != "Polders",
+                 jaar == j,
+                 periode_in_jaar == ronde),
+        zcol = "outlier", layer = "Locatie t.o.v. telcirkel")
+    
+    # Convert to leaflet object
+    leaflet_map <- m@map
+
+    # Create title
+    title <- paste("Jaar:", j, "- Ronde:", ronde)
+
+    # Add title to the map
+    leaflet_map <- leaflet_map %>%
+      leaflet::addControl(
+        html = title,
+        position = "topright",
+        className = "map-title"
+      )
+    
+    # Render the leaflet map
+    htmltools::tagList(leaflet_map) %>%
+      print()
+  }
+}
+```
+
+Deze lijken allemaal ok.
+
+In de Polders liggen er maximaal `r round(max(outside_observations %>% filter(regio == "Polders") %>% pull(outlier_perc)), 2)` procent waarnemingen buiten de telcirkel per telling.
+
+```{r, results='asis'}
+data <- outside_observations_new %>%
+          filter(regio == "Polders")
+
+for (j in sort(unique(data$jaar))) {
+  data <- outside_observations_new %>%
+          filter(regio == "Polders",
+                 jaar == j)
+  
+  for (ronde in sort(unique(data$periode_in_jaar))) {
+    m <- mapview(
+        outside_circles_new %>%
+          filter(regio == "Polders",
+                 jaar == j,
+                 periode_in_jaar == ronde),
+        alpha.regions = 0.3, legend = FALSE
+        ) +
+      mapview(
+        outside_plots_new %>%
+          filter(regio == "Polders",
+                 jaar == j,
+                 periode_in_jaar == ronde),
+        cex = 3, col.regions = "black", legend = FALSE
+        ) +
+      mapview(
+        outside_observations_new %>%
+          filter(regio == "Polders",
+                 jaar == j,
+                 periode_in_jaar == ronde),
+        zcol = "outlier", layer = "Locatie t.o.v. telcirkel"
+        )
+    
+    # Convert to leaflet object
+    leaflet_map <- m@map
+
+    # Create title
+    title <- paste("Jaar:", j, "- Ronde:", ronde)
+
+    # Add title to the map
+    leaflet_map <- leaflet_map %>%
+      leaflet::addControl(
+        html = title,
+        position = "topright",
+        className = "map-title"
+      )
+    
+    # Render the leaflet map
+    htmltools::tagList(leaflet_map) %>%
+      print()
+  }
+}
+```
+
+We zien een problematisch punt: Pl_49572. Alle andere lijken ok.
+
+```{r}
+outside_observations_new %>%
+  st_drop_geometry() %>%
+  filter(plotnaam == "Pl_49572") %>%
+  count(plotnaam, jaar, periode_in_jaar, outlier_perc, outlier)
+```
+
+Het ziet ernaar uit dat Pl_49572 dezelfde naam heeft voor 2 locaties.
+In plaats van: Pl_25053.16 (x: 50279.09, y: 210998)
+
+
+
+## Selecteer soortengroepen (select_species_groups)
 
 ...
 
-### Verwerk dubbeltellingen (remove_double_counts)
+## Verwerk dubbeltellingen (remove_double_counts)
 
 ...
 
-### Verwerk namen van ondersoorten (remove_subspecies_names)
+## Verwerk namen van ondersoorten (remove_subspecies_names)
 
 ...
 
-### Voeg predatorvariabele toe (add_predator_variable)
+## Voeg predatorvariabele toe (add_predator_variable)
 
 ...
 
-### Telpunten in finale dataset (mas_data_full)
+## Telpunten in finale dataset (mas_data_full)
 
 ```{r}
 mas_data_full <- tar_read("mas_data_full", store = targets_store)
