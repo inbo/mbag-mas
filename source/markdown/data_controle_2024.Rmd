@@ -45,7 +45,7 @@ targets_store <- here::here("source", "targets", "data_preparation", "_targets")
 
 # Doel
 
-Data cleaning en preparatie verloopt via een targets pipeline waarbij verschillende stappen elkaar opvolgen.
+Data preparatie verloopt via een targets pipeline waarbij verschillende stappen elkaar opvolgen.
 
 ```{r}
 tar_visnetwork(script = paste0(targets_store, ".R"),
@@ -59,7 +59,7 @@ In deze markdown controleren we
 
 We doen dit voor de data van 2018-2024.
 
-# Data preparatie workflow
+# Data preparatie pipeline
 ## Amersfoord naar Lambert coördinaten (crs_pipeline)
 
 In de eerste stap worden Amersfoord coördinaten naar Lambert coördinaten omgezet.
@@ -390,13 +390,33 @@ select_sampled_points %>%
                       "tellingen_buiten_telrondes.csv"))
 ```
 
+### Selecteer data binnen telcirkel radius (select_within_radius)
+
+...
+
+### Selecteer soortengroepen (select_species_groups)
+
+...
+
+### Verwerk dubbeltellingen (remove_double_counts)
+
+...
+
+### Verwerk namen van ondersoorten (remove_subspecies_names)
+
+...
+
+### Voeg predatorvariabele toe (add_predator_variable)
+
+...
+
 ### Telpunten in finale dataset (mas_data_full)
 
 ```{r}
 mas_data_full <- tar_read("mas_data_full", store = targets_store)
 ```
 
-Alle punten zijn nog altijd aanwezig:
+Zijn alle punten zijn nog altijd aanwezig?
 
 ```{r}
 mas_data_full %>%
@@ -410,9 +430,11 @@ mas_data_full %>%
   kable()
 ```
 
+Ja.
+
 # Controle finale dataset
 
-...
+*zie werkwijze pilootproject*
 
 ```{r}
 mas_data_clean <- tar_read("mas_data_clean", store = targets_store)
