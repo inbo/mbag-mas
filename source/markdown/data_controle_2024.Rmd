@@ -112,3 +112,12 @@ Welke punten zijn niet geteld?
 setdiff(sample$pointid, sample_visited$plotnaam)
 ```
 
+> Nagaan of deze bewust of onbewust niet geteld zijn
+
+### ...
+
+
+
+# Controle finale dataset
+
+...
