@@ -529,10 +529,10 @@ for (j in sort(unique(data$jaar))) {
     leaflet_map <- leaflet_map %>%
       addPolygons(data = circles, fillOpacity = 0.3, group = title) %>%
       addCircleMarkers(data = plots, radius = 3, color = "black",
-                       group = title) %>%
+                       group = title, label = ~plots$plotnaam) %>%
       addCircleMarkers(data = observations, fillOpacity = 0.8, radius = 5,
                        color = ~ifelse(outlier == "binnen", "green", "red"),
-                       group = title)
+                       group = title, label = ~observations$plotnaam)
   }
 }
 
@@ -598,10 +598,10 @@ for (j in sort(unique(data$jaar))) {
     leaflet_map <- leaflet_map %>%
       addPolygons(data = circles, fillOpacity = 0.3, group = title) %>%
       addCircleMarkers(data = plots, radius = 3, color = "black",
-                       group = title) %>%
+                       group = title, label = ~plots$plotnaam) %>%
       addCircleMarkers(data = observations, fillOpacity = 0.8, radius = 5,
                        color = ~ifelse(outlier == "binnen", "green", "red"),
-                       group = title)
+                       group = title, label = ~observations$plotnaam)
   }
 }
 
@@ -675,10 +675,10 @@ for (j in sort(unique(data$jaar))) {
     leaflet_map <- leaflet_map %>%
       addPolygons(data = circles, fillOpacity = 0.3, group = title) %>%
       addCircleMarkers(data = plots, radius = 3, color = "black",
-                       group = title) %>%
+                       group = title, label = ~plots$plotnaam) %>%
       addCircleMarkers(data = observations, fillOpacity = 0.8, radius = 5,
                        color = ~ifelse(outlier == "binnen", "green", "red"),
-                       group = title)
+                       group = title, label = ~observations$plotnaam)
   }
 }
 
