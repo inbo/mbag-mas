@@ -52,12 +52,13 @@ tar_visnetwork(script = paste0(targets_store, ".R"),
                store = targets_store)
 ```
 
-In deze markdown controleren we 
+In deze markdown controleren we ...
 
-1. Of deze pipeline de verwachte stappen correct doorloopt
-2. De finale data op het einde van de pipeline voor onverwachte zaken, uitschieters ...
+1. of deze pipeline de verwachte stappen correct doorloopt
+2. of in de finale data, op het einde van de pipeline, onverwachte zaken, uitschieters ... aanwezig zijn
+3. of de data klaar zijn voor publicatie op GBIF
 
-We doen dit voor de data van 2018-2024.
+We doen dit in dit rapport voor de data van 2018-2024.
 
 # Data preparatie pipeline
 ## Amersfoord naar Lambert coördinaten (crs_pipeline)
@@ -459,3 +460,7 @@ for (reg in sort(unique(count_per_period$regio))) {
   print(p)
 }
 ```
+
+# Controle data publicatie
+
+...
