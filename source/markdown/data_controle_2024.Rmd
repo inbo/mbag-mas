@@ -156,21 +156,239 @@ obs_per_year %>%
 - Kempen
   - ok
 - Oostelijke leemstreek
-  - alleen voor pre-MBAG jaren, ok
+  - verschil alleen voor pre-MBAG jaren (2018-2022), ok
 - Polders:
-  - verschil pre-MBAG jaren (2022-2023), ok
-  - waarnemingen 2024 nakijken!
+  - verschil alleen voor pre-MBAG jaren (2022-2023), ok
+  - 2024 nakijken!
 - Westelijke leemstreek
-  - nakijken!
-- Polders:
+  - 2024 nakijken!
+- Zandleemstreek
+  - 2024 nakijken!
+- Zandstreek:
   - verschil pre-MBAG jaren (2022-2023), ok
-  - waarnemingen 2024 nakijken!
+  - 2024 nakijken!
+
+**Polders**
 
 ```{r}
+oid_pl <- select_sampled_points %>%
+    st_drop_geometry() %>%
+    filter(regio == "Polders", jaar == 2024) %>%
+    pull(oid)
 
+oid_pl_filtered <- select_time_periods %>%
+    st_drop_geometry() %>%
+    filter(regio == "Polders", jaar == 2024) %>%
+    pull(oid)
+
+oid_pl_diff <- setdiff(oid_pl, oid_pl_filtered)
+
+obs_per_date_pl <- select_sampled_points %>%
+  st_drop_geometry() %>%
+  filter(regio == "Polders",
+         jaar == 2024,
+         oid %in% oid_pl_diff) %>%
+  mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
+  count(plotnaam, datum, name = "n_obs") %>%
+  arrange(plotnaam, datum)
+
+obs_per_date_pl %>%
+  kable()
 ```
 
+Dit zijn wintertellingen, dus is ok.
+Worden deze punten wel ook nog geteld in de correcte periodes?
 
+```{r}
+obs_per_period_pl <- select_time_periods %>%
+  st_drop_geometry() %>%
+  filter(regio == "Polders",
+         jaar == 2024,
+         plotnaam %in% unique(obs_per_date_pl$plotnaam)) %>%
+  count(plotnaam, periode_in_jaar, naam = "n_obs") %>%
+  group_by(plotnaam) %>%
+  mutate(n_periodes = n_distinct(periode_in_jaar)) %>%
+  ungroup()
+
+obs_per_period_pl %>%
+  kable()
+```
+
+Beerpolder is niet geteld in ronde 1.
+
+**Westelijke leemstreek**
+
+```{r}
+oid_wlm <- select_sampled_points %>%
+    st_drop_geometry() %>%
+    filter(regio == "Westelijke leemstreek", jaar == 2024) %>%
+    pull(oid)
+
+oid_wlm_filtered <- select_time_periods %>%
+    st_drop_geometry() %>%
+    filter(regio == "Westelijke leemstreek", jaar == 2024) %>%
+    pull(oid)
+
+oid_wlm_diff <- setdiff(oid_wlm, oid_wlm_filtered)
+
+obs_per_date_wlm <- select_sampled_points %>%
+  st_drop_geometry() %>%
+  filter(regio == "Westelijke leemstreek",
+         jaar == 2024,
+         oid %in% oid_wlm_diff) %>%
+  mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
+  count(plotnaam, datum, name = "n_obs") %>%
+  arrange(plotnaam, datum)
+
+obs_per_date_wlm %>%
+  kable()
+```
+
+Deze punten zijn geteld tussen telrondes 3 en 4.
+Worden deze punten wel ook nog geteld in de correcte periodes?
+
+```{r}
+obs_per_period_wlm <- select_time_periods %>%
+  st_drop_geometry() %>%
+  filter(regio == "Westelijke leemstreek",
+         jaar == 2024,
+         plotnaam %in% unique(obs_per_date_wlm$plotnaam)) %>%
+  count(plotnaam, periode_in_jaar, naam = "n_obs") %>%
+  group_by(plotnaam) %>%
+  mutate(n_periodes = n_distinct(periode_in_jaar)) %>%
+  ungroup()
+
+obs_per_period_wlm %>%
+  kable()
+```
+
+Neen, deze locaties zijn niet in telperiode 4 geteld.
+
+**Zandleemstreek**
+
+```{r}
+oid_zlm <- select_sampled_points %>%
+    st_drop_geometry() %>%
+    filter(regio == "Zandleemstreek", jaar == 2024) %>%
+    pull(oid)
+
+oid_zlm_filtered <- select_time_periods %>%
+    st_drop_geometry() %>%
+    filter(regio == "Zandleemstreek", jaar == 2024) %>%
+    pull(oid)
+
+oid_zlm_diff <- setdiff(oid_zlm, oid_zlm_filtered)
+
+obs_per_date_zlm <- select_sampled_points %>%
+  st_drop_geometry() %>%
+  filter(regio == "Zandleemstreek",
+         jaar == 2024,
+         oid %in% oid_zlm_diff) %>%
+  mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
+  count(plotnaam, datum, name = "n_obs") %>%
+  arrange(plotnaam, datum)
+
+obs_per_date_zlm %>%
+  kable()
+```
+
+Deze punten zijn geteld tussen telrondes 3 en 4.
+Worden deze punten wel ook nog geteld in de correcte periodes?
+
+```{r}
+obs_per_period_zlm <- select_time_periods %>%
+  st_drop_geometry() %>%
+  filter(regio == "Zandleemstreek",
+         jaar == 2024,
+         plotnaam %in% unique(obs_per_date_zlm$plotnaam)) %>%
+  count(plotnaam, periode_in_jaar, naam = "n_obs") %>%
+  group_by(plotnaam) %>%
+  mutate(n_periodes = n_distinct(periode_in_jaar)) %>%
+  ungroup()
+
+obs_per_period_zlm %>%
+  kable()
+```
+
+Neen, deze locaties zijn niet in telperiode 4 geteld.
+
+**Zandstreek**
+
+```{r}
+oid_za <- select_sampled_points %>%
+    st_drop_geometry() %>%
+    filter(regio == "Zandstreek", jaar == 2024) %>%
+    pull(oid)
+
+oid_za_filtered <- select_time_periods %>%
+    st_drop_geometry() %>%
+    filter(regio == "Zandstreek", jaar == 2024) %>%
+    pull(oid)
+
+oid_za_diff <- setdiff(oid_za, oid_za_filtered)
+
+obs_per_date_za <- select_sampled_points %>%
+  st_drop_geometry() %>%
+  filter(regio == "Zandstreek",
+         jaar == 2024,
+         oid %in% oid_za_diff) %>%
+  mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
+  count(plotnaam, datum, name = "n_obs") %>%
+  arrange(plotnaam, datum)
+
+obs_per_date_za %>%
+  kable()
+```
+
+Dit zijn wintertellingen, dus is ok.
+Worden deze punten wel ook nog geteld in de correcte periodes?
+
+```{r}
+obs_per_period_za <- select_time_periods %>%
+  st_drop_geometry() %>%
+  filter(regio == "Zandstreek",
+         jaar == 2024,
+         plotnaam %in% unique(obs_per_date_za$plotnaam)) %>%
+  count(plotnaam, periode_in_jaar, naam = "n_obs") %>%
+  group_by(plotnaam) %>%
+  mutate(n_periodes = n_distinct(periode_in_jaar)) %>%
+  ungroup()
+
+obs_per_period_za %>%
+  kable()
+```
+
+ok.
+
+We schrijven deze data weg zodat ze gecontroleerd kunnen worden.
+
+```{r}
+locs_outside_periods <- bind_rows(
+  obs_per_period_pl,
+  obs_per_period_wlm,
+  obs_per_period_zlm,
+  obs_per_period_za
+  ) %>%
+  filter(n_periodes < 4) %>%
+  distinct(plotnaam) %>%
+  pull()
+
+delete_from_df <- select_time_periods %>%
+  st_drop_geometry() %>%
+  filter(jaar == 2024,
+         plotnaam %in% locs_outside_periods) %>%
+  distinct(plotnaam, jaar, maand, dag, waarnemer = waarneme)
+
+select_sampled_points %>%
+  st_drop_geometry() %>%
+  filter(jaar == 2024,
+         plotnaam %in% locs_outside_periods) %>%
+  distinct(plotnaam, jaar, maand, dag, waarnemer = waarneme) %>%
+  anti_join(delete_from_df,
+            by = join_by(plotnaam, jaar, maand, dag, waarnemer)) %>%
+  write_csv(file.path(mbag_dir, "output", "data_controle",
+                      "tellingen_buiten_telrondes.csv"))
+```
 
 ### Telpunten in finale dataset (mas_data_full)
 
