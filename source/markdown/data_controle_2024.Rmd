@@ -119,18 +119,69 @@ Notities manuele controle Johannes:
 - Pl_25053.16: plek zelf moeilijk te gaan staan stoppen aan overkant weg wel
 - Pl_45612.2: OK geen privé weg maar langs bedrijf
 
-### ...
+### Selecteer data binnen de telperiodes (select_time_periods)
 
-### Telpunten in finale dataset (mas_data_clean)
+We selecteren data binnen de correcte telperiodes.
+Er zijn 4 telrondes:
+
+- R1: 1 april - 20 april
+- R2: 21 april - 10 mei
+- R3: 11 mei - 10 juni
+- R4: 21 juni - 15 juli
+
+Verliezen we data indien we filteren binnen deze periodes?
+Indien ja, hoeveel en waar?
 
 ```{r}
-mas_data_clean <- tar_read("mas_data_clean", store = targets_store)
+select_time_periods <- tar_read_sf("select_time_periods", store = targets_store)
+```
+
+In totaal vallen `r nrow(select_sampled_points) - nrow(select_time_periods)` waarnemingen buiten de telperiodes.
+
+```{r}
+obs_per_year <- select_sampled_points %>%
+  st_drop_geometry() %>%
+  count(regio, jaar)
+
+obs_per_year_filtered <- select_time_periods %>%
+  st_drop_geometry() %>%
+  count(regio, jaar, name = "n_filtered")
+
+obs_per_year %>%
+  full_join(obs_per_year_filtered, by = join_by(regio, jaar)) %>%
+  mutate(difference = n - n_filtered) %>%
+  kable()
+```
+
+- Kempen
+  - ok
+- Oostelijke leemstreek
+  - alleen voor pre-MBAG jaren, ok
+- Polders:
+  - verschil pre-MBAG jaren (2022-2023), ok
+  - waarnemingen 2024 nakijken!
+- Westelijke leemstreek
+  - nakijken!
+- Polders:
+  - verschil pre-MBAG jaren (2022-2023), ok
+  - waarnemingen 2024 nakijken!
+
+```{r}
+
+```
+
+
+
+### Telpunten in finale dataset (mas_data_full)
+
+```{r}
+mas_data_full <- tar_read("mas_data_full", store = targets_store)
 ```
 
 Alle punten zijn nog altijd aanwezig:
 
 ```{r}
-mas_data_clean %>%
+mas_data_full %>%
   st_drop_geometry() %>%
   distinct(plotnaam, regio, openheid_klasse, sbp) %>%
   mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
@@ -145,6 +196,9 @@ mas_data_clean %>%
 
 ...
 
+```{r}
+mas_data_clean <- tar_read("mas_data_clean", store = targets_store)
+```
 
 ```{r}
 count_per_period <- mas_data_clean %>%
@@ -164,5 +218,4 @@ for (reg in sort(unique(count_per_period$regio))) {
       labs(x = "Telperiode", y = "Aantal telpunten")
   print(p)
 }
-  
 ```
