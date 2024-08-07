@@ -423,13 +423,36 @@ We voegen deze oude punten samen met de nieuwe punten.
 - Km_45192.7 was oorspronkelijk VL0432? Km_45192.7 is geteld maar zit niet in steekproef
 - Km_14981.5 was oorspronkelijk VL0005? Km_14981.5 is geteld maar zit niet in steekproef
 
-> voorlopig weglaten
+> Km_45192.7 en Km_14981.5 zijn geteld, VL0432 en VL0005 niet
 
 ```{r}
+df1 <- steekproefkader_za_kp_po %>%
+  filter(pointid %in% c("Km_45192.7", "Km_14981.5"))
+df2 <- steekproef_za_kp_po %>%
+  filter(pointid %in% c("VL0432", "VL0005"))
+
+# Map old pointids to new pointids
+pointid_mapping <- data.frame(
+  old_pointid = c("VL0005", "VL0432"),
+  new_pointid = c("Km_14981.5", "Km_45192.7")
+)
+
+# Merge data frames to get new coordinates and pointids
+updated_df2 <- df2 %>%
+  select(-x_coord, -y_coord) %>%
+  left_join(pointid_mapping, by = c("pointid" = "old_pointid")) %>%
+  left_join(df1, by = c("new_pointid" = "pointid")) %>%
+  mutate(pointid = new_pointid) %>%
+  select(pointid, sample_order, batch, regio = regio.x,
+         area_prop_sb = area_prop_sb.x, openheid_klasse = openheid_klasse.x,
+         sbp = sbp.x, x_coord, y_coord, crs = crs.x)
+
 steekproef_avimap_za_kp_po <- avimap_za_kp_po_final %>%
   select(pointid, regio = Naam) %>%
-  filter(!pointid %in% c("Km_45192.7", "Km_14981.5")) %>%
   inner_join(steekproef_za_kp_po, by = join_by(pointid, regio)) %>%
+  # Add Km_45192.7 and Km_14981.5
+  bind_rows(updated_df2) %>%
+  # Add manual intervention
   bind_rows(avimap_za_kp_po_extra)
 ```
 
@@ -451,7 +474,7 @@ steekproef_avimap_za_kp_po %>%
   kable()
 ```
 
-> ???
+> 201 in Polders en 199 in Zandstreek?
 
 ```
 data <- st_read(file.path("data", "mas", "20240805_qgis_export_sovon_wfs_2024.geojson"))
