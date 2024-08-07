@@ -94,12 +94,18 @@ list(
     iteration = "list"
   ),
   tar_target(
-    name = select_within_radius,
-    command = select_within_circle_radius(
-      counts_df = select_time_periods,
-      radius = 300
+    name = calculate_obs_distance,
+    command = calculate_obs_dist(
+      counts_df = select_time_periods
     ),
     pattern = map(select_time_periods),
+    iteration = "list"
+  ),
+  tar_target(
+    name = select_within_radius,
+    command = calculate_obs_distance %>%
+      filter(.data$distance2plot <= 300),
+    pattern = map(calculate_obs_distance),
     iteration = "list"
   ),
   tar_target(
