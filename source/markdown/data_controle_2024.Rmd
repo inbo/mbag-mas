@@ -65,5 +65,50 @@ We doen dit voor de data van 2018-2024.
 In de eerste stap worden Amersfoord coördinaten naar Lambert coördinaten omgezet.
 Dit gebeurt via een functie die op verschillende datasets goed getest is.
 
+## Selectie punten MBAG steekproefkader (select_sampled_points)
 
+In de tweede stap selecteren we de punten uit de totale dataset die tot het MBAG steekproefkader behoren.
+Dit gebeurt via een "inner join" wat wil zeggen dat we kunnen nagaan of telpunten uit het steekproefkader niet bezocht zijn (bewust of onbewust).
+
+```{r}
+sample <- tar_read("sample", store = targets_store)
+
+select_sampled_points <- tar_read_sf("select_sampled_points",
+                                     store = targets_store)
+```
+
+Welke aantallen hebben we per stratum?
+
+```{r}
+sample %>%
+  mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
+  count(regio, stratum, name = "n_stratum") %>%
+  group_by(regio) %>%
+  mutate(n_regio = sum(n_stratum)) %>%
+  ungroup() %>%
+  kable()
+```
+
+We kijken of we dezelfde aantallen vinden in de data.
+
+```{r}
+sample_visited <- select_sampled_points %>%
+  st_drop_geometry() %>%
+  distinct(plotnaam, regio, openheid_klasse, sbp)
+
+sample_visited %>%
+  mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
+  count(regio, stratum, name = "n_stratum") %>%
+  group_by(regio) %>%
+  mutate(n_regio = sum(n_stratum)) %>%
+  ungroup() %>%
+  kable()
+```
+
+Er waren 201 telpunten in het steekproefkader, maar er zijn er 199 geteld.
+Welke punten zijn niet geteld?
+
+```{r}
+setdiff(sample$pointid, sample_visited$plotnaam)
+```
 
