@@ -393,7 +393,38 @@ select_sampled_points %>%
 
 ### Selecteer data binnen telcirkel radius (select_within_radius)
 
-...
+We selecteren data binnen de telcirkels.
+Telcirkels hebben een radius van 300 m.
+De afstanden krijgen we mee van Sovon, maar worden herberekend.
+
+Verliezen we data indien we filteren binnen deze radius?
+Indien ja, hoeveel en waar?
+
+```{r}
+calculate_obs_distance <- tar_read_sf(
+  "calculate_obs_distance", store = targets_store)
+select_within_radius <- tar_read_sf(
+  "select_within_radius", store = targets_store)
+```
+
+In totaal vallen `r nrow(select_time_periods) - nrow(select_within_radius)` waarnemingen buiten de telperiodes.
+
+```{r}
+obs_per_year <- select_time_periods %>%
+  st_drop_geometry() %>%
+  count(regio, jaar)
+
+obs_per_year_filtered <- select_within_radius %>%
+  st_drop_geometry() %>%
+  count(regio, jaar, name = "n_filtered")
+
+obs_per_year %>%
+  full_join(obs_per_year_filtered, by = join_by(regio, jaar)) %>%
+  mutate(difference = n - n_filtered) %>%
+  kable()
+```
+
+
 
 ### Selecteer soortengroepen (select_species_groups)
 
