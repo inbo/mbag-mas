@@ -276,7 +276,7 @@ sbp_akkervogels <- lapply(perimeters_za_kp_po$Naam, function(regio) {
         file = "sbp_overige_soorten.shp"),
       extra_soorten = c("hamster",
                         "bruine kiekendief",
-                        "zomertortel", 
+                        "zomertortel",
                         "grauwe kiekendief")
       )
 })
@@ -348,7 +348,7 @@ We berekenen overlap voor de punten:
 ```{r}
 original_point <- steekproefkader_za_kp_po %>%
   filter(pointid %in% c("Zn_63159.9", "Pl_13942.1", "Pl_1188.2", "Pl_2797.5",
-                        "Pl_31984.3", "Pl_2761.2.1", "Pl_5258.6", "Pl_13884.1", 
+                        "Pl_31984.3", "Pl_2761.2.1", "Pl_5258.6", "Pl_13884.1",
                         "Pl_2803.1", "Zn_8224.5")) %>%
   st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
   st_buffer(300) %>%
@@ -390,7 +390,8 @@ We lezen ouden en nieuwe telpunten in.
 # Prepare extra existing locations
 avimap_za_kp_po_extra <- extra_oude_punten_full %>%
   st_drop_geometry() %>%
-  bind_rows(oude_punten_za_kp_po %>% filter(!is.na(x_coord))) %>%
+  bind_rows(oude_punten_za_kp_po %>%
+              filter(!is.na(x_coord))) %>%
   select(all_of(colnames(steekproef_za_kp_po)))
 
 # Prepare selected new locations
@@ -487,13 +488,14 @@ data %>% st_drop_geometry() %>% distinct(plotnaam) %>% filter(grepl("^Km", plotn
 Inlezen en preparatie steekproefkader.
 
 ```{r}
-steekproefkader_weidestreek_raw <- git2rdata::read_vc(
+steekproefkader_wdstr_raw <- git2rdata::read_vc(
   file.path(
-    "source", "targets", "mas_steekproef_weidestreek", "output", "steekproefkader")
+    "source", "targets", "mas_steekproef_weidestreek", "output",
+    "steekproefkader")
   )
 
 # Prepare final dataframe
-steekproefkader_weidestreek <- steekproefkader_weidestreek_raw %>%
+steekproefkader_weidestreek <- steekproefkader_wdstr_raw %>%
   mutate(Naam = "Weidestreek",
          sbp = ifelse(is_sbp, "binnen", "buiten"),
          crs = 31370) %>%
@@ -561,7 +563,7 @@ weidestreek_avimap <- read.csv(
 steekproef_avimap_weidestreek <-  weidestreek_avimap %>%
   select(pointid) %>%
   mutate(regio = "Weidestreek") %>%
-  inner_join(steekproef_weidestreek, by = join_by(pointid, regio)) 
+  inner_join(steekproef_weidestreek, by = join_by(pointid, regio))
 ```
 
 ```{r}
@@ -620,16 +622,16 @@ bind_rows(
 Dit zijn aparte CSV-bestanden voor elke regio.
 
 ```{r}
-write_csv(gewichten_za, 
+write_csv(gewichten_za,
           here("data", "steekproefkaders",
                "gewichten_zandstreek.csv"))
-write_csv(gewichten_kp, 
+write_csv(gewichten_kp,
           here("data", "steekproefkaders",
                "gewichten_kempen.csv"))
-write_csv(gewichten_po, 
+write_csv(gewichten_po,
           here("data", "steekproefkaders",
                "gewichten_polders.csv"))
-write_csv(gewichten_wd, 
+write_csv(gewichten_wd,
           here("data", "steekproefkaders",
                "gewichten_weidestreek.csv"))
 ```
