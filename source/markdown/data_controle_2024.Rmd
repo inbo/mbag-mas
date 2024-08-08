@@ -1139,18 +1139,6 @@ select_species_groups %>%
 
 |Oostelijke leemstreek |VL0330      | 2021|R2              |           2|
 
-```{r}
-remove_double_counts %>%
-  st_drop_geometry() %>%
-  filter(plotnaam == "VL0289", jaar == 2020, periode_in_jaar == "R3") %>%
-  View()
-
-remove_double_counts %>%
-  st_drop_geometry() %>%
-  filter(plotnaam == "VL0330", jaar == 2021, periode_in_jaar == "R2") %>%
-  View()
-```
-
 > probleem verschillende datums maar beide proffessionele teller!
 
 **Polders**
