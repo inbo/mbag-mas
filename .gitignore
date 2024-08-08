@@ -20,6 +20,7 @@
 *.shx
 *.xls*
 *_files
+*.tex
 *.pdf
 *.png
 docs
