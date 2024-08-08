@@ -83,6 +83,7 @@ select_sampled_points <- tar_read_sf("select_sampled_points",
 Welke aantallen hebben we per stratum?
 
 ```{r}
+# Calculate number of locations we should have
 sample %>%
   mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
   count(regio, stratum, name = "n_stratum") %>%
@@ -95,6 +96,7 @@ sample %>%
 We kijken of we dezelfde aantallen vinden in de data.
 
 ```{r}
+# Calculate number of locations in data
 sample_visited <- select_sampled_points %>%
   st_drop_geometry() %>%
   distinct(plotnaam, regio, openheid_klasse, sbp)
@@ -143,6 +145,8 @@ select_time_periods <- tar_read_sf("select_time_periods", store = targets_store)
 In totaal vallen `r nrow(select_sampled_points) - nrow(select_time_periods)` waarnemingen buiten de telperiodes.
 
 ```{r}
+# Calculate difference in number of observations before and after filtering on
+# counting periods
 obs_per_year <- select_sampled_points %>%
   st_drop_geometry() %>%
   count(regio, jaar)
@@ -175,6 +179,7 @@ obs_per_year %>%
 **Polders**
 
 ```{r}
+# Which occurrences fall outside periods?
 oid_pl <- select_sampled_points %>%
     st_drop_geometry() %>%
     filter(regio == "Polders", jaar == 2024) %>%
@@ -187,6 +192,7 @@ oid_pl_filtered <- select_time_periods %>%
 
 oid_pl_diff <- setdiff(oid_pl, oid_pl_filtered)
 
+# Count number of observations per location and date
 obs_per_date_pl <- select_sampled_points %>%
   st_drop_geometry() %>%
   filter(regio == "Polders",
@@ -204,6 +210,7 @@ Dit zijn wintertellingen, dus is ok.
 Worden deze punten wel ook nog geteld in de correcte periodes?
 
 ```{r}
+# How many times are these locations counted in valid periods?
 obs_per_period_pl <- select_time_periods %>%
   st_drop_geometry() %>%
   filter(regio == "Polders",
@@ -223,6 +230,7 @@ Beerpolder is niet geteld in ronde 1.
 **Westelijke leemstreek**
 
 ```{r}
+# Which occurrences fall outside periods?
 oid_wlm <- select_sampled_points %>%
     st_drop_geometry() %>%
     filter(regio == "Westelijke leemstreek", jaar == 2024) %>%
@@ -235,6 +243,7 @@ oid_wlm_filtered <- select_time_periods %>%
 
 oid_wlm_diff <- setdiff(oid_wlm, oid_wlm_filtered)
 
+# Count number of observations per location and date
 obs_per_date_wlm <- select_sampled_points %>%
   st_drop_geometry() %>%
   filter(regio == "Westelijke leemstreek",
@@ -252,6 +261,7 @@ Deze punten zijn geteld tussen telrondes 3 en 4.
 Worden deze punten wel ook nog geteld in de correcte periodes?
 
 ```{r}
+# How many times are these locations counted in valid periods?
 obs_per_period_wlm <- select_time_periods %>%
   st_drop_geometry() %>%
   filter(regio == "Westelijke leemstreek",
@@ -271,6 +281,7 @@ Neen, deze locaties zijn niet in telperiode 4 geteld.
 **Zandleemstreek**
 
 ```{r}
+# Which occurrences fall outside periods?
 oid_zlm <- select_sampled_points %>%
     st_drop_geometry() %>%
     filter(regio == "Zandleemstreek", jaar == 2024) %>%
@@ -283,6 +294,7 @@ oid_zlm_filtered <- select_time_periods %>%
 
 oid_zlm_diff <- setdiff(oid_zlm, oid_zlm_filtered)
 
+# Count number of observations per location and date
 obs_per_date_zlm <- select_sampled_points %>%
   st_drop_geometry() %>%
   filter(regio == "Zandleemstreek",
@@ -300,6 +312,7 @@ Deze punten zijn geteld tussen telrondes 3 en 4.
 Worden deze punten wel ook nog geteld in de correcte periodes?
 
 ```{r}
+# How many times are these locations counted in valid periods?
 obs_per_period_zlm <- select_time_periods %>%
   st_drop_geometry() %>%
   filter(regio == "Zandleemstreek",
@@ -319,6 +332,7 @@ Neen, deze locaties zijn niet in telperiode 4 geteld.
 **Zandstreek**
 
 ```{r}
+# Which occurrences fall outside periods?
 oid_za <- select_sampled_points %>%
     st_drop_geometry() %>%
     filter(regio == "Zandstreek", jaar == 2024) %>%
@@ -331,6 +345,7 @@ oid_za_filtered <- select_time_periods %>%
 
 oid_za_diff <- setdiff(oid_za, oid_za_filtered)
 
+# Count number of observations per location and date
 obs_per_date_za <- select_sampled_points %>%
   st_drop_geometry() %>%
   filter(regio == "Zandstreek",
@@ -348,6 +363,7 @@ Dit zijn wintertellingen, dus is ok.
 Worden deze punten wel ook nog geteld in de correcte periodes?
 
 ```{r}
+# How many times are these locations counted in valid periods?
 obs_per_period_za <- select_time_periods %>%
   st_drop_geometry() %>%
   filter(regio == "Zandstreek",
@@ -367,6 +383,7 @@ ok.
 We schrijven deze data weg zodat ze gecontroleerd kunnen worden.
 
 ```{r}
+# Get all locations outside periods
 locs_outside_periods <- bind_rows(
   obs_per_period_pl,
   obs_per_period_wlm,
@@ -377,12 +394,14 @@ locs_outside_periods <- bind_rows(
   distinct(plotnaam) %>%
   pull()
 
+# Get removed data
 delete_from_df <- select_time_periods %>%
   st_drop_geometry() %>%
   filter(jaar == 2024,
          plotnaam %in% locs_outside_periods) %>%
   distinct(plotnaam, jaar, maand, dag, waarnemer = waarneme)
 
+# Write out removed data
 select_sampled_points %>%
   st_drop_geometry() %>%
   filter(jaar == 2024,
@@ -407,23 +426,27 @@ calculate_obs_distance <- tar_read_sf(
 Zijn er punten waarbij het absolute verschil meer dan 2 m is?
 
 ```{r}
+# Get original distances
 distances_og <- select_time_periods %>%
   st_drop_geometry() %>%
   select(oid, plotnaam, regio, jaar, periode_in_jaar,
          distance2plot_og = distance2plot) %>%
   mutate(distance2plot_og = as.numeric(distance2plot_og))
 
+# Get recalculated distances
 distances_new <- calculate_obs_distance %>%
   st_drop_geometry() %>%
   select(oid, plotnaam, regio, jaar, periode_in_jaar,
          distance2plot_new = distance2plot)
 
+# Calculate absolute difference between the two
 outlying_distances <- distances_og %>%
   full_join(distances_new,
             by = join_by(oid, plotnaam, regio, jaar, periode_in_jaar)) %>%
   mutate(abs_diff = abs(distance2plot_og - distance2plot_new)) %>%
   filter(abs_diff > 2)
 
+# How many mismatches do we have per region?
 outlying_distances %>%
   group_by(regio) %>%
   summarise(
@@ -443,17 +466,20 @@ Voor de polders is er 1 probleemtelpunt.
 outlying_dist_groups <- outlying_distances %>%
   distinct(plotnaam, regio, jaar, periode_in_jaar)
 
+# Get problematic observations
 outlying_dist_obs <- calculate_obs_distance %>%
   inner_join(outlying_dist_groups,
              by = join_by(plotnaam, jaar, regio, periode_in_jaar)) %>%
   left_join(outlying_distances %>% select(oid, abs_diff),
             by = join_by(oid))
 
+# Get problematic point locations
 outlying_dist_plots <- outlying_dist_obs %>%
   st_drop_geometry() %>%
   distinct(regio, plotnaam, jaar, periode_in_jaar, x_coord, y_coord) %>%
   st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370)
 
+# Get problematic location circles
 outlying_dist_circles <- outlying_dist_plots %>%
   st_buffer(300)
 ```
@@ -513,6 +539,7 @@ for (j in sort(years)) {
   }
 }
 
+# Calculate control groups
 groups <- outlying_dist_obs %>%
   filter(regio == "Polders") %>%
   distinct(jaar, periode_in_jaar) %>%
@@ -541,6 +568,7 @@ In de Oostelijke leemstreek gaat het om `r outlying_distances %>% filter(regio =
 Zijn het telkens dezelfde punten die problemen geven?
 
 ```{r}
+# Count per location
 outlying_distances %>%
   filter(regio == "Oostelijke leemstreek") %>%
   group_by(plotnaam) %>%
@@ -604,6 +632,7 @@ for (j in sort(years)) {
   }
 }
 
+# Calculate control groups
 groups <- outlying_dist_obs %>%
   filter(regio == "Oostelijke leemstreek") %>%
   distinct(jaar, periode_in_jaar) %>%
@@ -621,7 +650,7 @@ leaflet_map <- leaflet_map %>%
 leaflet_map
 ```
 
-> Locatie niet juist??
+> Locaties niet juist??
 
 ## Selecteer data binnen telcirkel radius (select_within_radius)
 
@@ -640,6 +669,8 @@ select_within_radius <- tar_read_sf(
 In totaal vallen `r nrow(calculate_obs_distance) - nrow(select_within_radius)` waarnemingen buiten de telcirkels.
 
 ```{r}
+# Calculate difference in number of observations before and after filtering on
+# radius
 obs_per_year <- select_time_periods %>%
   st_drop_geometry() %>%
   count(regio, jaar)
@@ -658,6 +689,7 @@ Het gaat om veel waarnemingen.
 We visualiseren deze.
 
 ```{r}
+# Calculate percentage of outlying observations per location and date
 outside_observations <- calculate_obs_distance %>%
   group_by(regio, plotnaam, jaar, periode_in_jaar) %>%
   mutate(max_dist = max(distance2plot)) %>%
@@ -670,14 +702,17 @@ outside_observations <- calculate_obs_distance %>%
   select(regio, plotnaam, jaar, periode_in_jaar, distance2plot,
          outlier, outlier_perc, x_coord, y_coord)
 
+# Get problematic point locations
 outside_plots <- outside_observations %>%
   st_drop_geometry() %>%
   distinct(regio, plotnaam, jaar, periode_in_jaar, x_coord, y_coord) %>%
   st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370)
 
+# Get problematic location circles
 outside_circles <- outside_plots %>%
   st_buffer(300)
 
+# Visualise outlier percentage distribution
 for (reg in sort(unique(outside_observations$regio))) {
   p <- outside_observations %>%
       filter(regio == reg) %>%
@@ -697,6 +732,8 @@ We stellen dat een verwijdering van > 20% van de waarnemingen per telling op een
 We filteren hierop en kijken wat overblijft.
 
 ```{r}
+# Filter problematic observations, point locations and circles on outlying
+# percentage
 outside_observations_new <- outside_observations %>%
   filter(outlier_perc > 0.2)
 
@@ -771,6 +808,7 @@ for (j in sort(years)) {
   }
 }
 
+# Calculate control groups
 groups <- outside_observations_new %>%
   filter(regio != "Oostelijke leemstreek",
          regio != "Polders") %>%
@@ -853,6 +891,7 @@ for (j in sort(years)) {
   }
 }
 
+# Calculate control groups
 groups <- outside_observations_new %>%
   filter(regio == "Polders") %>%
   distinct(jaar, periode_in_jaar) %>%
@@ -879,6 +918,7 @@ We zien een problematisch punt in 2024: Pl_49572.
 Alle andere lijken ok.
 
 ```{r}
+# Show outlying percentage of Pl_49572
 outside_observations_new %>%
   st_drop_geometry() %>%
   filter(plotnaam == "Pl_49572") %>%
@@ -942,6 +982,7 @@ for (j in sort(years)) {
   }
 }
 
+# Calculate control groups
 groups <- outside_observations_new %>%
   filter(regio == "Oostelijke leemstreek") %>%
   distinct(jaar, periode_in_jaar) %>%
@@ -978,11 +1019,13 @@ select_species_groups <- tar_read_sf(
 Is het aantal soortgroepen in de data gelijk aan 2?
 
 ```{r}
+# Get number of species groups
 n_soortgroups <- select_species_groups %>%
   st_drop_geometry() %>%
   distinct(soortgrp) %>%
   nrow()
 
+# Equal to 2 (birds and mammals)?
 n_soortgroups == 2
 ```
 
@@ -994,6 +1037,7 @@ Sommige telpunten zijn 2x geteld.
 We selecteren de telling van de laatste dag binnen de telperiode of de telling gedaan door een professionele teller indien van toepassing.
 
 ```{r, echo=FALSE}
+# Create table to show professional counters
 profs      <-  c("WVNT00", # professional from the start
                  "JJNN16",
                  "NOVN00",
@@ -1055,6 +1099,7 @@ remove_double_counts <- tar_read_sf(
 We lijsten op waar dubbeltellingen zijn verwijderd.
 
 ```{r}
+# Get locations with removed observations due to double counting
 removed_obs <- select_species_groups %>%
   st_drop_geometry() %>%
   anti_join(st_drop_geometry(remove_double_counts),
@@ -1075,10 +1120,10 @@ removed_obs %>%
 ```
 
 Zijn alle dubbeltellingen verwijderd?
-
-> nakijken of 1 telling per telpunt, regio, jaar, periode
+In de verwerkte data zou elke locatie maar 1x geteld moeten zijn per periode en jaar.
 
 ```{r}
+# Calculate number of counts in processed data
 select_species_groups %>%
   st_drop_geometry() %>%
   mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
@@ -1110,45 +1155,57 @@ remove_double_counts %>%
 
 **Polders**
 
+Zijn de juiste tellingen verwijderd?
+
 ```{r}
+# Which locations are removed?
 removed_obs_pl <- removed_obs %>%
   filter(regio == "Polders") %>%
   distinct(plotnaam, regio, jaar, periode_in_jaar)
 
+# Which observations are removed per date?
 removed_obs_pl2 <- removed_obs %>%
   filter(regio == "Polders") %>%
   mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
   distinct(plotnaam, regio, datum, periode_in_jaar) %>%
   mutate(keep = FALSE)
 
+# Get double counts and look if correct ones are removed
 select_species_groups %>%
   st_drop_geometry() %>%
   inner_join(removed_obs_pl,
              by = join_by(plotnaam, jaar, regio, periode_in_jaar)) %>%
   mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
+  # Add variable keep
   full_join(removed_obs_pl2,
             by = join_by(plotnaam, regio, datum, periode_in_jaar)) %>%
   mutate(keep = is.na(keep)) %>%
   count(plotnaam, datum, periode_in_jaar, waarnemer = waarneme, keep,
         name = "n_obs") %>%
-  arrange(plotnaam, periode_in_jaar, datum)
+  arrange(plotnaam, periode_in_jaar, datum) %>%
+  kable()
 ```
 
 Laatste telling behouden, ok.
 
 **Oostelijke leemstreek**
 
+Zijn de juiste tellingen verwijderd?
+
 ```{r}
+# Which locations are removed?
 removed_obs_ol <- removed_obs %>%
   filter(regio == "Oostelijke leemstreek") %>%
   distinct(plotnaam, regio, jaar, periode_in_jaar)
 
+# Which observations are removed per date?
 removed_obs_ol2 <- removed_obs %>%
   filter(regio == "Oostelijke leemstreek") %>%
   mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
   distinct(plotnaam, regio, datum, periode_in_jaar) %>%
   mutate(keep = FALSE)
 
+# Get double counts and look if correct ones are removed
 select_species_groups %>%
   st_drop_geometry() %>%
   inner_join(removed_obs_ol,
@@ -1159,7 +1216,8 @@ select_species_groups %>%
   mutate(keep = is.na(keep)) %>%
   count(plotnaam, datum, periode_in_jaar, waarnemer = waarneme, keep,
         name = "n_obs") %>%
-  arrange(plotnaam, datum, periode_in_jaar)
+  arrange(plotnaam, datum, periode_in_jaar) %>%
+  kable()
 ```
 
 - Ol_12609.15, 2022, R1, LEVS01: ok, laatste telling
@@ -1175,6 +1233,7 @@ select_species_groups %>%
 De volgende ondersoorten worden aangepast tot op soortniveau.
 
 ```{r, echo=FALSE}
+# Create table to show subspecies
 data.frame(
     ondersoort = c(
       "gele kwikstaart (spec)",
@@ -1221,6 +1280,7 @@ mas_data_full <- tar_read("mas_data_full", store = targets_store)
 Zijn alle punten zijn nog altijd aanwezig?
 
 ```{r}
+# Show number of locations per stratum
 mas_data_full %>%
   st_drop_geometry() %>%
   distinct(plotnaam, regio, openheid_klasse, sbp) %>%
