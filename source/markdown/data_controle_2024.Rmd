@@ -1135,23 +1135,7 @@ select_species_groups %>%
   kable()
 ```
 
-|Oostelijke leemstreek |VL0289      | 2020|R3              |           2|
-
-|Oostelijke leemstreek |VL0330      | 2021|R2              |           2|
-
-```{r}
-remove_double_counts %>%
-  st_drop_geometry() %>%
-  filter(plotnaam == "VL0289", jaar == 2020, periode_in_jaar == "R3") %>%
-  View()
-
-remove_double_counts %>%
-  st_drop_geometry() %>%
-  filter(plotnaam == "VL0330", jaar == 2021, periode_in_jaar == "R2") %>%
-  View()
-```
-
-> probleem verschillende datums maar beide proffessionele teller!
+Ok.
 
 **Polders**
 
@@ -1222,6 +1206,8 @@ select_species_groups %>%
 
 - Ol_12609.15, 2022, R1, LEVS01: ok, laatste telling
 - VL0055, 2019, R1-R4, JJNN16: ok, prof
+- VL0289, 2020, R3, JJNN16: ok, laatste telling
+- VL0330, 2021, R2, NOVN00: ok, laatste telling
 - VL0351, 2019, R2, FVRT02: ok, laatste telling
 - VL0587, 2021, R3, BSCX00: ok, laatste telling
 - VL0587, 2024, R2, BSCX00: ok, laatste telling

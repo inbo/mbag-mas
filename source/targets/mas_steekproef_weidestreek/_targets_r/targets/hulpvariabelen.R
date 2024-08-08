@@ -24,7 +24,8 @@ list(
     name = sbp_akkervogels,
     command = read_sbp_others(
       path = sbp_overige_file,
-      soorten = c("hamster", "bruine kiekendief", "zomertortel", "grauwe kiekendief"),
+      soorten = c("hamster", "bruine kiekendief", "zomertortel",
+                  "grauwe kiekendief"),
       gebied = perimeters_data
       ),
     pattern = map(perimeters_data),
