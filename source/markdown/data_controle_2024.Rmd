@@ -424,12 +424,14 @@ outlying_distances <- distances_og %>%
   filter(abs_diff > 2)
 
 outlying_distances %>%
-  group_by(regio, jaar, periode_in_jaar) %>%
+  group_by(regio) %>%
   summarise(
     n_plots = n_distinct(plotnaam),
+    n_jaren = n_distinct(jaar),
+    n_periodes = n_distinct(periode_in_jaar),
     max_diff = max(abs_diff),
     .groups = "drop") %>%
-  arrange(regio, jaar, periode_in_jaar) %>%
+  arrange(regio) %>%
   kable()
 ```
 
@@ -442,7 +444,9 @@ outlying_dist_groups <- outlying_distances %>%
 
 outlying_dist_obs <- calculate_obs_distance %>%
   inner_join(outlying_dist_groups,
-             by = join_by(plotnaam, jaar, regio, periode_in_jaar))
+             by = join_by(plotnaam, jaar, regio, periode_in_jaar)) %>%
+  left_join(outlying_distances %>% select(oid, abs_diff),
+            by = join_by(oid))
 
 outlying_dist_plots <- outlying_dist_obs %>%
   st_drop_geometry() %>%
@@ -504,7 +508,7 @@ for (j in sort(years)) {
                        group = title, label = ~plots$plotnaam) %>%
       addCircleMarkers(data = observations, fillOpacity = 0.8, radius = 5,
                        color = "red",
-                       group = title, label = ~observations$plotnaam)
+                       group = title, label = ~observations$abs_diff)
   }
 }
 
@@ -532,6 +536,21 @@ Deze afstanden zijn dus wel ok, maar het label van het telpunt moet aangepast wo
 **Oostelijke leemstreek**
 
 In de Oostelijke leemstreek gaat het om `r outlying_distances %>% filter(regio == "Oostelijke leemstreek") %>% distinct(plotnaam) %>% pull() %>% length()` punten in `r outlying_distances %>% filter(regio == "Oostelijke leemstreek") %>% distinct(jaar) %>% pull() %>% length()` jaren in `r outlying_distances %>% filter(regio == "Oostelijke leemstreek") %>% distinct(periode_in_jaar) %>% pull() %>% length()`telperiodes.
+
+Zijn het telkens dezelfde punten die problemen geven?
+
+```{r}
+outlying_distances %>%
+  filter(regio == "Oostelijke leemstreek") %>%
+  group_by(plotnaam) %>%
+  summarise(n_jaren = n_distinct(jaar),
+            n_periodes = n_distinct(jaar, periode_in_jaar)) %>%
+  arrange(n_jaren, n_periodes) %>%
+  kable()
+```
+
+In sommige gevallen wel.
+Het gaat telkens om oude punten.
 
 ```{r}
 # Data preparation
@@ -580,7 +599,7 @@ for (j in sort(years)) {
                        group = title, label = ~plots$plotnaam) %>%
       addCircleMarkers(data = observations, fillOpacity = 0.8, radius = 5,
                        color = "red",
-                       group = title, label = ~observations$plotnaam)
+                       group = title, label = ~observations$abs_diff)
   }
 }
 
@@ -600,6 +619,8 @@ leaflet_map <- leaflet_map %>%
 # Print the leaflet map
 leaflet_map
 ```
+
+> Locatie niet juist??
 
 ## Selecteer data binnen telcirkel radius (select_within_radius)
 
@@ -941,11 +962,7 @@ leaflet_map <- leaflet_map %>%
 leaflet_map
 ```
 
-2018: in R2 voor VL0145 is er slechts 1 waarneming en die valt buiten de 300 m dus wordt weggefilterd
-2019: ok
-2020: VL0157
-
-
+Deze probleempunten zijn allicht gerelateerd aan de locaties van de telpunten, zoals opgemerkt in de vorige subsectie.
 
 ## Selecteer soortengroepen (select_species_groups)
 
