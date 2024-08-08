@@ -393,6 +393,49 @@ select_sampled_points %>%
                       "tellingen_buiten_telrondes.csv"))
 ```
 
+## Herbereken afstand tot telpunt (calculate_obs_distance)
+
+We herberekenen de afstand van de waarneming tot het telpunt.
+Grote verschillen kunnen wijzen op fouten.
+
+```{r}
+calculate_obs_distance <- tar_read_sf(
+  "calculate_obs_distance", store = targets_store)
+```
+
+Zijn er veel punten waarbij het absolute verschil meer dan 2 m is?
+
+```{r}
+distances_og <- select_time_periods %>%
+  st_drop_geometry() %>%
+  select(oid, plotnaam, regio, jaar, periode_in_jaar,
+         distance2plot_og = distance2plot) %>%
+  mutate(distance2plot_og = as.numeric(distance2plot_og))
+
+distances_new <- calculate_obs_distance %>%
+  st_drop_geometry() %>%
+  select(oid, plotnaam, regio, jaar, periode_in_jaar,
+         distance2plot_new = distance2plot)
+
+distances_og %>%
+  full_join(distances_new,
+            by = join_by(oid, plotnaam, regio, jaar, periode_in_jaar)) %>%
+  mutate(abs_diff = abs(distance2plot_og - distance2plot_new)) %>%
+  filter(abs_diff > 2) %>%
+  group_by(regio, jaar, periode_in_jaar) %>%
+  summarise(
+    n_plots = n_distinct(plotnaam),
+    max_diff = max(abs_diff),
+    .groups = "drop") %>%
+  arrange(regio, jaar, periode_in_jaar) %>%
+  kable()
+```
+
+Er duiken veel problemen op in de Oostelijke leemstreek 2018-2024 voor meerdere verschillende telpunten.
+Voor de polders is er 1 probleemtelpunt.
+
+
+
 ## Selecteer data binnen telcirkel radius (select_within_radius)
 
 We selecteren data binnen de telcirkels.
@@ -403,8 +446,6 @@ Verliezen we data indien we filteren binnen deze radius?
 Indien ja, hoeveel en waar?
 
 ```{r}
-calculate_obs_distance <- tar_read_sf(
-  "calculate_obs_distance", store = targets_store)
 select_within_radius <- tar_read_sf(
   "select_within_radius", store = targets_store)
 ```
@@ -567,6 +608,8 @@ leaflet_map
 ```
 
 Deze lijken allemaal ok.
+Slechts enkele waarnemingen die buiten de telcirkel vallen.
+Deze mogen worden weggefilterd.
 
 **Polders**
 
@@ -645,7 +688,8 @@ leaflet_map <- leaflet_map %>%
 leaflet_map
 ```
 
-We zien een problematisch punt: Pl_49572. Alle andere lijken ok.
+We zien een problematisch punt in 2024: Pl_49572.
+Alle andere lijken ok.
 
 ```{r}
 outside_observations_new %>%
@@ -731,6 +775,10 @@ leaflet_map <- leaflet_map %>%
 # Print the leaflet map
 leaflet_map
 ```
+
+2018: in R2 voor VL0145 is er slechts 1 waarneming en die valt buiten de 300 m dus wordt weggefilterd
+2019: ok
+2020: VL0157
 
 
 
