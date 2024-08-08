@@ -13,6 +13,7 @@
 Akkervogelgemeenschappen
 Amersfoord
 Avimap
+Avimap-versie
 BO's
 BSCX00
 Bosonderzoek
@@ -44,6 +45,7 @@ Langeraert
 MAS-data
 MBAG
 Matkop
+NOVN00
 Natuur-
 OL
 OLA
@@ -65,6 +67,7 @@ SBP’s
 SOVON
 Sovon
 Surface
+Telpunt-
 Telrondes
 Terrain
 Union
@@ -135,6 +138,7 @@ multipolygon
 names
 occurrence
 openness
+opvalllende
 perceelsgrootte
 perimeters.gpkg
 periods
@@ -188,6 +192,7 @@ version
 viewshed
 visibility
 vlaanderen
+waarneminglocaties
 wikipedia
 within
 x-
