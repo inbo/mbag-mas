@@ -1336,7 +1336,7 @@ mas_data_clean %>%
                       "waarnemingen_met_hoge_aantallen.csv"))
 ```
 
-# Soortnamen
+## Soortnamen
 
 De volgende soorten werden gezien.
 Deze lijst moet gecontroleerd worden op vreemde namen die mogelijks fout zijn.
