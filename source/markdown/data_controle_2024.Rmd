@@ -62,7 +62,7 @@ In deze markdown controleren we ...
 
 We doen dit in dit rapport voor de data van 2018-2024.
 
-# Controlre data preparatie pipeline {#controle-pipeline}
+# Controle data preparatie pipeline {#controle-pipeline}
 ## Amersfoord naar Lambert coördinaten (crs_pipeline)
 
 In de eerste stap worden Amersfoord coördinaten naar Lambert coördinaten omgezet.
@@ -1303,7 +1303,88 @@ De datums werden gecontroleerd in Subsectie \@ref(time-periods).
 
 ## Aantal individuen
 
+In sommige gevallen worden meer dan 50 individuen gezien.
 
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  filter(aantal >= 50) %>%
+  count(aantal, name = "aantal keer in dataset") %>%
+  rename("aantal vogels" = aantal) %>%
+  kable()
+```
+
+Een opvalllende is ook een uitschieter van 3000 individuen.
+We zien dat de meeste waarnemingen wel gaan over soorten die in groep voorkomen, zoals Spreeuw, Grauwe Gans, Roek, Houtduif ...
+
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  select(aantal, naam, plotnaam, waarnemer, datum) %>%
+  filter(aantal >= 50) %>%
+  arrange(aantal) %>%
+  kable()
+```
+
+We schrijven deze waarnemingen weg zodat ze toch gecontroleerd kunnen worden.
+
+```{r}
+mas_data_clean %>%
+  filter(aantal >= 50) %>%
+  arrange(aantal) %>%
+  write_csv(file.path(mbag_dir, "output", "data_controle",
+                      "waarnemingen_met_hoge_aantallen.csv"))
+```
+
+# Soortnamen
+
+De volgende soorten werden gezien.
+Deze lijst moet gecontroleerd worden op vreemde namen die mogelijks fout zijn.
+
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  count(naam, name =  "aantal waarnemingen") %>%
+  arrange(naam) %>%
+  kable()
+```
+
+## Broedcodes
+
+Broedcodes zijn ook belangrijk voor verdere data analyse.
+
+Communicatie Simon Desmet:
+
+*In de Avimap-versie voor Android kan een teller enkel het aantal wijzigen als de vogel broedcode 0 krijgt, maar met een iPhone is dat wel mogelijk bij vogels die met een hogere broedcode dan 0 ingevoerd werden. Sommige tellers hebben dit blijkbaar effectief gedaan, hoewel wij op voorhand gevraagd hadden dit niet te doen.*
+
+Het is echter moeilijk om deze te controleren.
+Wel kunnen we de aantallen visualiseren.
+
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  count(wrntype, wrntype_omschrijving, name = "n_obs") %>%
+  rename(
+    "broedcode" = wrntype,
+    "omschrijving" = wrntype_omschrijving,
+  )
+```
+
+**Broedcode 1-5**
+
+Er is inderdaad een aantal keer hogere aantallen dan 1 ingevoerd bij broedcodes 1-5.
+
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  filter(aantal > 1,
+         wrntype > 0) %>%
+  count(wrntype, aantal, name = "aantal keer in dataset") %>%
+  rename(
+    "broedcode" = "wrntype",
+    "aantal vogels" = aantal) %>%
+  kable()
+```
 
 # Controle data publicatie
 
