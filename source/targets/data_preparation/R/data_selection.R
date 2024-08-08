@@ -42,8 +42,8 @@ select_within_time_periods <- function(counts_df) {
   return(out_df)
 }
 
-# Select data within circle radius
-select_within_circle_radius <- function(counts_df, radius = 300) {
+# Calculate distance of observation to center point
+calculate_obs_dist <- function(counts_df) {
   require("dplyr")
   require("rlang")
   require("sf")
@@ -58,7 +58,6 @@ select_within_circle_radius <- function(counts_df, radius = 300) {
 
   # Calculate distances between observation locations (geometry)
   # and count locations (geometry.point)
-  # Select data within radius distance
   obs_to_point_distances <- counts_df %>%
     full_join(sampling_points, by = join_by("plotnaam", "regio")) %>%
     mutate(
@@ -68,8 +67,7 @@ select_within_circle_radius <- function(counts_df, radius = 300) {
       calc_distance = round(units::drop_units(.data$calc_distance))
     ) %>%
     select(-c("distance2plot", "geometry.point")) %>%
-    rename(distance2plot = "calc_distance") %>%
-    filter(.data$distance2plot <= radius)
+    rename(distance2plot = "calc_distance")
 
   return(obs_to_point_distances)
 }
