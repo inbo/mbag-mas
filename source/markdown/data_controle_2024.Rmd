@@ -38,6 +38,7 @@ conflicted::conflicts_prefer(dplyr::select)
 
 # Source
 source(here::here("source", "R", "tar_read_sf.R"))
+source(here::here("source", "R", "predatoren_f.R"))
 
 # Paths
 mbag_dir <- here::here()
@@ -881,7 +882,8 @@ Alle andere lijken ok.
 outside_observations_new %>%
   st_drop_geometry() %>%
   filter(plotnaam == "Pl_49572") %>%
-  count(plotnaam, jaar, periode_in_jaar, outlier_perc, outlier)
+  count(plotnaam, jaar, periode_in_jaar, outlier_perc, outlier) %>%
+  kable()
 ```
 
 Het ziet ernaar uit dat Pl_49572 dezelfde naam heeft voor 2 locaties.
@@ -988,23 +990,226 @@ Ok.
 
 ## Verwerk dubbeltellingen (remove_double_counts)
 
+Sommige telpunten zijn 2x geteld.
+We selecteren de telling van de laatste dag binnen de telperiode of de telling gedaan door een professionele teller indien van toepassing.
+
+```{r, echo=FALSE}
+profs      <-  c("WVNT00", # professional from the start
+                 "JJNN16",
+                 "NOVN00",
+                 "ETBX00")
+profs_2022 <-    "RPLT02" # professional after 2022
+profs_2023 <- c("KLMS02", # professional after 2023
+                "KLMS02",
+                "ETON01",
+                "BDMR00",
+                "DDMR00",
+                "PADS02",
+                "PCAS00",
+                "BOPE01")
+profs_2024 <- c("KLMS02", # professional after 2024
+                "ETON01",
+                "BDMR00",
+                "DDMR00",
+                "BOPE01",
+                "DDMR01",
+                "AIST00",
+                "MJCS03",
+                "TGSS02",
+                "WVNN05",
+                "BBMS01",
+                "WKPN01",
+                "RDLK00",
+                "ABNS05",
+                "IJCS01",
+                "DVRN00",
+                "JPNS04",
+                "LBRH01",
+                "RLJE00",
+                "ETBX00",
+                "LHNN03",
+                "SDST00")
+
+data.frame(
+    professional = c(
+      profs,
+      profs_2022,
+      profs_2023,
+      profs_2024
+    ),
+    sinds = c(
+      rep("vanaf start", length(profs)),
+      rep("vanaf 2022", length(profs_2022)),
+      rep("vanaf 2023", length(profs_2023)),
+      rep("vanaf 2024", length(profs_2024))
+    )
+  ) %>%
+  kable()
+```
+
 ```{r}
 remove_double_counts <- tar_read_sf(
   "remove_double_counts", store = targets_store)
 ```
 
-## Verwerk namen van ondersoorten (remove_subspecies_names)
+We lijsten op waar dubbeltellingen zijn verwijderd.
 
 ```{r}
-remove_subspecies_names <- tar_read_sf(
-  "remove_subspecies_names", store = targets_store)
+removed_obs <- select_species_groups %>%
+  st_drop_geometry() %>%
+  anti_join(st_drop_geometry(remove_double_counts),
+            by = join_by(oid, projectid, plotid, plotnaam, x_amersfoord,
+                         y_amersfoord, x_lambert, y_lambert, soortgrp, soortnr,
+                         naam, aantal, jaar, maand, dag, doy, wrntype,
+                         broedcode, opmerk, clterr, clterrid, inplot, periodeid,
+                         periode, wrntype_omschrijving, sample_order, batch,
+                         regio, area_prop_sb, openheid_klasse, sbp, x_coord,
+                         y_coord, crs, datum, periode_in_jaar, distance2plot))
+  
+removed_obs %>%
+  group_by(regio, plotnaam, jaar) %>%
+  summarise(n_periodes = n_distinct(jaar, periode_in_jaar),
+            .groups = "drop") %>%
+  arrange(regio, plotnaam, jaar) %>%
+  kable()
+```
+
+Zijn alle dubbeltellingen verwijderd?
+
+> nakijken of 1 telling per telpunt, regio, jaar, periode
+
+```{r}
+select_species_groups %>%
+  st_drop_geometry() %>%
+  mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
+  distinct(regio, plotnaam, jaar, periode_in_jaar, datum) %>%
+  count(regio, plotnaam, jaar, periode_in_jaar,
+        name = "n_tellingen") %>%
+  filter(n_tellingen > 1) %>%
+  arrange(regio, plotnaam, jaar) %>%
+  kable()
+```
+
+|Oostelijke leemstreek |VL0289      | 2020|R3              |           2|
+
+|Oostelijke leemstreek |VL0330      | 2021|R2              |           2|
+
+```{r}
+remove_double_counts %>%
+  st_drop_geometry() %>%
+  filter(plotnaam == "VL0289", jaar == 2020, periode_in_jaar == "R3") %>%
+  View()
+
+remove_double_counts %>%
+  st_drop_geometry() %>%
+  filter(plotnaam == "VL0330", jaar == 2021, periode_in_jaar == "R2") %>%
+  View()
+```
+
+> probleem verschillende datums maar beide proffessionele teller!
+
+**Polders**
+
+```{r}
+removed_obs_pl <- removed_obs %>%
+  filter(regio == "Polders") %>%
+  distinct(plotnaam, regio, jaar, periode_in_jaar)
+
+removed_obs_pl2 <- removed_obs %>%
+  filter(regio == "Polders") %>%
+  mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
+  distinct(plotnaam, regio, datum, periode_in_jaar) %>%
+  mutate(keep = FALSE)
+
+select_species_groups %>%
+  st_drop_geometry() %>%
+  inner_join(removed_obs_pl,
+             by = join_by(plotnaam, jaar, regio, periode_in_jaar)) %>%
+  mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
+  full_join(removed_obs_pl2,
+            by = join_by(plotnaam, regio, datum, periode_in_jaar)) %>%
+  mutate(keep = is.na(keep)) %>%
+  count(plotnaam, datum, periode_in_jaar, waarnemer = waarneme, keep,
+        name = "n_obs") %>%
+  arrange(plotnaam, periode_in_jaar, datum)
+```
+
+Laatste telling behouden, ok.
+
+**Oostelijke leemstreek**
+
+```{r}
+removed_obs_ol <- removed_obs %>%
+  filter(regio == "Oostelijke leemstreek") %>%
+  distinct(plotnaam, regio, jaar, periode_in_jaar)
+
+removed_obs_ol2 <- removed_obs %>%
+  filter(regio == "Oostelijke leemstreek") %>%
+  mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
+  distinct(plotnaam, regio, datum, periode_in_jaar) %>%
+  mutate(keep = FALSE)
+
+select_species_groups %>%
+  st_drop_geometry() %>%
+  inner_join(removed_obs_ol,
+             by = join_by(plotnaam, jaar, regio, periode_in_jaar)) %>%
+  mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
+  full_join(removed_obs_ol2,
+            by = join_by(plotnaam, regio, datum, periode_in_jaar)) %>%
+  mutate(keep = is.na(keep)) %>%
+  count(plotnaam, datum, periode_in_jaar, waarnemer = waarneme, keep,
+        name = "n_obs") %>%
+  arrange(plotnaam, datum, periode_in_jaar)
+```
+
+- Ol_12609.15, 2022, R1, LEVS01: ok, laatste telling
+- VL0055, 2019, R1-R4, JJNN16: ok, prof
+- VL0351, 2019, R2, FVRT02: ok, laatste telling
+- VL0587, 2021, R3, BSCX00: ok, laatste telling
+- VL0587, 2024, R2, BSCX00: ok, laatste telling
+- VL0590, 2021, R3, BSCX00: ok, laatste telling
+- VL0590, 2024, R2, BSCX00: ok, laatste telling
+
+## Verwerk namen van ondersoorten (remove_subspecies_names)
+
+De volgende ondersoorten worden aangepast tot op soortniveau.
+
+```{r, echo=FALSE}
+data.frame(
+    ondersoort = c(
+      "gele kwikstaart (spec)",
+      "engelse kwikstaart",
+      "witte kwikstaart (spec)",
+      "Rouwkwikstaart",
+      "canadese gans spec.",
+      "Witsterblauwborst"
+    ),
+    soort = c(
+      rep("Gele kwikstaart", 2),
+      rep("Witte kwikstaart", 2),
+      rep("Grote Canadese Gans", 1),
+      rep("Blauwborst", 1)
+    )
+  ) %>%
+  kable()
 ```
 
 ## Voeg predatorvariabele toe (add_predator_variable)
 
+We voegen een variabele toe aan de data met per observatie of het een predator is of niet.
+Ook worden het aantal predatoren per telling berekend.
+Kraaiachtigen en roofvogels vormen samen de predatoren.
+
+Voor kraaiachtigen hebben we:
+
 ```{r}
-add_predator_variable <- tar_read_sf(
-  "add_predator_variable", store = targets_store)
+kraaiachtigen_f()
+```
+
+Voor roofvogels hebben we:
+
+```{r}
+roofvogels_f()
 ```
 
 ## Telpunten in finale dataset (mas_data_full)
@@ -1031,31 +1236,9 @@ Ja.
 
 # Controle finale dataset
 
-*zie werkwijze pilootproject*
+...
 
-```{r}
-mas_data_clean <- tar_read("mas_data_clean", store = targets_store)
-```
-
-```{r}
-count_per_period <- mas_data_clean %>%
-  st_drop_geometry() %>%
-  distinct(plotnaam, regio, periode_in_jaar, jaar) %>%
-  count(regio, periode_in_jaar, jaar, name = "n_period")
-
-for (reg in sort(unique(count_per_period$regio))) {
-  p <- count_per_period %>%
-    filter(regio == reg) %>%
-    ggplot(aes(x = periode_in_jaar, y = n_period)) +
-      geom_bar(stat = "identity") +
-      geom_text(aes(label = n_period),
-        position = position_dodge(width = 0.9), vjust = -0.25
-      ) +
-      facet_grid(rows = vars(regio), cols = vars(jaar)) +
-      labs(x = "Telperiode", y = "Aantal telpunten")
-  print(p)
-}
-```
+> zie werkwijze pilootproject
 
 # Controle data publicatie
 
