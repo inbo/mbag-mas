@@ -1367,7 +1367,8 @@ mas_data_clean %>%
   rename(
     "broedcode" = wrntype,
     "omschrijving" = wrntype_omschrijving,
-  )
+  ) %>%
+  kable()
 ```
 
 **Broedcode 1-5**
