@@ -103,6 +103,7 @@ process_double_counted_data <- function(counts_df) {
       # Calculate variables to validate count data in case of doubles
       group_by(.data$plotid, .data$jaar, .data$periode_in_jaar) %>%
       mutate(prof_in_period = any(.data$status_teller == "professioneel"),
+             vol_in_period = any(.data$status_teller == "vrijwilliger"),
              max_doy = (.data$doy == max(.data$doy))
       ) %>%
       arrange(.data$plotid, .data$jaar, .data$periode_in_jaar, .data$doy,
@@ -110,20 +111,25 @@ process_double_counted_data <- function(counts_df) {
       ungroup() %>%
       rowwise() %>%
       # Keep observations of professionals or otherwise the last day
-      mutate(keep = ifelse(
-        .data$status_teller == "professioneel",
-        TRUE,
-        ifelse(!isTRUE(.data$prof_in_period) & isTRUE(.data$max_doy),
-               TRUE, FALSE))
-      ) %>%
-      filter(isTRUE(.data$keep)) %>%
+      mutate(keep = case_when(
+        # only volunteers, take latest date
+        isFALSE(.data$prof_in_period) & isTRUE(.data$max_doy) ~ TRUE,
+        # volunteer and professional, take professional
+        isTRUE(.data$prof_in_period) & isTRUE(.data$vol_in_period) &
+          .data$status_teller == "professioneel" ~ TRUE,
+        # only professionals, take latest date
+        isTRUE(.data$prof_in_period) & isFALSE(.data$vol_in_period) &
+          isTRUE(.data$max_doy) ~ TRUE,
+        .default = FALSE
+      )) %>%
+      filter(.data$keep) %>%
       ungroup() %>%
       # Add non-double count data
       bind_rows(counts_df_state_pro %>%
                   anti_join(doubles_df,
                             by = c("plotnaam", "jaar", "periode_in_jaar"))) %>%
       # Remove added columns
-      select(-c("prof_in_period", "max_doy", "keep"))
+      select(-c("prof_in_period", "vol_in_period", "max_doy", "keep"))
   } else {
     out_df <- counts_df_state_pro
   }
