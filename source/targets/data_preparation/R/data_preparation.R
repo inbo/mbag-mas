@@ -186,7 +186,7 @@ add_predator_variables <- function(counts_df) {
 
 # Remove redundant columns
 remove_columns <- function(data_sf) {
-  require(dplyr)
+  require("dplyr")
 
   # Remove columns with all NA
   out_sf <- data_sf[, colSums(is.na(data_sf)) < nrow(data_sf)]
@@ -200,4 +200,3 @@ remove_columns <- function(data_sf) {
 
   return(out_sf)
 }
-
