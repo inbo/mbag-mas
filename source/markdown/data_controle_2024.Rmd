@@ -395,7 +395,7 @@ select_sampled_points %>%
 
 ## Herbereken afstand tot telpunt (calculate_obs_distance)
 
-We herberekenen de afstand van de waarneming tot het telpunt.
+We herberekenen de afstand van de waarnemingen tot elk telpunt.
 Grote verschillen kunnen wijzen op fouten.
 
 ```{r}
@@ -403,7 +403,7 @@ calculate_obs_distance <- tar_read_sf(
   "calculate_obs_distance", store = targets_store)
 ```
 
-Zijn er veel punten waarbij het absolute verschil meer dan 2 m is?
+Zijn er punten waarbij het absolute verschil meer dan 2 m is?
 
 ```{r}
 distances_og <- select_time_periods %>%
@@ -417,11 +417,13 @@ distances_new <- calculate_obs_distance %>%
   select(oid, plotnaam, regio, jaar, periode_in_jaar,
          distance2plot_new = distance2plot)
 
-distances_og %>%
+outlying_distances <- distances_og %>%
   full_join(distances_new,
             by = join_by(oid, plotnaam, regio, jaar, periode_in_jaar)) %>%
   mutate(abs_diff = abs(distance2plot_og - distance2plot_new)) %>%
-  filter(abs_diff > 2) %>%
+  filter(abs_diff > 2)
+
+outlying_distances %>%
   group_by(regio, jaar, periode_in_jaar) %>%
   summarise(
     n_plots = n_distinct(plotnaam),
@@ -434,7 +436,170 @@ distances_og %>%
 Er duiken veel problemen op in de Oostelijke leemstreek 2018-2024 voor meerdere verschillende telpunten.
 Voor de polders is er 1 probleemtelpunt.
 
+```{r}
+outlying_dist_groups <- outlying_distances %>%
+  distinct(plotnaam, regio, jaar, periode_in_jaar)
 
+outlying_dist_obs <- calculate_obs_distance %>%
+  inner_join(outlying_dist_groups,
+             by = join_by(plotnaam, jaar, regio, periode_in_jaar))
+
+outlying_dist_plots <- outlying_dist_obs %>%
+  st_drop_geometry() %>%
+  distinct(regio, plotnaam, jaar, periode_in_jaar, x_coord, y_coord) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370)
+
+outlying_dist_circles <- outlying_dist_plots %>%
+  st_buffer(300)
+```
+
+**Polders**
+
+In de Polders gaat het om `r outlying_distances %>% filter(regio == "Polders") %>% distinct(plotnaam) %>% pull() %>% length()` punten in `r outlying_distances %>% filter(regio == "Polders") %>% distinct(jaar) %>% pull() %>% length()` jaren in `r outlying_distances %>% filter(regio == "Polders") %>% distinct(periode_in_jaar) %>% pull() %>% length()`telperiodes.
+
+```{r}
+# Data preparation
+years <- outlying_dist_obs %>%
+  filter(regio == "Polders") %>%
+  distinct(jaar) %>%
+  pull()
+
+# Create an empty leaflet map
+leaflet_map <- leaflet() %>%
+  addTiles()
+
+# Loop through each year and round, adding layers to the map
+for (j in sort(years)) {
+  periods <- outlying_dist_obs %>%
+    filter(regio == "Polders",
+           jaar == j) %>%
+    distinct(periode_in_jaar) %>%
+    pull()
+  
+  for (ronde in sort(periods)) {
+    # Filter data for the current year and round
+    circles <- outlying_dist_circles %>%
+      filter(regio == "Polders",
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    plots <- outlying_dist_plots %>%
+      filter(regio == "Polders",
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    observations <- outlying_dist_obs %>%
+      filter(regio == "Polders",
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    
+    # Create title
+    title <- paste("Jaar:", j, "- Ronde:", ronde)
+    
+    # Add the layers to the leaflet map with group names
+    leaflet_map <- leaflet_map %>%
+      addPolygons(data = circles, fillOpacity = 0.3, group = title) %>%
+      addCircleMarkers(data = plots, radius = 3, color = "black",
+                       group = title, label = ~plots$plotnaam) %>%
+      addCircleMarkers(data = observations, fillOpacity = 0.8, radius = 5,
+                       color = "red",
+                       group = title, label = ~observations$plotnaam)
+  }
+}
+
+groups <- outlying_dist_obs %>% 
+  filter(regio == "Polders") %>%
+  distinct(jaar, periode_in_jaar) %>%
+  mutate(group = paste("Jaar:", jaar, "- Ronde:", periode_in_jaar)) %>%
+  pull(group)
+
+# Add layer control to toggle visibility of the facets
+leaflet_map <- leaflet_map %>%
+  addLayersControl(
+    overlayGroups = groups,
+    options = layersControlOptions(collapsed = FALSE)
+  )
+
+# Print the leaflet map
+leaflet_map
+```
+
+Het ziet ernaar uit dat Pl_49572 dezelfde naam heeft voor 2 locaties.
+In plaats van: Pl_25053.16 (x: 50279.09, y: 210998)
+Deze afstanden zijn dus wel ok, maar het label van het telpunt moet aangepast worden.
+
+**Oostelijke leemstreek**
+
+In de Oostelijke leemstreek gaat het om `r outlying_distances %>% filter(regio == "Oostelijke leemstreek") %>% distinct(plotnaam) %>% pull() %>% length()` punten in `r outlying_distances %>% filter(regio == "Oostelijke leemstreek") %>% distinct(jaar) %>% pull() %>% length()` jaren in `r outlying_distances %>% filter(regio == "Oostelijke leemstreek") %>% distinct(periode_in_jaar) %>% pull() %>% length()`telperiodes.
+
+```{r}
+# Data preparation
+years <- outlying_dist_obs %>%
+  filter(regio == "Oostelijke leemstreek") %>%
+  distinct(jaar) %>%
+  pull()
+
+# Create an empty leaflet map
+leaflet_map <- leaflet() %>%
+  addTiles()
+
+# Loop through each year and round, adding layers to the map
+for (j in sort(years)) {
+  periods <- outlying_dist_obs %>%
+    filter(regio == "Oostelijke leemstreek",
+           jaar == j) %>%
+    distinct(periode_in_jaar) %>%
+    pull()
+  
+  for (ronde in sort(periods)) {
+    # Filter data for the current year and round
+    circles <- outlying_dist_circles %>%
+      filter(regio == "Oostelijke leemstreek",
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    plots <- outlying_dist_plots %>%
+      filter(regio == "Oostelijke leemstreek",
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    observations <- outlying_dist_obs %>%
+      filter(regio == "Oostelijke leemstreek",
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    
+    # Create title
+    title <- paste("Jaar:", j, "- Ronde:", ronde)
+    
+    # Add the layers to the leaflet map with group names
+    leaflet_map <- leaflet_map %>%
+      addPolygons(data = circles, fillOpacity = 0.3, group = title) %>%
+      addCircleMarkers(data = plots, radius = 3, color = "black",
+                       group = title, label = ~plots$plotnaam) %>%
+      addCircleMarkers(data = observations, fillOpacity = 0.8, radius = 5,
+                       color = "red",
+                       group = title, label = ~observations$plotnaam)
+  }
+}
+
+groups <- outlying_dist_obs %>% 
+  filter(regio == "Oostelijke leemstreek") %>%
+  distinct(jaar, periode_in_jaar) %>%
+  mutate(group = paste("Jaar:", jaar, "- Ronde:", periode_in_jaar)) %>%
+  pull(group)
+
+# Add layer control to toggle visibility of the facets
+leaflet_map <- leaflet_map %>%
+  addLayersControl(
+    overlayGroups = groups,
+    options = layersControlOptions(collapsed = FALSE)
+  )
+
+# Print the leaflet map
+leaflet_map
+```
 
 ## Selecteer data binnen telcirkel radius (select_within_radius)
 
