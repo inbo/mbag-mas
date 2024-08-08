@@ -480,7 +480,7 @@ for (j in sort(years)) {
            jaar == j) %>%
     distinct(periode_in_jaar) %>%
     pull()
-  
+
   for (ronde in sort(periods)) {
     # Filter data for the current year and round
     circles <- outlying_dist_circles %>%
@@ -498,10 +498,10 @@ for (j in sort(years)) {
              jaar == j,
              periode_in_jaar == ronde) %>%
       st_transform(4326)
-    
+
     # Create title
     title <- paste("Jaar:", j, "- Ronde:", ronde)
-    
+
     # Add the layers to the leaflet map with group names
     leaflet_map <- leaflet_map %>%
       addPolygons(data = circles, fillOpacity = 0.3, group = title) %>%
@@ -513,7 +513,7 @@ for (j in sort(years)) {
   }
 }
 
-groups <- outlying_dist_obs %>% 
+groups <- outlying_dist_obs %>%
   filter(regio == "Polders") %>%
   distinct(jaar, periode_in_jaar) %>%
   mutate(group = paste("Jaar:", jaar, "- Ronde:", periode_in_jaar)) %>%
@@ -571,7 +571,7 @@ for (j in sort(years)) {
            jaar == j) %>%
     distinct(periode_in_jaar) %>%
     pull()
-  
+
   for (ronde in sort(periods)) {
     # Filter data for the current year and round
     circles <- outlying_dist_circles %>%
@@ -589,10 +589,10 @@ for (j in sort(years)) {
              jaar == j,
              periode_in_jaar == ronde) %>%
       st_transform(4326)
-    
+
     # Create title
     title <- paste("Jaar:", j, "- Ronde:", ronde)
-    
+
     # Add the layers to the leaflet map with group names
     leaflet_map <- leaflet_map %>%
       addPolygons(data = circles, fillOpacity = 0.3, group = title) %>%
@@ -604,7 +604,7 @@ for (j in sort(years)) {
   }
 }
 
-groups <- outlying_dist_obs %>% 
+groups <- outlying_dist_obs %>%
   filter(regio == "Oostelijke leemstreek") %>%
   distinct(jaar, periode_in_jaar) %>%
   mutate(group = paste("Jaar:", jaar, "- Ronde:", periode_in_jaar)) %>%
@@ -735,7 +735,7 @@ for (j in sort(years)) {
          jaar == j) %>%
     distinct(periode_in_jaar) %>%
     pull()
-  
+
   for (ronde in sort(periods)) {
     # Filter data for the current year and round
     circles <- outside_circles_new %>%
@@ -756,10 +756,10 @@ for (j in sort(years)) {
              jaar == j,
              periode_in_jaar == ronde) %>%
       st_transform(4326)
-    
+
     # Create title
     title <- paste("Jaar:", j, "- Ronde:", ronde)
-    
+
     # Add the layers to the leaflet map with group names
     leaflet_map <- leaflet_map %>%
       addPolygons(data = circles, fillOpacity = 0.3, group = title) %>%
@@ -771,7 +771,7 @@ for (j in sort(years)) {
   }
 }
 
-groups <- outside_observations_new %>% 
+groups <- outside_observations_new %>%
   filter(regio != "Oostelijke leemstreek",
          regio != "Polders") %>%
   distinct(jaar, periode_in_jaar) %>%
@@ -820,7 +820,7 @@ for (j in sort(years)) {
            jaar == j) %>%
     distinct(periode_in_jaar) %>%
     pull()
-  
+
   for (ronde in sort(periods)) {
     # Filter data for the current year and round
     circles <- outside_circles_new %>%
@@ -838,10 +838,10 @@ for (j in sort(years)) {
              jaar == j,
              periode_in_jaar == ronde) %>%
       st_transform(4326)
-    
+
     # Create title
     title <- paste("Jaar:", j, "- Ronde:", ronde)
-    
+
     # Add the layers to the leaflet map with group names
     leaflet_map <- leaflet_map %>%
       addPolygons(data = circles, fillOpacity = 0.3, group = title) %>%
@@ -853,7 +853,7 @@ for (j in sort(years)) {
   }
 }
 
-groups <- outside_observations_new %>% 
+groups <- outside_observations_new %>%
   filter(regio == "Polders") %>%
   distinct(jaar, periode_in_jaar) %>%
   mutate(group = paste("Jaar:", jaar, "- Ronde:", periode_in_jaar)) %>%
@@ -909,7 +909,7 @@ for (j in sort(years)) {
            jaar == j) %>%
     distinct(periode_in_jaar) %>%
     pull()
-  
+
   for (ronde in sort(periods)) {
     # Filter data for the current year and round
     circles <- outside_circles_new %>%
@@ -927,10 +927,10 @@ for (j in sort(years)) {
              jaar == j,
              periode_in_jaar == ronde) %>%
       st_transform(4326)
-    
+
     # Create title
     title <- paste("Jaar:", j, "- Ronde:", ronde)
-    
+
     # Add the layers to the leaflet map with group names
     leaflet_map <- leaflet_map %>%
       addPolygons(data = circles, fillOpacity = 0.3, group = title) %>%
@@ -942,7 +942,7 @@ for (j in sort(years)) {
   }
 }
 
-groups <- outside_observations_new %>% 
+groups <- outside_observations_new %>%
   filter(regio == "Oostelijke leemstreek") %>%
   distinct(jaar, periode_in_jaar) %>%
   mutate(group = paste("Jaar:", jaar, "- Ronde:", periode_in_jaar)) %>%
@@ -1065,7 +1065,7 @@ removed_obs <- select_species_groups %>%
                          periode, wrntype_omschrijving, sample_order, batch,
                          regio, area_prop_sb, openheid_klasse, sbp, x_coord,
                          y_coord, crs, datum, periode_in_jaar, distance2plot))
-  
+
 removed_obs %>%
   group_by(regio, plotnaam, jaar) %>%
   summarise(n_periodes = n_distinct(jaar, periode_in_jaar),
