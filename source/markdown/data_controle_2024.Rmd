@@ -459,7 +459,7 @@ outlying_dist_circles <- outlying_dist_plots %>%
 
 **Polders**
 
-In de Polders gaat het om `r outlying_distances %>% filter(regio == "Polders") %>% distinct(plotnaam) %>% pull() %>% length()` punten in `r outlying_distances %>% filter(regio == "Polders") %>% distinct(jaar) %>% pull() %>% length()` jaren in `r outlying_distances %>% filter(regio == "Polders") %>% distinct(periode_in_jaar) %>% pull() %>% length()`telperiodes.
+In de Polders gaat het om `r outlying_distances %>% filter(regio == "Polders") %>% distinct(plotnaam) %>% pull() %>% length()` punten in `r outlying_distances %>% filter(regio == "Polders") %>% distinct(jaar) %>% pull() %>% length()` jaren in `r outlying_distances %>% filter(regio == "Polders") %>% distinct(periode_in_jaar) %>% pull() %>% length()` telperiodes.
 
 ```{r}
 # Data preparation
@@ -535,7 +535,7 @@ Deze afstanden zijn dus wel ok, maar het label van het telpunt moet aangepast wo
 
 **Oostelijke leemstreek**
 
-In de Oostelijke leemstreek gaat het om `r outlying_distances %>% filter(regio == "Oostelijke leemstreek") %>% distinct(plotnaam) %>% pull() %>% length()` punten in `r outlying_distances %>% filter(regio == "Oostelijke leemstreek") %>% distinct(jaar) %>% pull() %>% length()` jaren in `r outlying_distances %>% filter(regio == "Oostelijke leemstreek") %>% distinct(periode_in_jaar) %>% pull() %>% length()`telperiodes.
+In de Oostelijke leemstreek gaat het om `r outlying_distances %>% filter(regio == "Oostelijke leemstreek") %>% distinct(plotnaam) %>% pull() %>% length()` punten in `r outlying_distances %>% filter(regio == "Oostelijke leemstreek") %>% distinct(jaar) %>% pull() %>% length()` jaren in `r outlying_distances %>% filter(regio == "Oostelijke leemstreek") %>% distinct(periode_in_jaar) %>% pull() %>% length()` telperiodes.
 
 Zijn het telkens dezelfde punten die problemen geven?
 
@@ -966,19 +966,46 @@ Deze probleempunten zijn allicht gerelateerd aan de locaties van de telpunten, z
 
 ## Selecteer soortengroepen (select_species_groups)
 
-...
+Vervolgens selecteren we de data van vogels (soortgrp 2) en zoogdieren (soortgrp 1).
+
+```{r}
+select_species_groups <- tar_read_sf(
+  "select_species_groups", store = targets_store)
+```
+
+Is het aantal soortgroepen in de data gelijk aan 2?
+
+```{r}
+n_soortgroups <- select_species_groups %>%
+  st_drop_geometry() %>%
+  distinct(soortgrp) %>%
+  nrow()
+
+n_soortgroups == 2
+```
+
+Ok.
 
 ## Verwerk dubbeltellingen (remove_double_counts)
 
-...
+```{r}
+remove_double_counts <- tar_read_sf(
+  "remove_double_counts", store = targets_store)
+```
 
 ## Verwerk namen van ondersoorten (remove_subspecies_names)
 
-...
+```{r}
+remove_subspecies_names <- tar_read_sf(
+  "remove_subspecies_names", store = targets_store)
+```
 
 ## Voeg predatorvariabele toe (add_predator_variable)
 
-...
+```{r}
+add_predator_variable <- tar_read_sf(
+  "add_predator_variable", store = targets_store)
+```
 
 ## Telpunten in finale dataset (mas_data_full)
 
