@@ -1263,7 +1263,7 @@ roofvogels_f()
 mas_data_full <- tar_read("mas_data_full", store = targets_store)
 ```
 
-Zijn alle punten zijn nog altijd aanwezig?
+Zijn alle telpunten zijn nog altijd aanwezig?
 
 ```{r}
 # Show number of locations per stratum
@@ -1282,10 +1282,19 @@ Ja.
 
 # Controle finale dataset
 
-...
+Nadat we de pipeline hebben doorlopen bekomen we de finale dataset.
+Ook hierop doen we enkele controlestappen.
+Zijn alle soorten correct (bv. Blauwe Pauw i.p.v. Blauwe Reiger)? Zijn er opvallend veel individuen opgegeven (bv. 300 i.p.v. 30)? ...
+
+```{r}
+mas_data_clean <- tar_read("mas_data_clean", store = targets_store)
+```
 
 > zie werkwijze pilootproject
 
 # Controle data publicatie
+
+De finale dataset wordt verder in de pipeline klaar gemaakt voor publicatie op GBIF.
+We controleren deze stappen voor data publicatie.
 
 ...
