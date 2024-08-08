@@ -508,7 +508,7 @@ for (j in sort(years)) {
     distinct(periode_in_jaar) %>%
     pull()
   
-  for (ronde in sort(unique(data$periode_in_jaar))) {
+  for (ronde in sort(periods)) {
     # Filter data for the current year and round
     circles <- outside_circles_new %>%
       filter(regio != "Oostelijke leemstreek",
@@ -543,11 +543,17 @@ for (j in sort(years)) {
   }
 }
 
+groups <- outside_observations_new %>% 
+  filter(regio != "Oostelijke leemstreek",
+         regio != "Polders") %>%
+  distinct(jaar, periode_in_jaar) %>%
+  mutate(group = paste("Jaar:", jaar, "- Ronde:", periode_in_jaar)) %>%
+  pull(group)
+
 # Add layer control to toggle visibility of the facets
 leaflet_map <- leaflet_map %>%
   addLayersControl(
-    overlayGroups = unique(paste("Jaar:", sort(unique(data$jaar)), "- Ronde:",
-                                 sort(unique(data$periode_in_jaar)))),
+    overlayGroups = groups,
     options = layersControlOptions(collapsed = FALSE)
   ) %>%
   addLegend(
@@ -617,11 +623,16 @@ for (j in sort(years)) {
   }
 }
 
+groups <- outside_observations_new %>% 
+  filter(regio == "Polders") %>%
+  distinct(jaar, periode_in_jaar) %>%
+  mutate(group = paste("Jaar:", jaar, "- Ronde:", periode_in_jaar)) %>%
+  pull(group)
+
 # Add layer control to toggle visibility of the facets
 leaflet_map <- leaflet_map %>%
   addLayersControl(
-    overlayGroups = unique(paste("Jaar:", sort(unique(data$jaar)), "- Ronde:",
-                                 sort(unique(data$periode_in_jaar)))),
+    overlayGroups = groups,
     options = layersControlOptions(collapsed = FALSE)
   ) %>%
   addLegend(
@@ -699,11 +710,16 @@ for (j in sort(years)) {
   }
 }
 
+groups <- outside_observations_new %>% 
+  filter(regio == "Oostelijke leemstreek") %>%
+  distinct(jaar, periode_in_jaar) %>%
+  mutate(group = paste("Jaar:", jaar, "- Ronde:", periode_in_jaar)) %>%
+  pull(group)
+
 # Add layer control to toggle visibility of the facets
 leaflet_map <- leaflet_map %>%
   addLayersControl(
-    overlayGroups = unique(paste("Jaar:", sort(unique(data$jaar)), "- Ronde:",
-                                 sort(unique(data$periode_in_jaar)))),
+    overlayGroups = groups,
     options = layersControlOptions(collapsed = FALSE)
   ) %>%
   addLegend(
