@@ -35,6 +35,7 @@ mbag_dir <- rprojroot::find_root_file(
 # Source custom functions
 lapply(list.files(file.path(target_dir, "R"), full.names = TRUE), source)
 source(file.path(mbag_dir, "source", "R", "predatoren_f.R"))
+source(file.path(mbag_dir, "source", "R", "taxon_mapping.R"))
 
 # Target list
 list(
@@ -150,5 +151,13 @@ list(
   tar_target(
     name = mas_data_clean,
     command = remove_columns(mas_data_full)
+  ),
+  tar_target(
+    name = mapping_data_raw,
+    command = prepare_mapping_df(mas_data_clean)
+  ),
+  tar_target(
+    name = dwc_mapping,
+    command = dwc_mapping_df(mapping_data_raw)
   )
 )
