@@ -189,7 +189,7 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
     select(all_of(
       c("scientificName", "phylum", "order", "family", "genus", "authorship",
         "rank", "key")
-    )
+      )
     ) %>%
     rename("speciesKey" = "key")
 
@@ -197,7 +197,7 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
     select(all_of(
       c("scientificName", "phylum", "order", "family", "authorship",
         "rank", "key")
-    )
+      )
     ) %>%
     rename("speciesKey" = "key")
 
@@ -207,7 +207,8 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
       "Veldmuis/Aardmuis",
       "rat spec.",
       "spitsmuis spec."
-    )) %>%
+      )
+    ) %>%
     bind_cols(
       bind_rows(
         df_veldmuizen,
@@ -223,14 +224,14 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
               by = "dwc_vernacularName",
               suffix = c("", ".df2")) %>%
     mutate(
-      scientificName = coalesce(scientificName, scientificName.df2),
-      phylum = coalesce(phylum, phylum.df2),
-      order = coalesce(order, order.df2),
-      family = coalesce(family, family.df2),
-      genus = coalesce(genus, genus.df2),
-      authorship = coalesce(authorship, authorship.df2),
-      rank = coalesce(rank, rank.df2),
-      speciesKey = coalesce(speciesKey, speciesKey.df2)
+      scientificName = coalesce(.data$scientificName, .data$scientificName.df2),
+      phylum = coalesce(.data$phylum, .data$phylum.df2),
+      order = coalesce(.data$order, .data$order.df2),
+      family = coalesce(.data$family, .data$family.df2),
+      genus = coalesce(.data$genus, .data$genus.df2),
+      authorship = coalesce(.data$authorship, .data$authorship.df2),
+      rank = coalesce(.data$rank, .data$rank.df2),
+      speciesKey = coalesce(.data$speciesKey, .data$speciesKey.df2)
     ) %>%
     select(-ends_with(".df2")) %>%
     # Join with observations dataset
