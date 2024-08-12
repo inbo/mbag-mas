@@ -1,5 +1,21 @@
+# Prepare dataframe for DwC mapping
+prepare_mapping_df <- function(data_sf) {
+  # Remove columns related to sampling frame
+  raw_data <- data_sf %>%
+    dplyr::select(
+      -"batch",
+      -"sample_order"
+    )
+
+  # Add prefix `raw_` to the column names of `raw_data`
+  colnames(raw_data) <- paste0("raw_", colnames(raw_data))
+  sf::st_geometry(raw_data) <- "raw_geometry"
+
+  return(raw_data)
+}
+
 # to be continued
-dwc_mapping <- function(data_sf) {
+dwc_mapping_df <- function(data_sf) {
   require("dplyr")
   require("rlang")
   require("sf")
