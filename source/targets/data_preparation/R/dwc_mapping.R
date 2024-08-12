@@ -218,16 +218,28 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
 
   # Finish manual taxon mapping
   taxon_core_final <- taxonomy_df %>%
-    full_join(
-      manual_taxa_df,
-      by = join_by(dwc_vernacularName, scientificName, phylum, order, family, genus, authorship, rank,
-                   speciesKey)
+    # Add taxon info difficult names
+    left_join(manual_taxa_df,
+              by = "dwc_vernacularName",
+              suffix = c("", ".df2")) %>%
+    mutate(
+      scientificName = coalesce(scientificName, scientificName.df2),
+      phylum = coalesce(phylum, phylum.df2),
+      order = coalesce(order, order.df2),
+      family = coalesce(family, family.df2),
+      genus = coalesce(genus, genus.df2),
+      authorship = coalesce(authorship, authorship.df2),
+      rank = coalesce(rank, rank.df2),
+      speciesKey = coalesce(speciesKey, speciesKey.df2)
     ) %>%
+    select(-ends_with(".df2")) %>%
+    # Join with observations dataset
     full_join(
       data_df,
       relationship = "many-to-many",
       by = c("dwc_taxonID", "dwc_vernacularName", "dwc_class", "dwc_kingdom")
     ) %>%
+    # Select and rename columns
     rename(
       "dwc_scientificNameID"         = "speciesKey",
       "dwc_taxonRank"                = "rank",
