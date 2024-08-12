@@ -1,5 +1,12 @@
 # Select data within sampling
 join_with_sample <- function(counts_df, sample) {
+  # Join with sample
+  sample_counts <- dplyr::inner_join(
+      x = counts_df,
+      y = sample,
+      by =  dplyr::join_by("plotnaam" == "pointid")
+    )
+
 
 }
 
