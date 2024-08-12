@@ -35,36 +35,26 @@ select_within_time_periods <- function(counts_df) {
   require("rlang")
   require("lubridate")
 
-  # Define valid periods
-  r1_start <- "04-01"
-  r1_stop <- "04-20"
-  r2_start <- "04-21"
-  r2_stop <- "05-10"
-  r3_start <- "05-11"
-  r3_stop <- "06-10"
-  r4_start <- "06-21"
-  r4_stop <- "07-15"
-
   # Select count data within time periods
   out_df <- counts_df %>%
     mutate(
       datum = ymd(paste(.data$jaar, .data$maand, .data$dag, sep = "-")),
       periode_in_jaar = case_when(
         datum %within% interval(
-          ymd(paste(jaar, r1_start, sep = "-")),
-          ymd(paste(jaar, r1_stop, sep = "-"))
+          ymd(paste(jaar, "04-01", sep = "-")),
+          ymd(paste(jaar, "04-20", sep = "-"))
         ) ~ "R1",
         datum %within% interval(
-          ymd(paste(jaar, r2_start, sep = "-")),
-          ymd(paste(jaar, r2_stop, sep = "-"))
+          ymd(paste(jaar, "04-21", sep = "-")),
+          ymd(paste(jaar, "05-10", sep = "-"))
         ) ~ "R2",
         datum %within% interval(
-          ymd(paste(jaar, r3_start, sep = "-")),
-          ymd(paste(jaar, r3_stop, sep = "-"))
+          ymd(paste(jaar, "05-11", sep = "-")),
+          ymd(paste(jaar, "06-10", sep = "-"))
         ) ~ "R3",
         datum %within% interval(
-          ymd(paste(jaar, r4_start, sep = "-")),
-          ymd(paste(jaar, r4_stop, sep = "-"))
+          ymd(paste(jaar, "06-21", sep = "-")),
+          ymd(paste(jaar, "07-15", sep = "-"))
         ) ~ "R4"
       )
     ) %>%
