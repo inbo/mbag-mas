@@ -1,13 +1,32 @@
 # Select data within sampling
 join_with_sample <- function(counts_df, sample) {
+  require("dplyr")
+  require("rlang")
+
   # Join with sample
-  sample_counts <- dplyr::inner_join(
+  sample_counts <- inner_join(
       x = counts_df,
       y = sample,
-      by =  dplyr::join_by("plotnaam" == "pointid")
+      by =  join_by("plotnaam" == "pointid")
     )
 
+  # Select data from correct years
+  out_df <- sample_counts %>%
+    mutate(keep = case_when(
+      .data$regio == "Oostelijke leemstreek" & .data$jaar >= 2018 ~ TRUE,
+      (.data$regio == "Westelijke leemstreek" |
+          .data$regio == "Zandleemstreek") & .data$jaar >= 2023 ~ TRUE,
+      (.data$regio == "Polders" |
+         .data$regio == "Kempen" |
+         .data$regio == "Zandstreek" |
+         .data$regio == "Weidestreek") & .data$jaar >= 2024 ~ TRUE,
+      .default = FALSE
+      )
+    ) %>%
+    filter(.data$keep) %>%
+    select(-"keep")
 
+  return(out_df)
 }
 
 # Select data within periods of time frames
