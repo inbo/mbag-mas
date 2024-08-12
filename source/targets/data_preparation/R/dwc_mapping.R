@@ -91,31 +91,74 @@ unchanged_mapping <- function(data_sf) {
   return(out_df)
 }
 
+# Modified values are used for Darwin Core terms where the content in the input
+# data are used as a basis, but this should be standardized. This applies to
+# Darwin Core terms where we use a vocabulary or where we want to transform for
+# clarity or to correct obvious errors.
+modified_mapping <- function(data_sf) {
+  require("dplyr")
+
+  out_df <- data_sf %>%
+    mutate(
+      dwc_occurrenceID = paste0("MBAG:MAS:", .data$raw_oid),
+      dwc_eventID = paste0("MBAG:MAS:",
+                           .data$dwc_eventDate,
+                           .data$dwc_locationID),
+      dwc_class = ifelse(.data$raw_soortgrp == 2, "Aves", "Mammalia"),
+      dwc_occurrenceStatus = ifelse(.data$dwc_individualCount > 0,
+                                    "Present", "Absent"),
+      dwc_behavior = case_when(
+        .data$dwc_varbatimBehavior == "Territoriaal gedrag" ~
+          "Teritorial behaviour",
+        .data$dwc_varbatimBehavior == "Individu of groep niet plaatsgebonden" ~
+          "Individual or group not bound to a location",
+        .data$dwc_varbatimBehavior == "Volwassen individu in broedbiotoop" ~
+          "Adult individual in breeding habitat",
+        .data$dwc_varbatimBehavior == "Nestvondst" ~
+          "Nest discovery",
+        .data$dwc_varbatimBehavior == "Nest-aanduidend gedrag" ~
+          "Nest-indicating behaviour",
+        .data$dwc_varbatimBehavior == "Paar in broedbiotoop" ~
+          "Pair in breeding habitat"
+      )) %>%
+    select(
+      -"raw_oid",
+      -"raw_soortgrp",
+      -"raw_wrntype"
+    )
+
+  return(out_df)
+}
+
 # Darwin Core mapping function
 dwc_mapping <- function(data_sf) {
   require("dplyr")
-  require("rlang")
   require("sf")
 
   # Preparation
   ## Remove columns related to sampling frame
   raw_data <- data_sf %>%
-    dplyr::select(
+    select(
       -"batch",
       -"sample_order"
     )
 
   ## Add prefix `raw_` to the column names of `raw_data`
   colnames(raw_data) <- paste0("raw_", colnames(raw_data))
-  sf::st_geometry(raw_data) <- "raw_geometry"
+  st_geometry(raw_data) <- "raw_geometry"
+
 
   # Spatial processing
   spatial_df <- spatial_mapping(raw_data)
 
-  # Static DwC mapping
+  # Static values DwC mapping
   static_df <- static_mapping(spatial_df)
 
-  # Unchanged DwC mapping
+  # Unchanged values DwC mapping
   unchanged_df <- unchanged_mapping(static_df)
 
+  # Modified values DwC mapping
+  out_df <- modified_mapping(unchanged_df)
+
+  return(out_df)
 }
