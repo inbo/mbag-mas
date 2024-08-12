@@ -153,11 +153,11 @@ list(
     command = remove_columns(mas_data_full)
   ),
   tar_target(
-    name = mapping_data_raw,
-    command = prepare_mapping_df(mas_data_clean)
+    name = dwc_mapping,
+    command = dwc_mapping(mas_data_clean)
   ),
   tar_target(
-    name = dwc_mapping,
-    command = dwc_mapping_df(mapping_data_raw)
+    name = taxon_mapping,
+    command = taxon_mapping(dwc_mapping)
   )
 )
