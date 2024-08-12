@@ -180,5 +180,19 @@ list(
       increment = 250
     ),
     pattern = map(prepare_taxon_mapping)
+  ),
+  tar_target(
+    name = add_taxon_names,
+    command = taxon_mapping %>%
+      full_join(darwincore_mapping,
+                relationship = "many-to-many",
+                by = c("dwc_taxonID", "dwc_vernacularName", "dwc_class",
+                       "dwc_kingdom")) %>%
+      rename(
+        "dwc_scientificNameID"         = "speciesKey",
+        "dwc_taxonRank"                = "rank",
+        "dwc_scientificNameAuthorship" = "authorship"
+      ) %>%
+      select(-"tar_group")
   )
 )
