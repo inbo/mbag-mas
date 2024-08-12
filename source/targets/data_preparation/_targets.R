@@ -153,11 +153,32 @@ list(
     command = remove_columns(mas_data_full)
   ),
   tar_target(
-    name = dwc_mapping,
+    name = darwincore_mapping,
     command = dwc_mapping(mas_data_clean)
+  ),
+  tarchetypes::tar_group_size(
+    name = prepare_taxon_mapping,
+    command = darwincore_mapping %>%
+      dplyr::distinct(
+        .data$dwc_taxonID,
+        .data$dwc_vernacularName,
+        .data$dwc_class,
+        .data$dwc_kingdom) %>%
+      dplyr::arrange(dwc_vernacularName),
+    size = 50
   ),
   tar_target(
     name = taxon_mapping,
-    command = taxon_mapping(dwc_mapping)
+    command = map_taxa_from_vernacular(
+      vernacular_name_df = prepare_taxon_mapping,
+      vernacular_name_col = "dwc_vernacularName",
+      out_cols = c("scientificName", "phylum", "order", "family", "genus",
+                   "species", "authorship", "rank", "speciesKey"),
+      filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
+      lang = "nld",
+      limit = 1000,
+      increment = 250
+    ),
+    pattern = map(prepare_taxon_mapping)
   )
 )
