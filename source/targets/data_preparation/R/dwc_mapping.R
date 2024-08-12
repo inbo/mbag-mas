@@ -1,11 +1,11 @@
 # Convert Lambert to decimal degrees
-spatial_mapping <- function(data_sf) {
+spatial_mapping <- function(data_df) {
   require("dplyr")
   require("rlang")
   require("sf")
 
 
-  out_df <- data_sf %>%
+  out_df <- data_df %>%
     # Remove Amersfoord coordinates
     select(
       -"raw_x_amersfoord",
@@ -35,10 +35,10 @@ spatial_mapping <- function(data_sf) {
 
 # Static values are used for Darwin Core terms that need the same value for all
 # records. They are usually missing from the input data.
-static_mapping <- function(data_sf) {
+static_mapping <- function(data_df) {
   require("dplyr")
 
-  out_df <- data_sf %>%
+  out_df <- data_df %>%
     mutate(
       dwc_type                 = "??",
       dwc_datasetID            = "??",
@@ -47,11 +47,11 @@ static_mapping <- function(data_sf) {
                                         "publicdomain/zero/1.0/"),
       dwc_publisher            = paste0("Research Institute for Nature and",
                                         "Forest (INBO)"),
-      dwc_rightsHolder         = "INBO",
+      dwc_rightsHolder         = paste0("Research Institute for Nature and",
+                                        "Forest (INBO)"),
       dwc_accessRights         = "http://www.inbo.be/en/norms-for-data-use",
       dwc_institutionCode      = "INBO",
       dwc_datasetName          = "??",
-      dwc_ownerInstitutionCode = "INBO",
       dwc_collectionCode       = "MAS",
       dwc_kingdom              = "Animalia",
       dwc_nomenclaturalCode    = "ICZN",
@@ -62,7 +62,9 @@ static_mapping <- function(data_sf) {
       dwc_country              = "Belgium",
       dwc_stateProvince        = "Flanders",
       dwc_countryCode          = "BE",
-      dwc_basisOfRecord        = "HumanObservation"
+      dwc_basisOfRecord        = "HumanObservation",
+      dwc_organismQuantityType = "individuals",
+      dwc_coordinateUncertaintyInMeters = "5"
     )
 
   return(out_df)
@@ -70,22 +72,27 @@ static_mapping <- function(data_sf) {
 
 # Unchanged values are used for Darwin Core terms whose content is an exact
 # copy of the corresponding field in the input data.
-unchanged_mapping <- function(data_sf) {
+unchanged_mapping <- function(data_df) {
   require("dplyr")
+  require("rlang")
 
-  out_df <- data_sf %>%
+  out_df <- data_df %>%
     rename(
-      "dwc_vernacularName"    = "raw_naam",
-      "dwc_eventDate"         = "raw_datum",
-      "dwc_year"              = "raw_jaar",
-      "dwc_month"             = "raw_maand",
-      "dwc_day"               = "raw_dag",
-      "dwc_recordedBy"        = "raw_waarnemer",
-      "dwc_individualCount"   = "raw_aantal",
-      "dwc_locationID"        = "raw_plotnaam",
-      "dwc_varbatimBehavior"  = "raw_wrntype_omschrijving",
-      "dwc_occurrenceRemarks" = "raw_opmerk",
-      "dwc_taxonID"           = "raw_soortnr"
+      "dwc_vernacularName"     = "raw_naam",
+      "dwc_eventDate"          = "raw_datum",
+      "dwc_year"               = "raw_jaar",
+      "dwc_month"              = "raw_maand",
+      "dwc_day"                = "raw_dag",
+      "dwc_recordedBy"         = "raw_waarnemer",
+      "dwc_organismQuantity"   = "raw_aantal",
+      "dwc_locationID"         = "raw_plotnaam",
+      "dwc_varbatimBehavior"   = "raw_wrntype_omschrijving",
+      "dwc_occurrenceRemarks"  = "raw_opmerk",
+      "dwc_taxonID"            = "raw_soortnr"
+    ) %>%
+    mutate(
+      dwc_identifiedBy = .data$dwc_recordedBy,
+      dwc_individualCount = .data$dwc_organismQuantity
     )
 
   return(out_df)
@@ -95,10 +102,10 @@ unchanged_mapping <- function(data_sf) {
 # data are used as a basis, but this should be standardized. This applies to
 # Darwin Core terms where we use a vocabulary or where we want to transform for
 # clarity or to correct obvious errors.
-modified_mapping <- function(data_sf) {
+modified_mapping <- function(data_df) {
   require("dplyr")
 
-  out_df <- data_sf %>%
+  out_df <- data_df %>%
     mutate(
       dwc_occurrenceID = paste0("MBAG:MAS:", .data$raw_oid),
       dwc_eventID = paste0("MBAG:MAS:",
@@ -131,13 +138,13 @@ modified_mapping <- function(data_sf) {
 }
 
 # Darwin Core mapping function
-dwc_mapping <- function(data_sf) {
+dwc_mapping <- function(data_df) {
   require("dplyr")
   require("sf")
 
   # Preparation
   ## Remove columns related to sampling frame
-  raw_data <- data_sf %>%
+  raw_data <- data_df %>%
     select(
       -"batch",
       -"sample_order"
@@ -159,6 +166,98 @@ dwc_mapping <- function(data_sf) {
 
   # Modified values DwC mapping
   out_df <- modified_mapping(unchanged_df)
+
+  return(out_df)
+}
+
+
+# Finalise DwC data
+finalise_dwc_df <- function(data_df, taxonomy_df) {
+  require("dplyr")
+  require("rlang")
+
+  # Do manual mapping for difficult taxa
+  df_veldmuizen <- rgbif::name_usage("2438591")$data %>%
+    select(all_of(
+      c("scientificName", "phylum", "order", "family", "genus", "authorship",
+        "rank", "key")
+      )
+    ) %>%
+    rename("speciesKey" = "key")
+
+  df_ratten <- rgbif::name_usage("2439223")$data %>%
+    select(all_of(
+      c("scientificName", "phylum", "order", "family", "genus", "authorship",
+        "rank", "key")
+    )
+    ) %>%
+    rename("speciesKey" = "key")
+
+  df_spitsmuizen <- rgbif::name_usage("5534")$data %>%
+    select(all_of(
+      c("scientificName", "phylum", "order", "family", "authorship",
+        "rank", "key")
+    )
+    ) %>%
+    rename("speciesKey" = "key")
+
+  # Create dataframe for merging difficult taxa
+  manual_taxa_df <- tibble(
+    dwc_vernacularName = c(
+      "Veldmuis/Aardmuis",
+      "rat spec.",
+      "spitsmuis spec."
+    )) %>%
+    bind_cols(
+      bind_rows(
+        df_veldmuizen,
+        df_ratten,
+        df_spitsmuizen
+      )
+    )
+
+  # Finish manual taxon mapping
+  taxon_core_final <- taxonomy_df %>%
+    full_join(
+      manual_taxa_df,
+      by = join_by(dwc_vernacularName, scientificName, phylum, order, family, genus, authorship, rank,
+                   speciesKey)
+    ) %>%
+    full_join(
+      data_df,
+      relationship = "many-to-many",
+      by = c("dwc_taxonID", "dwc_vernacularName", "dwc_class", "dwc_kingdom")
+    ) %>%
+    rename(
+      "dwc_scientificNameID"         = "speciesKey",
+      "dwc_taxonRank"                = "rank",
+      "dwc_scientificNameAuthorship" = "authorship"
+    ) %>%
+    select(-"tar_group")
+
+  # Remove raw columns
+  out_df <- taxon_core_final %>%
+    select(-starts_with("raw_")) %>%
+    rename_with(~ gsub("dwc\\_", "", .x))
+
+  # Select and sort columns
+  col_order <- c(
+    "type", "language", "license", "publisher", "rightsHolder", "accessRights",
+    "datasetID", "collectionCode", "institutionCode", "datasetName",
+    "basisOfRecord", "eventType", "eventID",
+    "occurrenceID", "recordedBy", "individualCount", "organismQuantity",
+    "organismQuantityType", "occurrenceStatus", "behavior", "varbatimBehavior",
+    "occurrenceRemarks", "samplingProtocol", "samplingEffort", "eventDate",
+    "day", "month", "year", "continent", "country", "countryCode",
+    "stateProvince", "locationID", "verbatimLatitude", "verbatimLongitude",
+    "verbatimCoordinateSystem", "verbatimSRS", "decimalLatitude",
+    "decimalLongitude", "geodeticDatum", "coordinateUncertaintyInMeters",
+    "identifiedBy", "vernacularName", "taxonID", "scientificName", "kingdom",
+    "phylum", "class", "order", "family", "genus", "species",
+    "scientificNameAuthorship", "scientificNameID", "taxonRank",
+    "nomenclaturalCode"
+  )
+  out_df <- out_df[, col_order]
 
   return(out_df)
 }

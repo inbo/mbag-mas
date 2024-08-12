@@ -133,11 +133,11 @@ taxon_core <- taxon_core %>%
                                       "publicdomain/zero/1.0/"),
     dwc_publisher            = paste0("Research Institute for Nature and",
                                       "Forest (INBO)"),
-    dwc_rightsHolder         = "INBO",
+    dwc_rightsHolder         = paste0("Research Institute for Nature and",
+                                        "Forest (INBO)"),
     dwc_accessRights         = "http://www.inbo.be/en/norms-for-data-use",
     dwc_institutionCode      = "INBO",
     dwc_datasetName          = "??",
-    dwc_ownerInstitutionCode = "INBO",
     dwc_collectionCode       = "MAS",
     dwc_kingdom              = "Animalia",
     dwc_nomenclaturalCode    = "ICZN",
@@ -148,7 +148,9 @@ taxon_core <- taxon_core %>%
     dwc_country              = "Belgium",
     dwc_stateProvince        = "Flanders",
     dwc_countryCode          = "BE",
-    dwc_basisOfRecord        = "HumanObservation"
+    dwc_basisOfRecord        = "HumanObservation",
+    dwc_organismQuantityType = "individuals",
+    dwc_coordinateUncertaintyInMeters = "5"
   )
 ```
 
@@ -162,6 +164,7 @@ taxon_core <- taxon_core %>%
   - `dwc_samplingEffort`
 - Is `dwc_language = "en"` ok?
 - Is `dwc_eventType = "Survey"` ok?
+- Hoeveel zetten we voor `dwc_coordinateUncertaintyInMeters`?
 
 ## Ongewijzigde waarden
 
@@ -170,17 +173,21 @@ Ongewijzigde waarden worden gebruikt voor Darwin Core-termen waarvan de inhoud e
 ```{r}
 taxon_core <- taxon_core %>%
   rename(
-    "dwc_vernacularName"    = "raw_naam",
-    "dwc_eventDate"         = "raw_datum",
-    "dwc_year"              = "raw_jaar",
-    "dwc_month"             = "raw_maand",
-    "dwc_day"               = "raw_dag",
-    "dwc_recordedBy"        = "raw_waarnemer",
-    "dwc_individualCount"   = "raw_aantal",
-    "dwc_locationID"        = "raw_plotnaam",
-    "dwc_varbatimBehavior"  = "raw_wrntype_omschrijving",
-    "dwc_occurrenceRemarks" = "raw_opmerk",
-    "dwc_taxonID"           = "raw_soortnr"
+    "dwc_vernacularName"     = "raw_naam",
+    "dwc_eventDate"          = "raw_datum",
+    "dwc_year"               = "raw_jaar",
+    "dwc_month"              = "raw_maand",
+    "dwc_day"                = "raw_dag",
+    "dwc_recordedBy"         = "raw_waarnemer",
+    "dwc_organismQuantity"   = "raw_aantal",
+    "dwc_locationID"         = "raw_plotnaam",
+    "dwc_varbatimBehavior"   = "raw_wrntype_omschrijving",
+    "dwc_occurrenceRemarks"  = "raw_opmerk",
+    "dwc_taxonID"            = "raw_soortnr"
+  ) %>%
+  mutate(
+    dwc_identifiedBy = .data$dwc_recordedBy,
+    dwc_individualCount = .data$dwc_organismQuantity
   )
 ```
 
@@ -205,7 +212,7 @@ taxon_core <- taxon_core %>%
                          .data$dwc_eventDate,
                          .data$dwc_locationID),
     dwc_class = ifelse(.data$raw_soortgrp == 2, "Aves", "Mammalia"),
-    dwc_occurrenceStatus = ifelse(.data$dwc_individualCount > 0,
+    dwc_occurrenceStatus = ifelse(.data$dwc_organismQuantity > 0,
                                   "Present", "Absent"),
     dwc_behavior = case_when(
       .data$dwc_varbatimBehavior == "Territoriaal gedrag" ~
