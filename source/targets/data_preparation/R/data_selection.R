@@ -1,3 +1,8 @@
+# Select data within sampling
+join_with_sample <- function(counts_df, sample) {
+
+}
+
 # Select data within periods of time frames
 select_within_time_periods <- function(counts_df) {
   require("dplyr")

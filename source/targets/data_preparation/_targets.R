@@ -77,10 +77,9 @@ list(
   ),
   tar_target(
     name = select_sampled_points,
-    command = dplyr::inner_join(
-      x = crs_pipeline,
-      y = sample,
-      by =  dplyr::join_by(plotnaam == pointid)
+    command = join_with_sample(
+      crs_pipeline,
+      sample
     ),
     pattern = map(crs_pipeline),
     iteration = "list"
