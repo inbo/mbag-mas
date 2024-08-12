@@ -1,6 +1,6 @@
 tar_read_sf <- function(name, store) {
   # Get target data
-  list_sf <- tar_read_raw(name = name, store = store)
+  list_sf <- targets::tar_read_raw(name = name, store = store)
 
   # Create dataframe
   out_df <- do.call(

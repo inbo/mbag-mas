@@ -1,18 +1,39 @@
+# Select data within sampling
+join_with_sample <- function(counts_df, sample) {
+  require("dplyr")
+  require("rlang")
+
+  # Join with sample
+  sample_counts <- inner_join(
+      x = counts_df,
+      y = sample,
+      by =  join_by("plotnaam" == "pointid")
+    )
+
+  # Select data from correct years
+  out_df <- sample_counts %>%
+    mutate(keep = case_when(
+      .data$regio == "Oostelijke leemstreek" & .data$jaar >= 2018 ~ TRUE,
+      (.data$regio == "Westelijke leemstreek" |
+          .data$regio == "Zandleemstreek") & .data$jaar >= 2023 ~ TRUE,
+      (.data$regio == "Polders" |
+         .data$regio == "Kempen" |
+         .data$regio == "Zandstreek" |
+         .data$regio == "Weidestreek") & .data$jaar >= 2024 ~ TRUE,
+      .default = FALSE
+      )
+    ) %>%
+    filter(.data$keep) %>%
+    select(-"keep")
+
+  return(out_df)
+}
+
 # Select data within periods of time frames
 select_within_time_periods <- function(counts_df) {
   require("dplyr")
   require("rlang")
   require("lubridate")
-
-  # Define valid periods
-  r1_start <- "04-01"
-  r1_stop <- "04-20"
-  r2_start <- "04-21"
-  r2_stop <- "05-10"
-  r3_start <- "05-11"
-  r3_stop <- "06-10"
-  r4_start <- "06-21"
-  r4_stop <- "07-15"
 
   # Select count data within time periods
   out_df <- counts_df %>%
@@ -20,20 +41,20 @@ select_within_time_periods <- function(counts_df) {
       datum = ymd(paste(.data$jaar, .data$maand, .data$dag, sep = "-")),
       periode_in_jaar = case_when(
         datum %within% interval(
-          ymd(paste(jaar, r1_start, sep = "-")),
-          ymd(paste(jaar, r1_stop, sep = "-"))
+          ymd(paste(jaar, "04-01", sep = "-")),
+          ymd(paste(jaar, "04-20", sep = "-"))
         ) ~ "R1",
         datum %within% interval(
-          ymd(paste(jaar, r2_start, sep = "-")),
-          ymd(paste(jaar, r2_stop, sep = "-"))
+          ymd(paste(jaar, "04-21", sep = "-")),
+          ymd(paste(jaar, "05-10", sep = "-"))
         ) ~ "R2",
         datum %within% interval(
-          ymd(paste(jaar, r3_start, sep = "-")),
-          ymd(paste(jaar, r3_stop, sep = "-"))
+          ymd(paste(jaar, "05-11", sep = "-")),
+          ymd(paste(jaar, "06-10", sep = "-"))
         ) ~ "R3",
         datum %within% interval(
-          ymd(paste(jaar, r4_start, sep = "-")),
-          ymd(paste(jaar, r4_stop, sep = "-"))
+          ymd(paste(jaar, "06-21", sep = "-")),
+          ymd(paste(jaar, "07-15", sep = "-"))
         ) ~ "R4"
       )
     ) %>%

@@ -1,80 +1,119 @@
-# to be continued
-dwc_mapping <- function(data_sf) {
+# Convert Lambert to decimal degrees
+spatial_mapping <- function(data_df) {
   require("dplyr")
   require("rlang")
   require("sf")
 
-  # Data cleaning: remove rows with all NA's and unnecessary columns
-  data_sf <- data_sf[, colSums(is.na(data_sf)) < nrow(data_sf)]
-  data_sf <- data_sf %>%
-    select(-"status_teller",
-           -"predator",
-           -"n_predators_plot",
-           -"broedcode")
 
-  # Spatial processing
-  ## Lambert to Decimals: keep original X, Y as verbatim coordinates
-  taxon_core <- data_sf %>%
-    select(-"x_amersfoord", -"y_amersfoord") %>%
+  out_df <- data_df %>%
+    # Remove Amersfoord coordinates
+    select(
+      -"raw_x_amersfoord",
+      -"raw_y_amersfoord"
+    ) %>%
+    # Keep original X, Y as verbatim coordinates
     rename(
-      "dwc_verbatimLatitude" = "y_lambert",
-      "dwc_verbatimLongitude" = "x_lambert") %>%
+      "dwc_verbatimLatitude" = "raw_y_lambert",
+      "dwc_verbatimLongitude" = "raw_x_lambert"
+    ) %>%
+    # Add CRS
     mutate(
       dwc_verbatimCoordinateSystem = "BD72 / Belgian Lambert 72",
-      dwc_verbatimSRS = "EPSG:31370") %>%
+      dwc_verbatimSRS = "EPSG:31370"
+    ) %>%
+    # Convert to WGS 84 decimal coordinates
     st_transform(4326) %>%
     mutate(
-      dwc_decimalLatitude = round(st_coordinates(.data$geometry)[, 2], 5),
-      dwc_decimalLongitude = round(st_coordinates(.data$geometry)[, 1], 5),
-      dwc_geodeticDatum = "EPSG:4326") %>%
+      dwc_decimalLatitude = round(st_coordinates(.data$raw_geometry)[, 2], 5),
+      dwc_decimalLongitude = round(st_coordinates(.data$raw_geometry)[, 1], 5),
+      dwc_geodeticDatum = "EPSG:4326"
+    ) %>%
     st_drop_geometry()
 
-  # Static values
-  ## Static values have the same value for all records
-  taxon_core <- taxon_core %>%
+  return(out_df)
+}
+
+# Static values are used for Darwin Core terms that need the same value for all
+# records. They are usually missing from the input data.
+static_mapping <- function(data_df) {
+  require("dplyr")
+
+  out_df <- data_df %>%
     mutate(
-      dwc_type = "Event",
-      # dwc_datasetID = "insert doi",
-      dwc_language = "nl",
-      dwc_license = "http://creativecommons.org/publicdomain/zero/1.0/",
-      dwc_rightsHolder = "INBO",
-      dwc_accessRights = "http://www.inbo.be/en/norms-for-data-use",
-      dwc_institutionCode = "INBO",
-      #dwc_datasetName = "name",
-      dwc_ownerInstitutionCode = "INBO",
-      dwc_kingdom = "Animalia",
-      dwc_nomenclaturalCode = "ICZN",
-      dwc_taxonRank = "species",
-      dwc_eventType = "Survey",
-      dwc_samplingProtocol = "...",
-      dwc_continent = "Europe",
-      dwc_country = "Belgium",
-      dwc_stateProvince = "Flanders",
-      dwc_countryCode = "BE",
-      dwc_basisOfRecord = "HumanObservation"
+      dwc_type                 = "??",
+      dwc_datasetID            = "??",
+      dwc_language             = "en",
+      dwc_license              = paste0("http://creativecommons.org/",
+                                        "publicdomain/zero/1.0/"),
+      dwc_publisher            = paste0("Research Institute for Nature and",
+                                        "Forest (INBO)"),
+      dwc_rightsHolder         = paste0("Research Institute for Nature and",
+                                        "Forest (INBO)"),
+      dwc_accessRights         = "http://www.inbo.be/en/norms-for-data-use",
+      dwc_institutionCode      = "INBO",
+      dwc_datasetName          = "??",
+      dwc_collectionCode       = "MAS",
+      dwc_kingdom              = "Animalia",
+      dwc_nomenclaturalCode    = "ICZN",
+      dwc_eventType            = "Survey",
+      dwc_samplingProtocol     = "??",
+      dwc_samplingEffort       = "??",
+      dwc_continent            = "Europe",
+      dwc_country              = "Belgium",
+      dwc_stateProvince        = "Flanders",
+      dwc_countryCode          = "BE",
+      dwc_basisOfRecord        = "HumanObservation",
+      dwc_organismQuantityType = "individuals",
+      dwc_coordinateUncertaintyInMeters = "5"
     )
 
-  # Unaltered values
-  # The content is an exact copy of the corresponding field of the raw data
-  taxon_core <- taxon_core %>%
+  return(out_df)
+}
+
+# Unchanged values are used for Darwin Core terms whose content is an exact
+# copy of the corresponding field in the input data.
+unchanged_mapping <- function(data_df) {
+  require("dplyr")
+  require("rlang")
+
+  out_df <- data_df %>%
     rename(
-      "dwc_vernacularName" = "naam",
-      "dwc_eventDate" = "datum",
-      "dwc_year" = "jaar",
-      "dwc_month" = "maand",
-      "dwc_day" = "dag",
-      "dwc_recordedBy" = "waarnemer",
-      "dwc_individualCount" = "aantal",
-      "dwc_locationID" = "plotnaam",
-      "dwc_varbatimBehavior" = "wrntype_omschrijving")
-
-
-  # Altered values
-  taxon_core <- taxon_core %>%
+      "dwc_vernacularName"     = "raw_naam",
+      "dwc_eventDate"          = "raw_datum",
+      "dwc_year"               = "raw_jaar",
+      "dwc_month"              = "raw_maand",
+      "dwc_day"                = "raw_dag",
+      "dwc_recordedBy"         = "raw_waarnemer",
+      "dwc_organismQuantity"   = "raw_aantal",
+      "dwc_locationID"         = "raw_plotnaam",
+      "dwc_varbatimBehavior"   = "raw_wrntype_omschrijving",
+      "dwc_occurrenceRemarks"  = "raw_opmerk",
+      "dwc_taxonID"            = "raw_soortnr"
+    ) %>%
     mutate(
-      dwc_occurrenceID = paste0("MBAG:MAS:", oid),
-      dwc_eventID = paste0("MBAG:MAS:", dwc_eventDate, dwc_locationID),
-      dwc_class = ifelse(.data$soortgrp == 2, "Aves", "Mammalia"),
+      dwc_identifiedBy = .data$dwc_recordedBy,
+      dwc_individualCount = .data$dwc_organismQuantity
+    )
+
+  return(out_df)
+}
+
+# Modified values are used for Darwin Core terms where the content in the input
+# data are used as a basis, but this should be standardized. This applies to
+# Darwin Core terms where we use a vocabulary or where we want to transform for
+# clarity or to correct obvious errors.
+modified_mapping <- function(data_df) {
+  require("dplyr")
+
+  out_df <- data_df %>%
+    mutate(
+      dwc_occurrenceID = paste0("MBAG:MAS:", .data$raw_oid),
+      dwc_eventID = paste0("MBAG:MAS:",
+                           .data$dwc_eventDate,
+                           .data$dwc_locationID),
+      dwc_class = ifelse(.data$raw_soortgrp == 2, "Aves", "Mammalia"),
+      dwc_occurrenceStatus = ifelse(.data$dwc_individualCount > 0,
+                                    "Present", "Absent"),
       dwc_behavior = case_when(
         .data$dwc_varbatimBehavior == "Territoriaal gedrag" ~
           "Teritorial behaviour",
@@ -89,12 +128,149 @@ dwc_mapping <- function(data_sf) {
         .data$dwc_varbatimBehavior == "Paar in broedbiotoop" ~
           "Pair in breeding habitat"
       )) %>%
-    select(-"soortgrp",
-           -"wrntype")
+    select(
+      -"raw_oid",
+      -"raw_soortgrp",
+      -"raw_wrntype"
+    )
 
-  # Presence absence data
-  taxon_core <- taxon_core
-  # pivot add zeroes dwc_individualCount = ifelse(dwc_individualCount > 0, "Present", "Absent")
+  return(out_df)
+}
 
-  glimpse(taxon_core)
+# Darwin Core mapping function
+dwc_mapping <- function(data_df) {
+  require("dplyr")
+  require("sf")
+
+  # Preparation
+  ## Remove columns related to sampling frame
+  raw_data <- data_df %>%
+    select(
+      -"batch",
+      -"sample_order"
+    )
+
+  ## Add prefix `raw_` to the column names of `raw_data`
+  colnames(raw_data) <- paste0("raw_", colnames(raw_data))
+  st_geometry(raw_data) <- "raw_geometry"
+
+
+  # Spatial processing
+  spatial_df <- spatial_mapping(raw_data)
+
+  # Static values DwC mapping
+  static_df <- static_mapping(spatial_df)
+
+  # Unchanged values DwC mapping
+  unchanged_df <- unchanged_mapping(static_df)
+
+  # Modified values DwC mapping
+  out_df <- modified_mapping(unchanged_df)
+
+  return(out_df)
+}
+
+
+# Finalise DwC data
+finalise_dwc_df <- function(data_df, taxonomy_df) {
+  require("dplyr")
+  require("rlang")
+
+  # Do manual mapping for difficult taxa
+  df_veldmuizen <- rgbif::name_usage("2438591")$data %>%
+    select(all_of(
+      c("scientificName", "phylum", "order", "family", "genus", "authorship",
+        "rank", "key")
+      )
+    ) %>%
+    rename("speciesKey" = "key")
+
+  df_ratten <- rgbif::name_usage("2439223")$data %>%
+    select(all_of(
+      c("scientificName", "phylum", "order", "family", "genus", "authorship",
+        "rank", "key")
+      )
+    ) %>%
+    rename("speciesKey" = "key")
+
+  df_spitsmuizen <- rgbif::name_usage("5534")$data %>%
+    select(all_of(
+      c("scientificName", "phylum", "order", "family", "authorship",
+        "rank", "key")
+      )
+    ) %>%
+    rename("speciesKey" = "key")
+
+  # Create dataframe for merging difficult taxa
+  manual_taxa_df <- tibble(
+    dwc_vernacularName = c(
+      "Veldmuis/Aardmuis",
+      "rat spec.",
+      "spitsmuis spec."
+      )
+    ) %>%
+    bind_cols(
+      bind_rows(
+        df_veldmuizen,
+        df_ratten,
+        df_spitsmuizen
+      )
+    )
+
+  # Finish manual taxon mapping
+  taxon_core_final <- taxonomy_df %>%
+    # Add taxon info difficult names
+    left_join(manual_taxa_df,
+              by = "dwc_vernacularName",
+              suffix = c("", ".df2")) %>%
+    mutate(
+      scientificName = coalesce(.data$scientificName, .data$scientificName.df2),
+      phylum = coalesce(.data$phylum, .data$phylum.df2),
+      order = coalesce(.data$order, .data$order.df2),
+      family = coalesce(.data$family, .data$family.df2),
+      genus = coalesce(.data$genus, .data$genus.df2),
+      authorship = coalesce(.data$authorship, .data$authorship.df2),
+      rank = coalesce(.data$rank, .data$rank.df2),
+      speciesKey = coalesce(.data$speciesKey, .data$speciesKey.df2)
+    ) %>%
+    select(-ends_with(".df2")) %>%
+    # Join with observations dataset
+    full_join(
+      data_df,
+      relationship = "many-to-many",
+      by = c("dwc_taxonID", "dwc_vernacularName", "dwc_class", "dwc_kingdom")
+    ) %>%
+    # Select and rename columns
+    rename(
+      "dwc_scientificNameID"         = "speciesKey",
+      "dwc_taxonRank"                = "rank",
+      "dwc_scientificNameAuthorship" = "authorship"
+    ) %>%
+    select(-"tar_group")
+
+  # Remove raw columns
+  out_df <- taxon_core_final %>%
+    select(-starts_with("raw_")) %>%
+    rename_with(~ gsub("dwc\\_", "", .x))
+
+  # Select and sort columns
+  col_order <- c(
+    "type", "language", "license", "publisher", "rightsHolder", "accessRights",
+    "datasetID", "collectionCode", "institutionCode", "datasetName",
+    "basisOfRecord", "eventType", "eventID",
+    "occurrenceID", "recordedBy", "individualCount", "organismQuantity",
+    "organismQuantityType", "occurrenceStatus", "behavior", "varbatimBehavior",
+    "occurrenceRemarks", "samplingProtocol", "samplingEffort", "eventDate",
+    "day", "month", "year", "continent", "country", "countryCode",
+    "stateProvince", "locationID", "verbatimLatitude", "verbatimLongitude",
+    "verbatimCoordinateSystem", "verbatimSRS", "decimalLatitude",
+    "decimalLongitude", "geodeticDatum", "coordinateUncertaintyInMeters",
+    "identifiedBy", "vernacularName", "taxonID", "scientificName", "kingdom",
+    "phylum", "class", "order", "family", "genus", "species",
+    "scientificNameAuthorship", "scientificNameID", "taxonRank",
+    "nomenclaturalCode"
+  )
+  out_df <- out_df[, col_order]
+
+  return(out_df)
 }

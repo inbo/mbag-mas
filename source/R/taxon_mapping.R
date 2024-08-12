@@ -40,6 +40,19 @@ find_df_name <- function(df_list, search_value, lang = NA) {
   return(df_name)
 }
 
+# Return accepted taxonomic information
+get_accepted_name_usage <- function(taxon_data) {
+  require("dplyr")
+
+  if ("acceptedKey" %in% colnames(taxon_data)) {
+    taxon_key <- taxon_data %>% pull(.data$acceptedKey)
+    return(rgbif::name_usage(taxon_key)$data)
+  } else {
+    taxon_key <- taxon_data %>% pull(.data$key)
+    return(rgbif::name_usage(taxon_key)$data)
+  }
+}
+
 # Match vernacular names with GBIF taxonomic backbone
 # Inspired by:
 # https://gist.github.com/damianooldoni/3fa9cc1ffa67377a9757df097d48d19f
@@ -127,13 +140,7 @@ match_vernacular_name <- function(
       out_data <- taxon_data[taxon_data$key == taxon_key, ]
       out_data <- out_data[, colSums(is.na(out_data)) < nrow(out_data)]
 
-      if ("acceptedKey" %in% colnames(out_data)) {
-        taxon_key <- out_data %>% pull(.data$acceptedKey)
-        return(rgbif::name_usage(taxon_key)$data)
-      } else {
-        taxon_key <- out_data %>% pull(.data$key)
-        return(rgbif::name_usage(taxon_key)$data)
-      }
+      return(get_accepted_name_usage(out_data))
     }
   } else {
     return(NA_character_)

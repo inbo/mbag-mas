@@ -126,28 +126,31 @@ Meestal ontbreken ze in `raw_data`.
 ```{r}
 taxon_core <- taxon_core %>%
   mutate(
-    #dwc_type                = "Event",
-    #dwc_datasetID           = "insert doi",
+    dwc_type                 = "??",
+    dwc_datasetID            = "??",
     dwc_language             = "en",
-    dwc_license              = paste0("http://creativecommons.org/publicdomain",
-                                      "/zero/1.0/"),
-    dwc_publisher            = "Research Institute for Nature and Forest (INBO)",
-    dwc_rightsHolder         = "INBO",
+    dwc_license              = paste0("http://creativecommons.org/",
+                                      "publicdomain/zero/1.0/"),
+    dwc_publisher            = paste0("Research Institute for Nature and",
+                                      "Forest (INBO)"),
+    dwc_rightsHolder         = paste0("Research Institute for Nature and",
+                                        "Forest (INBO)"),
     dwc_accessRights         = "http://www.inbo.be/en/norms-for-data-use",
     dwc_institutionCode      = "INBO",
-    #dwc_datasetName         = "name",
-    dwc_ownerInstitutionCode = "INBO",
+    dwc_datasetName          = "??",
     dwc_collectionCode       = "MAS",
     dwc_kingdom              = "Animalia",
     dwc_nomenclaturalCode    = "ICZN",
     dwc_eventType            = "Survey",
-    #dwc_samplingProtocol    = "...",
-    #dwc_samplingEffort      = "...",
+    dwc_samplingProtocol     = "??",
+    dwc_samplingEffort       = "??",
     dwc_continent            = "Europe",
     dwc_country              = "Belgium",
     dwc_stateProvince        = "Flanders",
     dwc_countryCode          = "BE",
-    dwc_basisOfRecord        = "HumanObservation"
+    dwc_basisOfRecord        = "HumanObservation",
+    dwc_organismQuantityType = "individuals",
+    dwc_coordinateUncertaintyInMeters = "5"
   )
 ```
 
@@ -161,6 +164,7 @@ taxon_core <- taxon_core %>%
   - `dwc_samplingEffort`
 - Is `dwc_language = "en"` ok?
 - Is `dwc_eventType = "Survey"` ok?
+- Hoeveel zetten we voor `dwc_coordinateUncertaintyInMeters`?
 
 ## Ongewijzigde waarden
 
@@ -169,23 +173,28 @@ Ongewijzigde waarden worden gebruikt voor Darwin Core-termen waarvan de inhoud e
 ```{r}
 taxon_core <- taxon_core %>%
   rename(
-    "dwc_vernacularName"    = "raw_naam",
-    "dwc_eventDate"         = "raw_datum",
-    "dwc_year"              = "raw_jaar",
-    "dwc_month"             = "raw_maand",
-    "dwc_day"               = "raw_dag",
-    "dwc_recordedBy"        = "raw_waarnemer",
-    "dwc_individualCount"   = "raw_aantal",
-    "dwc_locationID"        = "raw_plotnaam",
-    "dwc_varbatimBehavior"  = "raw_wrntype_omschrijving",
-    "dwc_occurrenceRemarks" = "raw_opmerk",
+    "dwc_vernacularName"     = "raw_naam",
+    "dwc_eventDate"          = "raw_datum",
+    "dwc_year"               = "raw_jaar",
+    "dwc_month"              = "raw_maand",
+    "dwc_day"                = "raw_dag",
+    "dwc_recordedBy"         = "raw_waarnemer",
+    "dwc_organismQuantity"   = "raw_aantal",
+    "dwc_locationID"         = "raw_plotnaam",
+    "dwc_varbatimBehavior"   = "raw_wrntype_omschrijving",
+    "dwc_occurrenceRemarks"  = "raw_opmerk",
     "dwc_taxonID"            = "raw_soortnr"
+  ) %>%
+  mutate(
+    dwc_identifiedBy = .data$dwc_recordedBy,
+    dwc_individualCount = .data$dwc_organismQuantity
   )
 ```
 
 **Vragen**
 
 -  Ok dat `dwc_varbatimBehavior` de Nederlandstalige beschrijving is? De Engelstalige beschrijving wordt in de volgende sectie onder `dwc_behavior` aangemaakt. Of mag de Nederlandse beschrijving dan weg?
+-  Wat is het verschil tussen `dwc_individualCount` en `dwc_organismQuantity`?
 
 ## Gewijzigde waarden
 
@@ -204,7 +213,7 @@ taxon_core <- taxon_core %>%
                          .data$dwc_eventDate,
                          .data$dwc_locationID),
     dwc_class = ifelse(.data$raw_soortgrp == 2, "Aves", "Mammalia"),
-    dwc_occurrenceStatus = ifelse(.data$dwc_individualCount > 0,
+    dwc_occurrenceStatus = ifelse(.data$dwc_organismQuantity > 0,
                                   "Present", "Absent"),
     dwc_behavior = case_when(
       .data$dwc_varbatimBehavior == "Territoriaal gedrag" ~
@@ -343,9 +352,59 @@ species_matching_mas %>%
 ```
 
 Nu hebben we namen voor alle taxa.
-Enkel Veldmuis/Aardmuis niet, wat prima is.
+Enkel voor "Veldmuis/Aardmuis", "rat spec." en "spitsmuis spec." niet.
+Deze moeten we manueel mappen:
 
 ```{r}
+# Do manual mapping for difficult taxa
+df_veldmuizen <- rgbif::name_usage("2438591")$data %>%
+  select(all_of(
+    c("scientificName", "phylum", "order", "family", "genus", "authorship",
+      "rank", "key")
+    )
+  ) %>%
+  rename("speciesKey" = "key")
+
+df_ratten <- rgbif::name_usage("2439223")$data %>%
+  select(all_of(
+    c("scientificName", "phylum", "order", "family", "genus", "authorship",
+      "rank", "key")
+  )
+  ) %>%
+  rename("speciesKey" = "key")
+
+df_spitsmuizen <- rgbif::name_usage("5534")$data %>%
+  select(all_of(
+    c("scientificName", "phylum", "order", "family", "authorship",
+      "rank", "key")
+    )
+  ) %>%
+  rename("speciesKey" = "key")
+
+# Create dataframe for merging difficult taxa
+manual_taxa_df <- tibble(
+  dwc_vernacularName = c(
+    "Veldmuis/Aardmuis",
+    "rat spec.",
+    "spitsmuis spec."
+    )
+  ) %>%
+  bind_cols(
+    bind_rows(
+      df_veldmuizen,
+      df_ratten,
+      df_spitsmuizen
+    )
+  )
+
+manual_taxa_df %>%
+  kable()
+```
+
+We voeren de finale mapping uit om alle kolommen van interesse te bekomen.
+
+```{r}
+# Final mapping for all species
 species_matching_mas_list2 <- lapply(
   species_names_mas_list, map_taxa_from_vernacular,
   vernacular_name_col = "dwc_vernacularName",
@@ -360,6 +419,22 @@ species_matching_mas2 <- do.call(rbind.data.frame,
                                  species_matching_mas_list2)
 
 taxon_core <- species_matching_mas2 %>%
+  # Add taxon info difficult names
+  left_join(manual_taxa_df,
+            by = "dwc_vernacularName",
+            suffix = c("", ".df2")) %>%
+  mutate(
+    scientificName = coalesce(scientificName, scientificName.df2),
+    phylum = coalesce(phylum, phylum.df2),
+    order = coalesce(order, order.df2),
+    family = coalesce(family, family.df2),
+    genus = coalesce(genus, genus.df2),
+    authorship = coalesce(authorship, authorship.df2),
+    rank = coalesce(rank, rank.df2),
+    speciesKey = coalesce(speciesKey, speciesKey.df2)
+  ) %>%
+  select(-ends_with(".df2")) %>%
+  # Join with observations dataset
   full_join(taxon_core,
             relationship = "many-to-many",
             by = join_by(dwc_taxonID, dwc_vernacularName, dwc_class,
@@ -448,9 +523,6 @@ sort(colnames(taxon_core)[grepl("^raw\\_", colnames(taxon_core))])
   - `raw_doy`: day of year sinds januari
   - `raw_plotid`: we gebruiken eigenlijk altijd plotnaam
   - `raw_projectid`: is dit INBO of SOVON gerelateerd?
-- We missen nog een paar belangrijke kolommen
-  - `coordinateUncertaintyInMeters`
-  - ...
 
 Zo ziet de dataset er voorlopig uit:
 
@@ -459,27 +531,25 @@ taxon_core_final <- taxon_core %>%
   select(-starts_with("raw_")) %>%
   rename_with(~ gsub("dwc\\_", "", .x))
 
+# Select and sort columns
+col_order <- c(
+  "type", "language", "license", "publisher", "rightsHolder", "accessRights",
+  "datasetID", "collectionCode", "institutionCode", "datasetName",
+  "basisOfRecord", "eventType", "eventID",
+  "occurrenceID", "recordedBy", "individualCount", "organismQuantity",
+  "organismQuantityType", "occurrenceStatus", "behavior", "varbatimBehavior",
+  "occurrenceRemarks", "samplingProtocol", "samplingEffort", "eventDate",
+  "day", "month", "year", "continent", "country", "countryCode",
+  "stateProvince", "locationID", "verbatimLatitude", "verbatimLongitude",
+  "verbatimCoordinateSystem", "verbatimSRS", "decimalLatitude",
+  "decimalLongitude", "geodeticDatum", "coordinateUncertaintyInMeters",
+  "identifiedBy", "vernacularName", "taxonID", "scientificName", "kingdom",
+  "phylum", "class", "order", "family", "genus", "species",
+  "scientificNameAuthorship", "scientificNameID", "taxonRank",
+  "nomenclaturalCode"
+)
+taxon_core_final <- taxon_core_final[, col_order]
+
 taxon_core_final %>%
   glimpse()
-```
-
-# Uitschrijven data
-
-Volgorde van de kolommen aanpassen kan volgens:
-
-```
-col_order <- c("type", "language", "license", "rightsHolder", "accessRights",
-               "datasetID", "institutionCode","datasetName","basisOfRecord",
-               "occurrenceID","recordedBy", "individualCount",
-               "organismQuantity", "organismQuantityType", "occurrenceStatus",
-               "occurrenceRemarks" ,"samplingProtocol", "samplingEffort",
-               "eventDate", "continent", "countryCode", "municipality",
-               "verbatimLatitude", "verbatimLongitude",
-               "verbatimCoordinateSystem", "verbatimSRS" ,"decimalLatitude",
-               "decimalLongitude", "geodeticDatum",
-               "coordinateUncertaintyInMeters", "identifiedBy",
-               "scientificName", "kingdom", "scientificNameAuthorship",
-               "taxonRank", "nomenclaturalCode"
-               )
-taxon_core_final <- taxon_core_final[, col_order]
 ```
