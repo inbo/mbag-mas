@@ -126,23 +126,24 @@ Meestal ontbreken ze in `raw_data`.
 ```{r}
 taxon_core <- taxon_core %>%
   mutate(
-    #dwc_type                = "Event",
-    #dwc_datasetID           = "insert doi",
+    dwc_type                 = "??",
+    dwc_datasetID            = "??",
     dwc_language             = "en",
-    dwc_license              = paste0("http://creativecommons.org/publicdomain",
-                                      "/zero/1.0/"),
-    dwc_publisher            = "Research Institute for Nature and Forest (INBO)",
+    dwc_license              = paste0("http://creativecommons.org/",
+                                      "publicdomain/zero/1.0/"),
+    dwc_publisher            = paste0("Research Institute for Nature and",
+                                      "Forest (INBO)"),
     dwc_rightsHolder         = "INBO",
     dwc_accessRights         = "http://www.inbo.be/en/norms-for-data-use",
     dwc_institutionCode      = "INBO",
-    #dwc_datasetName         = "name",
+    dwc_datasetName          = "??",
     dwc_ownerInstitutionCode = "INBO",
     dwc_collectionCode       = "MAS",
     dwc_kingdom              = "Animalia",
     dwc_nomenclaturalCode    = "ICZN",
     dwc_eventType            = "Survey",
-    #dwc_samplingProtocol    = "...",
-    #dwc_samplingEffort      = "...",
+    dwc_samplingProtocol     = "??",
+    dwc_samplingEffort       = "??",
     dwc_continent            = "Europe",
     dwc_country              = "Belgium",
     dwc_stateProvince        = "Flanders",
@@ -179,7 +180,7 @@ taxon_core <- taxon_core %>%
     "dwc_locationID"        = "raw_plotnaam",
     "dwc_varbatimBehavior"  = "raw_wrntype_omschrijving",
     "dwc_occurrenceRemarks" = "raw_opmerk",
-    "dwc_taxonID"            = "raw_soortnr"
+    "dwc_taxonID"           = "raw_soortnr"
   )
 ```
 
