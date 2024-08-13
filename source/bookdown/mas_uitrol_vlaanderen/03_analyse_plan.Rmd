@@ -1,0 +1,7 @@
+# Data verwerking en statistisch analyseplan {#analyseplan}
+
+\@ref(fig:analyse-plan)
+
+```{r analyse-plan, out.width = "80%", fig.cap = "Stramien voor verwerking en analyse van MAS-data. De volgorde en richting waarin de stappen worden uitgevoerd is verduidelijkt met de pijl in de inzet. Zie tekst voor verdere toelichting."}
+include_graphics(file.path("media", "analyse_plan", "analyse_plan.png"))
+```
