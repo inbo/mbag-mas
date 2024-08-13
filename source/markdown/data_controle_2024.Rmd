@@ -1349,6 +1349,16 @@ mas_data_clean %>%
   kable()
 ```
 
+We schrijven de data voor Kalkoen weg.
+
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  filter(naam == "Kalkoen") %>%
+  write_csv(file.path(mbag_dir, "output", "data_controle",
+                      "vreemde_soorten_mastellingen.csv"))
+```
+
 ## Broedcodes
 
 Broedcodes zijn ook belangrijk voor verdere data analyse.
@@ -1390,6 +1400,171 @@ mas_data_clean %>%
 # Controle data publicatie
 
 De finale dataset wordt verder in de pipeline klaar gemaakt voor publicatie op GBIF.
-We controleren deze stappen voor data publicatie.
+Het gaat om de volgende stappen (zie ook `dwc_mapping_mas.Rmd` voor een uitgebreide beschrijving en exploratie).
 
-...
+- Dataset preparatie
+  - We verwijderen van kolommen gerelateerd aan steekproef
+  - We passen kolomnamen aan
+- Ruimtelijke verwerking
+  - We verwijderen de Amersfoord coördinaten
+  - We zetten de Lambert coördinaten om naar WGS 84 decimale coördinaten
+  - We behouden de Lambert coördinaten als verbatim coördinaten
+- Mappen van statische waarden
+  - Statische waarden worden gebruikt voor Darwin Core-termen die dezelfde waarde nodig hebben voor alle records
+  - Meestal ontbreken ze in de input data
+- Mappen van ongewijzigde waarden
+  - Ongewijzigde waarden worden gebruikt voor Darwin Core-termen waarvan de inhoud een exacte kopie is van het overeenkomstige veld in de input data
+- Mappen van gewijzigde waarden
+  - Gewijzigde waarden worden gebruikt voor Darwin Core-termen waarvoor de inhoud in de input data als basis wordt gebruikt, maar deze moet worden gestandaardiseerd
+  - Dit geldt voor Darwin Core-termen waarvoor we een vocabulaire gebruiken of waar we willen transformeren voor de duidelijkheid of om duidelijke fouten te corrigeren
+- Taxon matching
+ - We matchen de Nederlandstalige soortnamen met de [GBIF backbone taxonomy](https://www.gbif.org/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c)
+ - Sommige taxa moeten manueel gematcht worden
+- Nabewerking dataset
+  - Selectie relevante kolommen
+  - Sorteren van kolommen
+
+## Taxon matching
+
+We controleren eerst de lijst van soorten die automatisch zijn gematcht (taxon_mapping).
+
+```{r}
+taxon_data <- tar_read("taxon_mapping", store = targets_store)
+
+taxon_data %>%
+  filter(!is.na(scientificName)) %>%
+  bind_rows(filter(taxon_data, is.na(scientificName))) %>%
+  select(dwc_vernacularName, dwc_class, family, scientificName, rank, key) %>%
+  kable()
+```
+
+Matching ziet er op het eerste zicht goed uit.
+Enkel voor “Veldmuis/Aardmuis”, “rat spec.” en “spitsmuis spec.” niet.
+Deze moeten we manueel mappen (manual_taxon_mapping).
+
+```{r}
+manual_taxon_data <- tar_read("manual_taxon_mapping", store = targets_store)
+
+manual_taxon_data %>%
+  filter(is.na(species)) %>%
+  select(dwc_vernacularName, dwc_class, family, scientificName, rank, key) %>%
+  kable()
+```
+
+We hebben een gedeeltelijke lijst van Sovon gekregen zodat we met hun namen kunnen controleren.
+
+```{r}
+soorten_wet_mas <- read_csv2(file.path("data", "SOVON", "soorten_wet_mas.csv"))
+
+test_wet_names <- manual_taxon_data %>%
+  select("dwc_taxonID", "dwc_vernacularName", "scientificName",
+         "authorship") %>%
+  mutate(authorship = trimws(authorship)) %>%
+  rowwise() %>%
+  mutate(scientificName = gsub(authorship, "", scientificName),
+         dwc_scientificName = trimws(gsub("\\(.*?\\)", "", scientificName))
+  ) %>%
+  select(-"authorship", -"scientificName") %>%
+  left_join(soorten_wet_mas, by = join_by("dwc_taxonID" == "euring")) %>%
+  select(-"groepnr")
+```
+
+De volgende soorten zijn niet in de lijst van sovon aanwezig.
+`dwc_taxonID` is de id voor de Nederlandstalige soortnaam van Sovon, `naam` is de Nederlandstalige naam op de lijst van Sovon en `wetenschap` is de wetenschappelijke naam op de lijst van Sovon.
+
+```{r}
+missing_soorten_wet_mas <- test_wet_names %>%
+  filter(is.na(naam))
+
+missing_soorten_wet_mas %>%
+  kable()
+```
+
+Hoe zit het met de wetenschappelijke namen van onze functie (`dwc_scientificName`) en van de lijst van Sovon. Komen deze overeen?
+
+```{r}
+mismatches_wet_names <- test_wet_names %>%
+  filter(!is.na(naam)) %>%
+  mutate(test_wet = dwc_scientificName == wetenschap)
+
+mismatches_wet_names %>%
+  filter(!test_wet) %>%
+  select(-"test_wet") %>%
+  kable()
+```
+
+Er zijn een aantal mismatches:
+
+1. Species versus subspecies
+  - Vormen in principe geen probleem
+2. Andere genera
+  - Braamsluiper: *Curruca curruca* is "Synonym of Sylvia curruca (Linnaeus, 1758)" volgens GBIF backbone taxonomy
+  - Fluiter: met 2 ll'en volgens GBIF backbone taxonomy(op wikipedia ook met 1 l ...)
+  - Grasmus: *Curruca communis* is "Homotypic synonym of Sylvia communis Latham, 1787" volgens GBIF backbone taxonomy
+  - Matkop: zowel *Parus montanus* als *Poecile montanus* zijn accepted in GBIF backbone taxonomy
+
+Ziet er over het algemeen ok uit.
+
+## Finale dataset
+
+Na DwC mapping bekomen we de finale dataset voor publicatie.
+We bekijken hier of er nog tekortkomingen zijn.
+
+```{r}
+darwincore_mapping <- tar_read("darwincore_mapping", store = targets_store)
+dwc_mapping_final <- tar_read("dwc_mapping_final", store = targets_store)
+```
+
+Welke kolommen zitten niet in de dataset?
+
+```{r}
+sort(colnames(darwincore_mapping)[
+    grepl("^raw\\_", colnames(darwincore_mapping))
+  ])
+```
+
+- Locaties telpunten ook in dataset (`raw_x_coord`, `raw_y_coord`, `raw_crs`) --> Event versus occurrence dataset opsplitsen?
+- Afstand tot telpunt: `raw_distance2plot` --> welke term?
+- Zijn variabelen relevant om mee te geven?
+  - `raw_area_prop_sb` --> Overlap steekproefkader zenodo?
+  - `raw_sbp` --> Overlap steekproefkader zenodo?
+  - `raw_openheid_klasse` --> Overlap steekproefkader zenodo?
+  - `raw_regio` --> Overlap steekproefkader zenodo?
+  - `raw_predator`, `raw_n_predators_plot`: achteraf berekend, is de soort een predator of niet
+  - `raw_periode_in_jaar`: 1 van 4 telperiodes
+  - `raw_status_teller`: is de waarnemer een professional of een vrijwilliger?
+- Kan hier nog iets mee gedaan worden?
+  - `raw_doy`: day of year sinds januari
+  - `raw_plotid`: we gebruiken eigenlijk altijd plotnaam
+  - `raw_projectid`: is dit INBO of SOVON gerelateerd?
+
+Welke kolommen moet nog aangevuld worden?
+
+```{r}
+empty_col_df <- dwc_mapping_final[
+    ,
+    colSums(is.na(dwc_mapping_final)) == nrow(dwc_mapping_final)
+  ]
+sort(colnames(empty_col_df))
+```
+
+> Aanvullen
+
+Hoe ziet de dataset er uit?
+
+```{r}
+glimpse(dwc_mapping_final)
+```
+
+> ok?
+
+Overige opmerkingen en vragen:
+
+- Hoeveel zetten we voor `coordinateUncertaintyInMeters`? Voorlopig op 5 m gezet.
+- Ok dat `varbatimBehavior` de Nederlandstalige beschrijving is? De Engelstalige beschrijving staat onder `behavior`. Of mag de Nederlandse beschrijving weg?
+- Wat is het verschil tussen `individualCount` en `organismQuantity`?
+- We kunnen ook afwezigheden toevoegen (`occurrenceStatus = "absent"` en `individualCount = 0`) aangezien alle vogels worden genoteerd op het moment van tellen vanaf dat telpunt. Hoe doen we dit?
+  - We kijken per jaar naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten per jaar. *Voordeel:* geen verandering als er data van een nieuw jaar bijkomt. *Nadeel:* niet volledig aangezien deze lijst niet volledig is.
+  - We kijken over de hele dataset naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten. *Voordeel:* steeds meer volledige lijst van soorten. *Nadeel:* dataset zal elk jaar veranderen.
+  - Afwezigheden toevoegen o.b.v. externe lijst?
+  - ...

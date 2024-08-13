@@ -173,7 +173,7 @@ list(
       vernacular_name_df = prepare_taxon_mapping,
       vernacular_name_col = "dwc_vernacularName",
       out_cols = c("scientificName", "phylum", "order", "family", "genus",
-                   "species", "authorship", "rank", "speciesKey"),
+                   "species", "authorship", "rank", "key"),
       filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
       lang = "nld",
       limit = 1000,
@@ -182,10 +182,24 @@ list(
     pattern = map(prepare_taxon_mapping)
   ),
   tar_target(
+    name = manual_taxon_mapping,
+    command = map_taxa_manual(
+      taxonomy_df = taxon_mapping,
+      manual_taxon_list = list(
+        "Veldmuis/Aardmuis" = 2438591, # genus
+        "rat spec." = 2439223,         # genus
+        "spitsmuis spec." = 5534       # family
+      ),
+      vernacular_name_col = "dwc_vernacularName",
+      out_cols = c("scientificName", "phylum", "order", "family", "genus",
+                   "species", "authorship", "rank", "key")
+    )
+  ),
+  tar_target(
     name = dwc_mapping_final,
     command = finalise_dwc_df(
       data_df = darwincore_mapping,
-      taxonomy_df = taxon_mapping
+      taxonomy_df = manual_taxon_mapping
     )
   )
 )

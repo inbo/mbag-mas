@@ -30,18 +30,21 @@ DSM
 DTM
 Digital
 Duinen/Weidestreek
+DwC
 FVRT02
 GL
 GVI
 Gittargets
 HGL
 Hazegraspolder
+Homotypic
 JJNN16
 KLA
 KLE's
 KML
 LEVS01
 Langeraert
+Latham
 MAS-data
 MBAG
 Matkop
@@ -67,6 +70,7 @@ SBP’s
 SOVON
 Sovon
 Surface
+Synonym
 Telpunt-
 Telrondes
 Terrain
@@ -84,6 +88,7 @@ Version
 WGS
 Westhoekreservaat
 \
+accepted
 add
 aeroway
 allocatieproporties
@@ -129,6 +134,7 @@ ll'en
 lm.Rmd
 lm.Rproj
 longitude
+manual
 mapping
 markdown
 mas
@@ -173,7 +179,9 @@ ste
 stratificatievariabelen
 stratumoppervlakte
 subspecies
+synonym
 tax
+taxonomy
 telcirkel
 telcirkels
 telperiode

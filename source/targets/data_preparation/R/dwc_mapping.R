@@ -40,8 +40,8 @@ static_mapping <- function(data_df) {
 
   out_df <- data_df %>%
     mutate(
-      dwc_type                 = "??",
-      dwc_datasetID            = "??",
+      dwc_type                 = NA,
+      dwc_datasetID            = NA,
       dwc_language             = "en",
       dwc_license              = paste0("http://creativecommons.org/",
                                         "publicdomain/zero/1.0/"),
@@ -51,13 +51,13 @@ static_mapping <- function(data_df) {
                                         "Forest (INBO)"),
       dwc_accessRights         = "http://www.inbo.be/en/norms-for-data-use",
       dwc_institutionCode      = "INBO",
-      dwc_datasetName          = "??",
+      dwc_datasetName          = NA,
       dwc_collectionCode       = "MAS",
       dwc_kingdom              = "Animalia",
       dwc_nomenclaturalCode    = "ICZN",
       dwc_eventType            = "Survey",
-      dwc_samplingProtocol     = "??",
-      dwc_samplingEffort       = "??",
+      dwc_samplingProtocol     = NA,
+      dwc_samplingEffort       = NA,
       dwc_continent            = "Europe",
       dwc_country              = "Belgium",
       dwc_stateProvince        = "Flanders",
@@ -170,71 +170,50 @@ dwc_mapping <- function(data_df) {
   return(out_df)
 }
 
+map_taxa_manual <- function(
+    taxonomy_df,
+    manual_taxon_list,
+    vernacular_name_col = "vernacularName",
+    out_cols = "scientificName") {
+  require("dplyr")
+  require("rlang")
+
+  # Get taxonomic info for provided taxon keys
+  mapped_taxa_list <- lapply(manual_taxon_list, function(key) {
+      taxon_data <- rgbif::name_usage(key)$data
+      cols_to_get <- intersect(colnames(taxon_data), out_cols)
+
+      taxon_data %>%
+        select(all_of(cols_to_get))
+    })
+  mapped_taxa_df <- do.call(bind_rows, mapped_taxa_list) %>%
+    mutate(!!vernacular_name_col := names(manual_taxon_list))
+
+
+  # Add taxon info difficult names
+  out_df <- taxonomy_df %>%
+    left_join(
+      mapped_taxa_df,
+      by = "dwc_vernacularName",
+      suffix = c("", ".df2")) %>%
+    mutate(
+      across(
+        all_of(setdiff(colnames(mapped_taxa_df), vernacular_name_col)),
+        ~ coalesce(.x, get(paste0(cur_column(), ".df2"))),
+        .names = "{.col}")
+    ) %>%
+    select(-ends_with(".df2"))
+
+  return(out_df)
+}
 
 # Finalise DwC data
 finalise_dwc_df <- function(data_df, taxonomy_df) {
   require("dplyr")
   require("rlang")
 
-  # Do manual mapping for difficult taxa
-  df_veldmuizen <- rgbif::name_usage("2438591")$data %>%
-    select(all_of(
-      c("scientificName", "phylum", "order", "family", "genus", "authorship",
-        "rank", "key")
-      )
-    ) %>%
-    rename("speciesKey" = "key")
-
-  df_ratten <- rgbif::name_usage("2439223")$data %>%
-    select(all_of(
-      c("scientificName", "phylum", "order", "family", "genus", "authorship",
-        "rank", "key")
-      )
-    ) %>%
-    rename("speciesKey" = "key")
-
-  df_spitsmuizen <- rgbif::name_usage("5534")$data %>%
-    select(all_of(
-      c("scientificName", "phylum", "order", "family", "authorship",
-        "rank", "key")
-      )
-    ) %>%
-    rename("speciesKey" = "key")
-
-  # Create dataframe for merging difficult taxa
-  manual_taxa_df <- tibble(
-    dwc_vernacularName = c(
-      "Veldmuis/Aardmuis",
-      "rat spec.",
-      "spitsmuis spec."
-      )
-    ) %>%
-    bind_cols(
-      bind_rows(
-        df_veldmuizen,
-        df_ratten,
-        df_spitsmuizen
-      )
-    )
-
-  # Finish manual taxon mapping
+  # Join with observations dataset
   taxon_core_final <- taxonomy_df %>%
-    # Add taxon info difficult names
-    left_join(manual_taxa_df,
-              by = "dwc_vernacularName",
-              suffix = c("", ".df2")) %>%
-    mutate(
-      scientificName = coalesce(.data$scientificName, .data$scientificName.df2),
-      phylum = coalesce(.data$phylum, .data$phylum.df2),
-      order = coalesce(.data$order, .data$order.df2),
-      family = coalesce(.data$family, .data$family.df2),
-      genus = coalesce(.data$genus, .data$genus.df2),
-      authorship = coalesce(.data$authorship, .data$authorship.df2),
-      rank = coalesce(.data$rank, .data$rank.df2),
-      speciesKey = coalesce(.data$speciesKey, .data$speciesKey.df2)
-    ) %>%
-    select(-ends_with(".df2")) %>%
-    # Join with observations dataset
     full_join(
       data_df,
       relationship = "many-to-many",
@@ -242,7 +221,7 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
     ) %>%
     # Select and rename columns
     rename(
-      "dwc_scientificNameID"         = "speciesKey",
+      "dwc_scientificNameID"         = "key",
       "dwc_taxonRank"                = "rank",
       "dwc_scientificNameAuthorship" = "authorship"
     ) %>%
