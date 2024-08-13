@@ -159,6 +159,8 @@ Dit telpunt wordt weggelaten voor verdere analyses.
 Ol_2214.11 werd niet in telperiode 4 geteld.
 VL0209 werd niet in telperiode 4 geteld.
 
+> moet opgelost zijn na data controle!
+
 ```{r}
 mas_2023_vogels <- mas_2023_vogels %>%
   filter(plotnaam != "VL0194")
