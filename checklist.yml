@@ -23,6 +23,7 @@ spelling:
   - LICENSE.md
   - source/targets
   - source/R
+  - data
   - source/bookdown/mas_uitrol_vlaanderen/LICENSE.md
   other:
     en-GB:

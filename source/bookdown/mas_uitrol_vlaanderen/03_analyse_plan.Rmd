@@ -9,7 +9,7 @@ Deze worden uitgevoerd met R [@R] in RStudio [@RStudio] tenzij anders vermeld.
 -   Figuur \@ref(fig:analyse-plan), stap 1
 -   De telpunten uit de steekproef worden toebedeeld aan tellers en geteld volgens het MAS-protocol \textcolor{red}{[REF]}.
 -   \textcolor{red}{Waarnemingen worden via de Avimap app ingegeven en komen zo bij Sovon terecht.}
--   Het export- en downloadprocess van deze data van Sovon word beschreven door \textcolor{red}{[REF]}.
+-   Het export- en downloadproces van deze data van Sovon word beschreven door \textcolor{red}{[REF]}.
 
 ## Data opkuisen en voorbereiden {#stap-2}
 
@@ -38,7 +38,7 @@ Na deze verwerkingsstappen hebben we een schone, opgekuiste dataset.
 
 De finale dataset wordt verder in de 'targets pipeline' klaar gemaakt voor publicatie op GBIF (<https://www.gbif.org/>) (Fig. \@ref(fig:analyse-plan), stap 3).
 De publicatie van de data 2018-2024 is gepland voor eind 2024.
-\textcolor{red}{Preparatie van data publicatie gaat voornamelijk over darwincore mapping ... .} Het gaat om de volgende stappen:
+\textcolor{red}{Preparatie van data publicatie gaat voornamelijk over Darwin Core mapping ... .} Het gaat om de volgende stappen:
 
 -   Dataset preparatie
     -   We verwijderen kolommen gerelateerd aan de steekproef

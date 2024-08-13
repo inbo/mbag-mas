@@ -230,7 +230,7 @@ Na manuele controle van de punten op bereikbaarheid, zichtbaarheid, overlap met 
 
 Daarna werden punten toebedeeld aan tellers.
 Tellers konden ook punten claimen door dit aan te geven in de Google Maps kaart.
-De preciese verdeling en aantal punten per landbouwstreek word besproken in Sectie \@ref(mas-vlaanderen).
+De precieze verdeling en aantal punten per landbouwstreek word besproken in Sectie \@ref(mas-vlaanderen).
 
 ### Reproduceerbaarheid en traceerbaarheid {#git-mas}
 
@@ -293,7 +293,7 @@ In het resterende gebied ligt 51,67 km paden en wegen (Fig. \@ref(fig:afbakening
 \end{figure}
 ```
 Langs deze paden werden punten gelegd die ten slotte werden gefilterd op basis van landgebruik en zichtbaarheid zoals beschreven in \@ref(meetnet-ontwerp).
-In het overgebleven steekproefkader merkten we een sterke spatiale clustering van punten zowel in zijn geheel (enkel punten in regios Nieuwpoort en Knokke) als binnen eenzelfde stratum (Fig. \@ref(fig:steekproefkader-duinen)).
+In het overgebleven steekproefkader merkten we een sterke spatiale clustering van punten zowel in zijn geheel (enkel punten in regio's Nieuwpoort en Knokke) als binnen eenzelfde stratum (Fig. \@ref(fig:steekproefkader-duinen)).
 
 ```{=tex}
 \begin{figure}
