@@ -1349,6 +1349,16 @@ mas_data_clean %>%
   kable()
 ```
 
+We schrijven de data voor Kalkon weg.
+
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  filter(naam == "Kalkoen") %>%
+  write_csv(file.path(mbag_dir, "output", "data_controle",
+                      "vreemde_soorten_mastellingen.csv"))
+```
+
 ## Broedcodes
 
 Broedcodes zijn ook belangrijk voor verdere data analyse.
