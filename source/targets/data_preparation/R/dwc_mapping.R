@@ -170,6 +170,9 @@ dwc_mapping <- function(data_df) {
   return(out_df)
 }
 
+map_taxa_manual <- function(taxonomy_df, manual_taxon_list) {
+
+}
 
 # Finalise DwC data
 finalise_dwc_df <- function(data_df, taxonomy_df) {
