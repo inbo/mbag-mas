@@ -1519,7 +1519,7 @@ Welke kolommen zitten niet in de dataset?
 
 ```{r}
 sort(colnames(darwincore_mapping)[
-    grepl("^raw\\_",colnames(darwincore_mapping))
+    grepl("^raw\\_", colnames(darwincore_mapping))
   ])
 ```
 
