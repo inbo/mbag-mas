@@ -131,7 +131,7 @@ mas_data_2024 %>%
   st_drop_geometry() %>%
   group_by(plotnaam, regio, datum, waarnemer) %>%
   summarise(aantal_soorten = n_distinct(naam),
-            .groups = "drop") %>% 
+            .groups = "drop") %>%
   slice_max(aantal_soorten, n = 5) %>%
   kable()
 ```
