@@ -1390,6 +1390,28 @@ mas_data_clean %>%
 # Controle data publicatie
 
 De finale dataset wordt verder in de pipeline klaar gemaakt voor publicatie op GBIF.
-We controleren deze stappen voor data publicatie.
+Het gaat om de volgende stappen (zie ook `dwc_mapping_mas.Rmd` voor een uitgebreide beschrijving en exploratie).
+
+- Dataset preparatie
+  - We verwijderen van kolommen gerelateerd aan steekproef
+  - We passen kolomnamen aan
+- Ruimtelijke verwerking
+  - We verwijderen de Amersfoord coördinaten
+  - We zetten de Lambert coördinaten om naar WGS 84 decimale coördinaten
+  - We behouden de Lambert coördinaten als verbatim coördinaten
+- Mappen van statische waarden
+  - Statische waarden worden gebruikt voor Darwin Core-termen die dezelfde waarde nodig hebben voor alle records
+  - Meestal ontbreken ze in de input data
+- Mappen van ongewijzigde waarden
+  - Ongewijzigde waarden worden gebruikt voor Darwin Core-termen waarvan de inhoud een exacte kopie is van het overeenkomstige veld in de input data
+- Mappen van gewijzigde waarden
+  - Gewijzigde waarden worden gebruikt voor Darwin Core-termen waarvoor de inhoud in de input data als basis wordt gebruikt, maar deze moet worden gestandaardiseerd
+  - Dit geldt voor Darwin Core-termen waarvoor we een vocabulaire gebruiken of waar we willen transformeren voor de duidelijkheid of om duidelijke fouten te corrigeren
+- Taxon matching
+ - We matchen de Nederlandstalige soortnamen met de [GBIF backbone taxonomy](https://www.gbif.org/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c)
+ - Sommige taxa moeten manueel gematched worden
+- Nabewerking dataset
+  - Selectie relevante kolommen
+  - Sorteren van kolommen
 
 ...
