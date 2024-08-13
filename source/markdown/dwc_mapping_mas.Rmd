@@ -488,18 +488,19 @@ mismatches_wet_names <- test_wet_names %>%
 
 mismatches_wet_names %>%
   filter(!test_wet) %>%
+  select(-"test_wet") %>%
   kable()
 ```
 
 Er zijn een aantal mismatches:
 
 1. Species versus subspecies
-  - op zich geen probleem
+  - Vormen in principe geen probleem
 2. Andere genera
-  - Braamsluiper: geen data van Curruca curruca in GBIF tax. backbone
-  - Fluiter: met 2 ll'en is correct (? op wikipedia ook met 1 l ...)
-  - Grasmus: geen data van Curruca communis in GBIF tax. backbone
-  - Matkop: zowel Parus montanus als Poecile montanus zelfde info in GBIF tax. backbone
+  - Braamsluiper: *Curruca curruca* is "Synonym of Sylvia curruca (Linnaeus, 1758)" volgens GBIF backbone taxonomy
+  - Fluiter: met 2 ll'en volgens GBIF backbone taxonomy(op wikipedia ook met 1 l ...)
+  - Grasmus: *Curruca communis* is "Homotypic synonym of Sylvia communis Latham, 1787" volgens GBIF backbone taxonomy
+  - Matkop: zowel *Parus montanus* als *Poecile montanus* zijn accepted in GBIF backbone taxonomy
 
 # Conclusie
 
