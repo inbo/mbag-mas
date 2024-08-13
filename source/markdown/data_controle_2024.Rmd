@@ -1501,15 +1501,41 @@ Na DwC mapping bekomen we de finale dataset voor publicatie.
 We bekijken hier of er nog tekortkomingen zijn.
 
 ```{r}
+darwincore_mapping <- tar_read("darwincore_mapping", store = targets_store)
 dwc_mapping_final <- tar_read("dwc_mapping_final", store = targets_store)
 ```
+
+Welke kolommen zitten niet in de dataset?
+
+```{r}
+sort(colnames(darwincore_mapping)[
+    grepl("^raw\\_",colnames(darwincore_mapping))
+  ])
+```
+
+- Locaties telpunten ook in dataset (`raw_x_coord`, `raw_y_coord`, `raw_crs`) --> Event versus occurrence dataset opsplitsen?
+- Afstand tot telpunt: `raw_distance2plot` --> welke term?
+- Zijn variabelen relevant om mee te geven?
+  - `raw_area_prop_sb` --> Overlap steekproefkader zenodo?
+  - `raw_sbp` --> Overlap steekproefkader zenodo?
+  - `raw_openheid_klasse` --> Overlap steekproefkader zenodo?
+  - `raw_regio` --> Overlap steekproefkader zenodo?
+  - `raw_predator`, `raw_n_predators_plot`: achteraf berekend, is de soort een predator of niet
+  - `raw_periode_in_jaar`: 1 van 4 telperiodes
+  - `raw_status_teller`: is de waarnemer een professional of een vrijwilliger?
+- Kan hier nog iets mee gedaan worden?
+  - `raw_doy`: day of year sinds januari
+  - `raw_plotid`: we gebruiken eigenlijk altijd plotnaam
+  - `raw_projectid`: is dit INBO of SOVON gerelateerd?
 
 Welke kolommen moet nog aangevult worden?
 
 ```{r}
-empty_col_df <- dwc_mapping_final[, colSums(is.na(dwc_mapping_final)) ==
-                                    nrow(dwc_mapping_final)]
-colnames(empty_col_df)
+empty_col_df <- dwc_mapping_final[
+    ,
+    colSums(is.na(dwc_mapping_final)) == nrow(dwc_mapping_final)
+  ]
+sort(colnames(empty_col_df))
 ```
 
 > Aanvullen
@@ -1522,4 +1548,13 @@ glimpse(dwc_mapping_final)
 
 > ok?
 
+Overige opmerkingen en vragen:
 
+- Hoeveel zetten we voor `coordinateUncertaintyInMeters`? Voorlopig op 5 m gezet.
+- Ok dat `varbatimBehavior` de Nederlandstalige beschrijving is? De Engelstalige beschrijving staat onder `behavior`. Of mag de Nederlandse beschrijving weg?
+- Wat is het verschil tussen `individualCount` en `organismQuantity`?
+- We kunnen ook afwezigheden toevoegen (`occurrenceStatus = "absent"` en `individualCount = 0`) aangezien alle vogels worden genoteerd op het moment van tellen vanaf dat telpunt. Hoe doen we dit?
+  - We kijken per jaar naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten per jaar. *Voordeel:* geen verandering als er data van een nieuw jaar bijkomt. *Nadeel:* niet volledig aangezien deze lijst niet volledig is.
+  - We kijken over de hele dataset naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten. *Voordeel:* steeds meer volledige lijst van soorten. *Nadeel:* dataset zal elk jaar veranderen.
+  - Afwezigheden toevoegen o.b.v. externe lijst?
+  - ...
