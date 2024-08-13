@@ -1349,7 +1349,7 @@ mas_data_clean %>%
   kable()
 ```
 
-We schrijven de data voor Kalkon weg.
+We schrijven de data voor Kalkoen weg.
 
 ```{r}
 mas_data_clean %>%
@@ -1419,14 +1419,14 @@ Het gaat om de volgende stappen (zie ook `dwc_mapping_mas.Rmd` voor een uitgebre
   - Dit geldt voor Darwin Core-termen waarvoor we een vocabulaire gebruiken of waar we willen transformeren voor de duidelijkheid of om duidelijke fouten te corrigeren
 - Taxon matching
  - We matchen de Nederlandstalige soortnamen met de [GBIF backbone taxonomy](https://www.gbif.org/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c)
- - Sommige taxa moeten manueel gematched worden
+ - Sommige taxa moeten manueel gematcht worden
 - Nabewerking dataset
   - Selectie relevante kolommen
   - Sorteren van kolommen
 
 ## Taxon matching
 
-We controleren eerst de lijst van soorten die automatisch zijn gematched (taxon_mapping).
+We controleren eerst de lijst van soorten die automatisch zijn gematcht (taxon_mapping).
 
 ```{r}
 taxon_data <- tar_read("taxon_mapping", store = targets_store)
@@ -1538,7 +1538,7 @@ sort(colnames(darwincore_mapping)[
   - `raw_plotid`: we gebruiken eigenlijk altijd plotnaam
   - `raw_projectid`: is dit INBO of SOVON gerelateerd?
 
-Welke kolommen moet nog aangevult worden?
+Welke kolommen moet nog aangevuld worden?
 
 ```{r}
 empty_col_df <- dwc_mapping_final[
