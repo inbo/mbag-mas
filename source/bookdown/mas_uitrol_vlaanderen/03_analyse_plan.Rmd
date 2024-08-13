@@ -2,17 +2,71 @@
 
 In het vorige hoofdstuk werd beschreven hoe het steekproefkader voor het MAS in Vlaanderen werd bepaald en hoe we uiteindelijk een ruimtelijk gespreide, aselecte steekproef bekwamen.
 Hier bespreken we het stramien voor verwerking en analyse van de MAS-data vanaf de steekproef (Fig. \@ref(fig:analyse-plan)).
-
-## Stap 1: Uitvoeren van de tellingen
-
-## Stap 2: Data opkuisen en voorbereiden
-
-## Stap 3: Data voorbereiden voor publicatie
-
-## Stap 4-5: Verzamelen van verklarende variabelen en datasets samenvoegen
-
-## Stap 6: Statistische analyse
+Deze worden uitgevoerd met R [@R] in RStudio [@RStudio] tenzij anders vermeld.
 
 ```{r analyse-plan, out.width = "80%", fig.cap = "Stramien voor verwerking en analyse van MAS-data. De volgorde en richting waarin de stappen worden uitgevoerd is verduidelijkt met de pijl in de inzet. Zie tekst voor verdere toelichting."}
 include_graphics(file.path("media", "analyse_plan", "analyse_plan.png"))
 ```
+
+## Stap 1: Uitvoeren van de tellingen {#stap-1}
+
+-   De telpunten uit de steekproef worden toebedeeld aan tellers en geteld volgens het MAS-protocol \textcolor{red}{[REF]}.
+-   \textcolor{red}{Waarnemingen worden via de Avimap app ingegeven en komen zo bij Sovon terecht.}
+-   Het export- en downloadprocess van deze data van Sovon word beschreven door \textcolor{red}{[REF]}.
+
+## Stap 2: Data opkuisen en voorbereiden {#stap-2}
+
+Het opkuisen en voorbereiden van de data gebeurt via de **targets** "pipeline tool" R package [@targets-package].
+De ruwe data zoals verkregen na Stap 1 is het startpunt.
+Daarna volgen verschillende opeenvolgende stappen:
+
+-   Omzetten van Amersfoord naar Lambert coördinaten
+-   Filteren van de data
+    -   Enkel telpuntlocaties die behoren tot de steekproef van het MAS
+    -   Enkel tellingen die vallen binnen de volgende telperiodes
+        -   R1: 1 april - 20 april
+        -   R2: 21 april - 10 mei
+        -   R3: 11 mei - 10 juni
+        -   R4: 21 juni - 15 juli
+    -   Enkel waarnemingen binnen de telcirkel radius (max. 300 m van telpunt)
+    -   Enkel waarnemingen van vogels of zoogdieren
+-   Preparatie van de data
+    -   Voor (het beperkt aantal) telpunten die twee maal geteld zijn in eenzelfde telperiode, wordt laatste telling binnen die periode behouden tenzij de eerdere telling door een professionele teller is gebeurt (niet door een vrijwilliger)
+    -   Ondersoorten worden geaggregeerd tot op soortniveau (bv. Witsterblauwborst $\rightarrow$ Blauwborst)
+    -   We voegen een variabele toe aan de data met per waarneming of het een predator is of niet. Kraaiachtigen en roofvogels vormen samen de predatoren
+
+Na deze verwerkingsstappen hebben we een schone, opgekuiste dataset.
+
+## Stap 3: Data voorbereiden voor publicatie {#stap-3}
+
+De finale dataset wordt verder in de 'targets pipeline' klaar gemaakt voor publicatie op GBIF (<https://www.gbif.org/>).
+De publicatie van de data 2018-2024 is gepland voor eind 2024.
+\textcolor{red}{Preparatie van data publicatie gaat voornamelijk over darwincore mapping ... .} Het gaat om de volgende stappen:
+
+-   Dataset preparatie
+    -   We verwijderen kolommen gerelateerd aan de steekproef
+-   Ruimtelijke verwerking
+    -   We verwijderen de Amersfoord coördinaten
+    -   We zetten de Lambert coördinaten om naar WGS 84 decimale coördinaten
+    -   We behouden de Lambert coördinaten als verbatim coördinaten
+-   Mappen van statische waarden
+    -   Statische waarden worden gebruikt voor Darwin Core-termen die dezelfde waarde nodig hebben voor alle records. Meestal ontbreken ze in de input data
+-   Mappen van ongewijzigde waarden
+    -   Ongewijzigde waarden worden gebruikt voor Darwin Core-termen waarvan de inhoud een exacte kopie is van het overeenkomstige veld in de input data
+-   Mappen van gewijzigde waarden
+    -   Gewijzigde waarden worden gebruikt voor Darwin Core-termen waarvoor de inhoud in de input data als basis wordt gebruikt, maar deze moet worden gestandaardiseerd
+    -   Dit geldt voor Darwin Core-termen waarvoor we een vocabulaire gebruiken of waar we willen transformeren voor de duidelijkheid of om duidelijke fouten te corrigeren
+-   Taxon matching
+    -   We matchen de Nederlandstalige soortnamen met de GBIF backbone taxonomy \textcolor{red}{REF}
+    -   Sommige (een beperkt aantal) taxa moeten manueel gematcht worden
+-   Nabewerking dataset
+    -   Selectie relevante kolommen
+    -   Sorteren van de kolommen
+
+## Stap 4-5: Verzamelen van verklarende variabelen en datasets samenvoegen {#stap-4}
+
+\textcolor{red}{to do en zie pilootproject}
+
+## Stap 6: Statistische analyse {#stap-6}
+
+\textcolor{red}{to do en zie pilootproject}
