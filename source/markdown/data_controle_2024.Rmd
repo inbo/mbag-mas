@@ -1497,6 +1497,29 @@ Ziet er over het algemeen ok uit.
 
 ## Finale dataset
 
-Lijst van nog niet ingevulde kolommen
-Glimpse
-Vragen aanvullen uit Rmd
+Na DwC mapping bekomen we de finale dataset voor publicatie.
+We bekijken hier of er nog tekortkomingen zijn.
+
+```{r}
+dwc_mapping_final <- tar_read("dwc_mapping_final", store = targets_store)
+```
+
+Welke kolommen moet nog aangevult worden?
+
+```{r}
+empty_col_df <- dwc_mapping_final[, colSums(is.na(dwc_mapping_final)) ==
+                                    nrow(dwc_mapping_final)]
+colnames(empty_col_df)
+```
+
+> Aanvullen
+
+Hoe ziet de dataset er uit?
+
+```{r}
+glimpse(dwc_mapping_final)
+```
+
+> ok?
+
+
