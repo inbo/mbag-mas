@@ -125,6 +125,18 @@ Notities manuele controle Johannes:
 
 - Pl_45612.2: OK geen privé weg maar langs bedrijf
 
+We bekijken dit ook per jaar.
+
+```{r}
+# Calculate number of locations per year in data
+select_sampled_points %>%
+  st_drop_geometry() %>%
+  distinct(plotnaam, regio, jaar) %>%
+  count(regio, jaar) %>%
+  arrange(regio, jaar) %>%
+  kable()
+```
+
 ## Selecteer data binnen de telperiodes (select_time_periods) {#time-periods}
 
 We selecteren data binnen de correcte telperiodes.
