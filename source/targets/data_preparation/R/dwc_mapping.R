@@ -40,8 +40,8 @@ static_mapping <- function(data_df) {
 
   out_df <- data_df %>%
     mutate(
-      dwc_type                 = "??",
-      dwc_datasetID            = "??",
+      dwc_type                 = NA,
+      dwc_datasetID            = NA,
       dwc_language             = "en",
       dwc_license              = paste0("http://creativecommons.org/",
                                         "publicdomain/zero/1.0/"),
@@ -51,13 +51,13 @@ static_mapping <- function(data_df) {
                                         "Forest (INBO)"),
       dwc_accessRights         = "http://www.inbo.be/en/norms-for-data-use",
       dwc_institutionCode      = "INBO",
-      dwc_datasetName          = "??",
+      dwc_datasetName          = NA,
       dwc_collectionCode       = "MAS",
       dwc_kingdom              = "Animalia",
       dwc_nomenclaturalCode    = "ICZN",
       dwc_eventType            = "Survey",
-      dwc_samplingProtocol     = "??",
-      dwc_samplingEffort       = "??",
+      dwc_samplingProtocol     = NA,
+      dwc_samplingEffort       = NA,
       dwc_continent            = "Europe",
       dwc_country              = "Belgium",
       dwc_stateProvince        = "Flanders",
