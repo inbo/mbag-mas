@@ -4,20 +4,17 @@ In het vorige hoofdstuk werd beschreven hoe het steekproefkader voor het MAS in 
 Hier bespreken we het stramien voor verwerking en analyse van de MAS-data vanaf de steekproef (Fig. \@ref(fig:analyse-plan)).
 Deze worden uitgevoerd met R [@R] in RStudio [@RStudio] tenzij anders vermeld.
 
-```{r analyse-plan, out.width = "80%", fig.cap = "Stramien voor verwerking en analyse van MAS-data. De volgorde en richting waarin de stappen worden uitgevoerd is verduidelijkt met de pijl in de inzet. Zie tekst voor verdere toelichting."}
-include_graphics(file.path("media", "analyse_plan", "analyse_plan.png"))
-```
+## Uitvoeren van de tellingen {#stap-1}
 
-## Stap 1: Uitvoeren van de tellingen {#stap-1}
-
+-   Figuur \@ref(fig:analyse-plan), stap 1
 -   De telpunten uit de steekproef worden toebedeeld aan tellers en geteld volgens het MAS-protocol \textcolor{red}{[REF]}.
 -   \textcolor{red}{Waarnemingen worden via de Avimap app ingegeven en komen zo bij Sovon terecht.}
 -   Het export- en downloadprocess van deze data van Sovon word beschreven door \textcolor{red}{[REF]}.
 
-## Stap 2: Data opkuisen en voorbereiden {#stap-2}
+## Data opkuisen en voorbereiden {#stap-2}
 
-Het opkuisen en voorbereiden van de data gebeurt via de **targets** "pipeline tool" R package [@targets-package].
-De ruwe data zoals verkregen na Stap 1 is het startpunt.
+Het opkuisen en voorbereiden van de data gebeurt via de **targets** "pipeline tool" R package [@targets-package] (Fig. \@ref(fig:analyse-plan), stap 2).
+De ruwe data zoals verkregen na stap 1 is het startpunt.
 Daarna volgen verschillende opeenvolgende stappen:
 
 -   Omzetten van Amersfoord naar Lambert coördinaten
@@ -37,9 +34,9 @@ Daarna volgen verschillende opeenvolgende stappen:
 
 Na deze verwerkingsstappen hebben we een schone, opgekuiste dataset.
 
-## Stap 3: Data voorbereiden voor publicatie {#stap-3}
+## Data voorbereiden voor publicatie {#stap-3}
 
-De finale dataset wordt verder in de 'targets pipeline' klaar gemaakt voor publicatie op GBIF (<https://www.gbif.org/>).
+De finale dataset wordt verder in de 'targets pipeline' klaar gemaakt voor publicatie op GBIF (<https://www.gbif.org/>) (Fig. \@ref(fig:analyse-plan), stap 3).
 De publicatie van de data 2018-2024 is gepland voor eind 2024.
 \textcolor{red}{Preparatie van data publicatie gaat voornamelijk over darwincore mapping ... .} Het gaat om de volgende stappen:
 
@@ -63,10 +60,16 @@ De publicatie van de data 2018-2024 is gepland voor eind 2024.
     -   Selectie relevante kolommen
     -   Sorteren van de kolommen
 
-## Stap 4-5: Verzamelen van verklarende variabelen en datasets samenvoegen {#stap-4}
+## Verzamelen van verklarende variabelen en datasets samenvoegen {#stap-4}
 
-\textcolor{red}{to do en zie pilootproject}
+-   (Fig. \@ref(fig:analyse-plan), stappen 4-5)
+-   \textcolor{red}{to do en zie pilootproject}
 
-## Stap 6: Statistische analyse {#stap-6}
+## Statistische analyse {#stap-6}
 
-\textcolor{red}{to do en zie pilootproject}
+-   (Fig. \@ref(fig:analyse-plan), stap 6)
+-   \textcolor{red}{to do en zie pilootproject}
+
+```{r analyse-plan, out.width = "80%", fig.cap = "Stramien voor verwerking en analyse van MAS-data. De volgorde en richting waarin de stappen worden uitgevoerd is verduidelijkt met de pijl in de inzet. Zie tekst voor verdere toelichting."}
+include_graphics(file.path("media", "analyse_plan", "analyse_plan.png"))
+```
