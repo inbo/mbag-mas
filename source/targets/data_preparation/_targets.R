@@ -201,5 +201,14 @@ list(
       data_df = darwincore_mapping,
       taxonomy_df = manual_taxon_mapping
     )
+  ),
+  tar_target(
+    name = create_dwc_csv,
+    command = create_output_csv(
+      x = dwc_mapping_final,
+      file = "mas_data_vlaanderen",
+      suffix_by = "year",
+      path = file.path(mbag_dir, "output", "datasets")
+    )
   )
 )
