@@ -1,6 +1,6 @@
 create_output_csv <- function(x, file, path, suffix_by = NA, ...) {
   # Add suffix if provided
-  if (is.na(suffix_by)) {
+  if (!is.na(suffix_by)) {
     suffix <- paste(
       unique(c(min(x[suffix_by]), max(x[suffix_by]))),
       collapse = "_"
