@@ -31,10 +31,12 @@ join_with_sample <- function(counts_df, sample) {
 
 # Expand sample with years based on dataframe
 expand_sample_by_year <- function(sample_df, data_df, year_var) {
+  require("dplyr")
+  require("rlang")
   year_range <- sort(pull(distinct(st_drop_geometry(data_df[year_var]))))
 
   out_df <- sample_df %>%
-    expand_grid(jaar = year_range) %>%
+    tidyr::expand_grid(jaar = year_range) %>%
     mutate(keep = case_when(
       .data$regio == "Oostelijke leemstreek" & .data$jaar >= 2018 ~ TRUE,
       (.data$regio == "Westelijke leemstreek" |

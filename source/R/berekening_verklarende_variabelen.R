@@ -1,6 +1,7 @@
 # Proportie beheerovereenkomst per telcirkel per jaar
 add_bo_by_year <- function(punten_df, year_var = "jaar", ...) {
   require("dplyr")
+  require("rlang")
   require("sf")
   require("lubridate")
 
