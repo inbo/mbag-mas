@@ -1,5 +1,5 @@
 name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
-.Random.seed|object|89dec05387ca1f97|||||||||||||||
+.Random.seed|object|ec2037045dbde25a|||||||||||||||
 add_bo_by_year|function|1fb0cf5ed1dc79a3|||||||||||||||
 add_bo_inertia|function|85383569dfac9577|||||||||||||||
 add_bo_to_frame|function|7b556e4fceefb146|||||||||||||||
@@ -67,6 +67,8 @@ calculate_obs_distance_90eee3c8ee3a0f40|branch|3b042e7f04aff8b6|8166dbc4eaa010e0
 calculate_obs_distance_ed3856baef182026|branch|4d406f3e16f12fc4|8166dbc4eaa010e0|b7240ed50b839f90|437038331||t19947.4753903668s|d4a47bf4e5c25c1f|1203686|qs|local|list|calculate_obs_distance||0.16||
 create_dwc_csv|stem|69867b8da7912256|b2f9b63dd4e2998f|45e999d71c48da26|-88588328||t19949.5218002067s|b7d4d37884c593be|120|qs|local|vector|||0.7||
 create_output_csv|function|e2f1e6a68090b8f6|||||||||||||||
+crop_groups|stem|5ca50c723f06fd75|99b79ef3721b4597|162928accadb77df|1767652009||t19954.5471466949s|03a9a2abd3819183|3499|qs|local|vector|||0.08||
+crop_groups_file|stem|7b82cc7252267910|3ce7bfcc2561d0ef|e5686c6045fb443d|-906779833|C:/R/git_repositories/mbag-mas/data/gewasgroepen/hoofdteelten_groep.csv|t19622.3423044291s|8006d35382488edc|16435|file|local|vector|||0.23||
 crs_pipeline|pattern|0f34c90350212e24|aa791bdc29595bf7||-1580479739||||2864177|qs|local|list||crs_pipeline_8a0cccf9e9749a52*crs_pipeline_a2028b6e2e6695cd*crs_pipeline_546c0ada21c7f54b|1.04||
 crs_pipeline_546c0ada21c7f54b|branch|0982d0229eac4346|aa791bdc29595bf7|f406b40e404ac5fe|1259719987||t19940.6216177356s|b0be5acd140bb645|2864177|qs|local|list|crs_pipeline||1.04||
 crs_pipeline_8a0cccf9e9749a52|branch|d58f3354146d760d|aa791bdc29595bf7|ee91bd6860d3c9f6|-1012013932||t19940.6078748873s|f7c2ca6faad50489|1932997|qs|local|list|crs_pipeline||0.78||

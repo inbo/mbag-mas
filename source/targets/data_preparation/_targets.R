@@ -276,5 +276,39 @@ list(
     command = file.path(mbag_dir, "data", "gewasgroepen",
                         "hoofdteelten_groep.csv")
   ),
-
+  tar_target(
+    name = crop_groups,
+    command = readr::read_csv2(
+      file = crop_groups_file,
+      show_col_types = FALSE
+    )
+  ),
+  # Calculate crop layer per year
+  # 1. Read in observation data
+  tarchetypes::tar_files_input(
+    name = crop_layer_files,
+    files = paths_to_lbg_year(
+      proj_path = mbag_dir,
+      pattern = "Landbouwgebruikspercelen"
+    )
+  ),
+  tar_target(
+    name = crop_layers_by_year,
+    command = calc_crop_layers_by_year(
+      path_to_crop_layer = crop_layer_files,
+      cut_bo = TRUE
+    ),
+    pattern = map(crop_layer_files),
+  ),
+  # Calculate crop proportions
+  tar_target(
+    name = crop_groups,
+    command = calc_vzml_by_year(
+      punten_df = add_other_bo_var,
+      group_by_col = "GWSNAM_H",
+      clip_bo = NULL
+    ),
+    pattern = map(add_other_bo_var),
+    iteration = "list"
+  )
 )
