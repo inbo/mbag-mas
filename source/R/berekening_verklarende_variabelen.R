@@ -1,31 +1,36 @@
 # Proportie beheerovereenkomst per telcirkel per jaar
-add_bo_by_year <- function(punten_df, path_bo, ...) {
+add_bo_by_year <- function(punten_df, year_var = "jaar", ...) {
   # Read in bo layer and calculate start and stop year
-  bo_layer <- read_bo(path = path_bo)
-  bo_layer2 <- bo_layer %>%
-    mutate(startjaar = year(START),
-           stopjaar = year(STOP))
-
-  # Loop over years
-  years <- unique(punten_df$jaar)
-  out_list <- vector(mode = "list", length = length(years))
-
-  for (i in seq_along(years)) {
-    year <- years[i]
-
-    # Filter by year
-    punten_df_year <- punten_df %>% filter(jaar == year)
-    bo_layer_year <- bo_layer2 %>%
-      filter(startjaar <= year & stopjaar >= year)
-
-    out_df_year <- add_bo_to_frame(punten_df = punten_df_year,
-                                   bo_layer = bo_layer_year,
-                                   ...)
-
-    out_list[[i]] <- out_df_year
+  ## Get right year for loading data
+  year <- pull(distinct(st_drop_geometry(punten_df[year_var])))
+  if (year >= 2018 && year <= 2023) {
+    bo_file_year <- 2022
+  } else if (year >= 2024) {
+    punten_df$area_prop_sb <- NA
+    return(punten_df)
+  } else {
+    stop("This function only works for years later than 2018.")
   }
+  ## Read data
+  path_bo <- path_to_bo(jaar = bo_file_year)
+  bo_layer <- read_bo(path = path_bo)
 
-  return(do.call(rbind.data.frame, out_list))
+  # Calculate start and stop year variables
+  bo_layer_filtered <- bo_layer %>%
+    mutate(startjaar = year(START),
+           stopjaar = year(STOP)) %>%
+    filter(startjaar <= year & stopjaar >= year)
+
+  # Prepare data
+  punten_df_year <- punten_df %>%
+    select(-"area_prop_sb")
+
+  # Calculate percentage of bo for each point location
+  out_df_year <- add_bo_to_frame(punten_df = punten_df_year,
+                                 bo_layer = bo_layer_filtered,
+                                 ...)
+
+  return(out_df_year)
 }
 
 # Proportie hoofdteelten per telcirkel per jaar
