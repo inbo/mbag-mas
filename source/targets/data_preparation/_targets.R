@@ -34,8 +34,12 @@ mbag_dir <- rprojroot::find_root_file(
 
 # Source custom functions
 lapply(list.files(file.path(target_dir, "R"), full.names = TRUE), source)
-source(file.path(mbag_dir, "source", "R", "predatoren_f.R"))
-source(file.path(mbag_dir, "source", "R", "taxon_mapping.R"))
+source(file.path(mbag_dir, "source", "R",
+                 "predatoren_f.R"))
+source(file.path(mbag_dir, "source", "R",
+                 "taxon_mapping.R"))
+source(file.path(mbag_dir, "source", "R",
+                 "berekening_verklarende_variabelen.R"))
 
 # Target list
 list(
@@ -216,5 +220,11 @@ list(
       suffix_by = "year",
       path = file.path(mbag_dir, "output", "datasets")
     )
+  ),
+  # 5. Add explanatory variables
+  tarchetypes::tar_group_by(
+    name = mas_data_clean_by_year,
+    command = mas_data_clean,
+    "jaar"
   )
 )
