@@ -25,9 +25,9 @@ add_bo_by_year <- function(punten_df, year_var = "jaar", ...) {
 
   # Calculate start and stop year variables
   bo_layer_filtered <- bo_layer %>%
-    mutate(startjaar = year(START),
-           stopjaar = year(STOP)) %>%
-    filter(startjaar <= year & stopjaar >= year)
+    mutate(startjaar = year(.data$START),
+           stopjaar = year(.data$STOP)) %>%
+    filter(.data$startjaar <= year & .data$stopjaar >= year)
 
   # Prepare data
   punten_df_year <- punten_df %>%
@@ -51,7 +51,7 @@ calc_lbg_by_year <- function(punten_df) {
     year <- years[i]
 
     # Filter by year
-    punten_df_year <- punten_df %>% filter(jaar == year)
+    punten_df_year <- punten_df %>% filter(.data$jaar == year)
     lbg_file_year <- path_to_lbg(jaar = year)
 
     out_df_year <- calc_lbg(path = lbg_file_year,
