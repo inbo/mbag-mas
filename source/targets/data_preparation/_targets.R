@@ -269,5 +269,12 @@ list(
     ),
     pattern = map(add_bo_var),
     iteration = "list"
-  )
+  ),
+  # Read in agricultural crop groups
+  tarchetypes::tar_file(
+    name = crop_groups_file,
+    command = file.path(mbag_dir, "data", "gewasgroepen",
+                        "hoofdteelten_groep.csv")
+  ),
+
 )
