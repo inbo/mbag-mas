@@ -12,7 +12,6 @@ add_bo_by_year <- function(punten_df, year_var = "jaar", ...) {
     bo_file_year <- 2022
   } else if (year >= 2024) {
     out_df_year <- punten_df %>%
-      select(-"area_prop_sb") %>%
       mutate(area_prop_sb = NA)
 
     return(out_df_year)
@@ -30,12 +29,8 @@ add_bo_by_year <- function(punten_df, year_var = "jaar", ...) {
            stopjaar = year(.data$STOP)) %>%
     filter(.data$startjaar <= year & .data$stopjaar >= year)
 
-  # Prepare data
-  punten_df_year <- punten_df %>%
-    select(-"area_prop_sb")
-
   # Calculate percentage of bo for each point location
-  out_df_year <- add_bo_to_frame(punten_df = punten_df_year,
+  out_df_year <- add_bo_to_frame(punten_df = punten_df,
                                  bo_layer = bo_layer_filtered,
                                  ...)
 

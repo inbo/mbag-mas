@@ -1,20 +1,44 @@
 name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
-.Random.seed|object|ab620d7ff06246e4|||||||||||||||
-add_bo_by_year|function|9f2d310bfdf6c9ae|||||||||||||||
+.Random.seed|object|c399af6d3cca1232|||||||||||||||
+add_bo_by_year|function|af30527f8281c9e7|||||||||||||||
 add_bo_inertia|function|85383569dfac9577|||||||||||||||
 add_bo_to_frame|function|7b556e4fceefb146|||||||||||||||
-add_bo_var|pattern|16b116ffe63def41|dd089441d9016774||-743304819||||104723|qs|local|list||add_bo_var_d808ac9a244a166a*add_bo_var_b2dffba16f6354b4*add_bo_var_3196b5bfd29b0bb5*add_bo_var_adf2d0e78d447b48*add_bo_var_c541c8da79215c7d*add_bo_var_59ca943ade1f4488*add_bo_var_6de92f2eb887953f|9.12||
+add_bo_var|pattern|fdf997acbcdf07ac|41b39ef5bfb8351b||-743304819||||104751|qs|local|list||add_bo_var_8546f0b11e4fb888*add_bo_var_8c085c487eae4ede*add_bo_var_c548b852a8d559f8*add_bo_var_fee04e5dcd8747fb*add_bo_var_aeaa71cd269805fa*add_bo_var_5251fd7262058203*add_bo_var_cf45029ee15ec5cc|9.96||
 add_bo_var_1d26f8fb0ab1342c|branch||9440efeb91076dd3|114abf56f9739895|-2007784260||t19954.4865330727s||0|qs|local|list|add_bo_var||1.28||no applicable method for st_buffer applied to an object of class ctbl_df, tbl, data.frame
 add_bo_var_229598629194c017|branch||57c03c3c4c80cff2|114abf56f9739895|-1633808047||t19954.4872399198s||0|qs|local|list|add_bo_var||1.25||no applicable method for st_buffer applied to an object of class ctbl_df, tbl, data.frame
-add_bo_var_3196b5bfd29b0bb5|branch|3958265f6d6b9e98|dd089441d9016774|31f290eb955ce3c2|731124372||t19954.5104321768s|cf5c648d8784cea1|11815|qs|local|list|add_bo_var||1.44|attribute variables are assumed to be spatially constant throughout all geometries|
-add_bo_var_59ca943ade1f4488|branch|31a47d59f1963599|dd089441d9016774|f3355787064d8648|-1001889270||t19954.5104889357s|b4bf859d23a0e58e|17803|qs|local|list|add_bo_var||1.46|attribute variables are assumed to be spatially constant throughout all geometries|
-add_bo_var_6de92f2eb887953f|branch|dec4c95a47a2024d|dd089441d9016774|18372b356dd6b9cd|-1428895569||t19954.5104917077s|cfb3543546cf1032|29345|qs|local|list|add_bo_var||0.09||
-add_bo_var_adf2d0e78d447b48|branch|090134cfbf688395|dd089441d9016774|8e4c058e0e9fd5b8|-544393452||t19954.5104512135s|b8119fe413b7534a|11895|qs|local|list|add_bo_var||1.5|attribute variables are assumed to be spatially constant throughout all geometries|
-add_bo_var_b2dffba16f6354b4|branch|0709310fe293b860|dd089441d9016774|86854e9d3849d30f|987035020||t19954.5104141611s|f45f4d8be4f1b521|11346|qs|local|list|add_bo_var||1.53|attribute variables are assumed to be spatially constant throughout all geometries|
-add_bo_var_c541c8da79215c7d|branch|4ecc1fcfb29ec73e|dd089441d9016774|e93068dd421e2f9b|-1313435262||t19954.5104703445s|76a262e1b233656a|11954|qs|local|list|add_bo_var||1.53|attribute variables are assumed to be spatially constant throughout all geometries|
-add_bo_var_d808ac9a244a166a|branch|71e7b1421d18c199|dd089441d9016774|32ba5969fe77044c|100208301||t19954.5103948994s|dbce489e953ecd5d|10565|qs|local|list|add_bo_var||1.92|attribute variables are assumed to be spatially constant throughout all geometries. Missing values are always removed in SQL aggregation functions.Use na.rm  TRUE to silence this warningThis warning is displayed once every 8 hours.|
+add_bo_var_3196b5bfd29b0bb5|branch|13578c148589b15d|41b39ef5bfb8351b|2436a96e24d6ff53|731124372||t19954.5298310265s|7c3eff623d476c63|11820|qs|local|list|add_bo_var||1.54|attribute variables are assumed to be spatially constant throughout all geometries|
+add_bo_var_5251fd7262058203|branch|b015558ddcbdcc28|41b39ef5bfb8351b|426ac642b8722823|1608855016||t19954.5329493194s|7b2d5c55bbe7d614|17805|qs|local|list|add_bo_var||1.58|attribute variables are assumed to be spatially constant throughout all geometries|
+add_bo_var_59ca943ade1f4488|branch|b015558ddcbdcc28|41b39ef5bfb8351b|75df042977369ad6|-1001889270||t19954.5298912815s|7b2d5c55bbe7d614|17805|qs|local|list|add_bo_var||1.61|attribute variables are assumed to be spatially constant throughout all geometries|
+add_bo_var_6de92f2eb887953f|branch|92469dc263a6d4f1|41b39ef5bfb8351b|7e2b56cbe411e6f9|-1428895569||t19954.5298945931s|dfeacc1533f9ff3d|29348|qs|local|list|add_bo_var||0.14||
+add_bo_var_8546f0b11e4fb888|branch|16a3fb3f17170235|41b39ef5bfb8351b|3ec552bd562351dc|-104771601||t19954.5328499298s|0b40454d1a94bafa|10567|qs|local|list|add_bo_var||1.9|attribute variables are assumed to be spatially constant throughout all geometries. Missing values are always removed in SQL aggregation functions.Use na.rm  TRUE to silence this warningThis warning is displayed once every 8 hours.|
+add_bo_var_8c085c487eae4ede|branch|a8233ed0bdeb3c95|41b39ef5bfb8351b|db8c6d9ad7963d8d|167414158||t19954.5328686963s|92d9d0905cb22316|11351|qs|local|list|add_bo_var||1.49|attribute variables are assumed to be spatially constant throughout all geometries|
+add_bo_var_adf2d0e78d447b48|branch|651548efc17209a2|41b39ef5bfb8351b|66990a340b5ce69c|-544393452||t19954.5298513164s|e3d81769c7aa46db|11901|qs|local|list|add_bo_var||1.59|attribute variables are assumed to be spatially constant throughout all geometries|
+add_bo_var_aeaa71cd269805fa|branch|1cf097527dcc0461|41b39ef5bfb8351b|e417c653c466d93c|1893308353||t19954.5329294017s|9d693c906f1d9ad8|11959|qs|local|list|add_bo_var||1.63|attribute variables are assumed to be spatially constant throughout all geometries|
+add_bo_var_b2dffba16f6354b4|branch|a8233ed0bdeb3c95|41b39ef5bfb8351b|7c2fb59ea9d068f3|987035020||t19954.5298114405s|92d9d0905cb22316|11351|qs|local|list|add_bo_var||1.5|attribute variables are assumed to be spatially constant throughout all geometries|
+add_bo_var_c541c8da79215c7d|branch|1cf097527dcc0461|41b39ef5bfb8351b|505a42241da1b314|-1313435262||t19954.5298710505s|9d693c906f1d9ad8|11959|qs|local|list|add_bo_var||1.56|attribute variables are assumed to be spatially constant throughout all geometries|
+add_bo_var_c548b852a8d559f8|branch|13578c148589b15d|41b39ef5bfb8351b|8da9b607b79e93fe|-1781774691||t19954.5328893776s|7c3eff623d476c63|11820|qs|local|list|add_bo_var||1.65|attribute variables are assumed to be spatially constant throughout all geometries|
+add_bo_var_cf45029ee15ec5cc|branch|92469dc263a6d4f1|41b39ef5bfb8351b|fdbda69409bbc499|-469114217||t19954.5329525415s|dfeacc1533f9ff3d|29348|qs|local|list|add_bo_var||0.14||
+add_bo_var_d808ac9a244a166a|branch|16a3fb3f17170235|41b39ef5bfb8351b|c8ec043c0c5dc4dc|100208301||t19954.5297925803s|0b40454d1a94bafa|10567|qs|local|list|add_bo_var||2.09|attribute variables are assumed to be spatially constant throughout all geometries. Missing values are always removed in SQL aggregation functions.Use na.rm  TRUE to silence this warningThis warning is displayed once every 8 hours.|
+add_bo_var_fee04e5dcd8747fb|branch|651548efc17209a2|41b39ef5bfb8351b|e2b874c3b78b58bf|-2036513307||t19954.5329091226s|e3d81769c7aa46db|11901|qs|local|list|add_bo_var||1.57|attribute variables are assumed to be spatially constant throughout all geometries|
+add_bo2_var|pattern|482871ada5863cce|a93d8a8caad0709b||-1045927336||||104523|qs|local|list||add_bo2_var_b7f05d724d2a2446*add_bo2_var_12935c2fb10acc27*add_bo2_var_2f025c3aad10380d*add_bo2_var_e596dc8837468fa4*add_bo2_var_d0c2610b17785c46*add_bo2_var_631423c6c669cc2b*add_bo2_var_45403ca3c45d9bc3|9.26||
+add_bo2_var_12935c2fb10acc27|branch|3b825d67deebfa96|a93d8a8caad0709b|da31c9972756ddae|1709501262||t19954.5235088473s|37a1e6c56004ce09|10979|qs|local|list|add_bo2_var||1.45|attribute variables are assumed to be spatially constant throughout all geometries|
+add_bo2_var_2f025c3aad10380d|branch|78a8854a5299dc7f|a93d8a8caad0709b|dd643e716379cee3|229967622||t19954.5235280984s|b9729f82f5183ef8|11630|qs|local|list|add_bo2_var||1.52|attribute variables are assumed to be spatially constant throughout all geometries|
+add_bo2_var_45403ca3c45d9bc3|branch|dec4c95a47a2024d|a93d8a8caad0709b|8f62bb257ec52fee|-1013190536||t19954.5235900648s|cfb3543546cf1032|29345|qs|local|list|add_bo2_var||0.14||
+add_bo2_var_631423c6c669cc2b|branch|98b8215fe68b9ac7|a93d8a8caad0709b|7f0267ad9c34f505|1809904441||t19954.523586778s|74529d64986e91e4|17969|qs|local|list|add_bo2_var||1.55|attribute variables are assumed to be spatially constant throughout all geometries|
+add_bo2_var_b7f05d724d2a2446|branch|19646f6d45568a59|a93d8a8caad0709b|6b953ba9972e7368|-1738377132||t19954.5234907417s|2215402ddffd6d44|10710|qs|local|list|add_bo2_var||1.5|attribute variables are assumed to be spatially constant throughout all geometries|
+add_bo2_var_d0c2610b17785c46|branch|dbf1361c1687cfb1|a93d8a8caad0709b|fa76f661e4af37d0|-878243439||t19954.5235672125s|4340ba9a5128d3a7|12054|qs|local|list|add_bo2_var||1.54|attribute variables are assumed to be spatially constant throughout all geometries|
+add_bo2_var_e596dc8837468fa4|branch|ac9a7d6e49e04253|a93d8a8caad0709b|e84dbba26e3aa22b|-1826358569||t19954.5235477087s|a8308f7b139532b6|11836|qs|local|list|add_bo2_var||1.56|attribute variables are assumed to be spatially constant throughout all geometries|
 add_bo2021_to_frame|function|2debb3f8dba236c9|||||||||||||||
 add_openheid_landschap_to_frame|function|aaabca7c68417579|||||||||||||||
+add_other_bo_var|pattern|e459f1a5794c5448|5e15322143c050e5||-348186537||||115056|qs|local|list||add_other_bo_var_11968150679e8220*add_other_bo_var_57c69e775186a46c*add_other_bo_var_cc0d119190850f7e*add_other_bo_var_4eccadb42327e2ea*add_other_bo_var_bd05749c4f654264*add_other_bo_var_ef683065d2a187d9*add_other_bo_var_ecba4159d0f66501|9.37||
+add_other_bo_var_11968150679e8220|branch|0bd9c18799c99d30|5e15322143c050e5|d36e6b7b7b4504a3|-1677764717||t19954.5329711998s|d66f6ecc3086b0e6|11407|qs|local|list|add_other_bo_var||1.5|attribute variables are assumed to be spatially constant throughout all geometries|
+add_other_bo_var_4eccadb42327e2ea|branch|2a9a91f85371e0f0|5e15322143c050e5|5b60b220d3875e75|83927955||t19954.5330281256s|eeb3b929d07c9a0f|13827|qs|local|list|add_other_bo_var||1.53|attribute variables are assumed to be spatially constant throughout all geometries|
+add_other_bo_var_57c69e775186a46c|branch|091a52d321ef44de|5e15322143c050e5|a5bf87aedf085466|470497546||t19954.5329894282s|8edf080f82ec8722|12439|qs|local|list|add_other_bo_var||1.45|attribute variables are assumed to be spatially constant throughout all geometries|
+add_other_bo_var_b7f05d724d2a2446|branch||5e15322143c050e5|0d3280c415143e8c|723588242||t19954.5299106052s||0|qs|local|list|add_other_bo_var||1.27||Cant select columns that dont exist. Column area_prop_sb doesnt exist.
+add_other_bo_var_bd05749c4f654264|branch|9461c638ed8633a1|5e15322143c050e5|6e7f0a6883a8b487|1108067689||t19954.5330491588s|164a9064155f811d|14103|qs|local|list|add_other_bo_var||1.67|attribute variables are assumed to be spatially constant throughout all geometries|
+add_other_bo_var_cc0d119190850f7e|branch|d39e568bc57eb2b1|5e15322143c050e5|1c94a0d17de4e64f|1885050869||t19954.5330088268s|8524d12adc6d6eef|13508|qs|local|list|add_other_bo_var||1.54|attribute variables are assumed to be spatially constant throughout all geometries|
+add_other_bo_var_ecba4159d0f66501|branch|81583c69b2d27969|5e15322143c050e5|8e4c8ee96c3b8185|369627739||t19954.5330721338s|a0e8276b966a05ba|29361|qs|local|list|add_other_bo_var||0.14||
+add_other_bo_var_ef683065d2a187d9|branch|60aa18a8562d2285|5e15322143c050e5|10de239cb087b1d0|690324599||t19954.5330688709s|8296fe71d83a839c|20411|qs|local|list|add_other_bo_var||1.54|attribute variables are assumed to be spatially constant throughout all geometries|
 add_predator_variable|pattern|553f49f78101fed6|7f80da6da30be403||-1919973047||||2253022|qs|local|list||add_predator_variable_80e9cadf25bbe03f*add_predator_variable_c431a571df92f158*add_predator_variable_83ebbeb707d6d411|0.22||
 add_predator_variable_39059f3c53f47f4b|branch|6c937055c3fcd832|7f80da6da30be403|dbbd857a814196a3|-1128578533||t19942.3123521215s|45dd9cbb207ba273|2658580|qs|local|list|add_predator_variable||0.14||
 add_predator_variable_80e9cadf25bbe03f|branch|aaeeea8f94e4a92e|7f80da6da30be403|eee678807fdb623b|1371437452||t19947.475417112s|5a88d339892fd5e8|1041246|qs|local|list|add_predator_variable||0.11||
@@ -31,7 +55,7 @@ adjust_subspecies_names_nl|function|d279a97a61383673|||||||||||||||
 amersfoort_to_lambert72|function|5817bd0ef18d2c03|||||||||||||||
 buffer_layers_to_perimeter|function|e412566b21bb4a33|||||||||||||||
 calc_lbg|function|dd7fb160350d8b29|||||||||||||||
-calc_lbg_by_year|function|4e3791d7854da41f|||||||||||||||
+calc_lbg_by_year|function|99337b092bba4575|||||||||||||||
 calc_perceelsgrootte_by_year|function|b1b6a86cbd0ed984|||||||||||||||
 calc_vzml|function|10906e08ebc7023f|||||||||||||||
 calc_vzml_by_year|function|d5bfd3b16f16050c|||||||||||||||
@@ -51,7 +75,7 @@ crs_pipeline_c93545c00be99fc4|branch|0982d0229eac4346|aa791bdc29595bf7|a6ed5483b
 darwincore_mapping|stem|30af5cd18f2493bf|005342f1e023cb02|3a9b9a26897374e2|15036475||t19948.35170326s|7e5d51f2d66b4f34|4614316|qs|local|vector|||1.72||
 dwc_mapping|function|401b7d7e37abd6e5|||||||||||||||
 dwc_mapping_final|stem|f4ec5355d825bc7c|a292e78454a4d61c|5813db4296503da0|-967949729||t19948.3517283978s|ce708a3ef680a0ee|5196828|qs|local|vector|||0.51||
-expand_sample_by_year|function|61432291f6a1ba3d|||||||||||||||
+expand_sample_by_year|function|0ec2d00fa1e3d22d|||||||||||||||
 finalise_dwc_df|function|497d6bc36139183a|||||||||||||||
 find_df_name|function|e7dcaeb8e01e6ac9|||||||||||||||
 get_accepted_name_usage|function|10bf98981ba9a5d2|||||||||||||||
@@ -113,15 +137,22 @@ remove_subspecies_names_cef7959abae44037|branch|434c98c998d74548|feb37789019a587
 remove_subspecies_names_ecfac9605d5540c7|branch|e85a5a11c2df8587|feb37789019a5873|7bc56bfea64e4219|93923103||t19947.4754105368s|c3e496d1a932ff7a|1027737|qs|local|list|remove_subspecies_names||0.08||
 roofvogels_f|function|a388160a22cc4fb0|||||||||||||||
 sample|stem|0cb9b2d5f34dbfc1|fe53bc30011f8a2f|aa6fc89dd6302939|887991846||t19942.3123015771s|5f35e6901f025e3b|29858|qs|local|vector|||0.09||
-sample_by_year|stem|06829de864b7a883|c5cf36aaa473e389|4d695481cca42e5f|1673748097||t19954.4872226071s|b069d582f95f0993|38847|qs|local|group||sample_by_year_ec5228190b53e207*sample_by_year_43832d38f4a73de2*sample_by_year_94b84dd91d0ed26e*sample_by_year_189bf0fc491cb82a*sample_by_year_6ab23e43f5f02632*sample_by_year_985fc18a6d70fab4*sample_by_year_7549d6124a6a7bf8|0.02||
-sample_by_year_sf|pattern|1b9b4f4feaa5b803|f1dd91a973f99f69||2143995969||||96391|qs|local|list||sample_by_year_sf_229598629194c017*sample_by_year_sf_d8add6c1378086ef*sample_by_year_sf_3536f3bbd0fdef00*sample_by_year_sf_698dafe89013ce6c*sample_by_year_sf_3f57c0d607e7c7f8*sample_by_year_sf_803bd7e8f6bfcc5e*sample_by_year_sf_b46639a41e1395e4|0||
+sample_by_year|stem|7a0bc4017a91d724|e69eb660371b1bf5|4cd5ee61f312e4ee|1673748097||t19954.5328197508s|ccd4e835d4ebda40|36475|qs|local|group||sample_by_year_90fd7c70038ca422*sample_by_year_93fda3230bd88c9d*sample_by_year_8dbc3be6e7dc07ac*sample_by_year_86434d2e4dd76888*sample_by_year_51f766e3518d95bf*sample_by_year_2d7c19e7eca23890*sample_by_year_8bc84ac9d72ea066|0.1||
+sample_by_year_sf|pattern|e17826809f2a80c9|f1dd91a973f99f69||2143995969||||93743|qs|local|list||sample_by_year_sf_84853b2fdbed7023*sample_by_year_sf_f3fb5295c50f6e0d*sample_by_year_sf_299a11c5d9b8ea2b*sample_by_year_sf_d3dbcec79e34262e*sample_by_year_sf_9f5764cbd6ea768c*sample_by_year_sf_c200e8025d11c4cc*sample_by_year_sf_edd2f955b1018af2|0.04||
 sample_by_year_sf_229598629194c017|branch|62ff57fa280c80d6|f1dd91a973f99f69|2c530c1562a7fbd1|-1080714478||t19954.4894290444s|641c435ee220b180|9867|qs|local|list|sample_by_year_sf||0||
+sample_by_year_sf_299a11c5d9b8ea2b|branch|35480ba00da50e5b|f1dd91a973f99f69|2c530c1562a7fbd1|1327348435||t19954.5328232704s|bf713645a34d19aa|9836|qs|local|list|sample_by_year_sf||0||
 sample_by_year_sf_3536f3bbd0fdef00|branch|3409e86bfca05c75|f1dd91a973f99f69|2c530c1562a7fbd1|4961455||t19954.4894308036s|af9f8061cf632166|9868|qs|local|list|sample_by_year_sf||0||
 sample_by_year_sf_3f57c0d607e7c7f8|branch|e68518537f368d0c|f1dd91a973f99f69|2c530c1562a7fbd1|-1775471508||t19954.4894324703s|af9f8061cf632166|9868|qs|local|list|sample_by_year_sf||0||
 sample_by_year_sf_698dafe89013ce6c|branch|e871c0a9adb6840c|f1dd91a973f99f69|2c530c1562a7fbd1|-420234739||t19954.4894316717s|af9f8061cf632166|9868|qs|local|list|sample_by_year_sf||0||
 sample_by_year_sf_803bd7e8f6bfcc5e|branch|8b0692fceca07c43|f1dd91a973f99f69|2c530c1562a7fbd1|-1945835849||t19954.4894333268s|158c9a895473c8e6|15877|qs|local|list|sample_by_year_sf||0||
+sample_by_year_sf_84853b2fdbed7023|branch|1dfedf241faf8608|f1dd91a973f99f69|2c530c1562a7fbd1|691395072||t19954.5328213588s|beb85d2873fb2cd1|9835|qs|local|list|sample_by_year_sf||0.02||
+sample_by_year_sf_9f5764cbd6ea768c|branch|d9e0c1d2b46726bd|f1dd91a973f99f69|2c530c1562a7fbd1|1411942561||t19954.532825018s|bf713645a34d19aa|9836|qs|local|list|sample_by_year_sf||0||
 sample_by_year_sf_b46639a41e1395e4|branch|843f498a3312ca81|f1dd91a973f99f69|2c530c1562a7fbd1|-1403330660||t19954.4894342064s|46a1286ba3f3903e|31175|qs|local|list|sample_by_year_sf||0||
+sample_by_year_sf_c200e8025d11c4cc|branch|8d461b4345e6d297|f1dd91a973f99f69|2c530c1562a7fbd1|190399862||t19954.5328258583s|f453039ec6fae79e|15254|qs|local|list|sample_by_year_sf||0.02||
+sample_by_year_sf_d3dbcec79e34262e|branch|5fac3a0f679fa64e|f1dd91a973f99f69|2c530c1562a7fbd1|-158390623||t19954.5328241616s|bf713645a34d19aa|9836|qs|local|list|sample_by_year_sf||0||
 sample_by_year_sf_d8add6c1378086ef|branch|05c2d54502e858d0|f1dd91a973f99f69|2c530c1562a7fbd1|-619993925||t19954.4894299588s|af9f8061cf632166|9868|qs|local|list|sample_by_year_sf||0||
+sample_by_year_sf_edd2f955b1018af2|branch|0eaf161add5f9ba9|f1dd91a973f99f69|2c530c1562a7fbd1|788908926||t19954.5328267394s|3762d9024f00380b|29310|qs|local|list|sample_by_year_sf||0||
+sample_by_year_sf_f3fb5295c50f6e0d|branch|2bfa974595c02479|f1dd91a973f99f69|2c530c1562a7fbd1|857197859||t19954.5328223445s|bf713645a34d19aa|9836|qs|local|list|sample_by_year_sf||0||
 sample_file|stem|2d979dc6886d84ac|ee733c16547c9136|43da0623493b65fb|1141903364|C:/R/git_repositories/mbag-mas/data/steekproefkaders/steekproef_avimap_mbag_mas.csv|t19942.3118489557s|c428f732e1f75663|119494|file|local|vector|||0.2||
 select_sampled_points|pattern|3ad46fc3f5814e01|035f6e45f6e9e077||-107447084||||4836101|qs|local|list||select_sampled_points_599f227375be15be*select_sampled_points_55034b8ef5ffd3e2*select_sampled_points_575bc4afbad87cce|0.55||
 select_sampled_points_55034b8ef5ffd3e2|branch|c970874a3248a750|035f6e45f6e9e077|9e034f31873c4a7a|855123073||t19947.4753556341s|f37fc5457e2f5387|1187211|qs|local|list|select_sampled_points||0.12||
