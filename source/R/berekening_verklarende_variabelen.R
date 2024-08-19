@@ -38,6 +38,52 @@ add_bo_by_year <- function(punten_df, year_var = "jaar", var_col, ...) {
   return(out_df_year)
 }
 
+read_crop_layers_by_year <- function(
+    path_to_crop_layer,
+    cut_bo = TRUE) {
+  require("dplyr")
+  require("sf")
+  require("qgisprocess")
+
+  # Read crop layer
+  crop_layer <- sf::st_read(path_to_crop_layer, quiet = TRUE)
+  sf::st_set_geometry(crop_layer, "geometry")
+
+  if (cut_bo) {
+    # Read in bo layer and calculate start and stop year
+    ## Get right year for loading data
+    year <- unique(as.numeric(
+      stringr::str_extract_all(path_to_crop_layer, "[0-9]+")[[1]]
+      ))
+
+    if (year >= 2018 && year <= 2023) {
+      bo_file_year <- 2022
+
+      ## Read data
+      path_bo <- path_to_bo(jaar = bo_file_year)
+      bo_layer <- sf::st_read(dsn = path_bo, quiet = TRUE) %>%
+        sf::st_transform(crs = 31370)
+
+      # Calculate start and stop year variables
+      bo_layer_filtered <- bo_layer %>%
+        mutate(startjaar = year(.data$START),
+               stopjaar = year(.data$STOP)) %>%
+        filter(.data$startjaar <= year & .data$stopjaar >= year)
+
+      # Take intersection with crop layer
+      crop_layer %>%
+        qgisprocess::qgis_run_algorithm_p(
+          algorithm = "native:difference",
+          OVERLAY = bo_layer_filtered
+        )
+
+
+    }
+  } else {
+
+  }
+}
+
 # Proportie hoofdteelten per telcirkel per jaar
 calc_lbg_by_year <- function(punten_df) {
   # Loop over years
