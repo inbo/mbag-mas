@@ -29,6 +29,29 @@ join_with_sample <- function(counts_df, sample) {
   return(out_df)
 }
 
+# Expand sample with years based on dataframe
+expand_sample_by_year <- function(sample_df, data_df, year_var) {
+  year_range <- sort(pull(distinct(st_drop_geometry(data_df[year_var]))))
+
+  out_df <- sample_df %>%
+    expand_grid(jaar = year_range) %>%
+    mutate(keep = case_when(
+      .data$regio == "Oostelijke leemstreek" & .data$jaar >= 2018 ~ TRUE,
+      (.data$regio == "Westelijke leemstreek" |
+         .data$regio == "Zandleemstreek") & .data$jaar >= 2023 ~ TRUE,
+      (.data$regio == "Polders" |
+         .data$regio == "Kempen" |
+         .data$regio == "Zandstreek" |
+         .data$regio == "Weidestreek") & .data$jaar >= 2024 ~ TRUE,
+      .default = FALSE
+    )
+    ) %>%
+    filter(.data$keep) %>%
+    select(-"keep")
+
+  return(out_df)
+}
+
 # Select data within periods of time frames
 select_within_time_periods <- function(counts_df) {
   require("dplyr")
