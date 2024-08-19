@@ -17,3 +17,20 @@ path_to_samples <- function(proj_path, file) {
   file_path <- file.path(proj_path, "data", "steekproefkaders", file)
   return(file_path)
 }
+
+# Paths files crop use by year
+paths_to_lbg_year <- function(
+    proj_path,
+    pattern = "Landbouwgebruikspercelen") {
+  # List paths to all files
+  file_paths <- list.files(
+    file.path(proj_path, "data", "verzamelaanvraag"),
+    pattern = pattern,
+    full.names = TRUE,
+    recursive = TRUE)
+
+  # Only return gpkg file paths
+  indices <- grepl(pattern = ".gpkg$", file_paths)
+
+  return(sort(file_paths[indices]))
+}
