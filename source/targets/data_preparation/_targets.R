@@ -39,6 +39,7 @@ source(file.path(mbag_dir, "source", "R", "taxon_mapping.R"))
 
 # Target list
 list(
+  # 1. Read in observation data
   tarchetypes::tar_files_input(
     name = mas_counts_sovon_files,
     files = paths_to_counts_sovon(
@@ -54,6 +55,7 @@ list(
     pattern = map(mas_counts_sovon_files),
     iteration = "list"
   ),
+  # Convert Amersfoord to Lambert coordinates
   tar_target(
     name = crs_pipeline,
     command = amersfoort_to_lambert72(
@@ -62,6 +64,7 @@ list(
     pattern = map(mas_counts_sovon),
     iteration = "list"
   ),
+  # 2. Read in sample points of MBAG MAS
   tarchetypes::tar_file(
     name = sample_file,
     command = path_to_samples(
@@ -76,6 +79,7 @@ list(
       show_col_types = FALSE
     )
   ),
+  # Select locations in data that belong to sample points of MBAG MAS
   tar_target(
     name = select_sampled_points,
     command = join_with_sample(
@@ -85,6 +89,7 @@ list(
     pattern = map(crs_pipeline),
     iteration = "list"
   ),
+  # 3. Data selection and preparation steps
   tar_target(
     name = select_time_periods,
     command = select_within_time_periods(
@@ -152,6 +157,7 @@ list(
     name = mas_data_clean,
     command = remove_columns(mas_data_full)
   ),
+  # 4. Prepare data for publication on GBIF
   tar_target(
     name = darwincore_mapping,
     command = dwc_mapping(mas_data_clean)
