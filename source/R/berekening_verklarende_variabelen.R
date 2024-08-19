@@ -1,5 +1,5 @@
 # Proportie beheerovereenkomst per telcirkel per jaar
-add_bo_by_year <- function(punten_df, year_var = "jaar", ...) {
+add_bo_by_year <- function(punten_df, year_var = "jaar", var_col, ...) {
   require("dplyr")
   require("rlang")
   require("sf")
@@ -12,7 +12,7 @@ add_bo_by_year <- function(punten_df, year_var = "jaar", ...) {
     bo_file_year <- 2022
   } else if (year >= 2024) {
     out_df_year <- punten_df %>%
-      mutate(area_prop_sb = NA)
+      mutate(!!var_col := NA)
 
     return(out_df_year)
   } else {
@@ -32,7 +32,8 @@ add_bo_by_year <- function(punten_df, year_var = "jaar", ...) {
   # Calculate percentage of bo for each point location
   out_df_year <- add_bo_to_frame(punten_df = punten_df,
                                  bo_layer = bo_layer_filtered,
-                                 ...)
+                                 ...) %>%
+    rename(!!var_col := "area_prop_sb")
 
   return(out_df_year)
 }

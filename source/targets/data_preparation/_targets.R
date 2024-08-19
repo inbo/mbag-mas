@@ -251,23 +251,22 @@ list(
   tar_target(
     name = add_bo_var,
     command = add_bo_by_year(
-        punten_df = sample_by_year_sf,
-        year_var = "jaar",
-        bh_doel = "soortenbescherming (SB)"
-      ) %>%
-      rename("area_prop_sb_temp" = "area_prop_sb"),
+      punten_df = sample_by_year_sf,
+      year_var = "jaar",
+      bh_doel = "soortenbescherming (SB)",
+      var_col = "area_prop_bo_sb"
+    ),
     pattern = map(sample_by_year_sf),
     iteration = "list"
   ),
   tar_target(
     name = add_other_bo_var,
     command = add_bo_by_year(
-        punten_df = add_bo_var,
-        year_var = "jaar",
-        bh_doel = c("erosiebestrijding (ER)", "perceelsrandenbeheer (PR)")
-      ) %>%
-      rename("area_prop_bo_overig" = "area_prop_sb",
-             "area_prop_sb" = "area_prop_sb_temp"),
+      punten_df = add_bo_var,
+      year_var = "jaar",
+      bh_doel = c("erosiebestrijding (ER)", "perceelsrandenbeheer (PR)"),
+      var_col = "area_prop_bo_overig"
+    ),
     pattern = map(add_bo_var),
     iteration = "list"
   )
