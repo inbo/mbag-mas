@@ -1,19 +1,27 @@
 # Proportie beheerovereenkomst per telcirkel per jaar
 add_bo_by_year <- function(punten_df, year_var = "jaar", ...) {
+  require("dplyr")
+  require("sf")
+  require("lubridate")
+
   # Read in bo layer and calculate start and stop year
   ## Get right year for loading data
   year <- pull(distinct(st_drop_geometry(punten_df[year_var])))
   if (year >= 2018 && year <= 2023) {
     bo_file_year <- 2022
   } else if (year >= 2024) {
-    punten_df$area_prop_sb <- NA
-    return(punten_df)
+    out_df_year <- punten_df %>%
+      select(-"area_prop_sb") %>%
+      mutate(area_prop_sb = NA)
+
+    return(out_df_year)
   } else {
     stop("This function only works for years later than 2018.")
   }
   ## Read data
   path_bo <- path_to_bo(jaar = bo_file_year)
-  bo_layer <- read_bo(path = path_bo)
+  bo_layer <- sf::st_read(dsn = path_bo, quiet = TRUE) %>%
+    sf::st_transform(crs = 31370)
 
   # Calculate start and stop year variables
   bo_layer_filtered <- bo_layer %>%
