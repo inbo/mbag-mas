@@ -1,3 +1,4 @@
+# nolint start
 path_to_bo <- function(jaar = 2021) {
   file_name <- paste("BO", jaar, "VLM_EXTERN.shp", sep = "_")
   file.path(mbag_dir, "data", "bo_vlm", file_name)
@@ -248,3 +249,4 @@ add_stratum_sbp <- function(punten_sf, sbp) {
 
   return(telpunten)
 }
+# nolint end

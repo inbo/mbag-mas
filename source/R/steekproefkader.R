@@ -1,3 +1,4 @@
+# nolint start
 st_bbox.SpatRaster <- function(obj, ...) {
   bb <- as.vector(terra::ext(obj))[c(1, 3, 2, 4)]
   names(bb) <- c("xmin", "ymin", "xmax", "ymax")
@@ -591,3 +592,4 @@ filter_zichtbaarheid <- function(punten_sf, min_cvvi) {
   punten_sf %>%
     filter(cvvi >= min_cvvi)
 }
+# nolint end

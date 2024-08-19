@@ -1,3 +1,4 @@
+# nolint start
 #' Convert a single point location to a grid cell polygon
 #'
 #' @param xy an object of class POINT
@@ -112,3 +113,4 @@ landusemetrics_grid_cell <- function(
     return(int)
   }
 }
+# nolint end
