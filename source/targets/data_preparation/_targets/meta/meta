@@ -1,5 +1,20 @@
 name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
-.Random.seed|object|1799808edc4973c2|||||||||||||||
+.Random.seed|object|89ff1428799674e2|||||||||||||||
+add_bo_by_year|function|6e25854de88b38d8|||||||||||||||
+add_bo_inertia|function|85383569dfac9577|||||||||||||||
+add_bo_to_frame|function|7b556e4fceefb146|||||||||||||||
+add_bo_var|pattern|f0231957d04a5cbf|dd089441d9016774||-743304819||||104616|qs|local|list||add_bo_var_d808ac9a244a166a*add_bo_var_b2dffba16f6354b4*add_bo_var_3196b5bfd29b0bb5*add_bo_var_adf2d0e78d447b48*add_bo_var_c541c8da79215c7d*add_bo_var_59ca943ade1f4488*add_bo_var_6de92f2eb887953f|9.09||
+add_bo_var_1d26f8fb0ab1342c|branch||9440efeb91076dd3|114abf56f9739895|-2007784260||t19954.4865330727s||0|qs|local|list|add_bo_var||1.28||no applicable method for st_buffer applied to an object of class ctbl_df, tbl, data.frame
+add_bo_var_229598629194c017|branch||57c03c3c4c80cff2|114abf56f9739895|-1633808047||t19954.4872399198s||0|qs|local|list|add_bo_var||1.25||no applicable method for st_buffer applied to an object of class ctbl_df, tbl, data.frame
+add_bo_var_3196b5bfd29b0bb5|branch|3958265f6d6b9e98|dd089441d9016774|a805501f2106120a|731124372||t19954.5034632812s|cf5c648d8784cea1|11815|qs|local|list|add_bo_var||1.39|attribute variables are assumed to be spatially constant throughout all geometries|
+add_bo_var_59ca943ade1f4488|branch|31a47d59f1963599|dd089441d9016774|261d8dbb5064c599|-1001889270||t19954.5035183007s|b4bf859d23a0e58e|17803|qs|local|list|add_bo_var||1.42|attribute variables are assumed to be spatially constant throughout all geometries|
+add_bo_var_6de92f2eb887953f|branch|9d357aa489853232|dd089441d9016774|d01997a93a49ec02|-1428895569||t19954.5035198749s|4e7f939e017b94c7|29238|qs|local|list|add_bo_var||0||
+add_bo_var_adf2d0e78d447b48|branch|090134cfbf688395|dd089441d9016774|161500901af04e05|-544393452||t19954.503481667s|b8119fe413b7534a|11895|qs|local|list|add_bo_var||1.46|attribute variables are assumed to be spatially constant throughout all geometries|
+add_bo_var_b2dffba16f6354b4|branch|0709310fe293b860|dd089441d9016774|6c3066e557b59aa2|987035020||t19954.5034458273s|f45f4d8be4f1b521|11346|qs|local|list|add_bo_var||1.47|attribute variables are assumed to be spatially constant throughout all geometries|
+add_bo_var_c541c8da79215c7d|branch|4ecc1fcfb29ec73e|dd089441d9016774|23bfad905ac0c69b|-1313435262||t19954.503500189s|76a262e1b233656a|11954|qs|local|list|add_bo_var||1.47|attribute variables are assumed to be spatially constant throughout all geometries|
+add_bo_var_d808ac9a244a166a|branch|71e7b1421d18c199|dd089441d9016774|496e75ccb0c7094c|100208301||t19954.5034275138s|dbce489e953ecd5d|10565|qs|local|list|add_bo_var||1.88|attribute variables are assumed to be spatially constant throughout all geometries. Missing values are always removed in SQL aggregation functions.Use na.rm  TRUE to silence this warningThis warning is displayed once every 8 hours.|
+add_bo2021_to_frame|function|2debb3f8dba236c9|||||||||||||||
+add_openheid_landschap_to_frame|function|aaabca7c68417579|||||||||||||||
 add_predator_variable|pattern|553f49f78101fed6|7f80da6da30be403||-1919973047||||2253022|qs|local|list||add_predator_variable_80e9cadf25bbe03f*add_predator_variable_c431a571df92f158*add_predator_variable_83ebbeb707d6d411|0.22||
 add_predator_variable_39059f3c53f47f4b|branch|6c937055c3fcd832|7f80da6da30be403|dbbd857a814196a3|-1128578533||t19942.3123521215s|45dd9cbb207ba273|2658580|qs|local|list|add_predator_variable||0.14||
 add_predator_variable_80e9cadf25bbe03f|branch|aaeeea8f94e4a92e|7f80da6da30be403|eee678807fdb623b|1371437452||t19947.475417112s|5a88d339892fd5e8|1041246|qs|local|list|add_predator_variable||0.11||
@@ -9,9 +24,18 @@ add_predator_variable_b9b757b78669abac|branch|f9b20c862d7486df|7f80da6da30be403|
 add_predator_variable_c431a571df92f158|branch|e0566e9b02b019f5|7f80da6da30be403|2a135a4a3dfcc131|1294033802||t19947.4754203431s|944704c2615cadf8|1211776|qs|local|list|add_predator_variable||0.11||
 add_predator_variable_ef880e1ebb8ae143|branch|c01b1ad77ba9422a|7f80da6da30be403|2739bb81858be96c|473876847||t19940.6079837304s|2c188c0e9629b764|1222029|qs|local|list|add_predator_variable||0.11||
 add_predator_variables|function|f07989cb34e7b00f|||||||||||||||
+add_sbp_per_regio|function|0c403f3e5d444bb0|||||||||||||||
+add_stratum_sbp|function|c50f4e75ce1c7aff|||||||||||||||
 add_taxon_names|stem|5024b5aaf05895da|6c646e28b607bbad|90d283732f740d7c|-254712532||t19947.5620961601s|794791cd06b67cea|7035593|qs|local|vector|||0.32||
 adjust_subspecies_names_nl|function|d279a97a61383673|||||||||||||||
 amersfoort_to_lambert72|function|5817bd0ef18d2c03|||||||||||||||
+buffer_layers_to_perimeter|function|e412566b21bb4a33|||||||||||||||
+calc_lbg|function|dd7fb160350d8b29|||||||||||||||
+calc_lbg_by_year|function|4e3791d7854da41f|||||||||||||||
+calc_perceelsgrootte_by_year|function|b1b6a86cbd0ed984|||||||||||||||
+calc_vzml|function|10906e08ebc7023f|||||||||||||||
+calc_vzml_by_year|function|d5bfd3b16f16050c|||||||||||||||
+calc_weights|function|f95ace192cfa04cd|||||||||||||||
 calculate_obs_dist|function|6c6948072107f556|||||||||||||||
 calculate_obs_distance|pattern|b38e56d94d3ef8ef|8166dbc4eaa010e0||-1763629018||||2253315|qs|local|list||calculate_obs_distance_90eee3c8ee3a0f40*calculate_obs_distance_ed3856baef182026*calculate_obs_distance_3603ee19e10afe80|0.37||
 calculate_obs_distance_3603ee19e10afe80|branch|13c7052ad7d3a6a5|8166dbc4eaa010e0|669cfeb9329d04a8|1161144758||t19942.4962403765s|a3185ecb789c83d4|2641901|qs|local|list|calculate_obs_distance||0.24||
@@ -27,12 +51,14 @@ crs_pipeline_c93545c00be99fc4|branch|0982d0229eac4346|aa791bdc29595bf7|a6ed5483b
 darwincore_mapping|stem|30af5cd18f2493bf|005342f1e023cb02|3a9b9a26897374e2|15036475||t19948.35170326s|7e5d51f2d66b4f34|4614316|qs|local|vector|||1.72||
 dwc_mapping|function|401b7d7e37abd6e5|||||||||||||||
 dwc_mapping_final|stem|f4ec5355d825bc7c|a292e78454a4d61c|5813db4296503da0|-967949729||t19948.3517283978s|ce708a3ef680a0ee|5196828|qs|local|vector|||0.51||
+expand_sample_by_year|function|61432291f6a1ba3d|||||||||||||||
 finalise_dwc_df|function|497d6bc36139183a|||||||||||||||
 find_df_name|function|e7dcaeb8e01e6ac9|||||||||||||||
 get_accepted_name_usage|function|10bf98981ba9a5d2|||||||||||||||
 get_df_structure|function|9e253fca42c8f4e8|||||||||||||||
 join_with_sample|function|126ebbae565b0746|||||||||||||||
 kraaiachtigen_f|function|09aaf12ec67028ec|||||||||||||||
+landusemetrics_grid_cell|function|d9c2d80ac3bf8484|||||||||||||||
 manual_taxon_mapping|stem|a76cc54253e83f27|674584105275533e|73f7dcf8c783fccf|-957817040||t19948.3102857154s|8cf00ebe6f99be6d|8224|qs|local|vector|||0.48||
 map_taxa_from_vernacular|function|69de112c9c2fece9|||||||||||||||
 map_taxa_manual|function|6b08c7b89dbd28e7|||||||||||||||
@@ -48,15 +74,26 @@ mas_counts_sovon_files_9614b5c06a1d9488|branch|e2ce90957c9dbd3b|d2fc191cb33d8683
 mas_counts_sovon_files_efd70fac45d19b0d|branch|cf87eeaff24d23bb|d2fc191cb33d8683|2c530c1562a7fbd1|570686772|C:/R/git_repositories/mbag-mas/source/targets/data_preparation/data/2018_2022/20240424_qgis_export_sovon_wfs_2018_2022.geojson|t19837.3739489539s|58109b1a3ec8817b|32800565|file|local|vector|mas_counts_sovon_files||0||
 mas_counts_sovon_files_files|stem|cb946689d55a2995|5c0c70d7920d11b4|2c530c1562a7fbd1|1663214924||t19940.6205023349s|0ce3c220c282aef6|192|rds|local|list||mas_counts_sovon_files_files_6b553758911bce46*mas_counts_sovon_files_files_2572d1be005a0c97*mas_counts_sovon_files_files_9db9b91e29d40fdc|0||
 mas_data_clean|stem|c21e2d88b0cf6332|3fc9eef94244aa1d|391bd8a0cc9c5fb8|-1942276229||t19947.4754346975s|990dc4ae7559fa6a|4842446|qs|local|vector|||0.1||
+mas_data_clean_by_year|stem|06829de864b7a883|c5cf36aaa473e389|4d695481cca42e5f|-259983735||t19954.4865175463s|b069d582f95f0993|38847|qs|local|group||mas_data_clean_by_year_ec5228190b53e207*mas_data_clean_by_year_43832d38f4a73de2*mas_data_clean_by_year_94b84dd91d0ed26e*mas_data_clean_by_year_189bf0fc491cb82a*mas_data_clean_by_year_6ab23e43f5f02632*mas_data_clean_by_year_985fc18a6d70fab4*mas_data_clean_by_year_7549d6124a6a7bf8|0.04||
 mas_data_full|stem|581d7d8fb31c4b6b|1c0319408b035a8c|9ffdb4f746566060|693198966||t19947.4754286023s|92f8e927b9f3ac70|4849414|qs|local|vector|||0.28||
 match_vernacular_name|function|d92ab0afaa607075|||||||||||||||
 mbag_dir|object|6f7a62ceac79d40c|||||||||||||||
 modified_mapping|function|bba5fba298313ae9|||||||||||||||
+path_to_bo|function|6ec2e4f6c4e1f8d9|||||||||||||||
+path_to_bo2021|function|81df7701b797b2f3|||||||||||||||
+path_to_lbg|function|10868ec37886a58e|||||||||||||||
+path_to_openheid_landschap|function|408528b3577c6c74|||||||||||||||
 path_to_samples|function|13303b230b24fb97|||||||||||||||
+path_to_sbp_akkervogels|function|2c362d8682ec9d84|||||||||||||||
+path_to_vzml|function|acfa4347293f8fdd|||||||||||||||
 paths_to_counts_sovon|function|a381ae222a6f3fde|||||||||||||||
+point_to_gridcell|function|496dc4aa4768ceaf|||||||||||||||
 predatoren_f|function|e0a123d0ad124cae|||||||||||||||
 prepare_taxon_mapping|stem|dc5284e0ca21e963|1ffe37ce80f00a6b|7ef74d7b9d4d8b88|-1886868896||t19948.3517106907s|7c2d602e26bcf3f8|1915|qs|local|group||prepare_taxon_mapping_6e9c9121b5014e94*prepare_taxon_mapping_d7c4add88375a88f*prepare_taxon_mapping_bf5dd0619c374afb*prepare_taxon_mapping_1dc7ca5149a319a8|0.02||
 process_double_counted_data|function|54bad175e5754ed4|||||||||||||||
+read_bo|function|a8ae9285aaa3a458|||||||||||||||
+read_sbp_akkervogels|function|796241aa3dd38bb7|||||||||||||||
+read_sbp_others|function|3fb7b319708fc511|||||||||||||||
 remove_columns|function|55e5849d4f251e49|||||||||||||||
 remove_double_counts|pattern|453bc2aa77559066|b2201c6fccf902b4||-48525810||||2223839|qs|local|list||remove_double_counts_cb0a03f97a3c6452*remove_double_counts_f656ca7c8a8eeb02*remove_double_counts_71fab235372c4037|0.44||
 remove_double_counts_102e9280bff012e1|branch|7bb61116bc369d64|b2201c6fccf902b4|7434c64cc290ddf2|-1812123624||t19940.6079538963s|8ac7492402bd138c|1035049|qs|local|list|remove_double_counts||0.26||
@@ -76,6 +113,15 @@ remove_subspecies_names_cef7959abae44037|branch|434c98c998d74548|feb37789019a587
 remove_subspecies_names_ecfac9605d5540c7|branch|e85a5a11c2df8587|feb37789019a5873|7bc56bfea64e4219|93923103||t19947.4754105368s|c3e496d1a932ff7a|1027737|qs|local|list|remove_subspecies_names||0.08||
 roofvogels_f|function|a388160a22cc4fb0|||||||||||||||
 sample|stem|0cb9b2d5f34dbfc1|fe53bc30011f8a2f|aa6fc89dd6302939|887991846||t19942.3123015771s|5f35e6901f025e3b|29858|qs|local|vector|||0.09||
+sample_by_year|stem|06829de864b7a883|c5cf36aaa473e389|4d695481cca42e5f|1673748097||t19954.4872226071s|b069d582f95f0993|38847|qs|local|group||sample_by_year_ec5228190b53e207*sample_by_year_43832d38f4a73de2*sample_by_year_94b84dd91d0ed26e*sample_by_year_189bf0fc491cb82a*sample_by_year_6ab23e43f5f02632*sample_by_year_985fc18a6d70fab4*sample_by_year_7549d6124a6a7bf8|0.02||
+sample_by_year_sf|pattern|1b9b4f4feaa5b803|f1dd91a973f99f69||2143995969||||96391|qs|local|list||sample_by_year_sf_229598629194c017*sample_by_year_sf_d8add6c1378086ef*sample_by_year_sf_3536f3bbd0fdef00*sample_by_year_sf_698dafe89013ce6c*sample_by_year_sf_3f57c0d607e7c7f8*sample_by_year_sf_803bd7e8f6bfcc5e*sample_by_year_sf_b46639a41e1395e4|0||
+sample_by_year_sf_229598629194c017|branch|62ff57fa280c80d6|f1dd91a973f99f69|2c530c1562a7fbd1|-1080714478||t19954.4894290444s|641c435ee220b180|9867|qs|local|list|sample_by_year_sf||0||
+sample_by_year_sf_3536f3bbd0fdef00|branch|3409e86bfca05c75|f1dd91a973f99f69|2c530c1562a7fbd1|4961455||t19954.4894308036s|af9f8061cf632166|9868|qs|local|list|sample_by_year_sf||0||
+sample_by_year_sf_3f57c0d607e7c7f8|branch|e68518537f368d0c|f1dd91a973f99f69|2c530c1562a7fbd1|-1775471508||t19954.4894324703s|af9f8061cf632166|9868|qs|local|list|sample_by_year_sf||0||
+sample_by_year_sf_698dafe89013ce6c|branch|e871c0a9adb6840c|f1dd91a973f99f69|2c530c1562a7fbd1|-420234739||t19954.4894316717s|af9f8061cf632166|9868|qs|local|list|sample_by_year_sf||0||
+sample_by_year_sf_803bd7e8f6bfcc5e|branch|8b0692fceca07c43|f1dd91a973f99f69|2c530c1562a7fbd1|-1945835849||t19954.4894333268s|158c9a895473c8e6|15877|qs|local|list|sample_by_year_sf||0||
+sample_by_year_sf_b46639a41e1395e4|branch|843f498a3312ca81|f1dd91a973f99f69|2c530c1562a7fbd1|-1403330660||t19954.4894342064s|46a1286ba3f3903e|31175|qs|local|list|sample_by_year_sf||0||
+sample_by_year_sf_d8add6c1378086ef|branch|05c2d54502e858d0|f1dd91a973f99f69|2c530c1562a7fbd1|-619993925||t19954.4894299588s|af9f8061cf632166|9868|qs|local|list|sample_by_year_sf||0||
 sample_file|stem|2d979dc6886d84ac|ee733c16547c9136|43da0623493b65fb|1141903364|C:/R/git_repositories/mbag-mas/data/steekproefkaders/steekproef_avimap_mbag_mas.csv|t19942.3118489557s|c428f732e1f75663|119494|file|local|vector|||0.2||
 select_sampled_points|pattern|3ad46fc3f5814e01|035f6e45f6e9e077||-107447084||||4836101|qs|local|list||select_sampled_points_599f227375be15be*select_sampled_points_55034b8ef5ffd3e2*select_sampled_points_575bc4afbad87cce|0.55||
 select_sampled_points_55034b8ef5ffd3e2|branch|c970874a3248a750|035f6e45f6e9e077|9e034f31873c4a7a|855123073||t19947.4753556341s|f37fc5457e2f5387|1187211|qs|local|list|select_sampled_points||0.12||
@@ -106,6 +152,7 @@ select_within_radius_e08a70ea66d007af|branch|a0c968d5c3180c1b|71c13a37275004ba|0
 select_within_radius_ed3856baef182026|branch|fbaec16ee7f89d94|62e7971a787bc8dd|84047db777de1ae6|414201679||t19940.6079335049s|eccc4314294a49f9|1205379|qs|local|list|select_within_radius||0.19||
 select_within_time_periods|function|cef082360b8f88a8|||||||||||||||
 spatial_mapping|function|7216f4b58232413c|||||||||||||||
+splits_polys|function|06e67a564f2eb8a8|||||||||||||||
 static_mapping|function|cd4c9fe877ce68f8|||||||||||||||
 target_dir|object|23ff0c4e4e5bca4a|||||||||||||||
 taxon_mapping|pattern|0cf8645fb3cff3e6|0637e744a2b42f92||-271920387||||9524|qs|local|vector||taxon_mapping_1c5e286d9cbbf6bd*taxon_mapping_817751b1629659d0*taxon_mapping_9c801f5745cf88c0*taxon_mapping_558a34440b4772b8|63.31||
@@ -114,3 +161,4 @@ taxon_mapping_558a34440b4772b8|branch|06d7dba5539deec9|0637e744a2b42f92|42e46be6
 taxon_mapping_817751b1629659d0|branch|a9685ea2ca6e7ece|0637e744a2b42f92|42e46be6ab4daf5f|152647033||t19948.3019285336s|010bea2257575d97|2422|qs|local|vector|taxon_mapping||14.25||
 taxon_mapping_9c801f5745cf88c0|branch|1e5a2c0870b5c626|0637e744a2b42f92|42e46be6ab4daf5f|-8675991||t19948.3021185439s|d23e0b4640361de0|2490|qs|local|vector|taxon_mapping||16.28||
 unchanged_mapping|function|11f61e08a4a19268|||||||||||||||
+visualize_weights|function|cd74cc72b2455896|||||||||||||||

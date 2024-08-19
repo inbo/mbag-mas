@@ -39,6 +39,10 @@ source(file.path(mbag_dir, "source", "R",
 source(file.path(mbag_dir, "source", "R",
                  "taxon_mapping.R"))
 source(file.path(mbag_dir, "source", "R",
+                 "geocomputations.R"))
+source(file.path(mbag_dir, "source", "R",
+                 "berekening_hulpvariabelen.R"))
+source(file.path(mbag_dir, "source", "R",
                  "berekening_verklarende_variabelen.R"))
 
 # Target list
@@ -223,8 +227,32 @@ list(
   ),
   # 5. Add explanatory variables
   tarchetypes::tar_group_by(
-    name = mas_data_clean_by_year,
-    command = mas_data_clean,
-    "jaar"
+    name = sample_by_year,
+    command = expand_sample_by_year(
+      sample_df = sample,
+      data_df = mas_data_clean,
+      year_var = "jaar"
+    ),
+    jaar
+  ),
+  tar_target(
+    name = sample_by_year_sf,
+    command = sf::st_as_sf(
+      x = sample_by_year,
+      coords = c("x_coord", "y_coord"),
+      crs = 31370
+    ),
+    pattern = map(sample_by_year),
+    iteration = "list"
+  ),
+  tar_target(
+    name = add_bo_var,
+    command = add_bo_by_year(
+      punten_df = sample_by_year_sf,
+      year_var = "jaar",
+      bh_doel = "soortenbescherming (SB)"
+    ),
+    pattern = map(sample_by_year_sf),
+    iteration = "list"
   )
 )
