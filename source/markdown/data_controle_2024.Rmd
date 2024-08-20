@@ -593,6 +593,42 @@ outlying_distances %>%
 
 In sommige gevallen wel.
 Het gaat telkens om oude punten.
+Zijn het alle Vl punten?
+
+```{r}
+vl_points_outlying <- outlying_distances %>%
+  filter(grepl("^VL", plotnaam)) %>%
+  distinct(plotnaam) %>%
+  pull(plotnaam)
+
+all_vl_points <- calculate_obs_distance %>%
+  st_drop_geometry() %>%
+  filter(grepl("^VL", plotnaam)) %>%
+  distinct(plotnaam) %>%
+  pull(plotnaam)
+
+identical(sort(vl_points_outlying), sort(all_vl_points))
+```
+
+Zijn het alle VL punten in de Oostelijke leemstreek?
+
+```{r}
+vl_points_outlying <- outlying_distances %>%
+  filter(grepl("^VL", plotnaam)) %>%
+  distinct(plotnaam) %>%
+  pull(plotnaam)
+
+all_vl_points <- calculate_obs_distance %>%
+  st_drop_geometry() %>%
+  filter(grepl("^VL", plotnaam),
+         regio == "Oostelijke leemstreek") %>%
+  distinct(plotnaam) %>%
+  pull(plotnaam)
+
+identical(sort(vl_points_outlying), sort(all_vl_points))
+```
+
+We visualiseren de punten.
 
 ```{r}
 # Data preparation
@@ -663,7 +699,77 @@ leaflet_map <- leaflet_map %>%
 leaflet_map
 ```
 
-> Locaties niet juist??
+We kijken naar telronde 1 in 2024.
+
+```{r}
+outlying_plots <- outlying_distances %>%
+  filter(grepl("^VL", plotnaam)) %>%
+  distinct(plotnaam) %>%
+  pull(plotnaam)
+
+# Test two locations
+observations_test1 <- select_time_periods %>%
+  filter(plotnaam %in% outlying_plots,
+         jaar == 2024,
+         periode_in_jaar == "R1")
+
+observations_test2 <- calculate_obs_distance %>%
+  filter(plotnaam %in% outlying_plots,
+         jaar == 2024,
+         periode_in_jaar == "R1")
+
+# Calculate buffered observations
+buffered_observations1 <- observations_test1 %>%
+  st_buffer(observations_test1$distance2plot)
+
+buffered_observations2 <- observations_test2 %>%
+  st_buffer(observations_test2$distance2plot)
+
+# Get problematic point locations
+plots_test <- observations_test2 %>%
+  st_drop_geometry() %>%
+  distinct(regio, plotnaam, jaar, periode_in_jaar, x_coord, y_coord) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370)
+
+# Get problematic location circles
+circles_test <- plots_test %>%
+  st_buffer(300)
+```
+
+Met de herberekende afstanden zien we dat de buffers rond de waarnemingen mooi in het telpunt samenkomen.
+
+```{r}
+# Visualise normal case
+mapview(observations_test2, col.regions = "red", legend = FALSE) +
+  mapview(buffered_observations2,
+          alpha.regions = 0, color = "black", legend = FALSE) +
+  mapview(plots_test,
+          col.regions = "black", legend = FALSE) +
+  mapview(circles_test,
+          legend = FALSE)
+```
+
+In welke punten komen de originele afstanden samen?
+
+```{r}
+# Visualise normal case
+mapview(observations_test2, col.regions = "red", legend = FALSE) +
+  mapview(buffered_observations1,
+          alpha.regions = 0, color = "black", legend = FALSE) +
+  mapview(plots_test,
+          col.regions = "black", legend = FALSE) +
+  mapview(circles_test,
+          legend = FALSE)
+```
+
+Het telpunt in Avimap lijkt ergens anders te liggen.
+Systematisch een dikke 100 m naar het ZWW.
+Voor het meest noordelijke punt naar het WWN.
+
+De punten in Avimap liggen inderdaad op de kruisingen van de buffers.
+Er is dus iets mis met de coördinaten in de data.
+
+> Wat is er mis?
 
 ## Selecteer data binnen telcirkel radius (select_within_radius)
 
