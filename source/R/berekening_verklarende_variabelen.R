@@ -101,7 +101,7 @@ calc_crop_prop_by_year <- function(punten_df, crop_layer, group_by_col) {
     grid_cell = punten_df %>%
       st_buffer(dist = 300),
     layer = crop_layer  %>%
-      group_by(geometry) %>%
+      group_by("geometry") %>%
       mutate(n = n()) %>%
       ungroup() %>%
       mutate(weight = 1 / n),
@@ -147,15 +147,15 @@ add_sbp_per_regio <- function(punten_sf, perimeters) {
     i <- i + 1
 
     # Filter by region
-    punten_df_regio <- punten_sf %>% filter(regio == r)
+    punten_df_regio <- punten_sf %>% filter(.data$regio == r)
     sbp_akkervogels_regio <- read_sbp_akkervogels(
       path = path_to_sbp_akkervogels(),
-      gebied = perimeters %>% filter(Naam == r))
+      gebied = perimeters %>% filter(.data$Naam == r))
 
     telpunten_2018_2022_regio <- add_stratum_sbp(
       punten_sf = punten_df_regio,
       sbp       = sbp_akkervogels_regio) %>%
-      mutate(sbp = ifelse(is_sbp == TRUE, "binnen", "buiten"))
+      mutate(sbp = ifelse(.data$is_sbp == TRUE, "binnen", "buiten"))
 
     out_list[[i]] <- telpunten_2018_2022_regio
   }
@@ -174,9 +174,10 @@ calc_perceelsgrootte_by_year <- function(punten_df) {
     number_string <- sub(".*([0-9]{2})$", "\\1", year)
 
     # Filter by year
-    punten_df_year <- punten_df %>% filter(jaar == year)
+    punten_df_year <- punten_df %>% filter(.data$jaar == year)
     lbg_binding <- st_read(file.path("data", "landbouwgebruikspercelen",
-                                     "Shapefile", paste0("Lbgbrprc", number_string,
+                                     "Shapefile", paste0("Lbgbrprc",
+                                                         number_string,
                                                          ".shp"))) %>%
       st_transform(crs = 31370)
 
