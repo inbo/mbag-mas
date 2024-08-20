@@ -10,14 +10,14 @@ add_bo_by_year <- function(punten_df, year_var = "jaar", var_col, ...) {
   year <- pull(distinct(st_drop_geometry(punten_df[year_var])))
   if (year >= 2018 && year <= 2023) {
     bo_file_year <- 2022
-  } else if (year >= 2024) {
+  } else {
+    warning("No calculation of bo prop. taken for years outside 2018-2023.")
     out_df_year <- punten_df %>%
       mutate(!!var_col := NA)
 
     return(out_df_year)
-  } else {
-    stop("This function only works for years later than 2018.")
   }
+
   ## Read data
   path_bo <- path_to_bo(jaar = bo_file_year)
   bo_layer <- sf::st_read(dsn = path_bo, quiet = TRUE) %>%
@@ -101,7 +101,7 @@ calc_crop_prop_by_year <- function(punten_df, crop_layer, group_by_col) {
     grid_cell = punten_df %>%
       st_buffer(dist = 300),
     layer = crop_layer  %>%
-      group_by("geometry") %>%
+      group_by(.data$geometry) %>%
       mutate(n = n()) %>%
       ungroup() %>%
       mutate(weight = 1 / n),
