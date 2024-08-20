@@ -294,21 +294,11 @@ list(
   ),
   tar_target(
     name = crop_layers_by_year,
-    command = calc_crop_layers_by_year(
+    command = read_crop_layers_by_year(
       path_to_crop_layer = crop_layer_files,
       cut_bo = TRUE
     ),
     pattern = map(crop_layer_files),
-  ),
-  # Calculate crop proportions
-  tar_target(
-    name = crop_groups,
-    command = calc_vzml_by_year(
-      punten_df = add_other_bo_var,
-      group_by_col = "GWSNAM_H",
-      clip_bo = NULL
-    ),
-    pattern = map(add_other_bo_var),
     iteration = "list"
   )
 )

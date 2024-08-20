@@ -44,18 +44,17 @@ read_crop_layers_by_year <- function(
   require("dplyr")
   require("sf")
   require("qgisprocess")
-
   # Read crop layer
   crop_layer <- sf::st_read(path_to_crop_layer, quiet = TRUE)
   sf::st_set_geometry(crop_layer, "geometry")
 
-  if (cut_bo) {
-    # Read in bo layer and calculate start and stop year
-    ## Get right year for loading data
-    year <- unique(as.numeric(
-      stringr::str_extract_all(path_to_crop_layer, "[0-9]+")[[1]]
-      ))
+  # Get year
+  year <- unique(as.numeric(
+    stringr::str_extract_all(path_to_crop_layer, "[0-9]+")[[1]]
+  ))
+  crop_layer$jaar <- year
 
+  if (cut_bo) {
     if (year >= 2018 && year <= 2023) {
       bo_file_year <- 2022
 
@@ -71,39 +70,23 @@ read_crop_layers_by_year <- function(
         filter(.data$startjaar <= year & .data$stopjaar >= year)
 
       # Take intersection with crop layer
-      crop_layer %>%
+      crop_layer_intersect <- crop_layer %>%
         qgisprocess::qgis_run_algorithm_p(
           algorithm = "native:difference",
-          OVERLAY = bo_layer_filtered
-        )
+          OVERLAY = bo_layer_filtered,
+          OUTPUT = qgis_tmp_vector()
+        ) %>%
+        qgisprocess::qgis_extract_output("OUTPUT") %>%
+        sf::st_as_sf()
 
-
+      return(crop_layer_intersect)
+    } else {
+      warning("No difference with bo layer taken for years outside 2018-2023.")
+      return(crop_layer)
     }
   } else {
-
+    return(crop_layer)
   }
-}
-
-# Proportie hoofdteelten per telcirkel per jaar
-calc_lbg_by_year <- function(punten_df) {
-  # Loop over years
-  years <- unique(punten_df$jaar)
-  out_list <- vector(mode = "list", length = length(years))
-
-  for (i in seq_along(years)) {
-    year <- years[i]
-
-    # Filter by year
-    punten_df_year <- punten_df %>% filter(.data$jaar == year)
-    lbg_file_year <- path_to_lbg(jaar = year)
-
-    out_df_year <- calc_lbg(path = lbg_file_year,
-                            punten_sf = punten_df_year)
-
-    out_list[[i]] <- out_df_year %>% ungroup() %>% mutate(jaar = year)
-  }
-
-  return(do.call(rbind.data.frame, out_list))
 }
 
 path_to_vzml <- function(jaar) {
@@ -190,6 +173,28 @@ calc_vzml_by_year <- function(punten_df, group_by_col, clip_bo = NULL) {
                              punten_sf = punten_df_year,
                              group_by_col = group_by_col,
                              clip_bo = clip_sf_by_year)
+
+    out_list[[i]] <- out_df_year %>% ungroup() %>% mutate(jaar = year)
+  }
+
+  return(do.call(rbind.data.frame, out_list))
+}
+
+# Proportie hoofdteelten per telcirkel per jaar
+calc_lbg_by_year <- function(punten_df) {
+  # Loop over years
+  years <- unique(punten_df$jaar)
+  out_list <- vector(mode = "list", length = length(years))
+
+  for (i in seq_along(years)) {
+    year <- years[i]
+
+    # Filter by year
+    punten_df_year <- punten_df %>% filter(.data$jaar == year)
+    lbg_file_year <- path_to_lbg(jaar = year)
+
+    out_df_year <- calc_lbg(path = lbg_file_year,
+                            punten_sf = punten_df_year)
 
     out_list[[i]] <- out_df_year %>% ungroup() %>% mutate(jaar = year)
   }
