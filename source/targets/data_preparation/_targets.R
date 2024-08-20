@@ -305,11 +305,11 @@ list(
   tar_target(
     name = add_crop_prop_var,
     command = calc_crop_prop_by_year(
-      punten_df = add_other_bo_var,
+      punten_df = sample_by_year,
       crop_layer = crop_layers_by_year,
       group_by_col = "GWSNAM_H"
     ),
-    pattern = map(add_other_bo_var, crop_layers_by_year),
+    pattern = map(sample_by_year, crop_layers_by_year),
     iteration = "list"
   )
 )
