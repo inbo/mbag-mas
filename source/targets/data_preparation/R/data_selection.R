@@ -34,22 +34,10 @@ expand_sample_by_year <- function(sample_df, data_df, year_var) {
   require("dplyr")
   require("rlang")
   year_range <- sort(pull(distinct(st_drop_geometry(data_df[year_var]))))
+  year_range <- union(year_range -1, year_range)
 
   out_df <- sample_df %>%
-    tidyr::expand_grid(jaar = year_range) %>%
-    mutate(keep = case_when(
-      .data$regio == "Oostelijke leemstreek" & .data$jaar >= 2018 ~ TRUE,
-      (.data$regio == "Westelijke leemstreek" |
-         .data$regio == "Zandleemstreek") & .data$jaar >= 2023 ~ TRUE,
-      (.data$regio == "Polders" |
-         .data$regio == "Kempen" |
-         .data$regio == "Zandstreek" |
-         .data$regio == "Weidestreek") & .data$jaar >= 2024 ~ TRUE,
-      .default = FALSE
-    )
-    ) %>%
-    filter(.data$keep) %>%
-    select(-"keep")
+    tidyr::expand_grid(jaar = year_range)
 
   return(out_df)
 }
