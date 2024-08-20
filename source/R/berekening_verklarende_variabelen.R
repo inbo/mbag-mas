@@ -42,10 +42,13 @@ read_crop_layers_by_year <- function(
     path_to_crop_layer,
     cut_bo = TRUE) {
   require("dplyr")
+  require("lubridate")
   require("sf")
   require("qgisprocess")
+
   # Read crop layer
-  crop_layer <- sf::st_read(path_to_crop_layer, quiet = TRUE)
+  crop_layer <- sf::st_read(path_to_crop_layer, quiet = TRUE) %>%
+    sf::st_transform(crs = 31370)
   if (!"geometry" %in% names(crop_layer)) {
     crop_layer <- crop_layer %>%
       rename("geometry" = "geom")
@@ -78,10 +81,12 @@ read_crop_layers_by_year <- function(
         qgisprocess::qgis_run_algorithm_p(
           algorithm = "native:difference",
           OVERLAY = bo_layer_filtered,
-          OUTPUT = qgis_tmp_vector()
+          OUTPUT = qgisprocess::qgis_tmp_vector()
         ) %>%
         qgisprocess::qgis_extract_output("OUTPUT") %>%
-        sf::st_as_sf()
+        sf::st_as_sf() %>%
+        rename("geometry" = "geom")
+      sf::st_set_geometry(crop_layer_intersect, "geometry")
 
       return(crop_layer_intersect)
     } else {
