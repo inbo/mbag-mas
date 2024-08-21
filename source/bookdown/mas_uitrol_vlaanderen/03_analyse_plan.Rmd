@@ -30,7 +30,6 @@ Daarna volgen verschillende opeenvolgende stappen:
 -   Preparatie van de data
     -   Voor (het beperkt aantal) telpunten die twee maal geteld zijn in eenzelfde telperiode, wordt laatste telling binnen die periode behouden tenzij de eerdere telling door een professionele teller is gebeurt (niet door een vrijwilliger)
     -   Ondersoorten worden geaggregeerd tot op soortniveau (bv. Witsterblauwborst $\rightarrow$ Blauwborst)
-    -   We voegen een variabele toe aan de data met per waarneming of het een predator is of niet. Kraaiachtigen en roofvogels vormen samen de predatoren
 
 Na deze verwerkingsstappen hebben we een schone, opgekuiste dataset.
 
@@ -62,14 +61,18 @@ De publicatie van de data 2018-2024 is gepland voor eind 2024.
 
 ## Verzamelen van verklarende variabelen en datasets samenvoegen {#stap-4}
 
--   (Fig. \@ref(fig:analyse-plan), stappen 4-5)
+-   (Fig. \@ref(fig:analyse-plan), stappen 4-6)
+
 -   \textcolor{red}{to do en zie pilootproject}
 
-## Statistische analyse {#stap-6}
+-   We voegen een variabele toe aan de data met per waarneming of het een predator is of niet.
+    Kraaiachtigen en roofvogels vormen samen de predatoren
 
--   (Fig. \@ref(fig:analyse-plan), stap 6)
+## Statistische analyse {#stap-7}
+
+-   (Fig. \@ref(fig:analyse-plan), stap 7)
 -   \textcolor{red}{to do en zie pilootproject}
 
-```{r analyse-plan, out.width = "80%", fig.cap = "Stramien voor verwerking en analyse van MAS-data. De volgorde en richting waarin de stappen worden uitgevoerd is verduidelijkt met de pijl in de inzet. Zie tekst voor verdere toelichting."}
+```{r analyse-plan, out.width = "80%", fig.cap = "Stramien voor verwerking en analyse van MAS-data. Zie tekst voor verdere toelichting."}
 include_graphics(file.path("media", "analyse_plan", "analyse_plan.png"))
 ```
