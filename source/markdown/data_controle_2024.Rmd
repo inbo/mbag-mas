@@ -763,13 +763,15 @@ mapview(observations_test2, col.regions = "red", legend = FALSE) +
 ```
 
 Het telpunt in Avimap lijkt ergens anders te liggen.
-Systematisch een dikke 100 m naar het ZWW.
-Voor het meest noordelijke punt naar het WWN.
-
 De punten in Avimap liggen inderdaad op de kruisingen van de buffers.
 Er is dus iets mis met de coördinaten in de data.
 
-> Wat is er mis?
+Het gaat blijkbaar om telpunten die vervangen worden door reeds bestaande punten
+De locatie is het nieuwe telpunt, maar de naam is die van het reeds bestaande punt, waardoor er een mismatch heb tussen de locaties van de telpunten in de steekproef en de locaties van de data via Sovon.
+Waarschijnlijk bij eerste tellingen van pilootproject punten meegegeven waarbij de telpuntnaam was aangepast naar het reeds bestaande punt, maar niet de locatie.
+Het vreemde is dat deze mismatch al voorkomt vanaf 2018 (van vóór het pilootproject).
+
+> Namen van telpunten aanpassen in Avimap van al deze punten?
 
 ## Selecteer data binnen telcirkel radius (select_within_radius)
 
