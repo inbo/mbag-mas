@@ -24,12 +24,18 @@
 *.tex
 *.pdf
 *.png
+*.cpg
+*.sbn
+*.sbx
+*.accdb
+*.tif
+*.cpg
 docs
 libs
 renv/library
 temp
+*wfsrequest.txt
 
 # knitr and R markdown default cache directories
 *_cache/
 /cache/
-

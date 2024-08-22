@@ -1,0 +1,1 @@
+This directory is used for storing exported MAS data from the Sovon WFS server.
