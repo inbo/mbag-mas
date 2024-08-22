@@ -35,7 +35,6 @@ libs
 renv/library
 temp
 *wfsrequest.txt
-*data/mas
 
 # knitr and R markdown default cache directories
 *_cache/
