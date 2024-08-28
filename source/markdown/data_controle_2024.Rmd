@@ -38,7 +38,6 @@ conflicted::conflicts_prefer(dplyr::select)
 
 # Source
 source(here::here("source", "R", "tar_read_sf.R"))
-source(here::here("source", "R", "predatoren_f.R"))
 
 # Paths
 mbag_dir <- here::here()
@@ -1361,24 +1360,6 @@ data.frame(
   kable()
 ```
 
-## Voeg predatorvariabele toe (add_predator_variable)
-
-We voegen een variabele toe aan de data met per observatie of het een predator is of niet.
-Ook worden het aantal predatoren per telling berekend.
-Kraaiachtigen en roofvogels vormen samen de predatoren.
-
-Voor kraaiachtigen hebben we:
-
-```{r}
-kraaiachtigen_f()
-```
-
-Voor roofvogels hebben we:
-
-```{r}
-roofvogels_f()
-```
-
 ## Telpunten in finale dataset (mas_data_full)
 
 ```{r}
@@ -1650,7 +1631,6 @@ sort(colnames(darwincore_mapping)[
   - `raw_sbp` --> Overlap steekproefkader zenodo?
   - `raw_openheid_klasse` --> Overlap steekproefkader zenodo?
   - `raw_regio` --> Overlap steekproefkader zenodo?
-  - `raw_predator`, `raw_n_predators_plot`: achteraf berekend, is de soort een predator of niet
   - `raw_periode_in_jaar`: 1 van 4 telperiodes
   - `raw_status_teller`: is de waarnemer een professional of een vrijwilliger?
 - Kan hier nog iets mee gedaan worden?
