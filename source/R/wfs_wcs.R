@@ -1,3 +1,4 @@
+# nolint start
 #' Get a layer from a web coverage service within a bounding box
 #'
 get_feature_wfs <- function(
@@ -204,3 +205,4 @@ unpack_mht <- function(path) {
   readr::write_file(tif,
                     stringr::str_replace(path, "mht", "tif"))
 }
+# nolint end

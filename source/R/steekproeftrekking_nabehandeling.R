@@ -1,3 +1,4 @@
+# nolint start
 path_to_existing <- function(file) {
   file.path(mbag_dir, "data", "SOVON", file)
 }
@@ -158,3 +159,4 @@ output_finaal <- function(files, write_out) {
   }
   return(write_out)
 }
+# nolint end

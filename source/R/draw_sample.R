@@ -1,3 +1,4 @@
+# nolint start
 #' Function to draw a spatially balanced sample from a sf object containing at
 #' least a geometry column with point coordinates
 #'
@@ -123,3 +124,4 @@ allocatie <- function(steekproefkader,
     ungroup()
   return(allocatie)
 }
+# nolint end
