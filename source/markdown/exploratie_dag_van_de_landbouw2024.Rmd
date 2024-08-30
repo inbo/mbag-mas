@@ -66,6 +66,7 @@ We vermoeden dat er significante verschillen kunnen zijn voor soorten als Haas, 
 
 We lezen in de data van Depotter.
 Behalve 1 punt behoren ze niet tot de steekproef voor MBAG MAS, dus we moeten nog verder deze waarnemingen opkuisen.
+We selecteren enkel vogels en Haas.
 
 ```{r}
 # Select data from De Potter
@@ -78,14 +79,17 @@ depot_data <- crs_pipeline %>%
 ```{r}
 # Data selection and preparation steps
 depot_data_final <- select_within_time_periods(counts_df = depot_data) %>%
-  mutate(regio = "Polders") %>%
+  mutate(regio = "Polders",
+         openheid_klasse = "OL", 
+         sbp = "binnen") %>%
   filter(.data$distance2plot <= 300,
-         .data$soortgrp %in% 1:2) %>%
+         (.data$soortgrp == 2 | naam == "Haas")) %>%
   process_double_counted_data() %>%
   adjust_subspecies_names_nl()
 ```
 
 We lezen in de MBAG MAS data van de Polders binnen sbp in open landschap.
+We selecteren enkel vogels en Haas.
 
 ```{r}
 # Select cleaned reference data from the correct stratum
@@ -94,7 +98,8 @@ mas_data_depot <- mas_data_clean %>%
   filter(regio == "Polders",
          sbp == "binnen",
          openheid_klasse == "OL",
-         !plotnaam %in% depot_locations)
+         !plotnaam %in% depot_locations,
+         (.data$soortgrp == 2 | naam == "Haas"))
 ```
 
 De data voor de Polders is sterk uigespreid.
@@ -125,7 +130,17 @@ analysis_data <- bind_rows(mas_data_depot, depot_data_final) %>%
 analysis_data %>%
   st_drop_geometry() %>%
   group_by(depotter) %>%
-  summarise(aantal_telpunten = n_distinct(plotnaam),
-            .groups = "drop" ) %>%
-  kable()
+  mutate(
+    aantal_soorten = n_distinct(naam),
+    aantal_waarnemingen = n_distinct(oid),
+    aantal_telpunten = n_distinct(plotid)
+  ) %>%
+  ungroup() %>%
+  distinct(
+    depotter, regio, openheid_klasse, sbp, aantal_soorten, aantal_waarnemingen, aantal_telpunten
+  )
 ```
+
+# Data exploratie
+
+
