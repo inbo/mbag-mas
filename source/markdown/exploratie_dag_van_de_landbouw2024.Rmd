@@ -348,7 +348,7 @@ p <- relfreq_ratio %>%
   filter(as.numeric(naam) > length(unique(naam)) - 15) %>%
   ggplot() +
   geom_vline(
-    xintercept = 0,
+    xintercept = 1,
     colour = "lightgrey",
     linetype = "dashed",
     linewidth = 0.7
