@@ -31,6 +31,9 @@ library(sf)
 library(mapview)
 library(targets)
 
+library(INBOtheme)
+theme_set(theme_inbo(transparent = TRUE))
+
 # Conflicts
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::select)
@@ -40,8 +43,14 @@ mbag_dir <- here::here()
 target_dir <- here::here("source", "targets", "data_preparation")
 targets_store <- here::here("source", "targets", "data_preparation", "_targets")
 
+media_folder <- here::here("media", "exploratie_gebied")
+dir.create(media_folder, showWarnings = FALSE)
+
+devices <- c("pdf", "png")
+
 # Source
 source(here::here("source", "R", "tar_read_sf.R"))
+source(here::here("source", "R", "save_figure.R"))
 lapply(list.files(file.path(target_dir, "R"), full.names = TRUE), source)
 ```
 
@@ -64,7 +73,7 @@ We vermoeden dat er significante verschillen kunnen zijn voor soorten als Haas, 
 
 # Data inlezen
 
-We lezen in de data van Depotter.
+We lezen in de data van gebied.
 Behalve 1 punt behoren ze niet tot de steekproef voor MBAG MAS, dus we moeten nog verder deze waarnemingen opkuisen.
 We selecteren enkel vogels en Haas.
 
@@ -123,13 +132,14 @@ We voegen de data samen.
 
 ```{r}
 analysis_data <- bind_rows(mas_data_depot, depot_data_final) %>%
-  mutate(depotter = plotnaam %in% depot_locations)
+  mutate(gebied = ifelse(plotnaam %in% depot_locations,
+                         "De Potter", "Referentie"))
 ```
 
 ```{r}
 analysis_data %>%
   st_drop_geometry() %>%
-  group_by(depotter) %>%
+  group_by(gebied) %>%
   mutate(
     aantal_soorten = n_distinct(naam),
     aantal_waarnemingen = n_distinct(oid),
@@ -137,10 +147,31 @@ analysis_data %>%
   ) %>%
   ungroup() %>%
   distinct(
-    depotter, regio, openheid_klasse, sbp, aantal_soorten, aantal_waarnemingen, aantal_telpunten
+    gebied, regio, openheid_klasse, sbp, aantal_soorten, aantal_waarnemingen, aantal_telpunten
   )
 ```
 
 # Data exploratie
 
+```{r}
+# Number of species counted in each period
+analysis_data %>%
+  group_by(gebied, periode_in_jaar, plotnaam) %>%
+  summarise(n = n_distinct(naam), .groups = "drop") %>%
+  ggplot(aes(x = periode_in_jaar, y = n, fill = gebied)) +
+  geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
+  geom_boxplot() +
+  labs(x = "Telperiode", y = "Aantal soorten per telpunt", fill = "Gebied")
+```
 
+
+```{r}
+# Number of observations counted in each period
+analysis_data %>%
+  count(gebied, periode_in_jaar, plotnaam) %>%
+  ggplot(aes(x = periode_in_jaar, y = n)) +
+  geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
+  geom_boxplot() +
+  facet_wrap(~gebied) +
+  labs(x = "Telperiode", y = "Aantal waarnemingen per telpunt")
+```
