@@ -35,10 +35,70 @@ library(targets)
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::select)
 
-# Source
-source(here::here("source", "R", "tar_read_sf.R"))
-
 # Paths
 mbag_dir <- here::here()
+target_dir <- here::here("source", "targets", "data_preparation")
 targets_store <- here::here("source", "targets", "data_preparation", "_targets")
+
+# Source
+source(here::here("source", "R", "tar_read_sf.R"))
+lapply(list.files(file.path(target_dir, "R"), full.names = TRUE), source)
 ```
+
+# Doel
+
+We maken enkele figuren voor de "Dag van de landbouw" te Koksijde (15 september).
+
+Hiervoor vergelijken we punten van het bedrijf De Potter in Wulpen (Nieuwpoort) met de omliggende regio:
+
+- Depot2
+- Depot3
+- Depot5
+- Pl_10446.2.18 
+- Pl_10047.1.3
+
+versus punten uit Polders OL (binnen plan).
+
+Die vijf bovenvermelde punten zijn er die voor >75% velden bevatten van dit bedrijf, waar brede graskruiden akkerranden (al 15 jaar en 30m breed!) liggen, en waarbij niet-kerend en agroecologisch wordt gewerkt.
+We vermoeden dat er significante verschillen kunnen zijn voor soorten als Haas, Veldleeuwerik, Kievit en misschien ook Gele kwikstaart.
+
+# Data inlezen
+
+We lezen in de data van Depotter.
+Behalve 1 punt behoren ze niet tot de steekproef voor MBAG MAS, dus we moeten nog verder deze waarnemingen opkuisen.
+
+```{r}
+# Select data from De Potter
+depot_locations <- c("Depot2", "Depot3", "Depot5", "Pl_10446.2.18", "Pl_10047.1.3")
+crs_pipeline <- tar_read_sf("crs_pipeline", store = targets_store)
+depot_data <- crs_pipeline %>%
+  filter(plotnaam %in% depot_locations)
+```
+
+```{r}
+# Data selection and preparation steps
+depot_data_final <- select_within_time_periods(counts_df = depot_data) %>%
+  mutate(regio = "Polders") %>%
+  filter(.data$distance2plot <= 300,
+         .data$soortgrp %in% 1:2) %>%
+  process_double_counted_data() %>%
+  adjust_subspecies_names_nl()
+```
+
+We lezen in de MBAG MAS data van de Polders binnen sbp in open landschap.
+
+```{r}
+# Select cleaned reference data from the correct stratum
+mas_data_clean <- tar_read("mas_data_clean", store = targets_store)
+mas_data_depot <- mas_data_clean %>%
+  filter(regio == "Polders",
+         sbp == "binnen",
+         openheid_klasse == "OL",
+         !plotnaam %in% depot_locations)
+```
+
+```{r}
+mapview(depot_data_final) +
+  mapview(mas_data_depot, col.regions = "red") 
+```
+
