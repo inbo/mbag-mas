@@ -24,21 +24,362 @@ opts_chunk$set(
 opts_knit$set(root.dir = here::here())
 ```
 
-```{r}
+```{r, results='hide', warning=FALSE, message=FALSE}
 # packages
 library(tidyverse)
 library(sf)
 library(mapview)
 library(targets)
 
+library(INBOtheme)
+theme_set(theme_inbo(transparent = TRUE))
+
 # Conflicts
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::select)
 
-# Source
-source(here::here("source", "R", "tar_read_sf.R"))
-
 # Paths
 mbag_dir <- here::here()
+target_dir <- here::here("source", "targets", "data_preparation")
 targets_store <- here::here("source", "targets", "data_preparation", "_targets")
+
+media_folder <- here::here("media", "dag_van_de_landbouw2024")
+dir.create(media_folder, showWarnings = FALSE)
+
+devices <- c("pdf", "png")
+
+# Source
+source(here::here("source", "R", "tar_read_sf.R"))
+source(here::here("source", "R", "save_figure.R"))
+source(here::here("source", "R", "predatoren_f.R"))
+lapply(list.files(file.path(target_dir, "R"), full.names = TRUE), source)
+```
+
+# Doel
+
+We maken enkele figuren voor de "Dag van de landbouw" te Koksijde (15 september).
+
+Hiervoor vergelijken we punten van het bedrijf De Potter in Wulpen (Nieuwpoort) met de omliggende regio:
+
+- Depot2
+- Depot3
+- Depot5
+- Pl_10446.2.18 
+- Pl_10047.1.3
+
+versus punten uit Polders OL (binnen plan).
+
+Die vijf bovenvermelde punten zijn er die voor >75% velden bevatten van dit bedrijf, waar brede graskruiden akkerranden (al 15 jaar en 30 m breed!) liggen, en waarbij niet-kerend en agro-ecologisch wordt gewerkt.
+We vermoeden dat er significante verschillen kunnen zijn voor soorten als Haas, Veldleeuwerik, Kievit en misschien ook Gele kwikstaart.
+
+# Data inlezen
+
+We lezen in de data van gebied.
+Behalve 1 punt behoren ze niet tot de steekproef voor MBAG MAS, dus we moeten nog verder deze waarnemingen opkuisen.
+We selecteren enkel vogels en Haas.
+
+```{r}
+# Select data from De Potter
+depot_locations <- c("Depot2", "Depot3", "Depot5", "Pl_10446.2.18",
+                     "Pl_10047.1.3")
+crs_pipeline <- tar_read_sf("crs_pipeline", store = targets_store)
+depot_data <- crs_pipeline %>%
+  filter(plotnaam %in% depot_locations)
+```
+
+```{r}
+# Data selection and preparation steps
+depot_data_final <- select_within_time_periods(counts_df = depot_data) %>%
+  mutate(regio = "Polders",
+         openheid_klasse = "OL",
+         sbp = "binnen") %>%
+  filter(.data$distance2plot <= 300,
+         (.data$soortgrp == 2 | naam == "Haas")) %>%
+  process_double_counted_data() %>%
+  adjust_subspecies_names_nl()
+```
+
+We lezen in de MBAG MAS data van de Polders binnen sbp in open landschap.
+We selecteren enkel vogels en Haas.
+
+```{r}
+# Select cleaned reference data from the correct stratum
+mas_data_clean <- tar_read("mas_data_clean", store = targets_store)
+mas_data_depot <- mas_data_clean %>%
+  filter(regio == "Polders",
+         sbp == "binnen",
+         openheid_klasse == "OL",
+         !plotnaam %in% depot_locations,
+         (.data$soortgrp == 2 | naam == "Haas"))
+```
+
+De data voor de Polders is wijd verbreid.
+
+```{r}
+mapview(depot_data_final, layer = "De Potter") +
+  mapview(mas_data_depot, col.regions = "red", layer = "Rest")
+```
+
+We zullen een selectie maken voor de vergelijking.
+We selecteren de data voor de westelijke Polders als alle punten ten westen van Oostende, Gistel, Torhout.
+
+```{r}
+mas_data_depot <- mas_data_depot %>%
+          filter(x_lambert < 50990)
+mapview(depot_data_final, layer = "De Potter") +
+  mapview(mas_data_depot, col.regions = "red", layer = "Referentie")
+```
+
+We voegen de data samen.
+
+```{r}
+analysis_data <- bind_rows(mas_data_depot, depot_data_final) %>%
+  mutate(gebied = ifelse(plotnaam %in% depot_locations,
+                         "De Potter", "Referentie"))
+```
+
+```{r}
+analysis_data %>%
+  st_drop_geometry() %>%
+  group_by(gebied) %>%
+  mutate(
+    aantal_soorten = n_distinct(naam),
+    aantal_waarnemingen = n_distinct(oid),
+    aantal_telpunten = n_distinct(plotid)
+  ) %>%
+  ungroup() %>%
+  distinct(
+    gebied, regio, openheid_klasse, sbp, aantal_soorten, aantal_waarnemingen,
+    aantal_telpunten
+  )
+```
+
+# Data exploratie
+
+We kijken naar het verschil in aantal soorten.
+
+```{r}
+# Number of species counted in each period
+analysis_data %>%
+  group_by(gebied, periode_in_jaar, plotnaam) %>%
+  summarise(n = n_distinct(naam), .groups = "drop") %>%
+  ggplot(aes(x = periode_in_jaar, y = n, fill = gebied)) +
+  geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
+  geom_boxplot() +
+  labs(x = "Telperiode", y = "Aantal soorten per telpunt", fill = "Gebied")
+```
+
+We kijken naar het verschil in aantal waarnemingen.
+
+```{r}
+# Number of observations counted in each period
+analysis_data %>%
+  count(gebied, periode_in_jaar, plotnaam) %>%
+  ggplot(aes(x = periode_in_jaar, y = n)) +
+  geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
+  geom_boxplot() +
+  facet_wrap(~gebied) +
+  labs(x = "Telperiode", y = "Aantal waarnemingen per telpunt")
+```
+
+We zien wel verschillen maar deze zijn moeilijk te interpreteren.
+
+Voor elke soort kunnen we de relatieve frequentie ($P$) berekenen als de proportie telpunten waarin de soort aanwezig is per telperiode, stratum en regio.
+Een relatieve frequentie van 0,5 wil dus zeggen dat de soort in 50 % van de telpunten gezien is.
+
+$$
+P = \sum_{i=1}^{N} I(n_i > 0) / N
+$$
+
+Waarbij $N$ het totaal aantal telpunten is in een bepaalde telperiode, stratum en regio en $n_i$ het aantal individuen van de beschouwde soort waargenomen aan telpunt $i$.
+$I(\cdot)$ is de indicatorfunctie die 1 geeft als $n_i > 0$ en 0 anderzijds.
+We selecteerden enkel waarnemingen met broedcode groter dan nul.
+Voor roofvogels en Haas hielden we geen rekening met broedcode, omdat we voor deze soorten meer algemeen geïnteresseerd zijn in predatiedruk op de akkervogels.
+
+```{r}
+bezoekenlijst <- analysis_data %>%
+  st_drop_geometry() %>%
+  distinct(gebied, plotnaam, periode_in_jaar) %>%
+  arrange(gebied, plotnaam, periode_in_jaar)
+
+# Define goal species
+doelsoorten <- c(
+  "Veldleeuwerik",
+  "Gele Kwikstaart",
+  "Geelgors",
+  "Kievit",
+  "Grasmus",
+  "Witte Kwikstaart",
+  "Ringmus",
+  "Kwartel",
+  "Kneu",
+  "Torenvalk",
+  "Haas"
+)
+```
+
+```{r}
+# Calculate relative frequencies
+# We want a number for each bird species for each region, stratum, period
+relfreqs_df <- analysis_data %>%
+  st_drop_geometry() %>%
+  # Only keep breeding birds except for predators
+  filter(ifelse(naam %in% c(roofvogels_f(), "Haas"),
+                wrntype >= 0L, wrntype > 0L)) %>%
+  # Number of individuals per species per plot
+  group_by(gebied, plotnaam, periode_in_jaar, naam) %>%
+  summarise(
+    totaal_aantal = sum(aantal),
+    .groups = "drop"
+  ) %>%
+  pivot_wider(
+    names_from = naam,
+    values_from = totaal_aantal,
+    values_fill = list(totaal_aantal = 0)
+  ) %>%
+  # Add absences
+  full_join(bezoekenlijst,
+    by = join_by(
+      gebied, plotnaam, periode_in_jaar
+    )
+  ) %>%
+  replace(is.na(.), 0) %>%
+  # Calculate relative frequency for all species and pivot back to long format
+  group_by(periode_in_jaar, gebied) %>%
+  summarise(
+    across(
+      .cols = where(~ is.numeric(.x) && min(.x) == 0),
+      .fns = ~ sum(.x > 0) / n()
+    ),
+    n = n(),
+    .groups = "drop"
+  ) %>%
+  pivot_longer(
+    cols = where(is.double),
+    names_to = "naam",
+    values_to = "relfreq"
+  ) %>%
+  distinct()
+
+# Calculate relative frequency per region per period as mean
+# Calculate difference between regions
+relfreq_diff <- relfreqs_df %>%
+  group_by(gebied, periode_in_jaar, naam) %>%
+  summarise(gemiddelde_freq = mean(relfreq)) %>%
+  ungroup() %>%
+  pivot_wider(
+    names_from = gebied,
+    values_from = gemiddelde_freq,
+    values_fill = 0
+  ) %>%
+  mutate(verschilfreq = `De Potter` - `Referentie`) %>%
+  # Order most common species
+  mutate(naam = reorder(naam, verschilfreq,
+    FUN = "median",
+    decreasing = FALSE
+  ))
+
+# Calculate relative frequency per region per period as mean
+# Calculate ratio between regions
+relfreq_ratio <- relfreqs_df %>%
+  group_by(gebied, periode_in_jaar, naam) %>%
+  summarise(gemiddelde_freq = mean(relfreq)) %>%
+  ungroup() %>%
+  pivot_wider(
+    names_from = gebied,
+    values_from = gemiddelde_freq,
+    values_fill = 0
+  ) %>%
+  mutate(ratiofreq = `De Potter` / `Referentie`) %>%
+  filter(Referentie != 0) %>%
+  filter(!is.infinite(ratiofreq)) %>%
+  # Retrieve 20 most common species + goal species
+  mutate(naam = reorder(naam, ratiofreq,
+    FUN = "median",
+    decreasing = FALSE
+  ))
+```
+
+Top 15 van soorten die in termen van verschil in relatieve frequentie van voorkomen meer voorkomen in de telpunten van De Potter.
+Boxplots op basis van verschil voor elke telperiode per soort ($n$ = 4).
+
+```{r}
+library(ggtext)
+highlight <- function(x, pat, color = "black", family = "") {
+  ifelse(x %in% pat,
+    glue::glue("<b style='font-family:{family}; color:{color}'>{x}</b>"),
+    x
+  )
+}
+```
+
+```{r}
+relfreq_diff %>%
+  filter(as.numeric(naam) > length(unique(naam)) - 15) %>%
+  ggplot() +
+  geom_vline(
+    xintercept = 0,
+    colour = "lightgrey"
+  ) +
+  geom_boxplot(aes(x = verschilfreq, y = naam)) +
+  labs(
+    y = "", x = "Verschil in relatieve frequentie",
+    title = "Algemener in telpunten De Potter"
+  ) +
+  scale_y_discrete(labels = function(x) highlight(x, doelsoorten, "red")) +
+  coord_cartesian(xlim = c(
+    NA,
+    0 + abs(max(relfreq_diff$verschilfreq))
+  )) +
+  scale_x_continuous(breaks = seq(-1, 1, 0.1)) +
+  theme(
+    legend.position = "top",
+    axis.text = element_text(size = 8),
+    axis.text.y = element_markdown(),
+    panel.spacing = unit(1.2, "lines")
+  ) +
+  guides(colour = guide_legend(override.aes = list(size = 3)))
+```
+
+Top 15 van soorten die in termen van ratio in gemiddelde relatieve frequentie van voorkomen meer voorkomen in de telpunten van De Potter.
+Boxplots op basis van verschil voor elke telperiode per soort ($n$ = 4).
+Een waarde 3 kan geïnterpreteerd worden als een soort die 3x algemener is in telpunten van De Potter dan het referentiegebied (de relatieve frequentie in De Potter is 3x zo groot als de relatieve frequentie in het referentiegebied).
+
+```{r}
+p <- relfreq_ratio %>%
+  filter(as.numeric(naam) > length(unique(naam)) - 15) %>%
+  ggplot() +
+  geom_vline(
+    xintercept = 1,
+    colour = "lightgrey",
+    linetype = "dashed",
+    linewidth = 0.7
+  ) +
+  geom_boxplot(aes(x = ratiofreq, y = naam)) +
+  annotate(geom = "label",
+           label = paste("Doelsoorten akkervogels (+ Haas) in",
+                         "rood.\nBoxplots tonen spreiding van waardes",
+                         "per\ntelperiode (n = 4) per soort."),
+           colour = "black", fill = "gray95",
+           x = 3.3, y = 1, hjust = 0, vjust = 0,
+           label.padding = unit(0.5, "lines")) +
+  labs(
+    y = "", x = "Factor algemener in De Potter",
+    title = "Top 15 soorten meer algemeen in telpunten De Potter"
+  ) +
+  scale_y_discrete(labels = function(x) highlight(x, doelsoorten, "red")) +
+  scale_x_continuous(breaks = seq(0, 10)) +
+  theme(
+    axis.text = element_text(size = 12),
+    axis.text.y = element_markdown(),
+    axis.title = element_text(size = 14, face = "bold"),
+    plot.title = element_text(size = 17, face = "bold",
+                              margin = margin(t = 0, r = 0, b = 20, l = 0),
+                              hjust = -5)
+  )
+p
+
+save_figure(p, here::here(media_folder, "ratio_frequenties"), devices,
+  dpi = 300, width = 8, height = 6
+)
 ```

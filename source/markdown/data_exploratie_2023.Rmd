@@ -1006,7 +1006,7 @@ relfreq_ratio_zn <- relfreqs_vogels %>%
 p <- relfreq_ratio_zn %>%
   ggplot() +
   geom_vline(
-    xintercept = 0,
+    xintercept = 1,
     colour = "lightgrey"
   ) +
   geom_hline(
@@ -1082,7 +1082,7 @@ relfreq_ratio_lm <- relfreqs_vogels %>%
 p <- relfreq_ratio_lm %>%
   ggplot() +
   geom_vline(
-    xintercept = 0,
+    xintercept = 1,
     colour = "lightgrey"
   ) +
   geom_hline(
