@@ -69,7 +69,7 @@ Hiervoor vergelijken we punten van het bedrijf De Potter in Wulpen (Nieuwpoort) 
 
 versus punten uit Polders OL (binnen plan).
 
-Die vijf bovenvermelde punten zijn er die voor >75% velden bevatten van dit bedrijf, waar brede graskruiden akkerranden (al 15 jaar en 30m breed!) liggen, en waarbij niet-kerend en agroecologisch wordt gewerkt.
+Die vijf bovenvermelde punten zijn er die voor >75% velden bevatten van dit bedrijf, waar brede graskruiden akkerranden (al 15 jaar en 30 m breed!) liggen, en waarbij niet-kerend en agro-ecologisch wordt gewerkt.
 We vermoeden dat er significante verschillen kunnen zijn voor soorten als Haas, Veldleeuwerik, Kievit en misschien ook Gele kwikstaart.
 
 # Data inlezen
@@ -80,7 +80,8 @@ We selecteren enkel vogels en Haas.
 
 ```{r}
 # Select data from De Potter
-depot_locations <- c("Depot2", "Depot3", "Depot5", "Pl_10446.2.18", "Pl_10047.1.3")
+depot_locations <- c("Depot2", "Depot3", "Depot5", "Pl_10446.2.18",
+                     "Pl_10047.1.3")
 crs_pipeline <- tar_read_sf("crs_pipeline", store = targets_store)
 depot_data <- crs_pipeline %>%
   filter(plotnaam %in% depot_locations)
@@ -90,7 +91,7 @@ depot_data <- crs_pipeline %>%
 # Data selection and preparation steps
 depot_data_final <- select_within_time_periods(counts_df = depot_data) %>%
   mutate(regio = "Polders",
-         openheid_klasse = "OL", 
+         openheid_klasse = "OL",
          sbp = "binnen") %>%
   filter(.data$distance2plot <= 300,
          (.data$soortgrp == 2 | naam == "Haas")) %>%
@@ -112,7 +113,7 @@ mas_data_depot <- mas_data_clean %>%
          (.data$soortgrp == 2 | naam == "Haas"))
 ```
 
-De data voor de Polders is sterk uigespreid.
+De data voor de Polders is wijd verbreid.
 
 ```{r}
 mapview(depot_data_final, layer = "De Potter") +
@@ -148,7 +149,8 @@ analysis_data %>%
   ) %>%
   ungroup() %>%
   distinct(
-    gebied, regio, openheid_klasse, sbp, aantal_soorten, aantal_waarnemingen, aantal_telpunten
+    gebied, regio, openheid_klasse, sbp, aantal_soorten, aantal_waarnemingen,
+    aantal_telpunten
   )
 ```
 
@@ -359,7 +361,8 @@ p <- relfreq_ratio %>%
                          "rood.\nBoxplots tonen spreiding van waardes",
                          "per\ntelperiode (n = 4) per soort."),
            colour = "black", fill = "gray95",
-           x = 3.3, y = 1, hjust = 0, vjust = 0, label.padding = unit(0.5, "lines")) +
+           x = 3.3, y = 1, hjust = 0, vjust = 0,
+           label.padding = unit(0.5, "lines")) +
   labs(
     y = "", x = "Factor algemener in De Potter",
     title = "Top 15 soorten meer algemeen in telpunten De Potter"

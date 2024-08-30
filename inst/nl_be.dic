@@ -28,6 +28,9 @@ Curruca
 DHMV
 DSM
 DTM
+Depot2
+Depot3
+Depot5
 Digital
 Duinen/Weidestreek
 DwC
@@ -93,6 +96,7 @@ Westhoekreservaat
 accepted
 add
 aeroway
+agro-ecologisch
 allocatieproporties
 avimapcodes
 batching
@@ -144,6 +148,7 @@ monocotylen
 montanus
 multipolygon
 names
+niet-kerend
 occurrence
 openness
 opvalllende
@@ -170,6 +175,7 @@ replicaten
 repo
 reserveset
 sampled
+sbp
 size
 soortgrp
 soortnamen/auteurs
