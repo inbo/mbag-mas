@@ -383,8 +383,9 @@ st_intersection(original_point, replacement_point) %>%
 
 Geen van deze zijn geldige punten.
 
+> Ongeldige punten worden niet verder geteld.
 
-We lezen ouden en nieuwe telpunten in.
+We lezen oude en nieuwe telpunten in.
 
 ```{r}
 # Prepare extra existing locations
@@ -392,6 +393,7 @@ avimap_za_kp_po_extra <- extra_oude_punten_full %>%
   st_drop_geometry() %>%
   bind_rows(oude_punten_za_kp_po %>%
               filter(!is.na(x_coord))) %>%
+  filter(!is.na(sample_order)) %>%
   select(all_of(colnames(steekproef_za_kp_po)))
 
 # Prepare selected new locations
@@ -425,6 +427,9 @@ We voegen deze oude punten samen met de nieuwe punten.
 - Km_14981.5 was oorspronkelijk VL0005? Km_14981.5 is geteld maar zit niet in steekproef
 
 > Km_45192.7 en Km_14981.5 zijn geteld, VL0432 en VL0005 niet
+> We behouden Km_45192.7 en Km_14981.5 
+
+We verwijderen ook Pl_45612.2 die niet kon geteld worden.
 
 ```{r}
 df1 <- steekproefkader_za_kp_po %>%
@@ -449,6 +454,7 @@ updated_df2 <- df2 %>%
          sbp = sbp.x, x_coord, y_coord, crs = crs.x)
 
 steekproef_avimap_za_kp_po <- avimap_za_kp_po_final %>%
+  filter(pointid != "Pl_45612.2") %>%
   select(pointid, regio = Naam) %>%
   inner_join(steekproef_za_kp_po, by = join_by(pointid, regio)) %>%
   # Add Km_45192.7 and Km_14981.5
@@ -475,12 +481,8 @@ steekproef_avimap_za_kp_po %>%
   kable()
 ```
 
-> 201 in Polders en 199 in Zandstreek?
-
-```
-data <- st_read(file.path("data", "mas", "20240805_qgis_export_sovon_wfs_2024.geojson"))
-data %>% st_drop_geometry() %>% distinct(plotnaam) %>% filter(grepl("^Km", plotnaam))
-```
+Polders: ok, 201 - 6 (manuele interventie) - 1 (niet telbaar punt) = 194
+Zandstreek: ok, verder met 198 punten
 
 ## Weidestreek
 ### Steekproefkader
