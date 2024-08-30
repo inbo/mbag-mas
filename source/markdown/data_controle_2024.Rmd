@@ -109,20 +109,7 @@ sample_visited %>%
   kable()
 ```
 
-Er waren 201 telpunten in het steekproefkader, maar er zijn er 199 geteld.
-Welke punten zijn niet geteld?
-
-```{r}
-setdiff(sample$pointid, sample_visited$plotnaam)
-```
-
-> Nagaan of deze bewust of onbewust niet geteld zijn
-
-- Pl_25053.16 is verkeerdelijk ingegeven als Pl_49572
-
-Notities manuele controle Johannes:
-
-- Pl_45612.2: OK geen privé weg maar langs bedrijf
+In de Polders zijn inderdaad 6 punten geschrapt. In de Zandstreek 2 punten.
 
 We bekijken dit ook per jaar.
 
@@ -236,7 +223,7 @@ obs_per_period_pl %>%
   kable()
 ```
 
-Beerpolder is niet geteld in ronde 1.
+Ok.
 
 **Westelijke leemstreek**
 
@@ -389,7 +376,7 @@ obs_per_period_za %>%
   kable()
 ```
 
-ok.
+Ok.
 
 We schrijven deze data weg zodat ze gecontroleerd kunnen worden.
 
@@ -471,7 +458,6 @@ outlying_distances %>%
 ```
 
 Er duiken veel problemen op in de Oostelijke leemstreek 2018-2024 voor meerdere verschillende telpunten.
-Voor de polders is er 1 probleemtelpunt.
 
 ```{r}
 outlying_dist_groups <- outlying_distances %>%
@@ -494,84 +480,6 @@ outlying_dist_plots <- outlying_dist_obs %>%
 outlying_dist_circles <- outlying_dist_plots %>%
   st_buffer(300)
 ```
-
-**Polders**
-
-In de Polders gaat het om `r outlying_distances %>% filter(regio == "Polders") %>% distinct(plotnaam) %>% pull() %>% length()` punten in `r outlying_distances %>% filter(regio == "Polders") %>% distinct(jaar) %>% pull() %>% length()` jaren in `r outlying_distances %>% filter(regio == "Polders") %>% distinct(periode_in_jaar) %>% pull() %>% length()` telperiodes.
-
-```{r}
-# Data preparation
-years <- outlying_dist_obs %>%
-  filter(regio == "Polders") %>%
-  distinct(jaar) %>%
-  pull()
-
-# Create an empty leaflet map
-leaflet_map <- leaflet() %>%
-  addTiles()
-
-# Loop through each year and round, adding layers to the map
-for (j in sort(years)) {
-  periods <- outlying_dist_obs %>%
-    filter(regio == "Polders",
-           jaar == j) %>%
-    distinct(periode_in_jaar) %>%
-    pull()
-
-  for (ronde in sort(periods)) {
-    # Filter data for the current year and round
-    circles <- outlying_dist_circles %>%
-      filter(regio == "Polders",
-             jaar == j,
-             periode_in_jaar == ronde) %>%
-      st_transform(4326)
-    plots <- outlying_dist_plots %>%
-      filter(regio == "Polders",
-             jaar == j,
-             periode_in_jaar == ronde) %>%
-      st_transform(4326)
-    observations <- outlying_dist_obs %>%
-      filter(regio == "Polders",
-             jaar == j,
-             periode_in_jaar == ronde) %>%
-      st_transform(4326)
-
-    # Create title
-    title <- paste("Jaar:", j, "- Ronde:", ronde)
-
-    # Add the layers to the leaflet map with group names
-    leaflet_map <- leaflet_map %>%
-      addPolygons(data = circles, fillOpacity = 0.3, group = title) %>%
-      addCircleMarkers(data = plots, radius = 3, color = "black",
-                       group = title, label = ~plots$plotnaam) %>%
-      addCircleMarkers(data = observations, fillOpacity = 0.8, radius = 5,
-                       color = "red",
-                       group = title, label = ~observations$abs_diff)
-  }
-}
-
-# Calculate control groups
-groups <- outlying_dist_obs %>%
-  filter(regio == "Polders") %>%
-  distinct(jaar, periode_in_jaar) %>%
-  mutate(group = paste("Jaar:", jaar, "- Ronde:", periode_in_jaar)) %>%
-  pull(group)
-
-# Add layer control to toggle visibility of the facets
-leaflet_map <- leaflet_map %>%
-  addLayersControl(
-    overlayGroups = groups,
-    options = layersControlOptions(collapsed = FALSE)
-  )
-
-# Print the leaflet map
-leaflet_map
-```
-
-Het ziet ernaar uit dat Pl_49572 dezelfde naam heeft voor 2 locaties.
-In plaats van: Pl_25053.16 (x: 50279.09, y: 210998).
-Deze afstanden zijn dus wel ok, maar het label van het telpunt moet aangepast worden.
-De afwezigheid van dit telpunt werd opgemerkt in Subsectie \@ref(steekproefkader).
 
 **Oostelijke leemstreek**
 
@@ -764,13 +672,9 @@ mapview(observations_test2, col.regions = "red", legend = FALSE) +
 Het telpunt in Avimap lijkt ergens anders te liggen.
 De punten in Avimap liggen inderdaad op de kruisingen van de buffers.
 Er is dus iets mis met de coördinaten in de data.
-
 Het gaat blijkbaar om telpunten die vervangen worden door reeds bestaande punten
-De locatie is het nieuwe telpunt, maar de naam is die van het reeds bestaande punt, waardoor er een mismatch heb tussen de locaties van de telpunten in de steekproef en de locaties van de data via Sovon.
-Waarschijnlijk bij eerste tellingen van pilootproject punten meegegeven waarbij de telpuntnaam was aangepast naar het reeds bestaande punt, maar niet de locatie.
-Het vreemde is dat deze mismatch al voorkomt vanaf 2018 (van vóór het pilootproject).
 
-> Namen van telpunten aanpassen in Avimap van al deze punten?
+> Juiste locatie oude punten nakijken.
 
 ## Selecteer data binnen telcirkel radius (select_within_radius)
 
@@ -1034,21 +938,7 @@ leaflet_map <- leaflet_map %>%
 leaflet_map
 ```
 
-We zien een problematisch punt in 2024: Pl_49572.
-Alle andere lijken ok.
-
-```{r}
-# Show outlying percentage of Pl_49572
-outside_observations_new %>%
-  st_drop_geometry() %>%
-  filter(plotnaam == "Pl_49572") %>%
-  count(plotnaam, jaar, periode_in_jaar, outlier_perc, outlier) %>%
-  kable()
-```
-
-Het ziet ernaar uit dat Pl_49572 dezelfde naam heeft voor 2 locaties.
-In plaats van: Pl_25053.16 (x: 50279.09, y: 210998).
-De afwezigheid van dit telpunt werd opgemerkt in Subsectie \@ref(steekproefkader).
+Deze lijken ok.
 
 **Oostelijke leemstreek**
 
@@ -1668,3 +1558,5 @@ Overige opmerkingen en vragen:
   - We kijken over de hele dataset naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten. *Voordeel:* steeds meer volledige lijst van soorten. *Nadeel:* dataset zal elk jaar veranderen.
   - Afwezigheden toevoegen o.b.v. externe lijst?
   - ...
+
+> Zouden afwezigheden correct zijn? Er is geen streeplijst gebruikt.
