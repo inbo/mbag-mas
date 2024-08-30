@@ -97,8 +97,35 @@ mas_data_depot <- mas_data_clean %>%
          !plotnaam %in% depot_locations)
 ```
 
+De data voor de Polders is sterk uigespreid.
+
 ```{r}
 mapview(depot_data_final) +
   mapview(mas_data_depot, col.regions = "red") 
 ```
 
+We zullen een selectie maken voor de vergelijking.
+We selecteren de data voor de westelijke Polders als alle punten ten westen van Oostende, Gistel, Torhout.
+
+```{r}
+mas_data_depot <- mas_data_depot %>%
+          filter(x_lambert < 50990)
+mapview(depot_data_final) +
+  mapview(mas_data_depot, col.regions = "red")
+```
+
+We voegen de data samen.
+
+```{r}
+analysis_data <- bind_rows(mas_data_depot, depot_data_final) %>%
+  mutate(depotter = plotnaam %in% depot_locations)
+```
+
+```{r}
+analysis_data %>%
+  st_drop_geometry() %>%
+  group_by(depotter) %>%
+  summarise(aantal_telpunten = n_distinct(plotnaam),
+            .groups = "drop" ) %>%
+  kable()
+```
