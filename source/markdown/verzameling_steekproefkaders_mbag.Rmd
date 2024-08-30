@@ -201,7 +201,7 @@ head(steekproef_za_kp_po) %>%
 
 Inlezen en preparatie finale steekproef na manuele controle
 
-1. in uncut in vervanging id kijken voor oude punten met volgnr <= 50
+1. in uncut in vervanging id kijken voor oude punten met volgnummer <= 50
 2. in final kijken voor finale punten
 3. samenvoegen
 
