@@ -256,6 +256,8 @@ De toestand van de GitHub repository op het moment van de steekproeftrekking voo
 ```
 \textcolor{red}{Centraal beschikbaar stellen via Zenodo (<https://zenodo.org/>): (1) het steekproefkader, (2) de steekproef, (3) de finale steekproef na manuele controle (de punten die effectief werden bezocht in het veld), en (4) de tabel met gewichten per stratum.}
 
+\textcolor{red}{rest van data op zenodo enzo}
+
 ## Stand van zaken en uitbreiding MAS {#mas-vlaanderen}
 
 ### Stand van zaken {#stand-van-zaken}
@@ -356,6 +358,12 @@ Als dit het geval was, werd het punt met de lagere rangorde weerhouden.
 Voor alle andere landbouwregio's werd een afstand van 600 m gehanteerd zodat er geen overlap is tussen telpunten (zie Sectie \@ref(nabehandeling)).
 We laten voor de Weidestreek dus wel overlap toe om genoeg telpunten over te houden.
 Na manuele controle behielden we 50 van de 58 punten.
+
+## Overzicht volledige steekproef MAS Vlaanderen
+
+```{r mas_steekproef_tot, out.width = "100%", fig.cap = "Telpunten MAS Vlaanderen"}
+include_graphics(file.path("media", "kaartjes", "tot_mas_kaart.png"))
+```
 
 [^02_uitrol_meetnet-1]: Met uitzondering van de Duinen en de Weidestreek.
     Deze worden apart besproken in Sectie \@ref(overige-streken).
