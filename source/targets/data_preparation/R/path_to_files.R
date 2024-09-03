@@ -24,7 +24,7 @@ paths_to_lbg_year <- function(
     pattern = "Landbouwgebruikspercelen") {
   # List paths to all files
   file_paths <- list.files(
-    file.path(proj_path, "data", "verzamelaanvraag"),
+    file.path(proj_path, "data", "landbouwgebruikspercelen"),
     pattern = pattern,
     full.names = TRUE,
     recursive = TRUE)
