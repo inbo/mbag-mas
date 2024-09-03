@@ -23,8 +23,6 @@ opts_chunk$set(
   out.width = "100%"
 )
 opts_knit$set(root.dir = here::here())
-
-Sys.setenv("PROJ_NETWORK" = "ON")
 ```
 
 ```{r}
