@@ -569,7 +569,8 @@ for (j in sort(years)) {
          regio != "Polders",
          jaar == j) %>%
     distinct(periode_in_jaar) %>%
-    pull()
+    pull() %>%
+    sort()
 
   for (ronde in sort(periods)) {
     # Filter data for the current year and round
@@ -611,6 +612,7 @@ groups <- outside_observations_new %>%
   filter(regio != "Oostelijke leemstreek",
          regio != "Polders") %>%
   distinct(jaar, periode_in_jaar) %>%
+  arrange(jaar, periode_in_jaar) %>%
   mutate(group = paste("Jaar:", jaar, "- Ronde:", periode_in_jaar)) %>%
   pull(group)
 
@@ -655,7 +657,8 @@ for (j in sort(years)) {
     filter(regio == "Polders",
            jaar == j) %>%
     distinct(periode_in_jaar) %>%
-    pull()
+    pull() %>%
+    sort()
 
   for (ronde in sort(periods)) {
     # Filter data for the current year and round
@@ -693,6 +696,7 @@ for (j in sort(years)) {
 groups <- outside_observations_new %>%
   filter(regio == "Polders") %>%
   distinct(jaar, periode_in_jaar) %>%
+  arrange(jaar, periode_in_jaar) %>%
   mutate(group = paste("Jaar:", jaar, "- Ronde:", periode_in_jaar)) %>%
   pull(group)
 
@@ -733,7 +737,8 @@ for (j in sort(years)) {
     filter(regio == "Oostelijke leemstreek",
            jaar == j) %>%
     distinct(periode_in_jaar) %>%
-    pull()
+    pull() %>%
+    sort()
 
   for (ronde in sort(periods)) {
     # Filter data for the current year and round
@@ -771,6 +776,7 @@ for (j in sort(years)) {
 groups <- outside_observations_new %>%
   filter(regio == "Oostelijke leemstreek") %>%
   distinct(jaar, periode_in_jaar) %>%
+  arrange(jaar, periode_in_jaar) %>%
   mutate(group = paste("Jaar:", jaar, "- Ronde:", periode_in_jaar)) %>%
   pull(group)
 
@@ -790,7 +796,121 @@ leaflet_map <- leaflet_map %>%
 leaflet_map
 ```
 
-Deze probleempunten zijn allicht gerelateerd aan de locaties van de telpunten.
+Bij de meeste punten lijkt dit ok, maar we zien een paar probleempunten:
+
+- Ol_1901.4: verkeerde locatie R2, 2022
+- Ol_1068.12: paar punten heel ver weg R3, 2022
+- Ol_827.8: verkeerde locatie R4, 2024
+
+In andere periodes zijn deze wel correct geteld. 
+We verliezen dus enkel:
+
+- Ol_1901.4: R2, 2022
+- Ol_827.8: R4, 2024
+
+```{r}
+# Problem points
+problem_points <- c("Ol_1901.4", "Ol_1068.12", "Ol_827.8")
+
+inside_observations_problems <- calculate_obs_distance %>%
+  filter((plotnaam == "Ol_1901.4" & jaar == 2022 & periode_in_jaar != "R2") |
+         (plotnaam == "Ol_1068.12" & jaar == 2022 & periode_in_jaar != "R3") |
+         (plotnaam == "Ol_827.8" & jaar == 2024 & periode_in_jaar != "R4")) %>%
+  mutate(outlier = "binnen",
+         outlier_perc = 0) %>%
+  select(all_of(names(outside_observations_new)))
+
+outside_observations_problems <- outside_observations_new %>%
+  filter(plotnaam %in% problem_points)
+
+obs_probs_total <- bind_rows(
+  inside_observations_problems,
+  outside_observations_problems
+  )
+
+plots_probs_total <- obs_probs_total %>%
+  st_drop_geometry() %>%
+  distinct(regio, plotnaam, jaar, periode_in_jaar, x_coord, y_coord) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370)
+
+circles_probs_total <- plots_probs_total %>%
+  st_buffer(300)
+
+# Data preparation
+years <- obs_probs_total %>%
+  distinct(jaar) %>%
+  pull()
+
+# Create an empty leaflet map
+leaflet_map <- leaflet() %>%
+  addTiles()
+
+# Loop through each year and round, adding layers to the map
+for (j in sort(years)) {
+  periods <- obs_probs_total %>%
+    filter(plotnaam %in% problem_points,
+           jaar == j) %>%
+    distinct(periode_in_jaar) %>%
+    pull() %>%
+    sort()
+
+  for (ronde in sort(periods)) {
+    # Filter data for the current year and round
+    circles <- circles_probs_total %>%
+      filter(plotnaam %in% problem_points,
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    plots <- plots_probs_total %>%
+      filter(plotnaam %in% problem_points,
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    observations <- bind_rows(
+      inside_observations_problems,
+      outside_observations_problems
+      ) %>%
+      filter(jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+
+    # Create title
+    title <- paste("Jaar:", j, "- Ronde:", ronde)
+
+    # Add the layers to the leaflet map with group names
+    leaflet_map <- leaflet_map %>%
+      addPolygons(data = circles, fillOpacity = 0.3, group = title) %>%
+      addCircleMarkers(data = plots, radius = 3, color = "black",
+                       group = title, label = ~plots$plotnaam) %>%
+      addCircleMarkers(data = observations, fillOpacity = 0.8, radius = 5,
+                       color = ~ifelse(outlier == "binnen", "green", "red"),
+                       group = title, label = ~observations$plotnaam)
+  }
+}
+
+# Calculate control groups
+groups <- obs_probs_total %>%
+  filter(plotnaam %in% problem_points) %>%
+  distinct(jaar, periode_in_jaar) %>%
+  arrange(jaar, periode_in_jaar) %>%
+  mutate(group = paste("Jaar:", jaar, "- Ronde:", periode_in_jaar)) %>%
+  pull(group)
+
+# Add layer control to toggle visibility of the facets
+leaflet_map <- leaflet_map %>%
+  addLayersControl(
+    overlayGroups = groups,
+    options = layersControlOptions(collapsed = FALSE)
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    colors = c("green", "red"),
+    labels = c("binnen", "buiten"),
+    title = "Locatie t.o.v. telcirkel")
+
+# Print the leaflet map
+leaflet_map
+```
 
 ## Selecteer soortengroepen (select_species_groups)
 
