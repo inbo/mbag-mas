@@ -272,14 +272,14 @@ De toestand van de GitHub repository op het moment van de steekproeftrekking voo
 -   2024: kempen, zandstreek, polders
     -   korte beschrijving en figuurtjes
 
-## Overige landbouwstreken {#overige-streken}
+### Overige landbouwstreken {#overige-streken}
 
 Ten slotte blijven nog twee kleine landbouwstreken over: (1) de Duinen en (2) de Weidestreek.
 Deze zijn apart geanalyseerd omdat het niet mogelijk is een voldoende grote steekproef te verkrijgen op eenzelfde wijze als beschreven in \@ref(meetnet-ontwerp).
 Om toch een voldoende grote steekproef te krijgen per landbouwstreek, kunnen we opteren om een allocatie te doen evenredig aan de oppervlakte van elk stratum.
 Het zal dan niet mogelijk zijn uitspraken te doen over elk stratum apart, maar wel over elke landbouwstreek als geheel en bijgevolg een aanvulling met de andere (grote) landbouwstreken om een uitspraak over Vlaanderen te kunnen doen
 
-### De Duinen
+#### De Duinen
 
 De landbouwstreek van de Duinen is een smalle strook langs de kust met een totale oppervlakte van 80.27 km².
 Een 54,3 % hiervan is open en halfopen landschap (resp. 12,9 en 41,4 %).
@@ -314,7 +314,7 @@ Bovendien kunnen we geen betrouwbare uitspraken doen op schaal van deze landbouw
 
 We besluiten geen punten te tellen voor het MAS in de Duinen.
 
-### De Weidestreek
+#### De Weidestreek
 
 De Weidestreek heeft een totale oppervlakte van 50,53 km².
 Een 62,9 % hiervan is open en halfopen landschap (resp. 11,0 en 51,9 %).
@@ -359,9 +359,36 @@ Voor alle andere landbouwregio's werd een afstand van 600 m gehanteerd zodat er 
 We laten voor de Weidestreek dus wel overlap toe om genoeg telpunten over te houden.
 Na manuele controle behielden we 50 van de 58 punten.
 
-## Overzicht volledige steekproef MAS Vlaanderen
+### Overzicht volledige steekproef MAS Vlaanderen
 
-```{r mas_steekproef_tot, out.width = "100%", fig.cap = "Telpunten MAS Vlaanderen"}
+```{r}
+file <- file.path("data/steekproefkaders/steekproef_avimap_mbag_mas.csv")
+gitroot <- rprojroot::find_root(rprojroot::is_git_root)
+projroot <- rprojroot::find_root(rprojroot::has_file(file))
+steekproef_final <- read_csv(file.path(projroot, file), show_col_types = FALSE)
+```
+
+In totaal worden `r nrow(steekproef_final)` telpunten geteld in kader van MAS Vlaanderen (Tabel \@ref(tab:aantal-telpunten)).
+Figuur \@ref(fig:mas-steekproef-tot) toont de verspreiding van deze punten.
+
+```{r aantal-telpunten}
+steekproef_final %>%
+  mutate(
+    regio = ifelse(grepl("leemstreek", regio), "Leemstreek", regio),
+    stratum = paste(openheid_klasse, sbp, "plan")
+    ) %>%
+  count(regio, stratum, name = "aantal telpunten") %>%
+  group_by(regio) %>%
+  mutate("aantal per regio" = sum(`aantal telpunten`)) %>%
+  ungroup() %>%
+  arrange(regio) %>%
+  kable(caption = paste("Aantal telpunten MAS Vlaanderen."),
+        booktabs = TRUE) %>%
+  kableExtra::kable_styling(latex_options = c("scale_down", "striped")) %>%
+  kableExtra::row_spec(0, bold = TRUE)
+```
+
+```{r mas-steekproef-tot, out.width = "100%", fig.cap = "Telpunten MAS Vlaanderen"}
 include_graphics(file.path("media", "kaartjes", "tot_mas_kaart.png"))
 ```
 
