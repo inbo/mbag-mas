@@ -147,18 +147,10 @@ list(
     iteration = "list"
   ),
   tar_target(
-    name = add_predator_variable,
-    command = add_predator_variables(
-      counts_df = remove_subspecies_names
-    ),
-    pattern = map(remove_subspecies_names),
-    iteration = "list"
-  ),
-  tar_target(
     name = mas_data_full,
     command = do.call(
       what = rbind.data.frame,
-      args = c(add_predator_variable, make.row.names = FALSE)
+      args = c(remove_subspecies_names, make.row.names = FALSE)
     )
   ),
   tar_target(

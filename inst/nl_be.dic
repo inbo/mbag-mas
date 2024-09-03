@@ -28,6 +28,9 @@ Curruca
 DHMV
 DSM
 DTM
+Depot2
+Depot3
+Depot5
 Digital
 Duinen/Weidestreek
 DwC
@@ -75,6 +78,7 @@ Telpunt-
 Telrondes
 Terrain
 Union
+VL
 VL0055
 VL0194
 VL0209
@@ -85,12 +89,14 @@ VL0587
 VL0590
 Veldmuis/Aardmuis
 Version
+Vl
 WGS
 Westhoekreservaat
 \
 accepted
 add
 aeroway
+agro-ecologisch
 allocatieproporties
 avimapcodes
 batching
@@ -142,6 +148,7 @@ monocotylen
 montanus
 multipolygon
 names
+niet-kerend
 occurrence
 openness
 opvalllende
@@ -168,6 +175,7 @@ replicaten
 repo
 reserveset
 sampled
+sbp
 size
 soortgrp
 soortnamen/auteurs
@@ -188,6 +196,7 @@ telperiode
 telperiodes
 telpunt
 telpunten
+telpuntnaam
 telronde
 telrondes
 tertiare

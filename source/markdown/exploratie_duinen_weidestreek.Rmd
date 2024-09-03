@@ -1465,6 +1465,7 @@ We analyseren groottes van `r min(sizes)` tot `r max(sizes)`.
 
 ```{r}
 calc_chisq <- function(observed, expected) {
+  require("dplyr")
   calc_df <- tibble(observed = observed, expected = expected) %>%
     rowwise() %>%
     mutate(single_chi = (observed - expected)^2 / expected)

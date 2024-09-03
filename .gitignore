@@ -17,6 +17,7 @@
 *.geojson
 *.kml
 *.csv
+!data/gewasgroepen/*.csv
 *.png
 *.shx
 *.xls*

@@ -38,7 +38,6 @@ conflicted::conflicts_prefer(dplyr::select)
 
 # Source
 source(here::here("source", "R", "tar_read_sf.R"))
-source(here::here("source", "R", "predatoren_f.R"))
 
 # Paths
 mbag_dir <- here::here()
@@ -110,20 +109,7 @@ sample_visited %>%
   kable()
 ```
 
-Er waren 201 telpunten in het steekproefkader, maar er zijn er 199 geteld.
-Welke punten zijn niet geteld?
-
-```{r}
-setdiff(sample$pointid, sample_visited$plotnaam)
-```
-
-> Nagaan of deze bewust of onbewust niet geteld zijn
-
-- Pl_25053.16 is verkeerdelijk ingegeven als Pl_49572
-
-Notities manuele controle Johannes:
-
-- Pl_45612.2: OK geen privé weg maar langs bedrijf
+In de Polders zijn inderdaad 6 punten geschrapt. In de Zandstreek 2 punten.
 
 We bekijken dit ook per jaar.
 
@@ -237,7 +223,7 @@ obs_per_period_pl %>%
   kable()
 ```
 
-Beerpolder is niet geteld in ronde 1.
+Ok.
 
 **Westelijke leemstreek**
 
@@ -390,7 +376,7 @@ obs_per_period_za %>%
   kable()
 ```
 
-ok.
+Ok.
 
 We schrijven deze data weg zodat ze gecontroleerd kunnen worden.
 
@@ -459,319 +445,10 @@ outlying_distances <- distances_og %>%
   filter(abs_diff > 2)
 
 # How many mismatches do we have per region?
-outlying_distances %>%
-  group_by(regio) %>%
-  summarise(
-    n_plots = n_distinct(plotnaam),
-    n_jaren = n_distinct(jaar),
-    n_periodes = n_distinct(periode_in_jaar),
-    max_diff = max(abs_diff),
-    .groups = "drop") %>%
-  arrange(regio) %>%
-  kable()
+nrow(outlying_distances)
 ```
 
-Er duiken veel problemen op in de Oostelijke leemstreek 2018-2024 voor meerdere verschillende telpunten.
-Voor de polders is er 1 probleemtelpunt.
-
-```{r}
-outlying_dist_groups <- outlying_distances %>%
-  distinct(plotnaam, regio, jaar, periode_in_jaar)
-
-# Get problematic observations
-outlying_dist_obs <- calculate_obs_distance %>%
-  inner_join(outlying_dist_groups,
-             by = join_by(plotnaam, jaar, regio, periode_in_jaar)) %>%
-  left_join(outlying_distances %>% select(oid, abs_diff),
-            by = join_by(oid))
-
-# Get problematic point locations
-outlying_dist_plots <- outlying_dist_obs %>%
-  st_drop_geometry() %>%
-  distinct(regio, plotnaam, jaar, periode_in_jaar, x_coord, y_coord) %>%
-  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370)
-
-# Get problematic location circles
-outlying_dist_circles <- outlying_dist_plots %>%
-  st_buffer(300)
-```
-
-**Polders**
-
-In de Polders gaat het om `r outlying_distances %>% filter(regio == "Polders") %>% distinct(plotnaam) %>% pull() %>% length()` punten in `r outlying_distances %>% filter(regio == "Polders") %>% distinct(jaar) %>% pull() %>% length()` jaren in `r outlying_distances %>% filter(regio == "Polders") %>% distinct(periode_in_jaar) %>% pull() %>% length()` telperiodes.
-
-```{r}
-# Data preparation
-years <- outlying_dist_obs %>%
-  filter(regio == "Polders") %>%
-  distinct(jaar) %>%
-  pull()
-
-# Create an empty leaflet map
-leaflet_map <- leaflet() %>%
-  addTiles()
-
-# Loop through each year and round, adding layers to the map
-for (j in sort(years)) {
-  periods <- outlying_dist_obs %>%
-    filter(regio == "Polders",
-           jaar == j) %>%
-    distinct(periode_in_jaar) %>%
-    pull()
-
-  for (ronde in sort(periods)) {
-    # Filter data for the current year and round
-    circles <- outlying_dist_circles %>%
-      filter(regio == "Polders",
-             jaar == j,
-             periode_in_jaar == ronde) %>%
-      st_transform(4326)
-    plots <- outlying_dist_plots %>%
-      filter(regio == "Polders",
-             jaar == j,
-             periode_in_jaar == ronde) %>%
-      st_transform(4326)
-    observations <- outlying_dist_obs %>%
-      filter(regio == "Polders",
-             jaar == j,
-             periode_in_jaar == ronde) %>%
-      st_transform(4326)
-
-    # Create title
-    title <- paste("Jaar:", j, "- Ronde:", ronde)
-
-    # Add the layers to the leaflet map with group names
-    leaflet_map <- leaflet_map %>%
-      addPolygons(data = circles, fillOpacity = 0.3, group = title) %>%
-      addCircleMarkers(data = plots, radius = 3, color = "black",
-                       group = title, label = ~plots$plotnaam) %>%
-      addCircleMarkers(data = observations, fillOpacity = 0.8, radius = 5,
-                       color = "red",
-                       group = title, label = ~observations$abs_diff)
-  }
-}
-
-# Calculate control groups
-groups <- outlying_dist_obs %>%
-  filter(regio == "Polders") %>%
-  distinct(jaar, periode_in_jaar) %>%
-  mutate(group = paste("Jaar:", jaar, "- Ronde:", periode_in_jaar)) %>%
-  pull(group)
-
-# Add layer control to toggle visibility of the facets
-leaflet_map <- leaflet_map %>%
-  addLayersControl(
-    overlayGroups = groups,
-    options = layersControlOptions(collapsed = FALSE)
-  )
-
-# Print the leaflet map
-leaflet_map
-```
-
-Het ziet ernaar uit dat Pl_49572 dezelfde naam heeft voor 2 locaties.
-In plaats van: Pl_25053.16 (x: 50279.09, y: 210998).
-Deze afstanden zijn dus wel ok, maar het label van het telpunt moet aangepast worden.
-De afwezigheid van dit telpunt werd opgemerkt in Subsectie \@ref(steekproefkader).
-
-**Oostelijke leemstreek**
-
-In de Oostelijke leemstreek gaat het om `r outlying_distances %>% filter(regio == "Oostelijke leemstreek") %>% distinct(plotnaam) %>% pull() %>% length()` punten in `r outlying_distances %>% filter(regio == "Oostelijke leemstreek") %>% distinct(jaar) %>% pull() %>% length()` jaren in `r outlying_distances %>% filter(regio == "Oostelijke leemstreek") %>% distinct(periode_in_jaar) %>% pull() %>% length()` telperiodes.
-
-Zijn het telkens dezelfde punten die problemen geven?
-
-```{r}
-# Count per location
-outlying_distances %>%
-  filter(regio == "Oostelijke leemstreek") %>%
-  group_by(plotnaam) %>%
-  summarise(n_jaren = n_distinct(jaar),
-            n_periodes = n_distinct(jaar, periode_in_jaar)) %>%
-  arrange(n_jaren, n_periodes) %>%
-  kable()
-```
-
-In sommige gevallen wel.
-Het gaat telkens om oude punten.
-Zijn het alle Vl punten?
-
-```{r}
-vl_points_outlying <- outlying_distances %>%
-  filter(grepl("^VL", plotnaam)) %>%
-  distinct(plotnaam) %>%
-  pull(plotnaam)
-
-all_vl_points <- calculate_obs_distance %>%
-  st_drop_geometry() %>%
-  filter(grepl("^VL", plotnaam)) %>%
-  distinct(plotnaam) %>%
-  pull(plotnaam)
-
-identical(sort(vl_points_outlying), sort(all_vl_points))
-```
-
-Zijn het alle VL punten in de Oostelijke leemstreek?
-
-```{r}
-vl_points_outlying <- outlying_distances %>%
-  filter(grepl("^VL", plotnaam)) %>%
-  distinct(plotnaam) %>%
-  pull(plotnaam)
-
-all_vl_points <- calculate_obs_distance %>%
-  st_drop_geometry() %>%
-  filter(grepl("^VL", plotnaam),
-         regio == "Oostelijke leemstreek") %>%
-  distinct(plotnaam) %>%
-  pull(plotnaam)
-
-identical(sort(vl_points_outlying), sort(all_vl_points))
-```
-
-We visualiseren de punten.
-
-```{r}
-# Data preparation
-years <- outlying_dist_obs %>%
-  filter(regio == "Oostelijke leemstreek") %>%
-  distinct(jaar) %>%
-  pull()
-
-# Create an empty leaflet map
-leaflet_map <- leaflet() %>%
-  addTiles()
-
-# Loop through each year and round, adding layers to the map
-for (j in sort(years)) {
-  periods <- outlying_dist_obs %>%
-    filter(regio == "Oostelijke leemstreek",
-           jaar == j) %>%
-    distinct(periode_in_jaar) %>%
-    pull()
-
-  for (ronde in sort(periods)) {
-    # Filter data for the current year and round
-    circles <- outlying_dist_circles %>%
-      filter(regio == "Oostelijke leemstreek",
-             jaar == j,
-             periode_in_jaar == ronde) %>%
-      st_transform(4326)
-    plots <- outlying_dist_plots %>%
-      filter(regio == "Oostelijke leemstreek",
-             jaar == j,
-             periode_in_jaar == ronde) %>%
-      st_transform(4326)
-    observations <- outlying_dist_obs %>%
-      filter(regio == "Oostelijke leemstreek",
-             jaar == j,
-             periode_in_jaar == ronde) %>%
-      st_transform(4326)
-
-    # Create title
-    title <- paste("Jaar:", j, "- Ronde:", ronde)
-
-    # Add the layers to the leaflet map with group names
-    leaflet_map <- leaflet_map %>%
-      addPolygons(data = circles, fillOpacity = 0.3, group = title) %>%
-      addCircleMarkers(data = plots, radius = 3, color = "black",
-                       group = title, label = ~plots$plotnaam) %>%
-      addCircleMarkers(data = observations, fillOpacity = 0.8, radius = 5,
-                       color = "red",
-                       group = title, label = ~observations$abs_diff)
-  }
-}
-
-# Calculate control groups
-groups <- outlying_dist_obs %>%
-  filter(regio == "Oostelijke leemstreek") %>%
-  distinct(jaar, periode_in_jaar) %>%
-  mutate(group = paste("Jaar:", jaar, "- Ronde:", periode_in_jaar)) %>%
-  pull(group)
-
-# Add layer control to toggle visibility of the facets
-leaflet_map <- leaflet_map %>%
-  addLayersControl(
-    overlayGroups = groups,
-    options = layersControlOptions(collapsed = FALSE)
-  )
-
-# Print the leaflet map
-leaflet_map
-```
-
-We kijken naar telronde 1 in 2024.
-
-```{r}
-outlying_plots <- outlying_distances %>%
-  filter(grepl("^VL", plotnaam)) %>%
-  distinct(plotnaam) %>%
-  pull(plotnaam)
-
-# Test two locations
-observations_test1 <- select_time_periods %>%
-  filter(plotnaam %in% outlying_plots,
-         jaar == 2024,
-         periode_in_jaar == "R1")
-
-observations_test2 <- calculate_obs_distance %>%
-  filter(plotnaam %in% outlying_plots,
-         jaar == 2024,
-         periode_in_jaar == "R1")
-
-# Calculate buffered observations
-buffered_observations1 <- observations_test1 %>%
-  st_buffer(observations_test1$distance2plot)
-
-buffered_observations2 <- observations_test2 %>%
-  st_buffer(observations_test2$distance2plot)
-
-# Get problematic point locations
-plots_test <- observations_test2 %>%
-  st_drop_geometry() %>%
-  distinct(regio, plotnaam, jaar, periode_in_jaar, x_coord, y_coord) %>%
-  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370)
-
-# Get problematic location circles
-circles_test <- plots_test %>%
-  st_buffer(300)
-```
-
-Met de herberekende afstanden zien we dat de buffers rond de waarnemingen mooi in het telpunt samenkomen.
-
-```{r}
-# Visualise normal case
-mapview(observations_test2, col.regions = "red", legend = FALSE) +
-  mapview(buffered_observations2,
-          alpha.regions = 0, color = "black", legend = FALSE) +
-  mapview(plots_test,
-          col.regions = "black", legend = FALSE) +
-  mapview(circles_test,
-          legend = FALSE)
-```
-
-In welke punten komen de originele afstanden samen?
-
-```{r}
-# Visualise normal case
-mapview(observations_test2, col.regions = "red", legend = FALSE) +
-  mapview(buffered_observations1,
-          alpha.regions = 0, color = "black", legend = FALSE) +
-  mapview(plots_test,
-          col.regions = "black", legend = FALSE) +
-  mapview(circles_test,
-          legend = FALSE)
-```
-
-Het telpunt in Avimap lijkt ergens anders te liggen.
-De punten in Avimap liggen inderdaad op de kruisingen van de buffers.
-Er is dus iets mis met de coördinaten in de data.
-
-Het gaat blijkbaar om telpunten die vervangen worden door reeds bestaande punten
-De locatie is het nieuwe telpunt, maar de naam is die van het reeds bestaande punt, waardoor er een mismatch heb tussen de locaties van de telpunten in de steekproef en de locaties van de data via Sovon.
-Waarschijnlijk bij eerste tellingen van pilootproject punten meegegeven waarbij de telpuntnaam was aangepast naar het reeds bestaande punt, maar niet de locatie.
-Het vreemde is dat deze mismatch al voorkomt vanaf 2018 (van vóór het pilootproject).
-
-> Namen van telpunten aanpassen in Avimap van al deze punten?
+Nee. Dit is ok.
 
 ## Selecteer data binnen telcirkel radius (select_within_radius)
 
@@ -892,7 +569,8 @@ for (j in sort(years)) {
          regio != "Polders",
          jaar == j) %>%
     distinct(periode_in_jaar) %>%
-    pull()
+    pull() %>%
+    sort()
 
   for (ronde in sort(periods)) {
     # Filter data for the current year and round
@@ -934,6 +612,7 @@ groups <- outside_observations_new %>%
   filter(regio != "Oostelijke leemstreek",
          regio != "Polders") %>%
   distinct(jaar, periode_in_jaar) %>%
+  arrange(jaar, periode_in_jaar) %>%
   mutate(group = paste("Jaar:", jaar, "- Ronde:", periode_in_jaar)) %>%
   pull(group)
 
@@ -978,7 +657,8 @@ for (j in sort(years)) {
     filter(regio == "Polders",
            jaar == j) %>%
     distinct(periode_in_jaar) %>%
-    pull()
+    pull() %>%
+    sort()
 
   for (ronde in sort(periods)) {
     # Filter data for the current year and round
@@ -1016,6 +696,7 @@ for (j in sort(years)) {
 groups <- outside_observations_new %>%
   filter(regio == "Polders") %>%
   distinct(jaar, periode_in_jaar) %>%
+  arrange(jaar, periode_in_jaar) %>%
   mutate(group = paste("Jaar:", jaar, "- Ronde:", periode_in_jaar)) %>%
   pull(group)
 
@@ -1035,21 +716,7 @@ leaflet_map <- leaflet_map %>%
 leaflet_map
 ```
 
-We zien een problematisch punt in 2024: Pl_49572.
-Alle andere lijken ok.
-
-```{r}
-# Show outlying percentage of Pl_49572
-outside_observations_new %>%
-  st_drop_geometry() %>%
-  filter(plotnaam == "Pl_49572") %>%
-  count(plotnaam, jaar, periode_in_jaar, outlier_perc, outlier) %>%
-  kable()
-```
-
-Het ziet ernaar uit dat Pl_49572 dezelfde naam heeft voor 2 locaties.
-In plaats van: Pl_25053.16 (x: 50279.09, y: 210998).
-De afwezigheid van dit telpunt werd opgemerkt in Subsectie \@ref(steekproefkader).
+Deze lijken ok.
 
 **Oostelijke leemstreek**
 
@@ -1070,7 +737,8 @@ for (j in sort(years)) {
     filter(regio == "Oostelijke leemstreek",
            jaar == j) %>%
     distinct(periode_in_jaar) %>%
-    pull()
+    pull() %>%
+    sort()
 
   for (ronde in sort(periods)) {
     # Filter data for the current year and round
@@ -1108,6 +776,7 @@ for (j in sort(years)) {
 groups <- outside_observations_new %>%
   filter(regio == "Oostelijke leemstreek") %>%
   distinct(jaar, periode_in_jaar) %>%
+  arrange(jaar, periode_in_jaar) %>%
   mutate(group = paste("Jaar:", jaar, "- Ronde:", periode_in_jaar)) %>%
   pull(group)
 
@@ -1127,7 +796,121 @@ leaflet_map <- leaflet_map %>%
 leaflet_map
 ```
 
-Deze probleempunten zijn allicht gerelateerd aan de locaties van de telpunten, zoals opgemerkt in de vorige subsectie.
+Bij de meeste punten lijkt dit ok, maar we zien een paar probleempunten:
+
+- Ol_1901.4: verkeerde locatie R2, 2022
+- Ol_1068.12: paar punten heel ver weg R3, 2022
+- Ol_827.8: verkeerde locatie R4, 2024
+
+In andere periodes zijn deze wel correct geteld. 
+We verliezen dus enkel:
+
+- Ol_1901.4: R2, 2022
+- Ol_827.8: R4, 2024
+
+```{r}
+# Problem points
+problem_points <- c("Ol_1901.4", "Ol_1068.12", "Ol_827.8")
+
+inside_observations_problems <- calculate_obs_distance %>%
+  filter((plotnaam == "Ol_1901.4" & jaar == 2022 & periode_in_jaar != "R2") |
+         (plotnaam == "Ol_1068.12" & jaar == 2022 & periode_in_jaar != "R3") |
+         (plotnaam == "Ol_827.8" & jaar == 2024 & periode_in_jaar != "R4")) %>%
+  mutate(outlier = "binnen",
+         outlier_perc = 0) %>%
+  select(all_of(names(outside_observations_new)))
+
+outside_observations_problems <- outside_observations_new %>%
+  filter(plotnaam %in% problem_points)
+
+obs_probs_total <- bind_rows(
+  inside_observations_problems,
+  outside_observations_problems
+  )
+
+plots_probs_total <- obs_probs_total %>%
+  st_drop_geometry() %>%
+  distinct(regio, plotnaam, jaar, periode_in_jaar, x_coord, y_coord) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370)
+
+circles_probs_total <- plots_probs_total %>%
+  st_buffer(300)
+
+# Data preparation
+years <- obs_probs_total %>%
+  distinct(jaar) %>%
+  pull()
+
+# Create an empty leaflet map
+leaflet_map <- leaflet() %>%
+  addTiles()
+
+# Loop through each year and round, adding layers to the map
+for (j in sort(years)) {
+  periods <- obs_probs_total %>%
+    filter(plotnaam %in% problem_points,
+           jaar == j) %>%
+    distinct(periode_in_jaar) %>%
+    pull() %>%
+    sort()
+
+  for (ronde in sort(periods)) {
+    # Filter data for the current year and round
+    circles <- circles_probs_total %>%
+      filter(plotnaam %in% problem_points,
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    plots <- plots_probs_total %>%
+      filter(plotnaam %in% problem_points,
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    observations <- bind_rows(
+      inside_observations_problems,
+      outside_observations_problems
+      ) %>%
+      filter(jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+
+    # Create title
+    title <- paste("Jaar:", j, "- Ronde:", ronde)
+
+    # Add the layers to the leaflet map with group names
+    leaflet_map <- leaflet_map %>%
+      addPolygons(data = circles, fillOpacity = 0.3, group = title) %>%
+      addCircleMarkers(data = plots, radius = 3, color = "black",
+                       group = title, label = ~plots$plotnaam) %>%
+      addCircleMarkers(data = observations, fillOpacity = 0.8, radius = 5,
+                       color = ~ifelse(outlier == "binnen", "green", "red"),
+                       group = title, label = ~observations$plotnaam)
+  }
+}
+
+# Calculate control groups
+groups <- obs_probs_total %>%
+  filter(plotnaam %in% problem_points) %>%
+  distinct(jaar, periode_in_jaar) %>%
+  arrange(jaar, periode_in_jaar) %>%
+  mutate(group = paste("Jaar:", jaar, "- Ronde:", periode_in_jaar)) %>%
+  pull(group)
+
+# Add layer control to toggle visibility of the facets
+leaflet_map <- leaflet_map %>%
+  addLayersControl(
+    overlayGroups = groups,
+    options = layersControlOptions(collapsed = FALSE)
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    colors = c("green", "red"),
+    labels = c("binnen", "buiten"),
+    title = "Locatie t.o.v. telcirkel")
+
+# Print the leaflet map
+leaflet_map
+```
 
 ## Selecteer soortengroepen (select_species_groups)
 
@@ -1359,24 +1142,6 @@ data.frame(
     )
   ) %>%
   kable()
-```
-
-## Voeg predatorvariabele toe (add_predator_variable)
-
-We voegen een variabele toe aan de data met per observatie of het een predator is of niet.
-Ook worden het aantal predatoren per telling berekend.
-Kraaiachtigen en roofvogels vormen samen de predatoren.
-
-Voor kraaiachtigen hebben we:
-
-```{r}
-kraaiachtigen_f()
-```
-
-Voor roofvogels hebben we:
-
-```{r}
-roofvogels_f()
 ```
 
 ## Telpunten in finale dataset (mas_data_full)
@@ -1650,7 +1415,6 @@ sort(colnames(darwincore_mapping)[
   - `raw_sbp` --> Overlap steekproefkader zenodo?
   - `raw_openheid_klasse` --> Overlap steekproefkader zenodo?
   - `raw_regio` --> Overlap steekproefkader zenodo?
-  - `raw_predator`, `raw_n_predators_plot`: achteraf berekend, is de soort een predator of niet
   - `raw_periode_in_jaar`: 1 van 4 telperiodes
   - `raw_status_teller`: is de waarnemer een professional of een vrijwilliger?
 - Kan hier nog iets mee gedaan worden?
@@ -1688,3 +1452,5 @@ Overige opmerkingen en vragen:
   - We kijken over de hele dataset naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten. *Voordeel:* steeds meer volledige lijst van soorten. *Nadeel:* dataset zal elk jaar veranderen.
   - Afwezigheden toevoegen o.b.v. externe lijst?
   - ...
+
+> Zouden afwezigheden correct zijn? Er is geen streeplijst gebruikt.

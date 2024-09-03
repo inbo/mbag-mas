@@ -15,9 +15,9 @@ read_bo <- function(path) {
 }
 
 add_bo2021_to_frame <- function(
-  punten_df,
-  path_bo
-  ) {
+    punten_df,
+    path_bo
+) {
 
   bo2021 <- read_bo(path = path_bo)
 
@@ -122,11 +122,11 @@ path_to_openheid_landschap <- function(
 }
 
 add_openheid_landschap_to_frame <- function(
-  path,
-  punten_sf,
-  gebied,
-  cutlevels = c(1.25, 1.35, 1.51),
-  class_labels = c("GL", "HGL", "HOL", "OL")) {
+    path,
+    punten_sf,
+    gebied,
+    cutlevels = c(1.25, 1.35, 1.51),
+    class_labels = c("GL", "HGL", "HOL", "OL")) {
 
   openheid <- rast(path)
   openheid <- crop(openheid, gebied)
@@ -194,10 +194,10 @@ read_sbp_others <- function(
 }
 
 read_sbp_akkervogels <- function(
-  path,
-  gebied,
-  path_extra_soorten = NULL,
-  extra_soorten = NULL) {
+    path,
+    gebied,
+    path_extra_soorten = NULL,
+    extra_soorten = NULL) {
 
   if (gebied$Naam == "De Moeren") {
     sbp_akkervogels <- st_read(path) %>%
