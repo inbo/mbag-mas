@@ -303,7 +303,7 @@ list(
       path = file.path(mbag_dir, "data", "landbouwgebruikspercelen",
                        "processed"),
       delete_dsn = TRUE,
-
+      quiet = TRUE
     ),
     pattern = map(crop_layers_by_year)
   ),
@@ -311,11 +311,11 @@ list(
   tar_target(
     name = add_crop_prop_var,
     command = calc_crop_prop_by_year(
-      punten_df = sample_by_year,
+      punten_df = sample_by_year_sf,
       crop_layer = crop_layers_by_year,
       group_by_col = "GWSNAM_H"
     ),
-    pattern = map(sample_by_year, crop_layers_by_year),
+    pattern = map(sample_by_year_sf, crop_layers_by_year),
     iteration = "list"
   )
 )
