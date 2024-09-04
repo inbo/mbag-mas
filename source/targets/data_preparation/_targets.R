@@ -218,14 +218,15 @@ list(
     )
   ),
   # 5. Add explanatory variables
+  tar_target(
+    name = year_span,
+    command = sort(unique(st_drop_geometry(mas_data_clean$jaar)))
+  ),
   # Expand sample by year and read as sf
   tarchetypes::tar_group_by(
     name = sample_by_year,
-    command = expand_sample_by_year(
-        sample_df = sample,
-        data_df = mas_data_clean,
-        year_var = "jaar"
-      ) %>%
+    command = sample %>%
+      tidyr::expand_grid(jaar = year_span) %>%
       select(-"area_prop_sb"),
     jaar
   ),
@@ -281,7 +282,7 @@ list(
     name = crop_layer_files,
     files = paths_to_lbg_year(
       proj_path = mbag_dir,
-      pattern = "Landbouwgebruikspercelen"
+      start_year = 2022
     )
   ),
   tar_target(
@@ -292,6 +293,19 @@ list(
     ),
     pattern = map(crop_layer_files),
     iteration = "list"
+  ),
+  tar_target(
+    name = write_crop_layers_by_year,
+    command = create_output_gpkg(
+      x = crop_layers_by_year,
+      file = "landbouwgebruikspercelen_cut_bo",
+      suffix_by = "jaar",
+      path = file.path(mbag_dir, "data", "landbouwgebruikspercelen",
+                       "processed"),
+      delete_dsn = TRUE,
+
+    ),
+    pattern = map(crop_layers_by_year)
   ),
   # Calculate crop proportions
   tar_target(
