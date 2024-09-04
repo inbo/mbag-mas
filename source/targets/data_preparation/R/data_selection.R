@@ -34,7 +34,6 @@ expand_sample_by_year <- function(sample_df, data_df, year_var) {
   require("dplyr")
   require("rlang")
   year_range <- sort(pull(distinct(st_drop_geometry(data_df[year_var]))))
-  year_range <- union(year_range - 1, year_range)
 
   out_df <- sample_df %>%
     tidyr::expand_grid(jaar = year_range)
