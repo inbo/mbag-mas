@@ -110,6 +110,7 @@ sample_visited %>%
 ```
 
 In de Polders zijn inderdaad 6 punten geschrapt. In de Zandstreek 2 punten.
+Voor de Oostelijke leemstreek missen we enkele punten.
 
 We bekijken dit ook per jaar.
 
@@ -122,6 +123,30 @@ select_sampled_points %>%
   arrange(regio, jaar) %>%
   kable()
 ```
+
+**Oostelijke leemstreek**
+
+Welke punten zitten in de steekproef die niet zijn geteld?
+We kijken naar de periode 2022-2024.
+We zien dat sommige punten in bepaalde jarne niet geteld zijn:
+
+```{r}
+not_counted_ol <- sample %>%
+  filter(regio == "Oostelijke leemstreek") %>%
+  expand_grid(jaar = 2022:2024) %>%
+  anti_join(select_sampled_points,
+            by = join_by("pointid" == "plotnaam", jaar))
+
+not_counted_ol %>%
+  write_csv(file.path(mbag_dir, "output", "data_controle",
+                      "telpunten_niet_geteld.csv"))
+
+not_counted_ol %>%
+  select(-c("regio", "area_prop_sb", "x_coord", "y_coord", "crs")) %>%
+  kable()
+```
+
+> Waarom?
 
 ## Selecteer data binnen de telperiodes (select_time_periods) {#time-periods}
 
@@ -421,7 +446,7 @@ calculate_obs_distance <- tar_read_sf(
   "calculate_obs_distance", store = targets_store)
 ```
 
-Zijn er punten waarbij het absolute verschil meer dan 2 m is?
+Zijn er punten waarbij het absolute verschil meer dan 1 m is?
 
 ```{r}
 # Get original distances
@@ -442,7 +467,7 @@ outlying_distances <- distances_og %>%
   full_join(distances_new,
             by = join_by(oid, plotnaam, regio, jaar, periode_in_jaar)) %>%
   mutate(abs_diff = abs(distance2plot_og - distance2plot_new)) %>%
-  filter(abs_diff > 2)
+  filter(abs_diff > 1)
 
 # How many mismatches do we have per region?
 nrow(outlying_distances)
@@ -1234,12 +1259,12 @@ mas_data_clean %>%
   kable()
 ```
 
-We schrijven de data voor Kalkoen weg.
+We schrijven de data voor Waterspreeuw weg.
 
 ```{r}
 mas_data_clean %>%
   st_drop_geometry() %>%
-  filter(naam == "Kalkoen") %>%
+  filter(naam == "Waterspreeuw") %>%
   write_csv(file.path(mbag_dir, "output", "data_controle",
                       "vreemde_soorten_mastellingen.csv"))
 ```
@@ -1280,6 +1305,21 @@ mas_data_clean %>%
     "broedcode" = "wrntype",
     "aantal vogels" = aantal) %>%
   kable()
+```
+
+We schrijven de data met broedcodes > 0 met een hoger aantal dan 1 weg.
+
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  filter(aantal > 1,
+         wrntype > 0) %>%
+  rename( "broedcode" = "wrntype") %>%
+  select("oid", "plotnaam", "x_lambert", "y_lambert", "datum", "periode_in_jaar", "jaar",
+         "naam", "aantal", "broedcode", "waarnemer") %>%
+  arrange(waarnemer, aantal, datum) %>%
+  write_csv(file.path(mbag_dir, "output", "data_controle",
+                      "hoge_aantallen_broedcodes.csv"))
 ```
 
 # Controle data publicatie
