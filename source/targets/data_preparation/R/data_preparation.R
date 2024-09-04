@@ -193,10 +193,7 @@ remove_columns <- function(data_sf) {
 
   # Remove redundant columns
   out_sf <- out_sf %>%
-    dplyr::select(
-      -"broedcode",
-      -"periode",
-      -"periodeid")
+    dplyr::select(-"broedcode")
 
   return(out_sf)
 }

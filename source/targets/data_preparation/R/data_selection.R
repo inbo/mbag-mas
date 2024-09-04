@@ -13,7 +13,7 @@ join_with_sample <- function(counts_df, sample) {
   # Select data from correct years
   out_df <- sample_counts %>%
     mutate(keep = case_when(
-      .data$regio == "Oostelijke leemstreek" & .data$jaar >= 2018 ~ TRUE,
+      .data$regio == "Oostelijke leemstreek" & .data$jaar >= 2022 ~ TRUE,
       (.data$regio == "Westelijke leemstreek" |
           .data$regio == "Zandleemstreek") & .data$jaar >= 2023 ~ TRUE,
       (.data$regio == "Polders" |
