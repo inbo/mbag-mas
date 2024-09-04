@@ -21,16 +21,25 @@ path_to_samples <- function(proj_path, file) {
 # Paths files crop use by year
 paths_to_lbg_year <- function(
     proj_path,
-    pattern = "Landbouwgebruikspercelen") {
-  # List paths to all files
+    start_year = 2022) {
+
+  # List paths to files
   file_paths <- list.files(
-    file.path(proj_path, "data", "landbouwgebruikspercelen"),
-    pattern = pattern,
-    full.names = TRUE,
-    recursive = TRUE)
+      file.path(proj_path, "data", "landbouwgebruikspercelen"),
+      pattern = "Landbouwgebruikspercelen",
+      full.names = TRUE,
+      recursive = TRUE)
 
-  # Only return gpkg file paths
-  indices <- grepl(pattern = ".gpkg$", file_paths)
+  # Select geopackage files
+  gpkg_files <- file_paths[grepl(pattern = ".gpkg$", file_paths)]
 
-  return(sort(file_paths[indices]))
+  # Select years
+  year <- sapply(as.list(gpkg_files), function(file) {
+    unique(as.numeric(
+      stringr::str_extract_all(file, "[0-9]+")[[1]]
+      ))
+  })
+  indices <- year >= start_year
+
+  return(sort(gpkg_files[indices]))
 }
