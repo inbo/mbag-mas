@@ -148,6 +148,64 @@ not_counted_ol %>%
 
 > Waarom?
 
+```{r}
+crs_pipeline <- tar_read_sf("crs_pipeline", store = targets_store)
+```
+
+Ol_12833.8
+
+- niet geteld in 2022 en 2023, wel in 2024
+- steekproef beslissing: eerste set, behouden
+
+```{r}
+crs_pipeline %>%
+  st_drop_geometry() %>%
+  filter(plotnaam == "Ol_12833.8") %>%
+  distinct(plotnaam, jaar, waarnemer = waarneme) %>%
+  arrange(jaar)
+```
+
+Ol_815.5
+
+- nooit geteld (2022-2024)
+- steekproef beslissing: zou ter vervanging zijn van Ol_11054.15 en Ol_3417.2
+
+Ol_5760.2.14
+
+- nooit geteld (2022-2024)
+- steekproef beslissing: zou ter vervanging zijn van Ol_513.1
+
+VL0605
+
+- niet geteld in 2022, wel in 2023 en 2024
+- steekproef beslissing: Ol_8682.1 vervangen door bestaand
+
+```{r}
+crs_pipeline %>%
+  st_drop_geometry() %>%
+  filter(plotnaam == "VL0605") %>%
+  distinct(plotnaam, jaar, waarnemer = waarneme) %>%
+  arrange(jaar)
+```
+
+Ol_2025.4
+
+- nooit geteld (2022-2024)
+- steekproef beslissing: zou ter vervanging zijn van Ol_22546.2
+
+VL0363
+
+- niet geteld in 2022, wel in 2023 en 2024
+- steekproef beslissing: Ol_593.1 vervangen door bestaand
+
+```{r}
+crs_pipeline %>%
+  st_drop_geometry() %>%
+  filter(plotnaam == "VL0363") %>%
+  distinct(plotnaam, jaar, waarnemer = waarneme) %>%
+  arrange(jaar)
+```
+
 ## Selecteer data binnen de telperiodes (select_time_periods) {#time-periods}
 
 We selecteren data binnen de correcte telperiodes.
