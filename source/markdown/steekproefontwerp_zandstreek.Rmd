@@ -952,6 +952,9 @@ steekproef[] %>%
 
 ```{r}
 first_samples <- function(steekproef_df, min_n, multiplicatie) {
+  require("dplyr")
+  require("rlang")
+
   factor_n <- min_n * multiplicatie
 
   steekproef_df %>%
