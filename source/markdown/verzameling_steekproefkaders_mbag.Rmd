@@ -600,7 +600,8 @@ bind_rows(
   filter(n > 1)
 ```
 
-> arrange alles op logische manier
+We schrijven alles weg als CSV-bestanden voor zendodo publicatie.
+Voor intern gebruik schrijven we ook GPKG-bestanden weg.
 
 ```{r}
 dir.create(here("data", "steekproefkaders"), showWarnings = FALSE)
@@ -617,6 +618,17 @@ bind_rows(
     steekproefkader_weidestreek) %>%
   arrange(regio, openheid_klasse, sbp, pointid) %>%
   write_csv(here("data", "steekproefkaders", "steekproefkader_mbag_mas.csv"))
+```
+
+```{r}
+bind_rows(
+    steekproefkader_mbag_piloot,
+    steekproefkader_za_kp_po,
+    steekproefkader_weidestreek) %>%
+  arrange(regio, openheid_klasse, sbp, pointid) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), remove = FALSE, crs = 31370) %>%
+  st_write(here("data", "steekproefkaders", "steekproefkader_mbag_mas.gpkg"),
+           delete_dsn = TRUE)
 ```
 
 ## Gewichten steekproefkader
@@ -651,6 +663,17 @@ bind_rows(
   write_csv(here("data", "steekproefkaders", "steekproef_mbag_mas.csv"))
 ```
 
+```{r}
+bind_rows(
+    steekproef_mbag_piloot,
+    steekproef_za_kp_po,
+    steekproef_weidestreek) %>%
+  arrange(regio, openheid_klasse, sbp, pointid) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), remove = FALSE, crs = 31370) %>%
+  st_write(here("data", "steekproefkaders", "steekproef_mbag_mas.gpkg"),
+           delete_dsn = TRUE)
+```
+
 ## Finale steekproef na manuele controle
 
 Dit is een CSV-bestand van alle finale telpunten.
@@ -662,4 +685,15 @@ bind_rows(
     steekproef_avimap_weidestreek) %>%
   arrange(regio, openheid_klasse, sbp, pointid) %>%
   write_csv(here("data", "steekproefkaders", "steekproef_avimap_mbag_mas.csv"))
+```
+
+```{r}
+bind_rows(
+    steekproef_avimap_mbag_piloot,
+    steekproef_avimap_za_kp_po,
+    steekproef_avimap_weidestreek) %>%
+  arrange(regio, openheid_klasse, sbp, pointid) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), remove = FALSE, crs = 31370) %>%
+  st_write(here("data", "steekproefkaders", "steekproef_avimap_mbag_mas.gpkg"),
+           delete_dsn = TRUE)
 ```
