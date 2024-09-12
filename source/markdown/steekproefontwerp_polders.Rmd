@@ -1068,10 +1068,9 @@ We zien dat de steekproef vanaf 50 punten per stratum een goede afspiegeling is 
 
 ```{r}
 mapview_n <- function(n) {
-  require("mapview")
-
-  mapview(perimeters_data, color = "red", alpha.regions = 0, legend = FALSE) +
-    mapview(
+  mapview::mapview(perimeters_data, color = "red", alpha.regions = 0,
+                   legend = FALSE) +
+    mapview::mapview(
       first_samples(steekproef, n, multiplicatie = 1) %>%
         st_buffer(dist = 300),
       zcol = "openheid_sbp", layer = "stratum"
