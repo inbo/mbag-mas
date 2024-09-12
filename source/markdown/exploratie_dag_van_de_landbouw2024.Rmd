@@ -1,5 +1,5 @@
 ---
-title: "Data exploratie De Potter"
+title: "Data exploratie Depotter"
 author: "Ward Langeraert"
 date: "`r Sys.Date()`"
 output:
@@ -59,7 +59,7 @@ lapply(list.files(file.path(target_dir, "R"), full.names = TRUE), source)
 
 We maken enkele figuren voor de "Dag van de landbouw" te Koksijde (15 september).
 
-Hiervoor vergelijken we punten van het bedrijf De Potter in Wulpen (Nieuwpoort) met de omliggende regio:
+Hiervoor vergelijken we punten van het bedrijf Depotter in Wulpen (Nieuwpoort) met de omliggende regio:
 
 - Depot2
 - Depot3
@@ -79,7 +79,7 @@ Behalve 1 punt behoren ze niet tot de steekproef voor MBAG MAS, dus we moeten no
 We selecteren enkel vogels en Haas.
 
 ```{r}
-# Select data from De Potter
+# Select data from Depotter
 depot_locations <- c("Depot2", "Depot3", "Depot5", "Pl_10446.2.18",
                      "Pl_10047.1.3")
 crs_pipeline <- tar_read_sf("crs_pipeline", store = targets_store)
@@ -113,11 +113,16 @@ mas_data_depot <- mas_data_clean %>%
          (.data$soortgrp == 2 | naam == "Haas"))
 ```
 
+Data Depotter.
+
+```{r}
+mapview(depot_data_final, layer = "Depotter")
+```
+
 De data voor de Polders is wijd verbreid.
 
 ```{r}
-mapview(depot_data_final, layer = "De Potter") +
-  mapview(mas_data_depot, col.regions = "red", layer = "Rest")
+mapview(mas_data_depot, col.regions = "red", layer = "Polders (OL binnen plan)")
 ```
 
 We zullen een selectie maken voor de vergelijking.
@@ -126,8 +131,8 @@ We selecteren de data voor de westelijke Polders als alle punten ten westen van 
 ```{r}
 mas_data_depot <- mas_data_depot %>%
           filter(x_lambert < 50990)
-mapview(depot_data_final, layer = "De Potter") +
-  mapview(mas_data_depot, col.regions = "red", layer = "Referentie")
+mapview(depot_data_final, layer = "Depotter") +
+  mapview(mas_data_depot, col.regions = "red", layer = "Referentiegebied Polders")
 ```
 
 We voegen de data samen.
@@ -135,7 +140,7 @@ We voegen de data samen.
 ```{r}
 analysis_data <- bind_rows(mas_data_depot, depot_data_final) %>%
   mutate(gebied = ifelse(plotnaam %in% depot_locations,
-                         "De Potter", "Referentie"))
+                         "Depotter", "Referentie"))
 ```
 
 ```{r}
@@ -151,7 +156,8 @@ analysis_data %>%
   distinct(
     gebied, regio, openheid_klasse, sbp, aantal_soorten, aantal_waarnemingen,
     aantal_telpunten
-  )
+  ) %>%
+  kable()
 ```
 
 # Data exploratie
@@ -272,7 +278,7 @@ relfreq_diff <- relfreqs_df %>%
     values_from = gemiddelde_freq,
     values_fill = 0
   ) %>%
-  mutate(verschilfreq = `De Potter` - `Referentie`) %>%
+  mutate(verschilfreq = `Depotter` - `Referentie`) %>%
   # Order most common species
   mutate(naam = reorder(naam, verschilfreq,
     FUN = "median",
@@ -290,7 +296,7 @@ relfreq_ratio <- relfreqs_df %>%
     values_from = gemiddelde_freq,
     values_fill = 0
   ) %>%
-  mutate(ratiofreq = `De Potter` / `Referentie`) %>%
+  mutate(ratiofreq = `Depotter` / `Referentie`) %>%
   filter(Referentie != 0) %>%
   filter(!is.infinite(ratiofreq)) %>%
   # Retrieve 20 most common species + goal species
@@ -300,7 +306,7 @@ relfreq_ratio <- relfreqs_df %>%
   ))
 ```
 
-Top 15 van soorten die in termen van verschil in relatieve frequentie van voorkomen meer voorkomen in de telpunten van De Potter.
+Top 15 van soorten die in termen van verschil in relatieve frequentie van voorkomen meer voorkomen in de telpunten van Depotter.
 Boxplots op basis van verschil voor elke telperiode per soort ($n$ = 4).
 
 ```{r}
@@ -324,7 +330,7 @@ relfreq_diff %>%
   geom_boxplot(aes(x = verschilfreq, y = naam)) +
   labs(
     y = "", x = "Verschil in relatieve frequentie",
-    title = "Algemener in telpunten De Potter"
+    title = "Algemener in telpunten Depotter"
   ) +
   scale_y_discrete(labels = function(x) highlight(x, doelsoorten, "red")) +
   coord_cartesian(xlim = c(
@@ -341,9 +347,53 @@ relfreq_diff %>%
   guides(colour = guide_legend(override.aes = list(size = 3)))
 ```
 
-Top 15 van soorten die in termen van ratio in gemiddelde relatieve frequentie van voorkomen meer voorkomen in de telpunten van De Potter.
+Top 15 van soorten die in termen van ratio in gemiddelde relatieve frequentie van voorkomen meer voorkomen in de telpunten van Depotter.
 Boxplots op basis van verschil voor elke telperiode per soort ($n$ = 4).
-Een waarde 3 kan geïnterpreteerd worden als een soort die 3x algemener is in telpunten van De Potter dan het referentiegebied (de relatieve frequentie in De Potter is 3x zo groot als de relatieve frequentie in het referentiegebied).
+Een waarde 3 kan geïnterpreteerd worden als een soort die 3x algemener is in telpunten van Depotter dan het referentiegebied (de relatieve frequentie in Depotter is 3x zo groot als de relatieve frequentie in het referentiegebied).
+
+```{r}
+relfreq_ratio %>%
+  filter(as.numeric(naam) > length(unique(naam)) - 15) %>%
+  group_by(naam) %>%
+  summarise(mediaan_freq = median(ratiofreq),
+            iqr = quantile(ratiofreq, 0.75) - quantile(ratiofreq, 0.25)) %>%
+  arrange(desc(naam)) %>%
+  kable(digits = 3)
+```
+
+
+```{r}
+relfreq_ratio %>%
+  filter(as.numeric(naam) > length(unique(naam)) - 15) %>%
+  ggplot() +
+  geom_vline(
+    xintercept = 1,
+    colour = "lightgrey",
+    linetype = "dashed",
+    linewidth = 0.7
+  ) +
+  geom_boxplot(aes(x = ratiofreq, y = naam)) +
+  annotate(geom = "label",
+           label = paste("Doelsoorten akkervogels (+ Haas) in",
+                         "rood.\nBoxplots tonen spreiding van waardes",
+                         "per\ntelperiode (n = 4) per soort."),
+           colour = "black", fill = "gray95",
+           x = 3, y = 1, hjust = 0, vjust = 0,
+           label.padding = unit(0.5, "lines")) +
+  labs(
+    y = "", x = "Factor algemener in Depotter",
+    title = "Top 15 soorten meer algemeen in\ntelpunten Depotter"
+  ) +
+  scale_y_discrete(labels = function(x) highlight(x, doelsoorten, "red")) +
+  scale_x_continuous(breaks = seq(0, 10)) +
+  theme(
+    legend.position = "top",
+    axis.text = element_text(size = 8),
+    axis.text.y = element_markdown(),
+    panel.spacing = unit(1.2, "lines")
+  )
+```
+
 
 ```{r}
 p <- relfreq_ratio %>%
@@ -364,8 +414,8 @@ p <- relfreq_ratio %>%
            x = 3.3, y = 1, hjust = 0, vjust = 0,
            label.padding = unit(0.5, "lines")) +
   labs(
-    y = "", x = "Factor algemener in De Potter",
-    title = "Top 15 soorten meer algemeen in telpunten De Potter"
+    y = "", x = "Factor algemener in Depotter",
+    title = "Top 15 soorten meer algemeen in telpunten Depotter"
   ) +
   scale_y_discrete(labels = function(x) highlight(x, doelsoorten, "red")) +
   scale_x_continuous(breaks = seq(0, 10)) +
@@ -377,7 +427,6 @@ p <- relfreq_ratio %>%
                               margin = margin(t = 0, r = 0, b = 20, l = 0),
                               hjust = -5)
   )
-p
 
 save_figure(p, here::here(media_folder, "ratio_frequenties"), devices,
   dpi = 300, width = 8, height = 6
