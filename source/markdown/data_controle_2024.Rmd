@@ -128,7 +128,7 @@ select_sampled_points %>%
 
 Welke punten zitten in de steekproef die niet zijn geteld?
 We kijken naar de periode 2022-2024.
-We zien dat sommige punten in bepaalde jarne niet geteld zijn:
+We zien dat sommige punten in bepaalde jaren niet geteld zijn:
 
 ```{r}
 not_counted_ol <- sample %>%

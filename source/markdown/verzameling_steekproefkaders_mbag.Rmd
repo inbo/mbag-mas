@@ -600,7 +600,7 @@ bind_rows(
   filter(n > 1)
 ```
 
-We schrijven alles weg als CSV-bestanden voor zendodo publicatie.
+We schrijven alles weg als CSV-bestanden voor zenodo publicatie.
 Voor intern gebruik schrijven we ook GPKG-bestanden weg.
 
 ```{r}
