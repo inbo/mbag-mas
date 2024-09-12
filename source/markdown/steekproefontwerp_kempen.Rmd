@@ -38,7 +38,8 @@ mbag_dir <- here()
 source(here("source", "R", "steekproefkader.R"))
 source(here("source", "R", "berekening_hulpvariabelen.R"))
 source(here("source", "R", "wfs_wcs.R"))
-targets_store <- here("source", "targets", "mas_steekproef_za_kp_po", "_targets")
+targets_store <- here("source", "targets", "mas_steekproef_za_kp_po",
+                      "_targets")
 ```
 
 # Vooraf
@@ -58,7 +59,7 @@ Om de perimeter te bepalen voer je onderstaande code uit in mas_steekproef_za_kp
 
 De code maakt een intersectie tussen landbouwstreek Kempen (heel België) en contour Vlaanderen en voegt deze toe  aan file "za_kp_po_perimeters.gpkg".
 
-```{r, class.source = "fold-show", eval=FALSE}
+```r
 # library(sf)
 #
 # # Lees in polygonen landbouwstreken
@@ -361,7 +362,7 @@ Voor elk potentieel telpunt / telcirkel:
 > VITO 2019 landgebruikskaart (update elke 3 jaar)
 
 ```{r}
-telcirkels_selectie_landgebruik <- tar_read(telcirkels_selectie_landgebruik,
+telcirkels_selectie_lgb <- tar_read(telcirkels_selectie_landgebruik,
   store = targets_store
 ) %>%
   filter(startsWith(pointid, abbreviate("Kempen", 2)))
@@ -377,7 +378,7 @@ In de momenteel gebruikte berekening is dit "ontbrekend" landgebruik weggefilter
 Het kan dus zijn dat op de volledige telcirkel deze oppervlakte-aandelen verschillend zijn (en al dan niet zouden moeten uitgesloten worden volgens het criterium).
 
 ```{r}
-telcirkels_selectie_landgebruik %>%
+telcirkels_selectie_lgb %>%
   ggtern::ggtern(aes(
     x = Akker + Grasland,
     y = Bos + Struikgewas,
@@ -394,7 +395,7 @@ De kaart toont de punten die op deze manier niet meer in aanmerkingen komen.
 ```{r map-exclusie-landgebruik-vito}
 exclusie_punten <- punten %>%
   left_join(
-    telcirkels_selectie_landgebruik %>%
+    telcirkels_selectie_lgb %>%
       group_by(pointid) %>%
       summarize(selectie2 = any(selectie2)),
     by = "pointid"
@@ -587,7 +588,7 @@ De kaartlagen bevinden zich in de MAS drive map onder layers \> perimeters SBPs
 
 Deze werden tot 1 bestand samengevoegd met volgende code:
 
-```{r, class.source = "fold-show", eval=FALSE}
+```r
 layer1 <- st_read("C:/Users/ward_langeraert/Downloads/INBO.A.4291_bijlage1/Kerngebied_SBP_2_INBO.shp")
 layer2 <- st_read("C:/Users/ward_langeraert/Downloads/INBO.A.4291_bijlage1/PM_SBP_2_INBO.shp")
 layer3 <- st_read("C:/Users/ward_langeraert/Downloads/PMZ_Kernzone_Grauwe_kiek_sbp/lu_sbp_pgs.shp")

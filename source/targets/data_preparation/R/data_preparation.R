@@ -167,7 +167,7 @@ add_predator_variables <- function(counts_df) {
   require("rlang")
 
   # Load predator species
-  predatoren <- predatoren_f()
+  predatoren <- predatoren_f() # nolint: object_usage_linter
 
   out_df <- counts_df %>%
     # Calculate number of predators per observation

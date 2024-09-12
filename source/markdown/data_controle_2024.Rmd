@@ -1387,9 +1387,10 @@ mas_data_clean %>%
   st_drop_geometry() %>%
   filter(aantal > 1,
          wrntype > 0) %>%
-  rename( "broedcode" = "wrntype") %>%
-  select("oid", "plotnaam", "x_lambert", "y_lambert", "datum", "periode_in_jaar", "jaar",
-         "naam", "aantal", "broedcode", "waarnemer") %>%
+  rename("broedcode" = "wrntype") %>%
+  select("oid", "plotnaam", "x_lambert", "y_lambert", "datum",
+         "periode_in_jaar", "jaar", "naam", "aantal", "broedcode", "waarnemer"
+         ) %>%
   arrange(waarnemer, aantal, datum) %>%
   write_csv(file.path(mbag_dir, "output", "data_controle",
                       "hoge_aantallen_broedcodes.csv"))
