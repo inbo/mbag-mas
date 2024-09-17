@@ -62,8 +62,7 @@ static_mapping <- function(data_df) {
       dwc_country              = "Belgium",
       dwc_stateProvince        = "Flanders",
       dwc_countryCode          = "BE",
-      dwc_basisOfRecord        = "HumanObservation",
-      dwc_organismQuantityType = "individuals"
+      dwc_basisOfRecord        = "HumanObservation"
     )
 
   return(out_df)
@@ -90,8 +89,7 @@ unchanged_mapping <- function(data_df) {
       "dwc_taxonID"            = "raw_soortnr"
     ) %>%
     mutate(
-      dwc_identifiedBy = .data$dwc_recordedBy,
-      dwc_individualCount = .data$dwc_organismQuantity
+      dwc_identifiedBy = .data$dwc_recordedBy
     )
 
   return(out_df)
@@ -111,7 +109,7 @@ modified_mapping <- function(data_df) {
                            .data$dwc_eventDate,
                            .data$dwc_locationID),
       dwc_class = ifelse(.data$raw_soortgrp == 2, "Aves", "Mammalia"),
-      dwc_occurrenceStatus = ifelse(.data$dwc_individualCount > 0,
+      dwc_occurrenceStatus = ifelse(.data$dwc_organismQuantity > 0,
                                     "Present", "Absent"),
       dwc_behavior = case_when(
           .data$dwc_varbatimBehavior == "Territoriaal gedrag" ~
@@ -128,7 +126,9 @@ modified_mapping <- function(data_df) {
             "Pair in breeding habitat"
         ),
       dwc_coordinateUncertaintyInMeters = ifelse(
-        .data$raw_distance2plot < 100, 10, 0.1 * .data$raw_distance2plot)
+        .data$raw_distance2plot < 100, 10, 0.1 * .data$raw_distance2plot),
+      dwc_organismQuantityType = ifelse(.data$raw_wrntype == "0",
+                                        "individuals", "breeding pairs")
     ) %>%
     select(
       -"raw_oid",
@@ -239,7 +239,7 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
     "type", "language", "license", "publisher", "rightsHolder", "accessRights",
     "datasetID", "collectionCode", "institutionCode", "datasetName",
     "basisOfRecord", "eventType", "eventID",
-    "occurrenceID", "recordedBy", "individualCount", "organismQuantity",
+    "occurrenceID", "recordedBy", "organismQuantity",
     "organismQuantityType", "occurrenceStatus", "behavior", "varbatimBehavior",
     "occurrenceRemarks", "samplingProtocol", "samplingEffort", "eventDate",
     "day", "month", "year", "continent", "country", "countryCode",
