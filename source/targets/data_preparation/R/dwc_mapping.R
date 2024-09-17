@@ -112,18 +112,18 @@ modified_mapping <- function(data_df) {
       dwc_occurrenceStatus = ifelse(.data$dwc_organismQuantity > 0,
                                     "Present", "Absent"),
       dwc_behavior = case_when(
-          .data$dwc_varbatimBehavior == "Territoriaal gedrag" ~
-            "Teritorial behaviour",
-          .data$dwc_varbatimBehavior == "Individu of groep niet plaatsgebonden" ~
-            "Individual or group not bound to a location",
-          .data$dwc_varbatimBehavior == "Volwassen individu in broedbiotoop" ~
-            "Adult individual in breeding habitat",
-          .data$dwc_varbatimBehavior == "Nestvondst" ~
-            "Nest discovery",
-          .data$dwc_varbatimBehavior == "Nest-aanduidend gedrag" ~
-            "Nest-indicating behaviour",
-          .data$dwc_varbatimBehavior == "Paar in broedbiotoop" ~
-            "Pair in breeding habitat"
+        .data$dwc_varbatimBehavior == "Territoriaal gedrag" ~
+          "Teritorial behaviour",
+        .data$dwc_varbatimBehavior == "Individu of groep niet plaatsgebonden" ~
+          "Individual or group not bound to a location",
+        .data$dwc_varbatimBehavior == "Volwassen individu in broedbiotoop" ~
+          "Adult individual in breeding habitat",
+        .data$dwc_varbatimBehavior == "Nestvondst" ~
+          "Nest discovery",
+        .data$dwc_varbatimBehavior == "Nest-aanduidend gedrag" ~
+          "Nest-indicating behaviour",
+        .data$dwc_varbatimBehavior == "Paar in broedbiotoop" ~
+          "Pair in breeding habitat"
         ),
       dwc_coordinateUncertaintyInMeters = ifelse(
         .data$raw_distance2plot < 100, 10, 0.1 * .data$raw_distance2plot),
