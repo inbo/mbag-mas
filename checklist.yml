@@ -19,6 +19,7 @@ spelling:
   ignore:
   - .github
   - LICENSE.md
-  - source/targets
+  - source/targets/mas_steekproef_weidestreek/targets_steekproef_weidestreek.Rmd
+  - source/targets/mas_steekproef_za_kp_po/targets_steekproef_za_kp_po.Rmd
   - source/R
   - data
