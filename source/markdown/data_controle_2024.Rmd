@@ -1382,6 +1382,20 @@ mas_data_clean %>%
   kable()
 ```
 
+We kijken per jaar hoe vaak een hoger getal dan **2** is geteld voor broedcodes > 0.
+Het is een probleem elk jaar.
+
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  filter(aantal > 2,
+         wrntype > 0) %>%
+  count(wrntype, jaar, name = "aantal keer in dataset") %>%
+  rename(
+    "broedcode" = "wrntype") %>%
+  kable()
+```
+
 We schrijven de data met broedcodes > 0 met een hoger aantal dan 1 weg.
 
 ```{r}
