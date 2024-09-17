@@ -49,6 +49,11 @@ targets_store <- here::here("source", "targets", "data_preparation", "_targets")
 # Doel
 
 Data preparatie verloopt via een targets pipeline waarbij verschillende stappen elkaar opvolgen.
+We maken gebruik van ["dynamic branching"](https://books.ropensci.org/targets/dynamic.html) in de targets pipeline.
+Dit is een manier om nieuwe targets te definiëren terwijl de pipeline actief is.
+Hierbij wordt een nieuwe target gemaakt voor elk bestand.
+Bij het toevoegen van een nieuwe dataset van een jaar, zal de pipeline bijgevolg enkel de berekeningen voor de data van het nieuwe jaar moeten doen en niet opnieuw de berekeningen voor de vorige jaren.
+De volledige pipeline ziet er als volgt uit:
 
 ```{r, message=FALSE}
 tar_visnetwork(script = paste0(targets_store, ".R"),
