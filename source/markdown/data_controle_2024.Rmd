@@ -1538,6 +1538,8 @@ sort(colnames(darwincore_mapping)[
   - `raw_plotid`: we gebruiken eigenlijk altijd plotnaam
   - `raw_projectid`: is dit INBO of SOVON gerelateerd?
 
+> Laatste 2 lijken ons alvast niet relevant.
+
 Welke kolommen moet nog aangevuld worden?
 
 ```{r}
@@ -1568,4 +1570,4 @@ Overige opmerkingen en vragen:
   - Afwezigheden toevoegen o.b.v. externe lijst?
   - ...
 
-> Zouden afwezigheden correct zijn? Er is geen streeplijst gebruikt.
+> Zouden afwezigheden correct zijn? Er is geen streeplijst gebruikt, dus eerder niet.

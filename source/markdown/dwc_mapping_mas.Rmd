@@ -248,6 +248,8 @@ taxon_core <- taxon_core %>%
   - Afwezigheden toevoegen o.b.v. externe lijst?
   - ...
 
+> Zouden afwezigheden correct zijn? Er is geen streeplijst gebruikt, dus eerder niet.
+
 # Nabewerking
 ## Taxon matching
 
@@ -527,6 +529,8 @@ sort(colnames(taxon_core)[grepl("^raw\\_", colnames(taxon_core))])
   - `raw_doy`: day of year sinds januari
   - `raw_plotid`: we gebruiken eigenlijk altijd plotnaam
   - `raw_projectid`: is dit INBO of SOVON gerelateerd?
+
+> Laatste 2 lijken ons alvast niet relevant.
 
 Zo ziet de dataset er voorlopig uit:
 
