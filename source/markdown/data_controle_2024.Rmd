@@ -1404,7 +1404,7 @@ De finale dataset wordt verder in de pipeline klaar gemaakt voor publicatie op G
 Het gaat om de volgende stappen (zie ook `dwc_mapping_mas.Rmd` voor een uitgebreide beschrijving en exploratie).
 
 - Dataset preparatie
-  - We verwijderen van kolommen gerelateerd aan steekproef
+  - We verwijderen kolommen gerelateerd aan steekproef
   - We passen kolomnamen aan
 - Ruimtelijke verwerking
   - We verwijderen de Amersfoord coördinaten
