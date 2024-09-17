@@ -1560,7 +1560,6 @@ glimpse(dwc_mapping_final)
 
 Overige opmerkingen en vragen:
 
-- Hoeveel zetten we voor `coordinateUncertaintyInMeters`? Voorlopig op 5 m gezet.
 - Ok dat `varbatimBehavior` de Nederlandstalige beschrijving is? De Engelstalige beschrijving staat onder `behavior`. Of mag de Nederlandse beschrijving weg?
 - Wat is het verschil tussen `individualCount` en `organismQuantity`?
 - We kunnen ook afwezigheden toevoegen (`occurrenceStatus = "absent"` en `individualCount = 0`) aangezien alle vogels worden genoteerd op het moment van tellen vanaf dat telpunt. Hoe doen we dit?

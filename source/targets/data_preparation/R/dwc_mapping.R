@@ -63,8 +63,7 @@ static_mapping <- function(data_df) {
       dwc_stateProvince        = "Flanders",
       dwc_countryCode          = "BE",
       dwc_basisOfRecord        = "HumanObservation",
-      dwc_organismQuantityType = "individuals",
-      dwc_coordinateUncertaintyInMeters = "5"
+      dwc_organismQuantityType = "individuals"
     )
 
   return(out_df)
@@ -115,19 +114,22 @@ modified_mapping <- function(data_df) {
       dwc_occurrenceStatus = ifelse(.data$dwc_individualCount > 0,
                                     "Present", "Absent"),
       dwc_behavior = case_when(
-        .data$dwc_varbatimBehavior == "Territoriaal gedrag" ~
-          "Teritorial behaviour",
-        .data$dwc_varbatimBehavior == "Individu of groep niet plaatsgebonden" ~
-          "Individual or group not bound to a location",
-        .data$dwc_varbatimBehavior == "Volwassen individu in broedbiotoop" ~
-          "Adult individual in breeding habitat",
-        .data$dwc_varbatimBehavior == "Nestvondst" ~
-          "Nest discovery",
-        .data$dwc_varbatimBehavior == "Nest-aanduidend gedrag" ~
-          "Nest-indicating behaviour",
-        .data$dwc_varbatimBehavior == "Paar in broedbiotoop" ~
-          "Pair in breeding habitat"
-      )) %>%
+          .data$dwc_varbatimBehavior == "Territoriaal gedrag" ~
+            "Teritorial behaviour",
+          .data$dwc_varbatimBehavior == "Individu of groep niet plaatsgebonden" ~
+            "Individual or group not bound to a location",
+          .data$dwc_varbatimBehavior == "Volwassen individu in broedbiotoop" ~
+            "Adult individual in breeding habitat",
+          .data$dwc_varbatimBehavior == "Nestvondst" ~
+            "Nest discovery",
+          .data$dwc_varbatimBehavior == "Nest-aanduidend gedrag" ~
+            "Nest-indicating behaviour",
+          .data$dwc_varbatimBehavior == "Paar in broedbiotoop" ~
+            "Pair in breeding habitat"
+        ),
+      dwc_coordinateUncertaintyInMeters = ifelse(
+        .data$raw_distance2plot < 100, 10, 0.1 * .data$raw_distance2plot)
+    ) %>%
     select(
       -"raw_oid",
       -"raw_soortgrp",

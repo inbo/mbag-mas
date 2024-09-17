@@ -76,7 +76,6 @@ raw_data <- raw_data %>%
   )
 ```
 
-
 We passen de kolomnamen aan en nemen een kopie van de data.
 
 ```{r}
@@ -151,8 +150,7 @@ taxon_core <- taxon_core %>%
     dwc_stateProvince        = "Flanders",
     dwc_countryCode          = "BE",
     dwc_basisOfRecord        = "HumanObservation",
-    dwc_organismQuantityType = "individuals",
-    dwc_coordinateUncertaintyInMeters = "5"
+    dwc_organismQuantityType = "individuals"
   )
 ```
 
@@ -166,7 +164,6 @@ taxon_core <- taxon_core %>%
   - `dwc_samplingEffort`
 - Is `dwc_language = "en"` ok?
 - Is `dwc_eventType = "Survey"` ok?
-- Hoeveel zetten we voor `dwc_coordinateUncertaintyInMeters`?
 
 ## Ongewijzigde waarden
 
@@ -206,6 +203,8 @@ Gewijzigde waarden worden gebruikt voor Darwin Core-termen waarvoor de inhoud in
 - We voegen `dwc_class` toe o.b.v. de `soortgrp`
 - We voegen `dwc_occurrenceStatus` toe o.b.v. de `dwc_individualCount` 
 - We voegen `dwc_behavior` toe als Engelse vertaling van `dwc_varbatimBehavior`
+- We berekenen `dwc_coordinateUncertaintyInMeters`:
+  - Minimaal 10 m, anders 10 % van afstand tot telpunt
 
 ```{r}
 taxon_core <- taxon_core %>%
@@ -230,7 +229,10 @@ taxon_core <- taxon_core %>%
         "Nest-indicating behaviour",
       .data$dwc_varbatimBehavior == "Paar in broedbiotoop" ~
         "Pair in breeding habitat"
-  )) %>%
+    ),
+  dwc_coordinateUncertaintyInMeters = ifelse(.data$raw_distance2plot < 100,
+                                             10, 0.1 * .data$raw_distance2plot)
+  ) %>%
   select(
     -"raw_oid",
     -"raw_soortgrp",
