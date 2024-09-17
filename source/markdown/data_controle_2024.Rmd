@@ -69,10 +69,10 @@ We doen dit in dit rapport voor de data van 2018-2024.
 In de eerste stap worden Amersfoord coördinaten naar Lambert coördinaten omgezet.
 Dit gebeurt via een functie die op verschillende datasets goed getest is.
 
-## Selectie punten MBAG steekproefkader (select_sampled_points) {#steekproefkader}
+## Selectie punten MBAG MAS steekproef (select_sampled_points) {#steekproef}
 
-In de tweede stap selecteren we de punten uit de totale dataset die tot het MBAG steekproefkader behoren.
-Dit gebeurt via een "inner join" wat wil zeggen dat we kunnen nagaan of telpunten uit het steekproefkader niet bezocht zijn (bewust of onbewust).
+In de tweede stap selecteren we de punten uit de totale dataset die tot het MBAG MAS steekproef behoren.
+Dit gebeurt via een "inner join" wat wil zeggen dat we kunnen nagaan of telpunten uit het steekproef niet bezocht zijn (bewust of onbewust).
 
 ```{r}
 sample <- tar_read("sample", store = targets_store)
@@ -1265,7 +1265,7 @@ mas_data_full %>%
 ```
 
 Het ziet er naar uit dat we 3 punten verloren zijn in de Oostelijke leemstreek.
-Deze zijn besproken in sectie \@ref(steekproefkader).
+Deze zijn besproken in sectie \@ref(steekproef).
 
 # Controle finale dataset
 
@@ -1527,10 +1527,10 @@ sort(colnames(darwincore_mapping)[
 - Locaties telpunten ook in dataset (`raw_x_coord`, `raw_y_coord`, `raw_crs`) --> Event versus occurrence dataset opsplitsen?
 - Afstand tot telpunt: `raw_distance2plot` --> welke term?
 - Zijn variabelen relevant om mee te geven?
-  - `raw_area_prop_sb` --> Overlap steekproefkader zenodo?
-  - `raw_sbp` --> Overlap steekproefkader zenodo?
-  - `raw_openheid_klasse` --> Overlap steekproefkader zenodo?
-  - `raw_regio` --> Overlap steekproefkader zenodo?
+  - `raw_area_prop_sb` --> Overlap steekproef(kader) zenodo?
+  - `raw_sbp` --> Overlap steekproef(kader) zenodo?
+  - `raw_openheid_klasse` --> Overlap steekproef(kader) zenodo?
+  - `raw_regio` --> Overlap steekproef(kader) zenodo?
   - `raw_periode_in_jaar`: 1 van 4 telperiodes
   - `raw_status_teller`: is de waarnemer een professional of een vrijwilliger?
 - Kan hier nog iets mee gedaan worden?
