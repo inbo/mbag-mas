@@ -37,6 +37,11 @@ lapply(list.files(file.path(target_dir, "R"), full.names = TRUE), source)
 source(file.path(mbag_dir, "source", "R", "predatoren_f.R"))
 source(file.path(mbag_dir, "source", "R", "taxon_mapping.R"))
 
+
+# Download MAS pipeline data
+
+## ... to be continued
+
 # Target list
 list(
   # 1. Read in observation data
