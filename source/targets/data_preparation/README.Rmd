@@ -1,0 +1,77 @@
+---
+title: "Procedure om MAS-data te downloaden via de Sovon WFS-server en verwerking via targets pipeline"
+author: "Hans Van Calster & Ward Langeraert"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Downloaden van de data van de Sovon WFS-server
+
+De MAS-data worden geïmporteerd van de Sovon WFS-server via [QGIS](https://qgis.org/).
+
+1.  Een account aanmaken via <https://www.vogelatlas.be/user/newuser>
+
+    1.  Rechten aanvragen via Sovon voor gebruik van de WFS
+
+2.  Open QGIS
+
+    1.  Zet project CRS op EPSG:28992
+    2.  Kies 'Kaartlagen' $\rightarrow$ 'Databronnen beheren' $\rightarrow$ 'WFS / OGC API - Objecten'
+
+3.  Klik 'Nieuw' bovenaan in het dialoogvenster om een nieuwe WFS-verbinding te maken
+
+    1.  Gebruik als 'naam' `sovon` en als 'url' `https://portal.sovon.nl/views/wfs/453/`
+    2.  Klik op 'OK'
+
+4.  Maak een verbinding met de zopas toegevoegde WFS
+
+    1.  Klik op 'Verbinden' bovenaan in het dialoogvenster
+    2.  Geef je gebruikersnaam en paswoord in wanneer dit wordt gevraagd en klik op 'OK'
+    3.  Selecteer de laag 'ms:viewpoints'
+        -   Maak eventueel een specifieke SQL-query aan via 'Query maken' onderaan in het dialoogvenster
+        -   Bijvoorbeeld voor de data 2024: `SELECT * FROM viewpoints WHERE jaar = 2024`
+    4.  Vink het boxje aan 'Alleen objecten bevragen die het huidige zichtbare bereik overlappen'
+    5.  Wijzig het Coördinaten Referentiesysteem naar EPSG:28992
+    6.  Klik op 'Toevoegen' onderaan in het dialoogvenster
+        -   Indien QGIS vraagt de toe te voegen items te selecteren, selecteer je de laag 'ms:viewpoints' en klik je op 'Lagen toevoegen'
+
+Nu worden alle data waar je toegang toe hebt gedownload (dit kan even duren).
+Dit zijn de waarnemingen van de MAS-tellingen in Vlaanderen.
+
+## Exporteren en lokalisatie van de data
+
+Wanneer alle data gedownload zijn, kan je deze laag exporteren:
+
+1.  Zorg dat alle data zichtbaar zijn in de view van QGIS
+
+2.  Selecteer 'Kaartlagen' $\rightarrow$ 'Opslaan als ...'
+
+    -   Gebruik als 'Indeling' `GeoJSON`
+    -   Gebruik als 'Bestandsnaam' `YYYYMMDD_qgis_export_sovon_wfs_JAAR`
+        -   `YYYYMMDD` is de datum van export
+        -   `JAAR` is het jaar wanneer de data verzameld is (zie SQL-query)
+        -   Sla het geojson-bestand op in de folder `mbag-mas/data/mas`.
+    -   Gebruik als 'CRS' `EPSG:28992 - Amersfoort / RD New`
+    -   Klik op 'OK' (dit kan even duren)
+
+3.  De finale export die je wilt gebruiken voor data preparatie en verdere analyses, sla je op in een folder met als naam `JAAR` onder `mbag-mas/source/targets/data_preparation/data`.
+    Elke folder mag slechts 1 bestand hebben met de data van dat jaar (zie verder).
+
+## Verwerking van de data 
+
+We verwerken de data via een pipeline met de [targets package](https://books.ropensci.org/targets/).
+Dit omvat data selectie, preparatie en berekening van variabelen.
+
+We maken gebruik van ["dynamic branching"](https://books.ropensci.org/targets/dynamic.html) in de targets pipeline.
+Dit is een manier om nieuwe targets te definiëren terwijl de pipeline actief is.
+Hierbij wordt een nieuwe target gemaakt voor elk bestand.
+Bij het toevoegen van een nieuwe dataset van een jaar, zal de pipeline bijgevolg enkel de berekeningen voor de data van het nieuwe jaar moeten doen en niet opnieuw de berekeningen voor de vorige jaren.
+De volledige pipeline ziet er als volgt uit:
+
+```{r}
+targets::tar_visnetwork()
+```

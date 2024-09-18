@@ -8,6 +8,8 @@ output:
     toc: true
     toc_float: true
     toc_collapsed: true
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../../output/rapporten/markdown/steekproefontwerp") })
 editor_options: 
   chunk_output_type: console
 ---
@@ -38,7 +40,8 @@ mbag_dir <- here()
 source(here("source", "R", "steekproefkader.R"))
 source(here("source", "R", "berekening_hulpvariabelen.R"))
 source(here("source", "R", "wfs_wcs.R"))
-targets_store <- here("source", "targets", "mas_steekproef_weidestreek", "_targets")
+targets_store <- here("source", "targets", "mas_steekproef_weidestreek",
+                      "_targets")
 ```
 
 # Vooraf
@@ -305,7 +308,7 @@ Voor elk potentieel telpunt / telcirkel:
 > VITO 2019 landgebruikskaart (update elke 3 jaar)
 
 ```{r}
-telcirkels_selectie_landgebruik <- tar_read(telcirkels_selectie_landgebruik,
+telcirkels_selectie_landgbrk <- tar_read(telcirkels_selectie_landgebruik,
   store = targets_store
 )
 ```
@@ -320,7 +323,7 @@ In de momenteel gebruikte berekening is dit "ontbrekend" landgebruik weggefilter
 Het kan dus zijn dat op de volledige telcirkel deze oppervlakte-aandelen verschillend zijn (en al dan niet zouden moeten uitgesloten worden volgens het criterium).
 
 ```{r}
-telcirkels_selectie_landgebruik %>%
+telcirkels_selectie_landgbrk %>%
   ggtern::ggtern(aes(
     x = Akker + Grasland,
     y = Bos + Struikgewas,
@@ -337,7 +340,7 @@ De kaart toont de punten die op deze manier niet meer in aanmerkingen komen.
 ```{r map-exclusie-landgebruik-vito}
 exclusie_punten <- punten %>%
   left_join(
-    telcirkels_selectie_landgebruik %>%
+    telcirkels_selectie_landgbrk %>%
       group_by(pointid) %>%
       summarize(selectie2 = any(selectie2)),
     by = "pointid"
@@ -794,7 +797,10 @@ balansvergelijking <- steekproefkader_finaal %>%
       "buiten sbp"
     ))) %>%
   cbind(st_coordinates(.)) %>%
-  mutate(puntenset = factor(puntenset, levels = c("volledig steekproefkader", "steekproef")))
+  mutate(puntenset = factor(
+    puntenset,
+    levels = c("volledig steekproefkader", "steekproef"))
+  )
 
 count_df_weidestreek <- balansvergelijking %>%
   group_by(puntenset, openheid_klasse, sbp_akkervogels) %>%

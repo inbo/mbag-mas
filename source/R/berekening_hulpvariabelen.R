@@ -1,3 +1,4 @@
+# nolint start
 path_to_bo <- function(jaar = 2021) {
   file_name <- paste("BO", jaar, "VLM_EXTERN.shp", sep = "_")
   file.path(mbag_dir, "data", "bo_vlm", file_name)
@@ -14,9 +15,9 @@ read_bo <- function(path) {
 }
 
 add_bo2021_to_frame <- function(
-  punten_df,
-  path_bo
-  ) {
+    punten_df,
+    path_bo
+) {
 
   bo2021 <- read_bo(path = path_bo)
 
@@ -48,10 +49,14 @@ add_bo2021_to_frame <- function(
 
 add_bo_to_frame <- function(
     punten_df,
-    path_bo
-    ) {
+    path_bo,
+    bo_layer = NULL,
+    bh_doel = "soortenbescherming (SB)"
+) {
 
-  bo_layer <- read_bo(path = path_bo)
+  if (is.null(bo_layer)) {
+    bo_layer <- read_bo(path = path_bo)
+  }
 
   points_bo <- landusemetrics_grid_cell(
     grid_cell = punten_df %>%
@@ -67,7 +72,7 @@ add_bo_to_frame <- function(
   aandeel_sb <- points_bo %>%
     select(pointid, SRT_OBJECT, area_prop) %>%
     left_join(bo_maatregelen, by = "SRT_OBJECT") %>%
-    filter(BH_DOELST == "soortenbescherming (SB)") %>%
+    filter(BH_DOELST %in% bh_doel) %>%
     group_by(pointid) %>%
     summarise(area_prop_sb = sum(area_prop))
 
@@ -111,18 +116,17 @@ calc_lbg <- function(path,
 }
 
 
-path_to_openheid_landschap <- function() {
-  file.path(mbag_dir,
-    "data", "dem",
-    "openness300m_chm_res25_c300_mean_vlaanderen.tif")
+path_to_openheid_landschap <- function(
+    file = "openness300m_chm_res25_c300_mean_vlaanderen.tif") {
+  file.path(mbag_dir, "data", "dem", file)
 }
 
 add_openheid_landschap_to_frame <- function(
-  path,
-  punten_sf,
-  gebied,
-  cutlevels = c(1.25, 1.35, 1.51),
-  class_labels = c("GL", "HGL", "HOL", "OL")) {
+    path,
+    punten_sf,
+    gebied,
+    cutlevels = c(1.25, 1.35, 1.51),
+    class_labels = c("GL", "HGL", "HOL", "OL")) {
 
   openheid <- rast(path)
   openheid <- crop(openheid, gebied)
@@ -190,10 +194,10 @@ read_sbp_others <- function(
 }
 
 read_sbp_akkervogels <- function(
-  path,
-  gebied,
-  path_extra_soorten = NULL,
-  extra_soorten = NULL) {
+    path,
+    gebied,
+    path_extra_soorten = NULL,
+    extra_soorten = NULL) {
 
   if (gebied$Naam == "De Moeren") {
     sbp_akkervogels <- st_read(path) %>%
@@ -245,3 +249,4 @@ add_stratum_sbp <- function(punten_sf, sbp) {
 
   return(telpunten)
 }
+# nolint end

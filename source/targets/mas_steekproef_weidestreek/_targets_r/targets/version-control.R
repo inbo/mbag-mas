@@ -6,7 +6,7 @@ list(
                                              steekproefkader_finaal),
                    steekproef = do.call(rbind.data.frame,
                                         steekproef_final)),
-      write_out = FALSE
+      write_out = TRUE
     )
   )
 )

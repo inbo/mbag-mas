@@ -1,3 +1,4 @@
+# nolint start
 #' Download land use maps from milieuinfo server
 #'
 #' @param year Character of length one. Either `'2019'` (default), `'2016'` or
@@ -146,3 +147,4 @@ lum_read_from_vito <- function(
 
   return(tr)
 }
+# nolint end

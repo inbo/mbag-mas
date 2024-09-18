@@ -8,6 +8,8 @@ output:
     toc: true
     toc_float: true
     toc_collapsed: true
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../../output/rapporten/markdown/steekproefontwerp") })
 editor_options: 
   chunk_output_type: console
 ---
@@ -585,7 +587,7 @@ telcirkels_landgebruik <- lapply(punten, function(streek) {
 })
 
 # Classificatie landgebruik
-telcirkels_selectie_landgebruik <- lapply(telcirkels_landgebruik,
+telcirkels_selectie_landgbrk <- lapply(telcirkels_landgebruik,
                                           function(streek) {
   punten_selectie_landgebruik(
     lum_extract_result = streek,
@@ -600,7 +602,7 @@ telcirkels_selectie_landgebruik <- lapply(telcirkels_landgebruik,
 selectie_landgebruik <- lapply(names(punten), function(i) {
   selectie_landgebruik_vito(
     punten_sf = punten[[i]],
-    selectie_df = telcirkels_selectie_landgebruik[[i]]
+    selectie_df = telcirkels_selectie_landgbrk[[i]]
   )
 })
 names(selectie_landgebruik) <- names(punten)
@@ -609,7 +611,7 @@ names(selectie_landgebruik) <- names(punten)
 exclusie_punten <- lapply(names(punten), function(i) {
   punten[[i]] %>%
     left_join(
-      telcirkels_selectie_landgebruik[[i]] %>%
+      telcirkels_selectie_landgbrk[[i]] %>%
         group_by(pointid) %>%
         summarize(selectie2 = any(selectie2)),
       by = "pointid"
@@ -624,7 +626,7 @@ names(exclusie_punten) <- names(punten)
 Er worden opnieuw een aantal punten uitgesloten.
 
 ```{r}
-telcirkels_selectie_landgebruik$Duinen %>%
+telcirkels_selectie_landgbrk$Duinen %>%
   ggtern::ggtern(aes(
     x = Akker + Grasland,
     y = Bos + Struikgewas,
@@ -666,7 +668,7 @@ mapview(
 Er worden weinig punten nog uitgesloten in de Weidestreek.
 
 ```{r}
-telcirkels_selectie_landgebruik$Weidestreek %>%
+telcirkels_selectie_landgbrk$Weidestreek %>%
   ggtern::ggtern(aes(
     x = Akker + Grasland,
     y = Bos + Struikgewas,
@@ -1465,6 +1467,7 @@ We analyseren groottes van `r min(sizes)` tot `r max(sizes)`.
 
 ```{r}
 calc_chisq <- function(observed, expected) {
+  require("dplyr")
   calc_df <- tibble(observed = observed, expected = expected) %>%
     rowwise() %>%
     mutate(single_chi = (observed - expected)^2 / expected)
@@ -1684,7 +1687,7 @@ steekproef_extended_thinned %>%
 ```
 
 ```{r}
-balansvergelijking_weidestreek2 <- steekproef_extended_thinned %>%
+balansvergelijking_wd2 <- steekproef_extended_thinned %>%
   select_at(names(steekproefkader_finaal$Weidestreek)) %>%
   mutate(fill_var = "steekproef") %>%
   bind_rows(steekproefkader_finaal$Weidestreek %>%
@@ -1695,7 +1698,7 @@ balansvergelijking_weidestreek2 <- steekproef_extended_thinned %>%
   mutate(fill_var = factor(fill_var,
                            levels = c("steekproefkader", "steekproef")))
 
-count_df_weidestreek2 <- balansvergelijking_weidestreek2 %>%
+count_df_weidestreek2 <- balansvergelijking_wd2 %>%
   group_by(fill_var, openheid_klasse, sbp_akkervogels) %>%
   summarise(
     max_openheid = max(openheid_waarde),
@@ -1709,7 +1712,7 @@ count_df_weidestreek2 <- balansvergelijking_weidestreek2 %>%
 We zien vooral dat de steekproef relatief goed overeenkomt met het steekproefkader op vlak van openheid.
 
 ```{r}
-balansvergelijking_weidestreek2 %>%
+balansvergelijking_wd2 %>%
   ggplot(aes(x = sbp_akkervogels, y = openheid_waarde)) +
   geom_boxplot(aes(fill = fill_var)) +
   geom_label(
@@ -1724,7 +1727,7 @@ balansvergelijking_weidestreek2 %>%
 Als we naar longitude en latitude kijken, lijkt dit wel min of meer ok. Opnieuw is er voor OL buiten SBP niet zo'n goede match, maar dit is ook maar 1 punt dus het is onmogelijk een goede vergelijking te maken.
 
 ```{r}
-balansvergelijking_weidestreek2 %>%
+balansvergelijking_wd2 %>%
   ggplot(aes(x = sbp_akkervogels, y = X)) +
   geom_boxplot(aes(fill = fill_var)) +
   geom_label(
@@ -1737,7 +1740,7 @@ balansvergelijking_weidestreek2 %>%
 ```
 
 ```{r}
-balansvergelijking_weidestreek2 %>%
+balansvergelijking_wd2 %>%
   ggplot(aes(x = sbp_akkervogels, y = Y)) +
   geom_boxplot(aes(fill = fill_var)) +
   geom_label(
