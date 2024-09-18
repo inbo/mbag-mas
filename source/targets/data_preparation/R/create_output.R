@@ -25,8 +25,8 @@ create_output_gpkg <- function(x, file, path, suffix_by = NA, ...) {
   # Add suffix if provided
   if (!is.na(suffix_by)) {
     suffix <- paste(
-      unique(c(min(st_drop_geometry(x)[suffix_by]),
-               max(st_drop_geometry(x)[suffix_by]))),
+      unique(c(min(sf::st_drop_geometry(x)[suffix_by]),
+               max(sf::st_drop_geometry(x)[suffix_by]))),
       collapse = "_"
     )
 
