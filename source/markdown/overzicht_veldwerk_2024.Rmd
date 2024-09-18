@@ -1,0 +1,240 @@
+---
+title: "Enkele cijfers veldwerk 2024"
+author: "Ward Langeraert"
+date: "`r Sys.Date()`"
+output:
+  bookdown::html_document2:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../../output/rapporten/markdown/2024") })
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+# set up
+library(knitr)
+opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  out.width = "100%"
+)
+opts_knit$set(root.dir = here::here())
+```
+
+```{r}
+# packages
+library(tidyverse)
+library(INBOtheme)
+library(targets)
+library(sf)
+
+theme_set(theme_inbo(transparent = TRUE))
+
+# Conflicts
+conflicted::conflicts_prefer(dplyr::filter)
+conflicted::conflicts_prefer(dplyr::select)
+
+# Paths
+mbag_dir <- here::here()
+targets_store <- here::here("source", "targets", "data_preparation", "_targets")
+```
+
+# Enkele cijfers
+
+We selecteren de MBAG MAS data van 2024.
+
+```{r}
+mas_data_clean <- tar_read("mas_data_clean", store = targets_store)
+mas_data_2024 <- mas_data_clean %>%
+  filter(jaar == 2024)
+
+jaar <- 2024 # year is 2024
+
+r1_start <- "04-01"
+r1_stop <- "04-20"
+r2_start <- "04-21"
+r2_stop <- "05-10"
+r3_start <- "05-11"
+r3_stop <- "06-10"
+r4_start <- "06-21"
+r4_stop <- "07-15"
+```
+
+```{r}
+aantal_soorten <- mas_data_2024 %>%
+  st_drop_geometry() %>%
+  distinct(naam) %>%
+  nrow()
+
+mas_data_2024_vogels <- mas_data_2024 %>%
+  st_drop_geometry() %>%
+  filter(soortgrp == 2)
+
+aantal_vogels <- mas_data_2024_vogels %>%
+  distinct(naam) %>%
+  nrow()
+
+mas_data_2024_zoogdieren <- mas_data_2024 %>%
+  st_drop_geometry() %>%
+  filter(soortgrp == 1)
+
+aantal_zoogdieren <- mas_data_2024_zoogdieren %>%
+  distinct(naam) %>%
+  nrow()
+```
+
+In totaal zijn `r nrow(mas_data_2024)` waarnemingen gedaan. Er werden in totaal `r aantal_soorten` verschillende soorten gezien, `r aantal_vogels` vogels en `r aantal_zoogdieren` zoogdieren.
+
+```{r}
+mas_data_2024 %>%
+  st_drop_geometry() %>%
+  group_by(regio) %>%
+  mutate(
+    aantal_soorten = n_distinct(naam),
+    aantal_waarnemingen = n()) %>%
+  ungroup(regio) %>%
+  distinct(regio, aantal_soorten, aantal_waarnemingen) %>%
+  arrange(regio) %>%
+  kable()
+```
+
+Dit zijn de top 5 tellingen met de meeste waarnemingen.
+
+```{r}
+mas_data_2024 %>%
+  st_drop_geometry() %>%
+  count(plotnaam, regio, datum, waarnemer, name = "aantal_waarnemingen") %>%
+  slice_max(aantal_waarnemingen, n = 5) %>%
+  kable()
+```
+
+We visualiseren de verspreiding van het aantal waarnemingen per telpunt.
+
+```{r}
+mas_data_2024 %>%
+  st_drop_geometry() %>%
+  group_by(regio, jaar, periode_in_jaar, plotnaam) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  ggplot(aes(x = periode_in_jaar, y = n, fill = regio)) +
+  geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
+  geom_boxplot() +
+  labs(x = "Telperiode", y = "Aantal waarnemingen per telpunt", fill = "Regio")
+```
+
+Dit zijn de top 5 tellingen met de meeste soorten.
+
+```{r}
+mas_data_2024 %>%
+  st_drop_geometry() %>%
+  group_by(plotnaam, regio, datum, waarnemer) %>%
+  summarise(aantal_soorten = n_distinct(naam),
+            .groups = "drop") %>%
+  slice_max(aantal_soorten, n = 5) %>%
+  kable()
+```
+
+We visualiseren de verspreiding van het aantal soorten per telpunt.
+
+```{r}
+mas_data_2024 %>%
+  st_drop_geometry() %>%
+  group_by(regio, jaar, periode_in_jaar, plotnaam) %>%
+  summarise(n = n_distinct(naam), .groups = "drop") %>%
+  ggplot(aes(x = periode_in_jaar, y = n, fill = regio)) +
+  geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
+  geom_boxplot() +
+  labs(x = "Telperiode", y = "Aantal soorten per telpunt", fill = "Regio")
+```
+
+We visualiseren hoe het aantal soorten toeneemt over de periodes voor de verschillende regio's.
+
+```{r}
+# Calculate the cumulative number of species over time for each agricultural
+# region
+cum_aantal_spec <- mas_data_2024 %>%
+  st_drop_geometry() %>%
+  group_by(regio, naam) %>%
+  filter(datum == min(datum)) %>%
+  slice(1) %>% # takes the first occurrence if there is a tie
+  ungroup() %>%
+  group_by(regio, datum) %>%
+  summarise(
+    n_spec = n_distinct(naam),
+    .groups = "drop"
+  ) %>%
+  group_by(regio) %>%
+  arrange(datum) %>%
+  mutate(cum_sum = cumsum(n_spec)) %>%
+  ungroup()
+
+# Create plot per region
+cum_aantal_spec %>%
+  ggplot(aes(x = datum, y = cum_sum, colour = regio)) +
+  # Add shade for counting periods
+  annotate("rect",
+    xmin = ymd(paste(jaar, r1_start, sep = "-")),
+    xmax = ymd(paste(jaar, r1_stop, sep = "-")),
+    ymin = 0, ymax = Inf,
+    alpha = 0.2
+  ) +
+  annotate("text",
+    label = "R1",
+    x = ymd(paste(jaar, r1_start, sep = "-")) +
+      (ymd(paste(jaar, r1_stop, sep = "-")) -
+        ymd(paste(jaar, r1_start, sep = "-"))) / 2,
+    y = 0,
+    vjust = -1
+  ) +
+  annotate("rect",
+    xmin = ymd(paste(jaar, r2_start, sep = "-")),
+    xmax = ymd(paste(jaar, r2_stop, sep = "-")),
+    ymin = 0, ymax = Inf,
+    alpha = 0.2
+  ) +
+  annotate("text",
+    label = "R2",
+    x = ymd(paste(jaar, r2_start, sep = "-")) +
+      (ymd(paste(jaar, r2_stop, sep = "-")) -
+        ymd(paste(jaar, r2_start, sep = "-"))) / 2,
+    y = 0,
+    vjust = -1
+  ) +
+  annotate("rect",
+    xmin = ymd(paste(jaar, r3_start, sep = "-")),
+    xmax = ymd(paste(jaar, r3_stop, sep = "-")),
+    ymin = 0, ymax = Inf,
+    alpha = 0.2
+  ) +
+  annotate("text",
+    label = "R3",
+    x = ymd(paste(jaar, r3_start, sep = "-")) +
+      (ymd(paste(jaar, r3_stop, sep = "-")) -
+        ymd(paste(jaar, r3_start, sep = "-"))) / 2,
+    y = 0,
+    vjust = -1
+  ) +
+  annotate("rect",
+    xmin = ymd(paste(jaar, r4_start, sep = "-")),
+    xmax = ymd(paste(jaar, r4_stop, sep = "-")),
+    ymin = 0, ymax = Inf,
+    alpha = 0.2
+  ) +
+  annotate("text",
+    label = "R4",
+    x = ymd(paste(jaar, r4_start, sep = "-")) +
+      (ymd(paste(jaar, r4_stop, sep = "-")) -
+        ymd(paste(jaar, r4_start, sep = "-"))) / 2,
+    y = 0,
+    vjust = -1
+  ) +
+  # Add line
+  geom_line(linewidth = 1) +
+  labs(x = "", y = "Totaal aantal soorten", colour = "Regio") +
+  theme(legend.position = "bottom")
+```
+

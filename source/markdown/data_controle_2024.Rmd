@@ -1,0 +1,1592 @@
+---
+title: "Controle data en data preparatie pipeline"
+author: "Ward Langeraert"
+date: "`r Sys.Date()`"
+output:
+  bookdown::html_document2:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../../output/rapporten/markdown/2024") })
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+# set up
+library(knitr)
+opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  out.width = "100%"
+)
+opts_knit$set(root.dir = here::here())
+```
+
+```{r}
+# packages
+library(tidyverse)
+library(sf)
+library(mapview)
+library(leaflet)
+library(targets)
+
+# Conflicts
+conflicted::conflicts_prefer(dplyr::filter)
+conflicted::conflicts_prefer(dplyr::select)
+
+# Source
+source(here::here("source", "R", "tar_read_sf.R"))
+
+# Paths
+mbag_dir <- here::here()
+targets_store <- here::here("source", "targets", "data_preparation", "_targets")
+```
+
+# Doel
+
+Data preparatie verloopt via een targets pipeline waarbij verschillende stappen elkaar opvolgen.
+We maken gebruik van ["dynamic branching"](https://books.ropensci.org/targets/dynamic.html) in de targets pipeline.
+Dit is een manier om nieuwe targets te definiëren terwijl de pipeline actief is.
+Hierbij wordt een nieuwe target gemaakt voor elk bestand.
+Bij het toevoegen van een nieuwe dataset van een jaar, zal de pipeline bijgevolg enkel de berekeningen voor de data van het nieuwe jaar moeten doen en niet opnieuw de berekeningen voor de vorige jaren.
+De volledige pipeline ziet er als volgt uit:
+
+```{r, message=FALSE}
+tar_visnetwork(script = paste0(targets_store, ".R"),
+               store = targets_store)
+```
+
+In deze markdown controleren we ...
+
+1. of deze pipeline de verwachte stappen correct doorloopt
+2. of in de finale data, op het einde van de pipeline, onverwachte zaken, uitschieters ... aanwezig zijn
+3. of de data klaar zijn voor publicatie op GBIF
+
+We doen dit in dit rapport voor de data van 2018-2024.
+
+# Controle data preparatie pipeline {#controle-pipeline}
+## Amersfoord naar Lambert coördinaten (crs_pipeline)
+
+In de eerste stap worden Amersfoord coördinaten naar Lambert coördinaten omgezet.
+Dit gebeurt via een functie die op verschillende datasets goed getest is.
+
+## Selectie punten MBAG MAS steekproef (select_sampled_points) {#steekproef}
+
+In de tweede stap selecteren we de punten uit de totale dataset die tot het MBAG MAS steekproef behoren.
+Dit gebeurt via een "inner join" wat wil zeggen dat we kunnen nagaan of telpunten uit het steekproef niet bezocht zijn (bewust of onbewust).
+
+```{r}
+sample <- tar_read("sample", store = targets_store)
+
+select_sampled_points <- tar_read_sf("select_sampled_points",
+                                     store = targets_store)
+```
+
+Welke aantallen hebben we per stratum?
+
+```{r}
+# Calculate number of locations we should have
+sample %>%
+  mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
+  count(regio, stratum, name = "n_stratum") %>%
+  group_by(regio) %>%
+  mutate(n_regio = sum(n_stratum)) %>%
+  ungroup() %>%
+  kable()
+```
+
+We kijken of we dezelfde aantallen vinden in de data.
+
+```{r}
+# Calculate number of locations in data
+sample_visited <- select_sampled_points %>%
+  st_drop_geometry() %>%
+  distinct(plotnaam, regio, openheid_klasse, sbp)
+
+sample_visited %>%
+  mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
+  count(regio, stratum, name = "n_stratum") %>%
+  group_by(regio) %>%
+  mutate(n_regio = sum(n_stratum)) %>%
+  ungroup() %>%
+  kable()
+```
+
+In de Polders zijn inderdaad 6 punten geschrapt. In de Zandstreek 2 punten.
+Voor de Oostelijke leemstreek missen we enkele punten.
+
+We bekijken dit ook per jaar.
+
+```{r}
+# Calculate number of locations per year in data
+select_sampled_points %>%
+  st_drop_geometry() %>%
+  distinct(plotnaam, regio, jaar) %>%
+  count(regio, jaar) %>%
+  arrange(regio, jaar) %>%
+  kable()
+```
+
+**Oostelijke leemstreek**
+
+Welke punten zitten in de steekproef die niet zijn geteld?
+We kijken naar de periode 2022-2024.
+We zien dat sommige punten in bepaalde jaren niet geteld zijn:
+
+```{r}
+not_counted_ol <- sample %>%
+  filter(regio == "Oostelijke leemstreek") %>%
+  expand_grid(jaar = 2022:2024) %>%
+  anti_join(select_sampled_points,
+            by = join_by("pointid" == "plotnaam", jaar))
+
+not_counted_ol %>%
+  write_csv(file.path(mbag_dir, "output", "data_controle",
+                      "telpunten_niet_geteld.csv"))
+
+not_counted_ol %>%
+  select(-c("regio", "area_prop_sb", "x_coord", "y_coord", "crs")) %>%
+  kable()
+```
+
+> Waarom?
+
+```{r}
+crs_pipeline <- tar_read_sf("crs_pipeline", store = targets_store)
+```
+
+Ol_12833.8
+
+- niet geteld in 2022 en 2023, wel in 2024
+- steekproef beslissing: eerste set, behouden
+
+```{r}
+crs_pipeline %>%
+  st_drop_geometry() %>%
+  filter(plotnaam == "Ol_12833.8") %>%
+  distinct(plotnaam, jaar, waarnemer = waarneme) %>%
+  arrange(jaar)
+```
+
+Ol_815.5
+
+- nooit geteld (2022-2024)
+- steekproef beslissing: zou ter vervanging zijn van Ol_11054.15 en Ol_3417.2
+
+Ol_5760.2.14
+
+- nooit geteld (2022-2024)
+- steekproef beslissing: zou ter vervanging zijn van Ol_513.1
+
+VL0605
+
+- niet geteld in 2022, wel in 2023 en 2024
+- steekproef beslissing: Ol_8682.1 vervangen door bestaand
+
+```{r}
+crs_pipeline %>%
+  st_drop_geometry() %>%
+  filter(plotnaam == "VL0605") %>%
+  distinct(plotnaam, jaar, waarnemer = waarneme) %>%
+  arrange(jaar)
+```
+
+Ol_2025.4
+
+- nooit geteld (2022-2024)
+- steekproef beslissing: zou ter vervanging zijn van Ol_22546.2
+
+VL0363
+
+- niet geteld in 2022, wel in 2023 en 2024
+- steekproef beslissing: Ol_593.1 vervangen door bestaand
+
+```{r}
+crs_pipeline %>%
+  st_drop_geometry() %>%
+  filter(plotnaam == "VL0363") %>%
+  distinct(plotnaam, jaar, waarnemer = waarneme) %>%
+  arrange(jaar)
+```
+
+## Selecteer data binnen de telperiodes (select_time_periods) {#time-periods}
+
+We selecteren data binnen de correcte telperiodes.
+Er zijn 4 telrondes:
+
+- R1: 1 april - 20 april
+- R2: 21 april - 10 mei
+- R3: 11 mei - 10 juni
+- R4: 21 juni - 15 juli
+
+Verliezen we data indien we filteren binnen deze periodes?
+Indien ja, hoeveel en waar?
+
+```{r}
+select_time_periods <- tar_read_sf("select_time_periods", store = targets_store)
+```
+
+In totaal vallen `r nrow(select_sampled_points) - nrow(select_time_periods)` waarnemingen buiten de telperiodes.
+
+```{r}
+# Calculate difference in number of observations before and after filtering on
+# counting periods
+obs_per_year <- select_sampled_points %>%
+  st_drop_geometry() %>%
+  count(regio, jaar)
+
+obs_per_year_filtered <- select_time_periods %>%
+  st_drop_geometry() %>%
+  count(regio, jaar, name = "n_filtered")
+
+obs_per_year %>%
+  full_join(obs_per_year_filtered, by = join_by(regio, jaar)) %>%
+  mutate(difference = n - n_filtered) %>%
+  kable()
+```
+
+- Kempen
+  - ok
+- Oostelijke leemstreek
+  - 2022 nakijken
+- Polders
+  - 2024 nakijken
+- Weidestreek
+  - ok
+- Westelijke leemstreek
+  - 2024 nakijken
+- Zandleemstreek
+  - 2024 nakijken
+- Zandstreek
+  - 2024 nakijken!
+
+**Oostelijke leemstreek**
+
+```{r}
+# Which occurrences fall outside periods?
+oid_ol <- select_sampled_points %>%
+    st_drop_geometry() %>%
+    filter(regio == "Oostelijke leemstreek", jaar == 2022) %>%
+    pull(oid)
+
+oid_ol_filtered <- select_time_periods %>%
+    st_drop_geometry() %>%
+    filter(regio == "Oostelijke leemstreek", jaar == 2022) %>%
+    pull(oid)
+
+oid_ol_diff <- setdiff(oid_ol, oid_ol_filtered)
+
+# Count number of observations per location and date
+obs_per_date_ol <- select_sampled_points %>%
+  st_drop_geometry() %>%
+  filter(regio == "Oostelijke leemstreek",
+         jaar == 2022,
+         oid %in% oid_ol_diff) %>%
+  mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
+  count(plotnaam, datum, name = "n_obs") %>%
+  arrange(plotnaam, datum)
+
+obs_per_date_ol %>%
+  kable()
+```
+
+Dit zijn wintertellingen, dus is ok.
+Worden dit punt wel ook nog geteld in de correcte periodes?
+
+```{r}
+# How many times are these locations counted in valid periods?
+obs_per_period_ol <- select_time_periods %>%
+  st_drop_geometry() %>%
+  filter(regio == "Oostelijke leemstreek",
+         jaar == 2024,
+         plotnaam %in% unique(obs_per_date_ol$plotnaam)) %>%
+  count(plotnaam, periode_in_jaar, naam = "n_obs") %>%
+  group_by(plotnaam) %>%
+  mutate(n_periodes = n_distinct(periode_in_jaar)) %>%
+  ungroup()
+
+obs_per_period_ol %>%
+  kable()
+```
+
+Ok.
+
+**Polders**
+
+```{r}
+# Which occurrences fall outside periods?
+oid_pl <- select_sampled_points %>%
+    st_drop_geometry() %>%
+    filter(regio == "Polders", jaar == 2024) %>%
+    pull(oid)
+
+oid_pl_filtered <- select_time_periods %>%
+    st_drop_geometry() %>%
+    filter(regio == "Polders", jaar == 2024) %>%
+    pull(oid)
+
+oid_pl_diff <- setdiff(oid_pl, oid_pl_filtered)
+
+# Count number of observations per location and date
+obs_per_date_pl <- select_sampled_points %>%
+  st_drop_geometry() %>%
+  filter(regio == "Polders",
+         jaar == 2024,
+         oid %in% oid_pl_diff) %>%
+  mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
+  count(plotnaam, datum, name = "n_obs") %>%
+  arrange(plotnaam, datum)
+
+obs_per_date_pl %>%
+  kable()
+```
+
+Dit zijn wintertellingen, dus is ok.
+Worden deze punten wel ook nog geteld in de correcte periodes?
+
+```{r}
+# How many times are these locations counted in valid periods?
+obs_per_period_pl <- select_time_periods %>%
+  st_drop_geometry() %>%
+  filter(regio == "Polders",
+         jaar == 2024,
+         plotnaam %in% unique(obs_per_date_pl$plotnaam)) %>%
+  count(plotnaam, periode_in_jaar, naam = "n_obs") %>%
+  group_by(plotnaam) %>%
+  mutate(n_periodes = n_distinct(periode_in_jaar)) %>%
+  ungroup()
+
+obs_per_period_pl %>%
+  kable()
+```
+
+Ok.
+
+**Westelijke leemstreek**
+
+```{r}
+# Which occurrences fall outside periods?
+oid_wlm <- select_sampled_points %>%
+    st_drop_geometry() %>%
+    filter(regio == "Westelijke leemstreek", jaar == 2024) %>%
+    pull(oid)
+
+oid_wlm_filtered <- select_time_periods %>%
+    st_drop_geometry() %>%
+    filter(regio == "Westelijke leemstreek", jaar == 2024) %>%
+    pull(oid)
+
+oid_wlm_diff <- setdiff(oid_wlm, oid_wlm_filtered)
+
+# Count number of observations per location and date
+obs_per_date_wlm <- select_sampled_points %>%
+  st_drop_geometry() %>%
+  filter(regio == "Westelijke leemstreek",
+         jaar == 2024,
+         oid %in% oid_wlm_diff) %>%
+  mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
+  count(plotnaam, datum, name = "n_obs") %>%
+  arrange(plotnaam, datum)
+
+obs_per_date_wlm %>%
+  kable()
+```
+
+Deze punten zijn geteld tussen telrondes 3 en 4.
+Worden deze punten wel ook nog geteld in de correcte periodes?
+
+```{r}
+# How many times are these locations counted in valid periods?
+obs_per_period_wlm <- select_time_periods %>%
+  st_drop_geometry() %>%
+  filter(regio == "Westelijke leemstreek",
+         jaar == 2024,
+         plotnaam %in% unique(obs_per_date_wlm$plotnaam)) %>%
+  count(plotnaam, periode_in_jaar, naam = "n_obs") %>%
+  group_by(plotnaam) %>%
+  mutate(n_periodes = n_distinct(periode_in_jaar)) %>%
+  ungroup()
+
+obs_per_period_wlm %>%
+  kable()
+```
+
+Neen, deze locaties zijn niet in telperiode 4 geteld.
+
+**Zandleemstreek**
+
+```{r}
+# Which occurrences fall outside periods?
+oid_zlm <- select_sampled_points %>%
+    st_drop_geometry() %>%
+    filter(regio == "Zandleemstreek", jaar == 2024) %>%
+    pull(oid)
+
+oid_zlm_filtered <- select_time_periods %>%
+    st_drop_geometry() %>%
+    filter(regio == "Zandleemstreek", jaar == 2024) %>%
+    pull(oid)
+
+oid_zlm_diff <- setdiff(oid_zlm, oid_zlm_filtered)
+
+# Count number of observations per location and date
+obs_per_date_zlm <- select_sampled_points %>%
+  st_drop_geometry() %>%
+  filter(regio == "Zandleemstreek",
+         jaar == 2024,
+         oid %in% oid_zlm_diff) %>%
+  mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
+  count(plotnaam, datum, name = "n_obs") %>%
+  arrange(plotnaam, datum)
+
+obs_per_date_zlm %>%
+  kable()
+```
+
+Deze punten zijn geteld tussen telrondes 3 en 4.
+Worden deze punten wel ook nog geteld in de correcte periodes?
+
+```{r}
+# How many times are these locations counted in valid periods?
+obs_per_period_zlm <- select_time_periods %>%
+  st_drop_geometry() %>%
+  filter(regio == "Zandleemstreek",
+         jaar == 2024,
+         plotnaam %in% unique(obs_per_date_zlm$plotnaam)) %>%
+  count(plotnaam, periode_in_jaar, naam = "n_obs") %>%
+  group_by(plotnaam) %>%
+  mutate(n_periodes = n_distinct(periode_in_jaar)) %>%
+  ungroup()
+
+obs_per_period_zlm %>%
+  kable()
+```
+
+Neen, deze locaties zijn niet in telperiode 4 geteld.
+
+**Zandstreek**
+
+```{r}
+# Which occurrences fall outside periods?
+oid_za <- select_sampled_points %>%
+    st_drop_geometry() %>%
+    filter(regio == "Zandstreek", jaar == 2024) %>%
+    pull(oid)
+
+oid_za_filtered <- select_time_periods %>%
+    st_drop_geometry() %>%
+    filter(regio == "Zandstreek", jaar == 2024) %>%
+    pull(oid)
+
+oid_za_diff <- setdiff(oid_za, oid_za_filtered)
+
+# Count number of observations per location and date
+obs_per_date_za <- select_sampled_points %>%
+  st_drop_geometry() %>%
+  filter(regio == "Zandstreek",
+         jaar == 2024,
+         oid %in% oid_za_diff) %>%
+  mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
+  count(plotnaam, datum, name = "n_obs") %>%
+  arrange(plotnaam, datum)
+
+obs_per_date_za %>%
+  kable()
+```
+
+Dit zijn wintertellingen, dus is ok.
+Worden deze punten wel ook nog geteld in de correcte periodes?
+
+```{r}
+# How many times are these locations counted in valid periods?
+obs_per_period_za <- select_time_periods %>%
+  st_drop_geometry() %>%
+  filter(regio == "Zandstreek",
+         jaar == 2024,
+         plotnaam %in% unique(obs_per_date_za$plotnaam)) %>%
+  count(plotnaam, periode_in_jaar, naam = "n_obs") %>%
+  group_by(plotnaam) %>%
+  mutate(n_periodes = n_distinct(periode_in_jaar)) %>%
+  ungroup()
+
+obs_per_period_za %>%
+  kable()
+```
+
+Ok.
+
+We schrijven deze data weg zodat ze gecontroleerd kunnen worden.
+
+```{r}
+# Get all locations outside periods
+locs_outside_periods <- bind_rows(
+  obs_per_period_ol,
+  obs_per_period_pl,
+  obs_per_period_wlm,
+  obs_per_period_zlm,
+  obs_per_period_za
+  ) %>%
+  filter(n_periodes < 4) %>%
+  distinct(plotnaam) %>%
+  pull()
+
+# Get removed data
+delete_from_df <- select_time_periods %>%
+  st_drop_geometry() %>%
+  filter(jaar == 2024,
+         plotnaam %in% locs_outside_periods) %>%
+  distinct(plotnaam, jaar, maand, dag, waarnemer = waarneme)
+
+# Write out removed data
+select_sampled_points %>%
+  st_drop_geometry() %>%
+  filter(jaar == 2024,
+         plotnaam %in% locs_outside_periods) %>%
+  distinct(plotnaam, jaar, maand, dag, waarnemer = waarneme) %>%
+  anti_join(delete_from_df,
+            by = join_by(plotnaam, jaar, maand, dag, waarnemer)) %>%
+  write_csv(file.path(mbag_dir, "output", "data_controle",
+                      "tellingen_buiten_telrondes.csv"))
+```
+
+## Herbereken afstand tot telpunt (calculate_obs_distance)
+
+We herberekenen de afstand van de waarnemingen tot elk telpunt.
+Grote verschillen kunnen wijzen op fouten.
+
+```{r}
+calculate_obs_distance <- tar_read_sf(
+  "calculate_obs_distance", store = targets_store)
+```
+
+Zijn er punten waarbij het absolute verschil meer dan 1 m is?
+
+```{r}
+# Get original distances
+distances_og <- select_time_periods %>%
+  st_drop_geometry() %>%
+  select(oid, plotnaam, regio, jaar, periode_in_jaar,
+         distance2plot_og = distance2plot) %>%
+  mutate(distance2plot_og = as.numeric(distance2plot_og))
+
+# Get recalculated distances
+distances_new <- calculate_obs_distance %>%
+  st_drop_geometry() %>%
+  select(oid, plotnaam, regio, jaar, periode_in_jaar,
+         distance2plot_new = distance2plot)
+
+# Calculate absolute difference between the two
+outlying_distances <- distances_og %>%
+  full_join(distances_new,
+            by = join_by(oid, plotnaam, regio, jaar, periode_in_jaar)) %>%
+  mutate(abs_diff = abs(distance2plot_og - distance2plot_new)) %>%
+  filter(abs_diff > 1)
+
+# How many mismatches do we have per region?
+nrow(outlying_distances)
+```
+
+Nee. Dit is ok.
+
+## Selecteer data binnen telcirkel radius (select_within_radius)
+
+We selecteren data binnen de telcirkels.
+Telcirkels hebben een radius van 300 m.
+De afstanden krijgen we mee van Sovon, maar worden herberekend.
+
+Verliezen we data indien we filteren binnen deze radius?
+Indien ja, hoeveel en waar?
+
+```{r}
+select_within_radius <- tar_read_sf(
+  "select_within_radius", store = targets_store)
+```
+
+In totaal vallen `r nrow(calculate_obs_distance) - nrow(select_within_radius)` waarnemingen buiten de telcirkels.
+
+```{r}
+# Calculate difference in number of observations before and after filtering on
+# radius
+obs_per_year <- select_time_periods %>%
+  st_drop_geometry() %>%
+  count(regio, jaar)
+
+obs_per_year_filtered <- select_within_radius %>%
+  st_drop_geometry() %>%
+  count(regio, jaar, name = "n_filtered")
+
+obs_per_year %>%
+  full_join(obs_per_year_filtered, by = join_by(regio, jaar)) %>%
+  mutate(difference = n - n_filtered) %>%
+  kable()
+```
+
+Het gaat om veel waarnemingen.
+We visualiseren deze.
+
+```{r}
+# Calculate percentage of outlying observations per location and date
+outside_observations <- calculate_obs_distance %>%
+  group_by(regio, plotnaam, jaar, periode_in_jaar) %>%
+  mutate(max_dist = max(distance2plot)) %>%
+  ungroup() %>%
+  filter(max_dist > 300) %>%
+  mutate(outlier = ifelse(distance2plot > 300, "buiten", "binnen")) %>%
+  group_by(regio, plotnaam, jaar, periode_in_jaar) %>%
+  mutate(outlier_perc = sum(grepl("buiten", outlier)) / n()) %>%
+  ungroup() %>%
+  select(regio, plotnaam, jaar, periode_in_jaar, distance2plot,
+         outlier, outlier_perc, x_coord, y_coord)
+
+# Get problematic point locations
+outside_plots <- outside_observations %>%
+  st_drop_geometry() %>%
+  distinct(regio, plotnaam, jaar, periode_in_jaar, x_coord, y_coord) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370)
+
+# Get problematic location circles
+outside_circles <- outside_plots %>%
+  st_buffer(300)
+
+# Visualise outlier percentage distribution
+for (reg in sort(unique(outside_observations$regio))) {
+  p <- outside_observations %>%
+      filter(regio == reg) %>%
+      distinct(regio, plotnaam, jaar, periode_in_jaar, outlier_perc) %>%
+      ggplot() +
+        geom_histogram(aes(x = outlier_perc), bins = 20) +
+        coord_cartesian(xlim = c(0, 1)) +
+        labs(x = "Procent waarnemingen buiten telcirkel per telling",
+             y = "Frequentie",
+             title = reg) +
+        facet_wrap(~jaar, ncol = 3)
+  print(p)
+}
+```
+
+We stellen dat een verwijdering van > 20% van de waarnemingen per telling op een probleem kan wijzen.
+We filteren hierop en kijken wat overblijft.
+
+```{r}
+# Filter problematic observations, point locations and circles on outlying
+# percentage
+outside_observations_new <- outside_observations %>%
+  filter(outlier_perc > 0.2)
+
+outside_plots_new <- outside_observations_new %>%
+  st_drop_geometry() %>%
+  distinct(regio, plotnaam, jaar, periode_in_jaar, x_coord, y_coord) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370)
+
+outside_circles_new <- outside_plots_new %>%
+  st_buffer(300)
+```
+
+Vooral in de Oostelijke leemstreek en de Polders zijn er verdachte cases.
+
+**Kempen, Weidestreek, Westelijke leemstreek, Zandleemstreek, Zandstreek**
+
+We controleren eerst alle andere regio's (per jaar per telronde).
+
+```{r}
+# Data preparation
+years <- outside_observations_new %>%
+  filter(regio != "Oostelijke leemstreek",
+         regio != "Polders") %>%
+  distinct(jaar) %>%
+  pull()
+
+# Create an empty leaflet map
+leaflet_map <- leaflet() %>%
+  addTiles()
+
+# Loop through each year and round, adding layers to the map
+for (j in sort(years)) {
+  periods <- outside_observations_new %>%
+    filter(regio != "Oostelijke leemstreek",
+         regio != "Polders",
+         jaar == j) %>%
+    distinct(periode_in_jaar) %>%
+    pull() %>%
+    sort()
+
+  for (ronde in sort(periods)) {
+    # Filter data for the current year and round
+    circles <- outside_circles_new %>%
+      filter(regio != "Oostelijke leemstreek",
+             regio != "Polders",
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    plots <- outside_plots_new %>%
+            filter(regio != "Oostelijke leemstreek",
+             regio != "Polders",
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    observations <- outside_observations_new %>%
+            filter(regio != "Oostelijke leemstreek",
+             regio != "Polders",
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+
+    # Create title
+    title <- paste("Jaar:", j, "- Ronde:", ronde)
+
+    # Add the layers to the leaflet map with group names
+    leaflet_map <- leaflet_map %>%
+      addPolygons(data = circles, fillOpacity = 0.3, group = title) %>%
+      addCircleMarkers(data = plots, radius = 3, color = "black",
+                       group = title, label = ~plots$plotnaam) %>%
+      addCircleMarkers(data = observations, fillOpacity = 0.8, radius = 5,
+                       color = ~ifelse(outlier == "binnen", "green", "red"),
+                       group = title, label = ~observations$plotnaam)
+  }
+}
+
+# Calculate control groups
+groups <- outside_observations_new %>%
+  filter(regio != "Oostelijke leemstreek",
+         regio != "Polders") %>%
+  distinct(jaar, periode_in_jaar) %>%
+  arrange(jaar, periode_in_jaar) %>%
+  mutate(group = paste("Jaar:", jaar, "- Ronde:", periode_in_jaar)) %>%
+  pull(group)
+
+# Add layer control to toggle visibility of the facets
+leaflet_map <- leaflet_map %>%
+  addLayersControl(
+    overlayGroups = groups,
+    options = layersControlOptions(collapsed = FALSE)
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    colors = c("green", "red"),
+    labels = c("binnen", "buiten"),
+    title = "Locatie t.o.v. telcirkel")
+
+# Print the leaflet map
+leaflet_map
+```
+
+Deze lijken allemaal ok.
+Slechts enkele waarnemingen die buiten de telcirkel vallen.
+Deze mogen worden weggefilterd.
+
+**Polders**
+
+In de Polders liggen er maximaal `r round(max(outside_observations %>% filter(regio == "Polders") %>% pull(outlier_perc)), 2)` procent waarnemingen buiten de telcirkel per telling.
+
+```{r}
+# Data preparation
+years <- outside_observations_new %>%
+  filter(regio == "Polders") %>%
+  distinct(jaar) %>%
+  pull()
+
+# Create an empty leaflet map
+leaflet_map <- leaflet() %>%
+  addTiles()
+
+# Loop through each year and round, adding layers to the map
+for (j in sort(years)) {
+  periods <- outside_observations_new %>%
+    filter(regio == "Polders",
+           jaar == j) %>%
+    distinct(periode_in_jaar) %>%
+    pull() %>%
+    sort()
+
+  for (ronde in sort(periods)) {
+    # Filter data for the current year and round
+    circles <- outside_circles_new %>%
+      filter(regio == "Polders",
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    plots <- outside_plots_new %>%
+      filter(regio == "Polders",
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    observations <- outside_observations_new %>%
+      filter(regio == "Polders",
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+
+    # Create title
+    title <- paste("Jaar:", j, "- Ronde:", ronde)
+
+    # Add the layers to the leaflet map with group names
+    leaflet_map <- leaflet_map %>%
+      addPolygons(data = circles, fillOpacity = 0.3, group = title) %>%
+      addCircleMarkers(data = plots, radius = 3, color = "black",
+                       group = title, label = ~plots$plotnaam) %>%
+      addCircleMarkers(data = observations, fillOpacity = 0.8, radius = 5,
+                       color = ~ifelse(outlier == "binnen", "green", "red"),
+                       group = title, label = ~observations$plotnaam)
+  }
+}
+
+# Calculate control groups
+groups <- outside_observations_new %>%
+  filter(regio == "Polders") %>%
+  distinct(jaar, periode_in_jaar) %>%
+  arrange(jaar, periode_in_jaar) %>%
+  mutate(group = paste("Jaar:", jaar, "- Ronde:", periode_in_jaar)) %>%
+  pull(group)
+
+# Add layer control to toggle visibility of the facets
+leaflet_map <- leaflet_map %>%
+  addLayersControl(
+    overlayGroups = groups,
+    options = layersControlOptions(collapsed = FALSE)
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    colors = c("green", "red"),
+    labels = c("binnen", "buiten"),
+    title = "Locatie t.o.v. telcirkel")
+
+# Print the leaflet map
+leaflet_map
+```
+
+Deze lijken ok.
+
+**Oostelijke leemstreek**
+
+```{r}
+# Data preparation
+years <- outside_observations_new %>%
+  filter(regio == "Oostelijke leemstreek") %>%
+  distinct(jaar) %>%
+  pull()
+
+# Create an empty leaflet map
+leaflet_map <- leaflet() %>%
+  addTiles()
+
+# Loop through each year and round, adding layers to the map
+for (j in sort(years)) {
+  periods <- outside_observations_new %>%
+    filter(regio == "Oostelijke leemstreek",
+           jaar == j) %>%
+    distinct(periode_in_jaar) %>%
+    pull() %>%
+    sort()
+
+  for (ronde in sort(periods)) {
+    # Filter data for the current year and round
+    circles <- outside_circles_new %>%
+      filter(regio == "Oostelijke leemstreek",
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    plots <- outside_plots_new %>%
+      filter(regio == "Oostelijke leemstreek",
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    observations <- outside_observations_new %>%
+      filter(regio == "Oostelijke leemstreek",
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+
+    # Create title
+    title <- paste("Jaar:", j, "- Ronde:", ronde)
+
+    # Add the layers to the leaflet map with group names
+    leaflet_map <- leaflet_map %>%
+      addPolygons(data = circles, fillOpacity = 0.3, group = title) %>%
+      addCircleMarkers(data = plots, radius = 3, color = "black",
+                       group = title, label = ~plots$plotnaam) %>%
+      addCircleMarkers(data = observations, fillOpacity = 0.8, radius = 5,
+                       color = ~ifelse(outlier == "binnen", "green", "red"),
+                       group = title, label = ~observations$plotnaam)
+  }
+}
+
+# Calculate control groups
+groups <- outside_observations_new %>%
+  filter(regio == "Oostelijke leemstreek") %>%
+  distinct(jaar, periode_in_jaar) %>%
+  arrange(jaar, periode_in_jaar) %>%
+  mutate(group = paste("Jaar:", jaar, "- Ronde:", periode_in_jaar)) %>%
+  pull(group)
+
+# Add layer control to toggle visibility of the facets
+leaflet_map <- leaflet_map %>%
+  addLayersControl(
+    overlayGroups = groups,
+    options = layersControlOptions(collapsed = FALSE)
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    colors = c("green", "red"),
+    labels = c("binnen", "buiten"),
+    title = "Locatie t.o.v. telcirkel")
+
+# Print the leaflet map
+leaflet_map
+```
+
+Bij de meeste punten lijkt dit ok, maar we zien een paar probleempunten:
+
+- Ol_1901.4: verkeerde locatie R2, 2022
+- Ol_1068.12: paar punten heel ver weg R3, 2022
+- Ol_827.8: verkeerde locatie R4, 2024
+
+In andere periodes zijn deze wel correct geteld. 
+We verliezen dus enkel:
+
+- Ol_1901.4: R2, 2022
+- Ol_827.8: R4, 2024
+
+```{r}
+# Problem points
+problem_points <- c("Ol_1901.4", "Ol_1068.12", "Ol_827.8")
+
+inside_observations_problems <- calculate_obs_distance %>%
+  filter((plotnaam == "Ol_1901.4" & jaar == 2022 & periode_in_jaar != "R2") |
+         (plotnaam == "Ol_1068.12" & jaar == 2022 & periode_in_jaar != "R3") |
+         (plotnaam == "Ol_827.8" & jaar == 2024 & periode_in_jaar != "R4")) %>%
+  mutate(outlier = "binnen",
+         outlier_perc = 0) %>%
+  select(all_of(names(outside_observations_new)))
+
+outside_observations_problems <- outside_observations_new %>%
+  filter(plotnaam %in% problem_points)
+
+obs_probs_total <- bind_rows(
+  inside_observations_problems,
+  outside_observations_problems
+  )
+
+plots_probs_total <- obs_probs_total %>%
+  st_drop_geometry() %>%
+  distinct(regio, plotnaam, jaar, periode_in_jaar, x_coord, y_coord) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370)
+
+circles_probs_total <- plots_probs_total %>%
+  st_buffer(300)
+
+# Data preparation
+years <- obs_probs_total %>%
+  distinct(jaar) %>%
+  pull()
+
+# Create an empty leaflet map
+leaflet_map <- leaflet() %>%
+  addTiles()
+
+# Loop through each year and round, adding layers to the map
+for (j in sort(years)) {
+  periods <- obs_probs_total %>%
+    filter(plotnaam %in% problem_points,
+           jaar == j) %>%
+    distinct(periode_in_jaar) %>%
+    pull() %>%
+    sort()
+
+  for (ronde in sort(periods)) {
+    # Filter data for the current year and round
+    circles <- circles_probs_total %>%
+      filter(plotnaam %in% problem_points,
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    plots <- plots_probs_total %>%
+      filter(plotnaam %in% problem_points,
+             jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+    observations <- bind_rows(
+      inside_observations_problems,
+      outside_observations_problems
+      ) %>%
+      filter(jaar == j,
+             periode_in_jaar == ronde) %>%
+      st_transform(4326)
+
+    # Create title
+    title <- paste("Jaar:", j, "- Ronde:", ronde)
+
+    # Add the layers to the leaflet map with group names
+    leaflet_map <- leaflet_map %>%
+      addPolygons(data = circles, fillOpacity = 0.3, group = title) %>%
+      addCircleMarkers(data = plots, radius = 3, color = "black",
+                       group = title, label = ~plots$plotnaam) %>%
+      addCircleMarkers(data = observations, fillOpacity = 0.8, radius = 5,
+                       color = ~ifelse(outlier == "binnen", "green", "red"),
+                       group = title, label = ~observations$plotnaam)
+  }
+}
+
+# Calculate control groups
+groups <- obs_probs_total %>%
+  filter(plotnaam %in% problem_points) %>%
+  distinct(jaar, periode_in_jaar) %>%
+  arrange(jaar, periode_in_jaar) %>%
+  mutate(group = paste("Jaar:", jaar, "- Ronde:", periode_in_jaar)) %>%
+  pull(group)
+
+# Add layer control to toggle visibility of the facets
+leaflet_map <- leaflet_map %>%
+  addLayersControl(
+    overlayGroups = groups,
+    options = layersControlOptions(collapsed = FALSE)
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    colors = c("green", "red"),
+    labels = c("binnen", "buiten"),
+    title = "Locatie t.o.v. telcirkel")
+
+# Print the leaflet map
+leaflet_map
+```
+
+## Selecteer soortengroepen (select_species_groups)
+
+Vervolgens selecteren we de data van vogels (soortgrp 2) en zoogdieren (soortgrp 1).
+
+```{r}
+select_species_groups <- tar_read_sf(
+  "select_species_groups", store = targets_store)
+```
+
+Is het aantal soortgroepen in de data gelijk aan 2?
+
+```{r}
+# Get number of species groups
+n_soortgroups <- select_species_groups %>%
+  st_drop_geometry() %>%
+  distinct(soortgrp) %>%
+  nrow()
+
+# Equal to 2 (birds and mammals)?
+n_soortgroups == 2
+```
+
+Ok.
+
+## Verwerk dubbeltellingen (remove_double_counts)
+
+Sommige telpunten zijn 2x geteld.
+We selecteren de telling van de laatste dag binnen de telperiode of de telling gedaan door een professionele teller indien van toepassing.
+
+```{r, echo=FALSE}
+# Create table to show professional counters
+profs      <-  c("WVNT00", # professional from the start
+                 "JJNN16",
+                 "NOVN00",
+                 "ETBX00")
+profs_2022 <-    "RPLT02" # professional after 2022
+profs_2023 <- c("KLMS02", # professional after 2023
+                "KLMS02",
+                "ETON01",
+                "BDMR00",
+                "DDMR00",
+                "PADS02",
+                "PCAS00",
+                "BOPE01")
+profs_2024 <- c("KLMS02", # professional after 2024
+                "ETON01",
+                "BDMR00",
+                "DDMR00",
+                "BOPE01",
+                "DDMR01",
+                "AIST00",
+                "MJCS03",
+                "TGSS02",
+                "WVNN05",
+                "BBMS01",
+                "WKPN01",
+                "RDLK00",
+                "ABNS05",
+                "IJCS01",
+                "DVRN00",
+                "JPNS04",
+                "LBRH01",
+                "RLJE00",
+                "ETBX00",
+                "LHNN03",
+                "SDST00")
+
+data.frame(
+    professional = c(
+      profs,
+      profs_2022,
+      profs_2023,
+      profs_2024
+    ),
+    sinds = c(
+      rep("vanaf start", length(profs)),
+      rep("vanaf 2022", length(profs_2022)),
+      rep("vanaf 2023", length(profs_2023)),
+      rep("vanaf 2024", length(profs_2024))
+    )
+  ) %>%
+  kable()
+```
+
+```{r}
+remove_double_counts <- tar_read_sf(
+  "remove_double_counts", store = targets_store)
+
+remove_subspecies_names <- tar_read_sf(
+  "remove_subspecies_names", store = targets_store)
+```
+
+We lijsten op waar dubbeltellingen zijn verwijderd.
+
+```{r}
+# Get locations with removed observations due to double counting
+removed_obs <- select_species_groups %>%
+  st_drop_geometry() %>%
+  anti_join(st_drop_geometry(remove_double_counts),
+            by = join_by(oid, projectid, plotid, plotnaam, x_amersfoord,
+                         y_amersfoord, x_lambert, y_lambert, soortgrp, soortnr,
+                         naam, aantal, jaar, maand, dag, doy, wrntype,
+                         broedcode, opmerk, clterr, clterrid, inplot, periodeid,
+                         periode, wrntype_omschrijving, sample_order, batch,
+                         regio, area_prop_sb, openheid_klasse, sbp, x_coord,
+                         y_coord, crs, datum, periode_in_jaar, distance2plot))
+
+removed_obs %>%
+  group_by(regio, plotnaam, jaar) %>%
+  summarise(n_periodes = n_distinct(jaar, periode_in_jaar),
+            .groups = "drop") %>%
+  arrange(regio, plotnaam, jaar) %>%
+  kable()
+```
+
+Zijn alle dubbeltellingen verwijderd?
+In de verwerkte data zou elke locatie maar 1x geteld moeten zijn per periode en jaar.
+
+```{r}
+# Calculate number of counts in processed data
+remove_subspecies_names %>%
+  st_drop_geometry() %>%
+  mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
+  distinct(regio, plotnaam, jaar, periode_in_jaar, datum) %>%
+  count(regio, plotnaam, jaar, periode_in_jaar,
+        name = "n_tellingen") %>%
+  filter(n_tellingen > 1) %>%
+  arrange(regio, plotnaam, jaar) %>%
+  nrow() == 0
+```
+
+Ok.
+
+**Oostelijke leemstreek**
+
+Zijn de juiste tellingen verwijderd?
+
+```{r}
+# Which locations are removed?
+removed_obs_ol <- removed_obs %>%
+  filter(regio == "Oostelijke leemstreek") %>%
+  distinct(plotnaam, regio, jaar, periode_in_jaar)
+
+# Which observations are removed per date?
+removed_obs_ol2 <- removed_obs %>%
+  filter(regio == "Oostelijke leemstreek") %>%
+  mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
+  distinct(plotnaam, regio, datum, periode_in_jaar) %>%
+  mutate(keep = FALSE)
+
+# Get double counts and look if correct ones are removed
+select_species_groups %>%
+  st_drop_geometry() %>%
+  inner_join(removed_obs_ol,
+             by = join_by(plotnaam, jaar, regio, periode_in_jaar)) %>%
+  mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
+  full_join(removed_obs_ol2,
+            by = join_by(plotnaam, regio, datum, periode_in_jaar)) %>%
+  mutate(keep = is.na(keep)) %>%
+  count(plotnaam, datum, periode_in_jaar, waarnemer = waarneme, keep,
+        name = "n_obs") %>%
+  arrange(plotnaam, datum, periode_in_jaar) %>%
+  kable()
+```
+
+- Ol_12609.15, 2022, R1, LEVS01: ok, laatste telling
+- VL0587, 2024, R2, BSCX00: ok, laatste telling
+- VL0590, 2024, R2, BSCX00: ok, laatste telling
+
+## Verwerk namen van ondersoorten (remove_subspecies_names)
+
+De volgende ondersoorten worden aangepast tot op soortniveau.
+
+```{r, echo=FALSE}
+# Create table to show subspecies
+data.frame(
+    ondersoort = c(
+      "gele kwikstaart (spec)",
+      "engelse kwikstaart",
+      "witte kwikstaart (spec)",
+      "Rouwkwikstaart",
+      "canadese gans spec.",
+      "Witsterblauwborst"
+    ),
+    soort = c(
+      rep("Gele kwikstaart", 2),
+      rep("Witte kwikstaart", 2),
+      rep("Grote Canadese Gans", 1),
+      rep("Blauwborst", 1)
+    )
+  ) %>%
+  kable()
+```
+
+## Telpunten in finale dataset (mas_data_full)
+
+```{r}
+mas_data_full <- tar_read("mas_data_full", store = targets_store)
+```
+
+Zijn alle telpunten zijn nog altijd aanwezig?
+
+```{r}
+# Show number of locations per stratum
+mas_data_full %>%
+  st_drop_geometry() %>%
+  distinct(plotnaam, regio, openheid_klasse, sbp) %>%
+  mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
+  count(regio, stratum, name = "n_stratum") %>%
+  group_by(regio) %>%
+  mutate(n_regio = sum(n_stratum)) %>%
+  ungroup() %>%
+  kable()
+```
+
+Het ziet er naar uit dat we 3 punten verloren zijn in de Oostelijke leemstreek.
+Deze zijn besproken in sectie \@ref(steekproef).
+
+# Controle finale dataset
+
+Nadat we de pipeline hebben doorlopen bekomen we de finale dataset.
+Ook hierop doen we enkele controlestappen.
+Zijn alle soorten correct (bv. Blauwe Pauw i.p.v. Blauwe Reiger)? Zijn er opvallend veel individuen opgegeven (bv. 300 i.p.v. 30)? ...
+
+```{r}
+mas_data_clean <- tar_read("mas_data_clean", store = targets_store)
+```
+
+## Telpunt- en waarneminglocaties
+
+Zie Sectie \@ref(controle-pipeline).
+
+## Timing observaties
+
+De data bevatten geen info over precieze tijdstippen van tellingen, enkel datums.
+De datums werden gecontroleerd in Subsectie \@ref(time-periods).
+
+## Aantal individuen
+
+In sommige gevallen worden meer dan 50 individuen gezien.
+
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  filter(aantal >= 50) %>%
+  count(aantal, name = "aantal keer in dataset") %>%
+  rename("aantal vogels" = aantal) %>%
+  kable()
+```
+
+Een opvalllende is ook een uitschieter van 3000 individuen.
+We zien dat de meeste waarnemingen wel gaan over soorten die in groep voorkomen, zoals Spreeuw, Grauwe Gans, Roek, Houtduif ...
+
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  select(aantal, naam, plotnaam, waarnemer, datum) %>%
+  filter(aantal >= 50) %>%
+  arrange(aantal) %>%
+  kable()
+```
+
+We schrijven deze waarnemingen weg zodat ze toch gecontroleerd kunnen worden.
+
+```{r}
+mas_data_clean %>%
+  filter(aantal >= 50) %>%
+  arrange(aantal) %>%
+  write_csv(file.path(mbag_dir, "output", "data_controle",
+                      "waarnemingen_met_hoge_aantallen.csv"))
+```
+
+## Soortnamen
+
+De volgende soorten werden gezien.
+Deze lijst moet gecontroleerd worden op vreemde namen die mogelijks fout zijn.
+
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  count(naam, name =  "aantal waarnemingen") %>%
+  arrange(naam) %>%
+  kable()
+```
+
+We schrijven de data voor Waterspreeuw weg.
+
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  filter(naam == "Waterspreeuw") %>%
+  write_csv(file.path(mbag_dir, "output", "data_controle",
+                      "vreemde_soorten_mastellingen.csv"))
+```
+
+## Broedcodes
+
+Broedcodes zijn ook belangrijk voor verdere data analyse.
+
+Communicatie Simon Desmet:
+
+*In de Avimap-versie voor Android kan een teller enkel het aantal wijzigen als de vogel broedcode 0 krijgt, maar met een iPhone is dat wel mogelijk bij vogels die met een hogere broedcode dan 0 ingevoerd werden. Sommige tellers hebben dit blijkbaar effectief gedaan, hoewel wij op voorhand gevraagd hadden dit niet te doen.*
+
+Het is echter moeilijk om deze te controleren.
+Wel kunnen we de aantallen visualiseren.
+
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  count(wrntype, wrntype_omschrijving, name = "n_obs") %>%
+  rename(
+    "broedcode" = wrntype,
+    "omschrijving" = wrntype_omschrijving,
+  ) %>%
+  kable()
+```
+
+**Broedcode 1-5**
+
+Er is inderdaad een aantal keer hogere aantallen dan 1 ingevoerd bij broedcodes 1-5.
+
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  filter(aantal > 1,
+         wrntype > 0) %>%
+  count(wrntype, aantal, name = "aantal keer in dataset") %>%
+  rename(
+    "broedcode" = "wrntype",
+    "aantal vogels" = aantal) %>%
+  kable()
+```
+
+We kijken per jaar hoe vaak een hoger getal dan **2** is geteld voor broedcodes > 0.
+Het is een probleem elk jaar.
+
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  filter(aantal > 2,
+         wrntype > 0) %>%
+  count(wrntype, jaar, name = "aantal keer in dataset") %>%
+  rename(
+    "broedcode" = "wrntype") %>%
+  kable()
+```
+
+We schrijven de data met broedcodes > 0 met een hoger aantal dan 1 weg.
+
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  filter(aantal > 1,
+         wrntype > 0) %>%
+  rename("broedcode" = "wrntype") %>%
+  select("oid", "plotnaam", "x_lambert", "y_lambert", "datum",
+         "periode_in_jaar", "jaar", "naam", "aantal", "broedcode", "waarnemer"
+         ) %>%
+  arrange(waarnemer, aantal, datum) %>%
+  write_csv(file.path(mbag_dir, "output", "data_controle",
+                      "hoge_aantallen_broedcodes.csv"))
+```
+
+# Controle data publicatie
+
+De finale dataset wordt verder in de pipeline klaar gemaakt voor publicatie op GBIF.
+Het gaat om de volgende stappen (zie ook `dwc_mapping_mas.Rmd` voor een uitgebreide beschrijving en exploratie).
+
+- Dataset preparatie
+  - We verwijderen kolommen gerelateerd aan steekproef
+  - We passen kolomnamen aan
+- Ruimtelijke verwerking
+  - We verwijderen de Amersfoord coördinaten
+  - We zetten de Lambert coördinaten om naar WGS 84 decimale coördinaten
+  - We behouden de Lambert coördinaten als verbatim coördinaten
+- Mappen van statische waarden
+  - Statische waarden worden gebruikt voor Darwin Core-termen die dezelfde waarde nodig hebben voor alle records
+  - Meestal ontbreken ze in de input data
+- Mappen van ongewijzigde waarden
+  - Ongewijzigde waarden worden gebruikt voor Darwin Core-termen waarvan de inhoud een exacte kopie is van het overeenkomstige veld in de input data
+- Mappen van gewijzigde waarden
+  - Gewijzigde waarden worden gebruikt voor Darwin Core-termen waarvoor de inhoud in de input data als basis wordt gebruikt, maar deze moet worden gestandaardiseerd
+  - Dit geldt voor Darwin Core-termen waarvoor we een vocabulaire gebruiken of waar we willen transformeren voor de duidelijkheid of om duidelijke fouten te corrigeren
+- Taxon matching
+ - We matchen de Nederlandstalige soortnamen met de [GBIF backbone taxonomy](https://www.gbif.org/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c)
+ - Sommige taxa moeten manueel gematcht worden
+- Nabewerking dataset
+  - Selectie relevante kolommen
+  - Sorteren van kolommen
+
+## Taxon matching
+
+We controleren eerst de lijst van soorten die automatisch zijn gematcht (taxon_mapping).
+
+```{r}
+taxon_data <- tar_read("taxon_mapping", store = targets_store)
+
+taxon_data %>%
+  filter(!is.na(scientificName)) %>%
+  bind_rows(filter(taxon_data, is.na(scientificName))) %>%
+  select(dwc_vernacularName, dwc_class, family, scientificName, rank, key) %>%
+  kable()
+```
+
+Matching ziet er op het eerste zicht goed uit.
+Enkel voor “Veldmuis/Aardmuis”, “rat spec.” en “spitsmuis spec.” niet.
+Deze moeten we manueel mappen (manual_taxon_mapping).
+
+```{r}
+manual_taxon_data <- tar_read("manual_taxon_mapping", store = targets_store)
+
+manual_taxon_data %>%
+  filter(is.na(species)) %>%
+  select(dwc_vernacularName, dwc_class, family, scientificName, rank, key) %>%
+  kable()
+```
+
+We hebben een gedeeltelijke lijst van Sovon gekregen zodat we met hun namen kunnen controleren.
+
+```{r}
+soorten_wet_mas <- read_csv2(file.path("data", "SOVON", "soorten_wet_mas.csv"))
+
+test_wet_names <- manual_taxon_data %>%
+  select("dwc_taxonID", "dwc_vernacularName", "scientificName",
+         "authorship") %>%
+  mutate(authorship = trimws(authorship)) %>%
+  rowwise() %>%
+  mutate(scientificName = gsub(authorship, "", scientificName),
+         dwc_scientificName = trimws(gsub("\\(.*?\\)", "", scientificName))
+  ) %>%
+  select(-"authorship", -"scientificName") %>%
+  left_join(soorten_wet_mas, by = join_by("dwc_taxonID" == "euring")) %>%
+  select(-"groepnr")
+```
+
+De volgende soorten zijn niet in de lijst van sovon aanwezig.
+`dwc_taxonID` is de id voor de Nederlandstalige soortnaam van Sovon, `naam` is de Nederlandstalige naam op de lijst van Sovon en `wetenschap` is de wetenschappelijke naam op de lijst van Sovon.
+
+```{r}
+missing_soorten_wet_mas <- test_wet_names %>%
+  filter(is.na(naam))
+
+missing_soorten_wet_mas %>%
+  kable()
+```
+
+Hoe zit het met de wetenschappelijke namen van onze functie (`dwc_scientificName`) en van de lijst van Sovon. Komen deze overeen?
+
+```{r}
+mismatches_wet_names <- test_wet_names %>%
+  filter(!is.na(naam)) %>%
+  mutate(test_wet = dwc_scientificName == wetenschap)
+
+mismatches_wet_names %>%
+  filter(!test_wet) %>%
+  select(-"test_wet") %>%
+  kable()
+```
+
+Er zijn een aantal mismatches:
+
+1. Species versus subspecies
+  - Vormen in principe geen probleem
+2. Andere genera
+  - Braamsluiper: *Curruca curruca* is "Synonym of Sylvia curruca (Linnaeus, 1758)" volgens GBIF backbone taxonomy
+  - Fluiter: met 2 ll'en volgens GBIF backbone taxonomy(op wikipedia ook met 1 l ...)
+  - Grasmus: *Curruca communis* is "Homotypic synonym of Sylvia communis Latham, 1787" volgens GBIF backbone taxonomy
+  - Matkop: zowel *Parus montanus* als *Poecile montanus* zijn accepted in GBIF backbone taxonomy
+
+Ziet er over het algemeen ok uit.
+
+## Finale dataset
+
+Na DwC mapping bekomen we de finale dataset voor publicatie.
+We bekijken hier of er nog tekortkomingen zijn.
+
+```{r}
+darwincore_mapping <- tar_read("darwincore_mapping", store = targets_store)
+dwc_mapping_final <- tar_read("dwc_mapping_final", store = targets_store)
+```
+
+Welke kolommen zitten niet in de dataset?
+
+```{r}
+sort(colnames(darwincore_mapping)[
+    grepl("^raw\\_", colnames(darwincore_mapping))
+  ])
+```
+
+- Locaties telpunten ook in dataset (`raw_x_coord`, `raw_y_coord`, `raw_crs`) --> Event versus occurrence dataset opsplitsen?
+- Afstand tot telpunt: `raw_distance2plot` --> welke term?
+- Zijn variabelen relevant om mee te geven?
+  - `raw_area_prop_sb` --> Overlap steekproef(kader) zenodo?
+  - `raw_sbp` --> Overlap steekproef(kader) zenodo?
+  - `raw_openheid_klasse` --> Overlap steekproef(kader) zenodo?
+  - `raw_regio` --> Overlap steekproef(kader) zenodo?
+  - `raw_periode_in_jaar`: 1 van 4 telperiodes
+  - `raw_status_teller`: is de waarnemer een professional of een vrijwilliger?
+- Kan hier nog iets mee gedaan worden?
+  - `raw_doy`: day of year sinds januari
+  - `raw_plotid`: we gebruiken eigenlijk altijd plotnaam
+  - `raw_projectid`: is dit INBO of SOVON gerelateerd?
+
+> Laatste 2 lijken ons alvast niet relevant.
+
+Welke kolommen moet nog aangevuld worden?
+
+```{r}
+empty_col_df <- dwc_mapping_final[
+    ,
+    colSums(is.na(dwc_mapping_final)) == nrow(dwc_mapping_final)
+  ]
+sort(colnames(empty_col_df))
+```
+
+> Aanvullen
+
+Hoe ziet de dataset er uit?
+
+```{r}
+glimpse(dwc_mapping_final)
+```
+
+> ok?
+
+Overige opmerkingen en vragen:
+
+- Ok dat `varbatimBehavior` de Nederlandstalige beschrijving is? De Engelstalige beschrijving staat onder `behavior`. Of mag de Nederlandse beschrijving weg?
+-  Wat is het verschil tussen `dwc_individualCount` en `dwc_organismQuantity`? Voorlopig gebruiken we `organismQuantity` voor aantallen en `organismQuantityType = individuals` wanneer broedcode gelijk aan 0 en `organismQuantityType = breeding pairs` wanneer broedcode > 0. In geval van broedcode > 0 moet `organismQuantity` eigenlijk gelijk zijn aan 1.
+- We kunnen ook afwezigheden toevoegen (`occurrenceStatus = "absent"` en `organismQuantity = 0`) aangezien alle vogels worden genoteerd op het moment van tellen vanaf dat telpunt. Hoe doen we dit?
+  - We kijken per jaar naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten per jaar. *Voordeel:* geen verandering als er data van een nieuw jaar bijkomt. *Nadeel:* niet volledig aangezien deze lijst niet volledig is.
+  - We kijken over de hele dataset naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten. *Voordeel:* steeds meer volledige lijst van soorten. *Nadeel:* dataset zal elk jaar veranderen.
+  - Afwezigheden toevoegen o.b.v. externe lijst?
+  - ...
+
+> Zouden afwezigheden correct zijn? Er is geen streeplijst gebruikt, dus eerder niet.

@@ -8,6 +8,8 @@ output:
     toc: true
     toc_float: true
     toc_collapsed: true
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../../output/rapporten/markdown/steekproefontwerp") })
 editor_options: 
   chunk_output_type: console
 ---
@@ -38,7 +40,8 @@ mbag_dir <- here()
 source(here("source", "R", "steekproefkader.R"))
 source(here("source", "R", "berekening_hulpvariabelen.R"))
 source(here("source", "R", "wfs_wcs.R"))
-targets_store <- here("source", "targets", "mas_steekproef_za_kp_po", "_targets")
+targets_store <- here("source", "targets", "mas_steekproef_za_kp_po",
+                      "_targets")
 ```
 
 # Vooraf
@@ -58,7 +61,7 @@ Om de perimeter te bepalen voer je onderstaande code uit in mas_steekproef_za_kp
 
 De code maakt een intersectie tussen landbouwstreek Kempen (heel België) en contour Vlaanderen en voegt deze toe  aan file "za_kp_po_perimeters.gpkg".
 
-```{r, class.source = "fold-show", eval=FALSE}
+```r
 # library(sf)
 #
 # # Lees in polygonen landbouwstreken
@@ -361,7 +364,7 @@ Voor elk potentieel telpunt / telcirkel:
 > VITO 2019 landgebruikskaart (update elke 3 jaar)
 
 ```{r}
-telcirkels_selectie_landgebruik <- tar_read(telcirkels_selectie_landgebruik,
+telcirkels_selectie_lgb <- tar_read(telcirkels_selectie_landgebruik,
   store = targets_store
 ) %>%
   filter(startsWith(pointid, abbreviate("Kempen", 2)))
@@ -377,7 +380,7 @@ In de momenteel gebruikte berekening is dit "ontbrekend" landgebruik weggefilter
 Het kan dus zijn dat op de volledige telcirkel deze oppervlakte-aandelen verschillend zijn (en al dan niet zouden moeten uitgesloten worden volgens het criterium).
 
 ```{r}
-telcirkels_selectie_landgebruik %>%
+telcirkels_selectie_lgb %>%
   ggtern::ggtern(aes(
     x = Akker + Grasland,
     y = Bos + Struikgewas,
@@ -394,7 +397,7 @@ De kaart toont de punten die op deze manier niet meer in aanmerkingen komen.
 ```{r map-exclusie-landgebruik-vito}
 exclusie_punten <- punten %>%
   left_join(
-    telcirkels_selectie_landgebruik %>%
+    telcirkels_selectie_lgb %>%
       group_by(pointid) %>%
       summarize(selectie2 = any(selectie2)),
     by = "pointid"
@@ -524,7 +527,7 @@ Werkwijze:
     -   GL (\< 71,6°) gesloten landschap
 
 Akkervogelgemeenschappen worden vaak ingedeeld volgens hun affiniteit met open landschap (OLA - Open landschap Akkervogels), half-open landschap (HOLA) en kleinschalig landschap (KLA).
-Onder kleinschalig landschap verstaat men een landschap waar de percelen relatief klein zijn en het landschap in sterke mate dooraderd is door hagen, rietkragen en andere lijn- of puntvormige kleine landschapselementen (KLE's).
+Onder kleinschalig landschap verstaat men een landschap waar de percelen relatief klein zijn en het landschap in sterke mate dooraderd is door hagen, rietkragen en andere lijn of puntvormige kleine landschapselementen (KLE's).
 De manier waarop we openheid van het landschap hebben bepaald laat niet toe om KLA te bepalen zonder bijkomende berekeningen.
 KLA zullen een subset zijn van wat wij HOL noemen, met name HOL waar de gemiddelde perceelsgrootte relatief klein is.
 
@@ -587,7 +590,7 @@ De kaartlagen bevinden zich in de MAS drive map onder layers \> perimeters SBPs
 
 Deze werden tot 1 bestand samengevoegd met volgende code:
 
-```{r, class.source = "fold-show", eval=FALSE}
+```r
 layer1 <- st_read("C:/Users/ward_langeraert/Downloads/INBO.A.4291_bijlage1/Kerngebied_SBP_2_INBO.shp")
 layer2 <- st_read("C:/Users/ward_langeraert/Downloads/INBO.A.4291_bijlage1/PM_SBP_2_INBO.shp")
 layer3 <- st_read("C:/Users/ward_langeraert/Downloads/PMZ_Kernzone_Grauwe_kiek_sbp/lu_sbp_pgs.shp")
@@ -951,6 +954,9 @@ steekproef[] %>%
 
 ```{r}
 first_samples <- function(steekproef_df, min_n, multiplicatie) {
+  require("dplyr")
+  require("rlang")
+
   factor_n <- min_n * multiplicatie
 
   steekproef_df %>%
@@ -1066,8 +1072,9 @@ We zien dat de steekproef vanaf 50 punten per stratum een goede afspiegeling is 
 
 ```{r}
 mapview_n <- function(n) {
-  mapview(perimeters_data, color = "red", alpha.regions = 0, legend = FALSE) +
-    mapview(
+  mapview::mapview(perimeters_data, color = "red", alpha.regions = 0,
+                   legend = FALSE) +
+    mapview::mapview(
       first_samples(steekproef, n, multiplicatie = 1) %>%
         st_buffer(dist = 300),
       zcol = "openheid_sbp", layer = "stratum"

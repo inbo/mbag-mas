@@ -8,4 +8,5 @@ steekproef_piloot_avimap.tsv
 steekproef_piloot_avimap.yml
 trend_aup.tsv
 trend_aup.yml
+!README.txt
 !.gitignore
