@@ -836,7 +836,7 @@ steekproefkader_finaal$Duinen %>%
   kable(digits = 3)
 ```
 
-In de Duinen zien we dat het steekproefkader vooral in twee gebieden gelocaliseerd is.
+In de Duinen zien we dat het steekproefkader vooral in twee gebieden gelokaliseerd is.
 
 1.  Rond Nieuwpoort
 2.  Hazegraspolder
