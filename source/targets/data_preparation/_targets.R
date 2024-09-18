@@ -45,15 +45,28 @@ source(file.path(mbag_dir, "source", "R",
 source(file.path(mbag_dir, "source", "R",
                  "berekening_verklarende_variabelen.R"))
 
+
+# Download MAS pipeline data
+
+## ... to be continued
+
 # Target list
 list(
   # 1. Read in observation data
+  ## We use "dynamic branching" in the targets pipeline.
+  ## The pipeline creates new targets at runtime for each file.
+  ## When we add a new dataset file for a certain year, the pipeline will only
+  ## do calculations for the data of that year and not again for the other years
+  ## if nothing changed there.
+
+  # Get file paths for each year
   tarchetypes::tar_files_input(
     name = mas_counts_sovon_files,
     files = paths_to_counts_sovon(
       proj_path = target_dir
     )
   ),
+  # Read data from file paths
   tar_target(
     name = mas_counts_sovon,
     command = sf::st_read(
@@ -72,7 +85,10 @@ list(
     pattern = map(mas_counts_sovon),
     iteration = "list"
   ),
+
   # 2. Read in sample points of MBAG MAS
+
+  # Get file path
   tarchetypes::tar_file(
     name = sample_file,
     command = path_to_samples(
@@ -80,6 +96,7 @@ list(
       file = "steekproef_avimap_mbag_mas.csv"
     )
   ),
+  # Read table from file path
   tar_target(
     name = sample,
     command = readr::read_csv(
@@ -87,7 +104,8 @@ list(
       show_col_types = FALSE
     )
   ),
-  # Select locations in data that belong to sample points of MBAG MAS
+  # Select locations in MAS data that belong to sample points of MBAG MAS
+  # We still branch per year
   tar_target(
     name = select_sampled_points,
     command = join_with_sample(
@@ -97,7 +115,10 @@ list(
     pattern = map(crs_pipeline),
     iteration = "list"
   ),
+
   # 3. Data selection and preparation steps
+
+  # Select data that fall within valid time periods
   tar_target(
     name = select_time_periods,
     command = select_within_time_periods(
@@ -106,6 +127,7 @@ list(
     pattern = map(select_sampled_points),
     iteration = "list"
   ),
+  # Calculate distances to observer
   tar_target(
     name = calculate_obs_distance,
     command = calculate_obs_dist(
@@ -114,6 +136,7 @@ list(
     pattern = map(select_time_periods),
     iteration = "list"
   ),
+  # Select data that fall within the sampling unit circles
   tar_target(
     name = select_within_radius,
     command = calculate_obs_distance %>%
@@ -121,6 +144,7 @@ list(
     pattern = map(calculate_obs_distance),
     iteration = "list"
   ),
+  # Select data for birds and mammals
   tar_target(
     name = select_species_groups,
     command = dplyr::filter(
@@ -130,6 +154,8 @@ list(
     pattern = map(select_within_radius),
     iteration = "list"
   ),
+  # Remove data from counts that were performed twice within the same time
+  # period
   tar_target(
     name = remove_double_counts,
     command = process_double_counted_data(
@@ -138,6 +164,7 @@ list(
     pattern = map(select_species_groups),
     iteration = "list"
   ),
+  # Set all taxon names to species level
   tar_target(
     name = remove_subspecies_names,
     command = adjust_subspecies_names_nl(
@@ -146,6 +173,7 @@ list(
     pattern = map(remove_double_counts),
     iteration = "list"
   ),
+  # Stop branching over years, bind all data together
   tar_target(
     name = mas_data_full,
     command = do.call(
@@ -153,15 +181,21 @@ list(
       args = c(remove_subspecies_names, make.row.names = FALSE)
     )
   ),
+  # Remove unwanted columns
   tar_target(
     name = mas_data_clean,
     command = remove_columns(mas_data_full)
   ),
+
   # 4. Prepare data for publication on GBIF
+
+  # Perform mapping of Darwin Core column names
   tar_target(
     name = darwincore_mapping,
     command = dwc_mapping(mas_data_clean)
   ),
+
+  # Get taxon names and split dataframe in groups of `size`
   tarchetypes::tar_group_size(
     name = prepare_taxon_mapping,
     command = darwincore_mapping %>%
@@ -173,6 +207,8 @@ list(
       dplyr::arrange(dwc_vernacularName),
     size = 50
   ),
+  # Get taxonomic info from GBIF tax. backbone, branch over the groups to limit
+  # the number of connections to GBIF backbone at once
   tar_target(
     name = taxon_mapping,
     command = map_taxa_from_vernacular(
@@ -187,6 +223,7 @@ list(
     ),
     pattern = map(prepare_taxon_mapping)
   ),
+  # Add taxon names manual if required
   tar_target(
     name = manual_taxon_mapping,
     command = map_taxa_manual(
@@ -201,6 +238,7 @@ list(
                    "species", "authorship", "rank", "key")
     )
   ),
+  # Join taxon names and sort columns
   tar_target(
     name = dwc_mapping_final,
     command = finalise_dwc_df(
@@ -208,6 +246,7 @@ list(
       taxonomy_df = manual_taxon_mapping
     )
   ),
+  # Write out GBIF dataset
   tar_target(
     name = create_dwc_csv,
     command = create_output_csv(

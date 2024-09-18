@@ -8,6 +8,8 @@ output:
     toc: true
     toc_float: true
     toc_collapsed: true
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../../output/rapporten/markdown/2024") })
 editor_options: 
   chunk_output_type: console
 ---
@@ -73,7 +75,6 @@ raw_data <- raw_data %>%
     -"sample_order"
   )
 ```
-
 
 We passen de kolomnamen aan en nemen een kopie van de data.
 
@@ -148,9 +149,7 @@ taxon_core <- taxon_core %>%
     dwc_country              = "Belgium",
     dwc_stateProvince        = "Flanders",
     dwc_countryCode          = "BE",
-    dwc_basisOfRecord        = "HumanObservation",
-    dwc_organismQuantityType = "individuals",
-    dwc_coordinateUncertaintyInMeters = "5"
+    dwc_basisOfRecord        = "HumanObservation"
   )
 ```
 
@@ -164,7 +163,6 @@ taxon_core <- taxon_core %>%
   - `dwc_samplingEffort`
 - Is `dwc_language = "en"` ok?
 - Is `dwc_eventType = "Survey"` ok?
-- Hoeveel zetten we voor `dwc_coordinateUncertaintyInMeters`?
 
 ## Ongewijzigde waarden
 
@@ -186,15 +184,14 @@ taxon_core <- taxon_core %>%
     "dwc_taxonID"            = "raw_soortnr"
   ) %>%
   mutate(
-    dwc_identifiedBy = .data$dwc_recordedBy,
-    dwc_individualCount = .data$dwc_organismQuantity
+    dwc_identifiedBy = .data$dwc_recordedBy
   )
 ```
 
 **Vragen**
 
 -  Ok dat `dwc_varbatimBehavior` de Nederlandstalige beschrijving is? De Engelstalige beschrijving wordt in de volgende sectie onder `dwc_behavior` aangemaakt. Of mag de Nederlandse beschrijving dan weg?
--  Wat is het verschil tussen `dwc_individualCount` en `dwc_organismQuantity`?
+-  Wat is het verschil tussen `dwc_individualCount` en `dwc_organismQuantity`? Voorlopig gebruiken we `organismQuantity` voor aantallen en `organismQuantityType = individuals` wanneer broedcode gelijk aan 0 en `organismQuantityType = breeding pairs` wanneer broedcode > 0. In geval van broedcode > 0 moet `organismQuantity` eigenlijk gelijk zijn aan 1.
 
 ## Gewijzigde waarden
 
@@ -202,8 +199,13 @@ Gewijzigde waarden worden gebruikt voor Darwin Core-termen waarvoor de inhoud in
 
 - We creëren een `dwc_occurrenceID` en een `dwc_occurrenceID`
 - We voegen `dwc_class` toe o.b.v. de `soortgrp`
-- We voegen `dwc_occurrenceStatus` toe o.b.v. de `dwc_individualCount` 
+- We voegen `dwc_occurrenceStatus` toe o.b.v. de `dwc_organismQuantity` 
 - We voegen `dwc_behavior` toe als Engelse vertaling van `dwc_varbatimBehavior`
+- We berekenen `dwc_coordinateUncertaintyInMeters`:
+  - Minimaal 10 m, anders 10 % van afstand tot telpunt
+- We berekenen `dwc_organismQuantityType`
+  - Wanneer broedcode gelijk aan 0 --> `organismQuantityType = individuals`
+  - Wanneer broedcode > 0 --> `organismQuantityType = breeding pairs`
 
 ```{r}
 taxon_core <- taxon_core %>%
@@ -228,7 +230,12 @@ taxon_core <- taxon_core %>%
         "Nest-indicating behaviour",
       .data$dwc_varbatimBehavior == "Paar in broedbiotoop" ~
         "Pair in breeding habitat"
-  )) %>%
+    ),
+  dwc_coordinateUncertaintyInMeters = ifelse(.data$raw_distance2plot < 100,
+                                             10, 0.1 * .data$raw_distance2plot),
+  dwc_organismQuantityType = ifelse(.data$raw_wrntype == "0",
+                                    "individuals", "breeding pairs")
+  ) %>%
   select(
     -"raw_oid",
     -"raw_soortgrp",
@@ -238,11 +245,13 @@ taxon_core <- taxon_core %>%
 
 **Vragen**
 
-- We kunnen ook afwezigheden toevoegen (`dwc_occurrenceStatus = "absent"` en `dwc_individualCount = 0`) aangezien alle vogels worden genoteerd op het moment van tellen vanaf dat telpunt. Hoe doen we dit?
+- We kunnen ook afwezigheden toevoegen (`dwc_occurrenceStatus = "absent"` en `dwc_organismQuantity = 0`) aangezien alle vogels worden genoteerd op het moment van tellen vanaf dat telpunt. Hoe doen we dit?
   - We kijken per jaar naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten per jaar. *Voordeel:* geen verandering als er data van een nieuw jaar bijkomt. *Nadeel:* niet volledig aangezien deze lijst niet volledig is.
   - We kijken over de hele dataset naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten. *Voordeel:* steeds meer volledige lijst van soorten. *Nadeel:* dataset zal elk jaar veranderen.
   - Afwezigheden toevoegen o.b.v. externe lijst?
   - ...
+
+> Zouden afwezigheden correct zijn? Er is geen streeplijst gebruikt, dus eerder niet.
 
 # Nabewerking
 ## Taxon matching
@@ -524,6 +533,8 @@ sort(colnames(taxon_core)[grepl("^raw\\_", colnames(taxon_core))])
   - `raw_plotid`: we gebruiken eigenlijk altijd plotnaam
   - `raw_projectid`: is dit INBO of SOVON gerelateerd?
 
+> Laatste 2 lijken ons alvast niet relevant.
+
 Zo ziet de dataset er voorlopig uit:
 
 ```{r}
@@ -536,7 +547,7 @@ col_order <- c(
   "type", "language", "license", "publisher", "rightsHolder", "accessRights",
   "datasetID", "collectionCode", "institutionCode", "datasetName",
   "basisOfRecord", "eventType", "eventID",
-  "occurrenceID", "recordedBy", "individualCount", "organismQuantity",
+  "occurrenceID", "recordedBy", "organismQuantity",
   "organismQuantityType", "occurrenceStatus", "behavior", "varbatimBehavior",
   "occurrenceRemarks", "samplingProtocol", "samplingEffort", "eventDate",
   "day", "month", "year", "continent", "country", "countryCode",

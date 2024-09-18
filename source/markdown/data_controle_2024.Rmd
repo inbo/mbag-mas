@@ -8,6 +8,8 @@ output:
     toc: true
     toc_float: true
     toc_collapsed: true
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../../output/rapporten/markdown/2024") })
 editor_options: 
   chunk_output_type: console
 ---
@@ -47,6 +49,11 @@ targets_store <- here::here("source", "targets", "data_preparation", "_targets")
 # Doel
 
 Data preparatie verloopt via een targets pipeline waarbij verschillende stappen elkaar opvolgen.
+We maken gebruik van ["dynamic branching"](https://books.ropensci.org/targets/dynamic.html) in de targets pipeline.
+Dit is een manier om nieuwe targets te definiëren terwijl de pipeline actief is.
+Hierbij wordt een nieuwe target gemaakt voor elk bestand.
+Bij het toevoegen van een nieuwe dataset van een jaar, zal de pipeline bijgevolg enkel de berekeningen voor de data van het nieuwe jaar moeten doen en niet opnieuw de berekeningen voor de vorige jaren.
+De volledige pipeline ziet er als volgt uit:
 
 ```{r, message=FALSE}
 tar_visnetwork(script = paste0(targets_store, ".R"),
@@ -67,10 +74,10 @@ We doen dit in dit rapport voor de data van 2018-2024.
 In de eerste stap worden Amersfoord coördinaten naar Lambert coördinaten omgezet.
 Dit gebeurt via een functie die op verschillende datasets goed getest is.
 
-## Selectie punten MBAG steekproefkader (select_sampled_points) {#steekproefkader}
+## Selectie punten MBAG MAS steekproef (select_sampled_points) {#steekproef}
 
-In de tweede stap selecteren we de punten uit de totale dataset die tot het MBAG steekproefkader behoren.
-Dit gebeurt via een "inner join" wat wil zeggen dat we kunnen nagaan of telpunten uit het steekproefkader niet bezocht zijn (bewust of onbewust).
+In de tweede stap selecteren we de punten uit de totale dataset die tot het MBAG MAS steekproef behoren.
+Dit gebeurt via een "inner join" wat wil zeggen dat we kunnen nagaan of telpunten uit het steekproef niet bezocht zijn (bewust of onbewust).
 
 ```{r}
 sample <- tar_read("sample", store = targets_store)
@@ -110,6 +117,7 @@ sample_visited %>%
 ```
 
 In de Polders zijn inderdaad 6 punten geschrapt. In de Zandstreek 2 punten.
+Voor de Oostelijke leemstreek missen we enkele punten.
 
 We bekijken dit ook per jaar.
 
@@ -121,6 +129,88 @@ select_sampled_points %>%
   count(regio, jaar) %>%
   arrange(regio, jaar) %>%
   kable()
+```
+
+**Oostelijke leemstreek**
+
+Welke punten zitten in de steekproef die niet zijn geteld?
+We kijken naar de periode 2022-2024.
+We zien dat sommige punten in bepaalde jaren niet geteld zijn:
+
+```{r}
+not_counted_ol <- sample %>%
+  filter(regio == "Oostelijke leemstreek") %>%
+  expand_grid(jaar = 2022:2024) %>%
+  anti_join(select_sampled_points,
+            by = join_by("pointid" == "plotnaam", jaar))
+
+not_counted_ol %>%
+  write_csv(file.path(mbag_dir, "output", "data_controle",
+                      "telpunten_niet_geteld.csv"))
+
+not_counted_ol %>%
+  select(-c("regio", "area_prop_sb", "x_coord", "y_coord", "crs")) %>%
+  kable()
+```
+
+> Waarom?
+
+```{r}
+crs_pipeline <- tar_read_sf("crs_pipeline", store = targets_store)
+```
+
+Ol_12833.8
+
+- niet geteld in 2022 en 2023, wel in 2024
+- steekproef beslissing: eerste set, behouden
+
+```{r}
+crs_pipeline %>%
+  st_drop_geometry() %>%
+  filter(plotnaam == "Ol_12833.8") %>%
+  distinct(plotnaam, jaar, waarnemer = waarneme) %>%
+  arrange(jaar)
+```
+
+Ol_815.5
+
+- nooit geteld (2022-2024)
+- steekproef beslissing: zou ter vervanging zijn van Ol_11054.15 en Ol_3417.2
+
+Ol_5760.2.14
+
+- nooit geteld (2022-2024)
+- steekproef beslissing: zou ter vervanging zijn van Ol_513.1
+
+VL0605
+
+- niet geteld in 2022, wel in 2023 en 2024
+- steekproef beslissing: Ol_8682.1 vervangen door bestaand
+
+```{r}
+crs_pipeline %>%
+  st_drop_geometry() %>%
+  filter(plotnaam == "VL0605") %>%
+  distinct(plotnaam, jaar, waarnemer = waarneme) %>%
+  arrange(jaar)
+```
+
+Ol_2025.4
+
+- nooit geteld (2022-2024)
+- steekproef beslissing: zou ter vervanging zijn van Ol_22546.2
+
+VL0363
+
+- niet geteld in 2022, wel in 2023 en 2024
+- steekproef beslissing: Ol_593.1 vervangen door bestaand
+
+```{r}
+crs_pipeline %>%
+  st_drop_geometry() %>%
+  filter(plotnaam == "VL0363") %>%
+  distinct(plotnaam, jaar, waarnemer = waarneme) %>%
+  arrange(jaar)
 ```
 
 ## Selecteer data binnen de telperiodes (select_time_periods) {#time-periods}
@@ -162,17 +252,68 @@ obs_per_year %>%
 - Kempen
   - ok
 - Oostelijke leemstreek
-  - verschil alleen voor pre-MBAG jaren (2018-2022), ok
-- Polders:
-  - verschil alleen voor pre-MBAG jaren (2022-2023), ok
-  - 2024 nakijken!
+  - 2022 nakijken
+- Polders
+  - 2024 nakijken
+- Weidestreek
+  - ok
 - Westelijke leemstreek
-  - 2024 nakijken!
+  - 2024 nakijken
 - Zandleemstreek
+  - 2024 nakijken
+- Zandstreek
   - 2024 nakijken!
-- Zandstreek:
-  - verschil pre-MBAG jaren (2022-2023), ok
-  - 2024 nakijken!
+
+**Oostelijke leemstreek**
+
+```{r}
+# Which occurrences fall outside periods?
+oid_ol <- select_sampled_points %>%
+    st_drop_geometry() %>%
+    filter(regio == "Oostelijke leemstreek", jaar == 2022) %>%
+    pull(oid)
+
+oid_ol_filtered <- select_time_periods %>%
+    st_drop_geometry() %>%
+    filter(regio == "Oostelijke leemstreek", jaar == 2022) %>%
+    pull(oid)
+
+oid_ol_diff <- setdiff(oid_ol, oid_ol_filtered)
+
+# Count number of observations per location and date
+obs_per_date_ol <- select_sampled_points %>%
+  st_drop_geometry() %>%
+  filter(regio == "Oostelijke leemstreek",
+         jaar == 2022,
+         oid %in% oid_ol_diff) %>%
+  mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
+  count(plotnaam, datum, name = "n_obs") %>%
+  arrange(plotnaam, datum)
+
+obs_per_date_ol %>%
+  kable()
+```
+
+Dit zijn wintertellingen, dus is ok.
+Worden dit punt wel ook nog geteld in de correcte periodes?
+
+```{r}
+# How many times are these locations counted in valid periods?
+obs_per_period_ol <- select_time_periods %>%
+  st_drop_geometry() %>%
+  filter(regio == "Oostelijke leemstreek",
+         jaar == 2024,
+         plotnaam %in% unique(obs_per_date_ol$plotnaam)) %>%
+  count(plotnaam, periode_in_jaar, naam = "n_obs") %>%
+  group_by(plotnaam) %>%
+  mutate(n_periodes = n_distinct(periode_in_jaar)) %>%
+  ungroup()
+
+obs_per_period_ol %>%
+  kable()
+```
+
+Ok.
 
 **Polders**
 
@@ -383,6 +524,7 @@ We schrijven deze data weg zodat ze gecontroleerd kunnen worden.
 ```{r}
 # Get all locations outside periods
 locs_outside_periods <- bind_rows(
+  obs_per_period_ol,
   obs_per_period_pl,
   obs_per_period_wlm,
   obs_per_period_zlm,
@@ -421,7 +563,7 @@ calculate_obs_distance <- tar_read_sf(
   "calculate_obs_distance", store = targets_store)
 ```
 
-Zijn er punten waarbij het absolute verschil meer dan 2 m is?
+Zijn er punten waarbij het absolute verschil meer dan 1 m is?
 
 ```{r}
 # Get original distances
@@ -442,7 +584,7 @@ outlying_distances <- distances_og %>%
   full_join(distances_new,
             by = join_by(oid, plotnaam, regio, jaar, periode_in_jaar)) %>%
   mutate(abs_diff = abs(distance2plot_og - distance2plot_new)) %>%
-  filter(abs_diff > 2)
+  filter(abs_diff > 1)
 
 # How many mismatches do we have per region?
 nrow(outlying_distances)
@@ -999,6 +1141,9 @@ data.frame(
 ```{r}
 remove_double_counts <- tar_read_sf(
   "remove_double_counts", store = targets_store)
+
+remove_subspecies_names <- tar_read_sf(
+  "remove_subspecies_names", store = targets_store)
 ```
 
 We lijsten op waar dubbeltellingen zijn verwijderd.
@@ -1029,7 +1174,7 @@ In de verwerkte data zou elke locatie maar 1x geteld moeten zijn per periode en 
 
 ```{r}
 # Calculate number of counts in processed data
-select_species_groups %>%
+remove_subspecies_names %>%
   st_drop_geometry() %>%
   mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
   distinct(regio, plotnaam, jaar, periode_in_jaar, datum) %>%
@@ -1037,45 +1182,10 @@ select_species_groups %>%
         name = "n_tellingen") %>%
   filter(n_tellingen > 1) %>%
   arrange(regio, plotnaam, jaar) %>%
-  kable()
+  nrow() == 0
 ```
 
 Ok.
-
-**Polders**
-
-Zijn de juiste tellingen verwijderd?
-
-```{r}
-# Which locations are removed?
-removed_obs_pl <- removed_obs %>%
-  filter(regio == "Polders") %>%
-  distinct(plotnaam, regio, jaar, periode_in_jaar)
-
-# Which observations are removed per date?
-removed_obs_pl2 <- removed_obs %>%
-  filter(regio == "Polders") %>%
-  mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
-  distinct(plotnaam, regio, datum, periode_in_jaar) %>%
-  mutate(keep = FALSE)
-
-# Get double counts and look if correct ones are removed
-select_species_groups %>%
-  st_drop_geometry() %>%
-  inner_join(removed_obs_pl,
-             by = join_by(plotnaam, jaar, regio, periode_in_jaar)) %>%
-  mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
-  # Add variable keep
-  full_join(removed_obs_pl2,
-            by = join_by(plotnaam, regio, datum, periode_in_jaar)) %>%
-  mutate(keep = is.na(keep)) %>%
-  count(plotnaam, datum, periode_in_jaar, waarnemer = waarneme, keep,
-        name = "n_obs") %>%
-  arrange(plotnaam, periode_in_jaar, datum) %>%
-  kable()
-```
-
-Laatste telling behouden, ok.
 
 **Oostelijke leemstreek**
 
@@ -1110,13 +1220,7 @@ select_species_groups %>%
 ```
 
 - Ol_12609.15, 2022, R1, LEVS01: ok, laatste telling
-- VL0055, 2019, R1-R4, JJNN16: ok, prof
-- VL0289, 2020, R3, JJNN16: ok, laatste telling
-- VL0330, 2021, R2, NOVN00: ok, laatste telling
-- VL0351, 2019, R2, FVRT02: ok, laatste telling
-- VL0587, 2021, R3, BSCX00: ok, laatste telling
 - VL0587, 2024, R2, BSCX00: ok, laatste telling
-- VL0590, 2021, R3, BSCX00: ok, laatste telling
 - VL0590, 2024, R2, BSCX00: ok, laatste telling
 
 ## Verwerk namen van ondersoorten (remove_subspecies_names)
@@ -1165,7 +1269,8 @@ mas_data_full %>%
   kable()
 ```
 
-Ja.
+Het ziet er naar uit dat we 3 punten verloren zijn in de Oostelijke leemstreek.
+Deze zijn besproken in sectie \@ref(steekproef).
 
 # Controle finale dataset
 
@@ -1234,12 +1339,12 @@ mas_data_clean %>%
   kable()
 ```
 
-We schrijven de data voor Kalkoen weg.
+We schrijven de data voor Waterspreeuw weg.
 
 ```{r}
 mas_data_clean %>%
   st_drop_geometry() %>%
-  filter(naam == "Kalkoen") %>%
+  filter(naam == "Waterspreeuw") %>%
   write_csv(file.path(mbag_dir, "output", "data_controle",
                       "vreemde_soorten_mastellingen.csv"))
 ```
@@ -1282,13 +1387,43 @@ mas_data_clean %>%
   kable()
 ```
 
+We kijken per jaar hoe vaak een hoger getal dan **2** is geteld voor broedcodes > 0.
+Het is een probleem elk jaar.
+
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  filter(aantal > 2,
+         wrntype > 0) %>%
+  count(wrntype, jaar, name = "aantal keer in dataset") %>%
+  rename(
+    "broedcode" = "wrntype") %>%
+  kable()
+```
+
+We schrijven de data met broedcodes > 0 met een hoger aantal dan 1 weg.
+
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  filter(aantal > 1,
+         wrntype > 0) %>%
+  rename("broedcode" = "wrntype") %>%
+  select("oid", "plotnaam", "x_lambert", "y_lambert", "datum",
+         "periode_in_jaar", "jaar", "naam", "aantal", "broedcode", "waarnemer"
+         ) %>%
+  arrange(waarnemer, aantal, datum) %>%
+  write_csv(file.path(mbag_dir, "output", "data_controle",
+                      "hoge_aantallen_broedcodes.csv"))
+```
+
 # Controle data publicatie
 
 De finale dataset wordt verder in de pipeline klaar gemaakt voor publicatie op GBIF.
 Het gaat om de volgende stappen (zie ook `dwc_mapping_mas.Rmd` voor een uitgebreide beschrijving en exploratie).
 
 - Dataset preparatie
-  - We verwijderen van kolommen gerelateerd aan steekproef
+  - We verwijderen kolommen gerelateerd aan steekproef
   - We passen kolomnamen aan
 - Ruimtelijke verwerking
   - We verwijderen de Amersfoord coördinaten
@@ -1411,16 +1546,18 @@ sort(colnames(darwincore_mapping)[
 - Locaties telpunten ook in dataset (`raw_x_coord`, `raw_y_coord`, `raw_crs`) --> Event versus occurrence dataset opsplitsen?
 - Afstand tot telpunt: `raw_distance2plot` --> welke term?
 - Zijn variabelen relevant om mee te geven?
-  - `raw_area_prop_sb` --> Overlap steekproefkader zenodo?
-  - `raw_sbp` --> Overlap steekproefkader zenodo?
-  - `raw_openheid_klasse` --> Overlap steekproefkader zenodo?
-  - `raw_regio` --> Overlap steekproefkader zenodo?
+  - `raw_area_prop_sb` --> Overlap steekproef(kader) zenodo?
+  - `raw_sbp` --> Overlap steekproef(kader) zenodo?
+  - `raw_openheid_klasse` --> Overlap steekproef(kader) zenodo?
+  - `raw_regio` --> Overlap steekproef(kader) zenodo?
   - `raw_periode_in_jaar`: 1 van 4 telperiodes
   - `raw_status_teller`: is de waarnemer een professional of een vrijwilliger?
 - Kan hier nog iets mee gedaan worden?
   - `raw_doy`: day of year sinds januari
   - `raw_plotid`: we gebruiken eigenlijk altijd plotnaam
   - `raw_projectid`: is dit INBO of SOVON gerelateerd?
+
+> Laatste 2 lijken ons alvast niet relevant.
 
 Welke kolommen moet nog aangevuld worden?
 
@@ -1444,13 +1581,12 @@ glimpse(dwc_mapping_final)
 
 Overige opmerkingen en vragen:
 
-- Hoeveel zetten we voor `coordinateUncertaintyInMeters`? Voorlopig op 5 m gezet.
 - Ok dat `varbatimBehavior` de Nederlandstalige beschrijving is? De Engelstalige beschrijving staat onder `behavior`. Of mag de Nederlandse beschrijving weg?
-- Wat is het verschil tussen `individualCount` en `organismQuantity`?
-- We kunnen ook afwezigheden toevoegen (`occurrenceStatus = "absent"` en `individualCount = 0`) aangezien alle vogels worden genoteerd op het moment van tellen vanaf dat telpunt. Hoe doen we dit?
+-  Wat is het verschil tussen `dwc_individualCount` en `dwc_organismQuantity`? Voorlopig gebruiken we `organismQuantity` voor aantallen en `organismQuantityType = individuals` wanneer broedcode gelijk aan 0 en `organismQuantityType = breeding pairs` wanneer broedcode > 0. In geval van broedcode > 0 moet `organismQuantity` eigenlijk gelijk zijn aan 1.
+- We kunnen ook afwezigheden toevoegen (`occurrenceStatus = "absent"` en `organismQuantity = 0`) aangezien alle vogels worden genoteerd op het moment van tellen vanaf dat telpunt. Hoe doen we dit?
   - We kijken per jaar naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten per jaar. *Voordeel:* geen verandering als er data van een nieuw jaar bijkomt. *Nadeel:* niet volledig aangezien deze lijst niet volledig is.
   - We kijken over de hele dataset naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten. *Voordeel:* steeds meer volledige lijst van soorten. *Nadeel:* dataset zal elk jaar veranderen.
   - Afwezigheden toevoegen o.b.v. externe lijst?
   - ...
 
-> Zouden afwezigheden correct zijn? Er is geen streeplijst gebruikt.
+> Zouden afwezigheden correct zijn? Er is geen streeplijst gebruikt, dus eerder niet.
