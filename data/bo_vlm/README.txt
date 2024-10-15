@@ -8,12 +8,18 @@ This folder contains the following data files related to agricultural management
   - See also: https://www.vlaanderen.be/datavindplaats/catalogus/beheergebieden-akkervogelsoorten-toestand-11-8-2017
 - sbp_overige_soorten.shp
   - Determination within and outside sbp strata for sampling frame (partim other species)
-  - Derived from https://www.vlaanderen.be/datavindplaats/catalogus/soortenbeschermingsprogrammas
+  - Derived from 
+    - bruine kiekendief, hamster, zomertortel: https://www.vlaanderen.be/datavindplaats/catalogus/soortenbeschermingsprogrammas
+    - grauwe kiekendief old: https://www.vlaanderen.be/publicaties/soortenbeschermingsprogramma-voor-grauwe-kiekendief-circus-pygargus-in-vlaanderen
+    - grauwe kiekendief new: https://www.vlaanderen.be/inbo/publicaties/advies-over-de-uitbreiding-van-de-kerngebieden-en-de-aanpassing-van-de-prioritaire-maatregelenzones-voor-de-grauwe-kiekendief-in-de-moeren-en-midden-limburg
+- BO_2021_VLM_EXTERN.shp
+  - Variable used for proportion management agreements used in the MAS pilot study, default still in some function code
+  - Not publicly available
 - BO_2022_VLM_EXTERN.shp
   - Variable used for proportion management agreements, used for sample distribution and as explanatory variable
   - Not publicly available
-- BO_2021_VLM_EXTERN.shp
-  - Variable used for proportion management agreements used in the MAS pilot study, default still in some function code
+- BO_2024_VLM_EXTERN.shp
+  - Variable used as explanatory variable
   - Not publicly available
 
 MAS pilot repository: https://github.com/inbo/mas-piloot
