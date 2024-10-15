@@ -28,6 +28,12 @@ author:
     orcid: "0009-0005-2174-672X"
     affiliation: "Instituut voor Natuur- en Bosonderzoek (INBO)"
   - name:
+      given: "Simon"
+      family: "Desmet"
+    email: "simon.desmet@inbo.be"
+    orcid: "0009-0006-0433-7593"
+    affiliation: "Instituut voor Natuur- en Bosonderzoek (INBO)"
+  - name:
       given: "Johannes"
       family: "Jansen"
     email: "johannes.jansen@inbo.be"
