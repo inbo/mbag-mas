@@ -239,9 +239,13 @@ list(
     command = map_taxa_manual(
       taxonomy_df = taxon_mapping,
       manual_taxon_list = list(
-        "Veldmuis/Aardmuis" = 2438591, # genus
-        "rat spec." = 2439223,         # genus
-        "spitsmuis spec." = 5534       # family
+        "Huismuis (zoogdier)" = 7429082,        # species
+        "Barmsijs (Grote of Kleine)" = 6782561, # genus
+        "Veldmuis/Aardmuis" = 2438591,          # genus
+        "Wezel/Hermelijn" = 2433922,            # genus
+        "groene kikker-complex" = 2426629,      # genus
+        "rat spec." = 2439223,                  # genus
+        "spitsmuis spec." = 5534                # family
       ),
       vernacular_name_col = "dwc_vernacularName",
       out_cols = c("scientificName", "phylum", "order", "family", "genus",
