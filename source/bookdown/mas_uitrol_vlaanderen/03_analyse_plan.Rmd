@@ -1,4 +1,4 @@
-# Data verwerking en statistisch analyseplan {#analyseplan}
+# Dataverwerking en statistisch analyseplan {#analyseplan}
 
 In het vorige hoofdstuk werd beschreven hoe het steekproefkader voor het MAS in Vlaanderen werd bepaald en hoe we uiteindelijk een ruimtelijk gespreide, aselecte steekproef bekwamen.
 Hier bespreken we het stramien voor verwerking en analyse van de MAS-data vanaf de steekproef (Fig. \@ref(fig:analyse-plan)).
