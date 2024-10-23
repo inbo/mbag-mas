@@ -210,8 +210,7 @@ rbind_all_mas_data <- function(sample_data, extra_data) {
   # Add extra data to sample data
   complete_df <- extra_data %>%
     # Recalculate and columns to comply with protocol data
-    mutate(distance2plot = NA,
-           datum = ymd(paste(.data$jaar, .data$maand, .data$dag, sep = "-"))
+    mutate(datum = ymd(paste(.data$jaar, .data$maand, .data$dag, sep = "-"))
     ) %>%
     rename(waarnemer = "waarneme") %>%
 
