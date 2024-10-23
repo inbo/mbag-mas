@@ -226,7 +226,7 @@ rbind_all_mas_data <- function(sample_data, extra_data) {
     select(all_of(names(sample_data))) %>%
 
     # Add column to distinguish sample and non-sample data
-    mutate(mas_sample = oid %in% sample_oids)
+    mutate(mas_sample = .data$oid %in% sample_oids)
 
 
   return(complete_df)
