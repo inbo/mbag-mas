@@ -86,7 +86,8 @@ unchanged_mapping <- function(data_df) {
       "dwc_locationID"         = "raw_plotnaam",
       "dwc_varbatimBehavior"   = "raw_wrntype_omschrijving",
       "dwc_occurrenceRemarks"  = "raw_opmerk",
-      "dwc_taxonID"            = "raw_soortnr"
+      "dwc_taxonID"            = "raw_soortnr",
+      "dwc_mas_sample"         = "raw_mas_sample"
     ) %>%
     mutate(
       dwc_identifiedBy = .data$dwc_recordedBy
@@ -125,8 +126,13 @@ modified_mapping <- function(data_df) {
         .data$dwc_varbatimBehavior == "Paar in broedbiotoop" ~
           "Pair in breeding habitat"
         ),
-      dwc_coordinateUncertaintyInMeters = ifelse(
-        .data$raw_distance2plot < 100, 10, 0.1 * .data$raw_distance2plot),
+      # If the distance is < 100 m --> 10 m
+      # If the distance is >= 100 m --> 0.1 * distance
+      # If the distance is unknown --> 30 m (0.1 * 300 m)
+      dwc_coordinateUncertaintyInMeters =
+        ifelse(is.na(.data$raw_distance2plot), 30,
+          ifelse(.data$raw_distance2plot < 100,
+                 10, 0.1 * .data$raw_distance2plot)),
       dwc_organismQuantityType = ifelse(.data$raw_wrntype == "0",
                                         "individuals", "breeding pairs")
     ) %>%
@@ -238,7 +244,7 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
   col_order <- c(
     "type", "language", "license", "publisher", "rightsHolder", "accessRights",
     "datasetID", "collectionCode", "institutionCode", "datasetName",
-    "basisOfRecord", "eventType", "eventID",
+    "basisOfRecord", "eventType", "eventID", "mas_sample",
     "occurrenceID", "recordedBy", "organismQuantity",
     "organismQuantityType", "occurrenceStatus", "behavior", "varbatimBehavior",
     "occurrenceRemarks", "samplingProtocol", "samplingEffort", "eventDate",
