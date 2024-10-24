@@ -42,7 +42,7 @@ conflicted::conflicts_prefer(dplyr::lag)
 
 # Paths
 data_path <- here("data", "mas")
-media_folder <- here("media", "exploratie_2024")
+media_folder <- here("media", "exploratie_pl_zn_2024")
 dir.create(media_folder, showWarnings = FALSE)
 
 devices <- c("pdf", "png")
@@ -108,7 +108,8 @@ summary_vogels_2024 <- mas_2024_vogels %>%
   ) %>%
   arrange(regio, jaar, openheid_klasse, sbp)
 
-write_csv(summary_vogels_2024, here(media_folder, "summary_vogels_2024.csv"))
+write_csv(summary_vogels_2024, here(media_folder,
+                                    "summary_vogels_pl_zn_2024.csv"))
 
 summary_vogels_2024 %>%
   kable()
@@ -133,7 +134,7 @@ p <- mas_2024_vogels %>%
   facet_wrap(~regio) +
   labs(x = "Telperiode", y = "Totaal aantal telpunten")
 
-save_figure(p, here(media_folder, "tellingen_vogels_2024"), devices,
+save_figure(p, here(media_folder, "tellingen_vogels_pl_zn_2024"), devices,
   dpi = 300, width = 8, height = 6
 )
 
@@ -166,7 +167,7 @@ p <- mas_2024_vogels %>%
   geom_boxplot() +
   labs(x = "Telperiode", y = "Aantal soorten per telpunt", fill = "Regio")
 
-save_figure(p, here(media_folder, "soorten_vogels_2024"), devices,
+save_figure(p, here(media_folder, "soorten_vogels_pl_zn_2024"), devices,
   dpi = 300, width = 8, height = 6
 )
 
@@ -185,7 +186,7 @@ p <- mas_2024_vogels %>%
   facet_wrap(~regio) +
   labs(x = "Telperiode", y = "Aantal waarnemingen per telpunt")
 
-save_figure(p, here(media_folder, "waarnemingen_vogels_2024"), devices,
+save_figure(p, here(media_folder, "waarnemingen_vogels_pl_zn_2024"), devices,
   dpi = 300, width = 8, height = 6
 )
 
@@ -418,7 +419,7 @@ cum_p2 <- cum_aantal_spec_strat %>%
 # Combine cumulative species plots
 p <- gridExtra::grid.arrange(cum_p1, cum_p2)
 
-save_figure(p, here(media_folder, "cum_soorten_vogels_2024"), devices,
+save_figure(p, here(media_folder, "cum_soorten_vogels_pl_zn_2024"), devices,
   dpi = 300, width = 8, height = 8
 )
 ```
@@ -452,7 +453,7 @@ p <- mas_2024_vogels %>%
   labs(y = "Aantal soorten per telpunt", x = "", colour = "Telperiode")
 
 
-save_figure(p, here(media_folder, "aantal_soorten_vogels_strat_2024"), devices,
+save_figure(p, here(media_folder, "aantal_soorten_vogels_strat_pl_zn_2024"), devices,
   dpi = 300, width = 8, height = 6
 )
 
@@ -593,7 +594,8 @@ relfreq_vogels_regio <- relfreqs_vogels %>%
   rownames_to_column(var = "rang") %>%
   mutate(rang = as.numeric(rang))
 
-write_csv(relfreq_vogels_regio, here(media_folder, "relfreq_vogels_regio.csv"))
+write_csv(relfreq_vogels_regio, here(media_folder,
+                                     "relfreq_vogels_pl_zn_2024.csv"))
 
 # Get 20 most frequent species or goal species
 relfreq_vogels_regio %>%
@@ -640,7 +642,7 @@ p <- freq_to_plot %>%
   ) +
   guides(colour = guide_legend(override.aes = list(size = 2)))
 
-save_figure(p, here(media_folder, "vogelfreqs_2024"), devices,
+save_figure(p, here(media_folder, "vogelfreqs_pl_zn_2024"), devices,
   dpi = 300, width = 8, height = 6
 )
 
@@ -692,7 +694,7 @@ relfreqs_vogels %>%
   rownames_to_column(var = "rang") %>%
   mutate(rang = as.numeric(rang)) %>%
   select(rang, naam, Zandstreek, Polders, verschilfreq) %>%
-  write_csv(here(media_folder, "relfreq_vogels_diff.csv"))
+  write_csv(here(media_folder, "relfreq_vogels_diff_pl_zn_2024.csv"))
 ```
 
 ```{r}
@@ -909,7 +911,7 @@ p <- relfreq_diff_total %>%
     size = 2, hjust = "right", colour = "black", angle = 90
   )
 
-save_figure(p, here(media_folder, "vogelfreqs_diff_2024"), devices,
+save_figure(p, here(media_folder, "vogelfreqs_diff_pl_zn_2024"), devices,
   dpi = 300, width = 8, height = 6
 )
 
@@ -943,7 +945,8 @@ relfreq_vogels_ratio <- relfreqs_vogels %>%
          ratio_lm_zn = 1 / ratiofreq) %>%
   select(rang, naam, Zandstreek, Polders, ratio_zn_lm, ratio_lm_zn)
 
-write_csv(relfreq_vogels_ratio, here(media_folder, "relfreq_vogels_ratio.csv"))
+write_csv(relfreq_vogels_ratio, here(media_folder,
+                                     "relfreq_vogels_ratio_pl_zn_2024.csv"))
 ```
 
 ```{r}
@@ -1004,7 +1007,7 @@ p <- relfreq_ratio_zn %>%
   ) +
   guides(colour = guide_legend(override.aes = list(size = 3)))
 
-save_figure(p, here(media_folder, "vogelfreqs_ratio_zn_lm_2024"), devices,
+save_figure(p, here(media_folder, "vogelfreqs_ratio_pl_zn_2024"), devices,
   dpi = 300, width = 8, height = 6
 )
 
@@ -1080,7 +1083,7 @@ p <- relfreq_ratio_lm %>%
   ) +
   guides(colour = guide_legend(override.aes = list(size = 3)))
 
-save_figure(p, here(media_folder, "vogelfreqs_ratio_lm_zn_2024"), devices,
+save_figure(p, here(media_folder, "vogelfreqs_ratio_pl_zn_2024"), devices,
   dpi = 300, width = 8, height = 6
 )
 
@@ -1160,7 +1163,7 @@ p <- relfreqs_vogels %>%
   theme(legend.position = "top") +
   guides(colour = guide_legend(override.aes = list(size = 2)))
 
-save_figure(p, here(media_folder, "vogelfreqs_2024_doelsoorten"), devices,
+save_figure(p, here(media_folder, "vogelfreqs_pl_zn_2024_doelsoorten"), devices,
   dpi = 300, width = 8, height = 7
 )
 
@@ -1196,7 +1199,7 @@ summary_zoogdieren_2024 <- mas_2024_zoogdieren %>%
   arrange(regio, jaar, openheid_klasse, sbp)
 
 write_csv(summary_zoogdieren_2024,
-          here(media_folder, "summary_zoogdieren_2024.csv"))
+          here(media_folder, "summary_zoogdieren_pl_zn_2024.csv"))
 
 summary_zoogdieren_2024 %>%
   kable()
@@ -1214,7 +1217,7 @@ p <- mas_2024_zoogdieren %>%
   facet_wrap(~regio) +
   labs(x = "Telperiode", y = "Aantal waarnemingen per telpunt")
 
-save_figure(p, here(media_folder, "waarnemingen_zoogdieren_2024"), devices,
+save_figure(p, here(media_folder, "waarnemingen_zoogdieren_pl_zn_2024"), devices,
   dpi = 300, width = 8, height = 6
 )
 
@@ -1408,7 +1411,7 @@ cum_p2 <- cum_aantal_spec_strat %>%
 # Combine cumulative species plots
 p <- gridExtra::grid.arrange(cum_p1, cum_p2)
 
-save_figure(p, here(media_folder, "cum_soorten_zoogdieren_2024"), devices,
+save_figure(p, here(media_folder, "cum_soorten_zoogdieren_pl_zn_2024"), devices,
   dpi = 300, width = 8, height = 8
 )
 ```
@@ -1503,7 +1506,7 @@ relfreq_zoogdieren_regio <- relfreqs_zoogdieren %>%
 
 write_csv(
   relfreq_zoogdieren_regio,
-  here(media_folder, "relfreq_zoogdieren_regio.csv")
+  here(media_folder, "relfreq_zoogdieren_pl_zn_2024.csv")
 )
 
 relfreq_zoogdieren_regio %>%
@@ -1542,7 +1545,7 @@ p <- freq_to_plot %>%
   ) +
   guides(colour = guide_legend(override.aes = list(size = 2)))
 
-save_figure(p, here(media_folder, "zoogdierfreqs_2024"), devices,
+save_figure(p, here(media_folder, "zoogdierfreqs_pl_zn_2024"), devices,
   dpi = 300, width = 8, height = 6
 )
 
@@ -1577,7 +1580,7 @@ relfreqs_zoogdieren_diff <- relfreqs_zoogdieren %>%
 
 write_csv(
   relfreqs_zoogdieren_diff,
-  here(media_folder, "relfreq_zoogdieren_diff.csv")
+  here(media_folder, "relfreq_zoogdieren_diff_pl_zn_2024.csv")
 )
 
 relfreqs_zoogdieren_diff %>%
@@ -1655,7 +1658,7 @@ p <- relfreq_diff_zn %>%
     size = 2, hjust = "right", colour = "black"
   )
 
-save_figure(p, here(media_folder, "zoogdierfreqs_diff_2024"), devices,
+save_figure(p, here(media_folder, "zoogdierfreqs_diff_pl_zn_2024"), devices,
   dpi = 300, width = 8, height = 6
 )
 
@@ -1686,7 +1689,7 @@ p <- mas_2024_zoogdieren %>%
   facet_wrap(~landbouwstreek) +
   labs(y = "Totaal aantal individuen", x = "Telperiode", fill = "Jaar")
 
-save_figure(p, here(media_folder, "aantal_hazen_2024"), devices,
+save_figure(p, here(media_folder, "aantal_hazen_pl_zn_2024"), devices,
   dpi = 300, width = 8, height = 6
 )
 
@@ -1709,7 +1712,7 @@ p <- relfreqs_zoogdieren %>%
   facet_grid(~landbouwstreek) +
   theme(legend.position = "top")
 
-save_figure(p, here(media_folder, "relfreq_haas_2024"), devices,
+save_figure(p, here(media_folder, "relfreq_haas_pl_zn_2024"), devices,
   dpi = 300, width = 8, height = 6
 )
 
