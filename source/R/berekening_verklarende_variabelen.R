@@ -278,7 +278,7 @@ add_bo_inertia <- function(punten_df, path_bo, bh_doel) {
       filter(BH_DOELST %in% bh_doel) %>%
       mutate(inertia_row = jaar - startjaar + 1) %>%
       group_by(pointid) %>%
-      summarise(inertia = round(mean(inertia_row)), .groups = "drop")
+      summarise(inertia = round(mean(.data$inertia_row)), .groups = "drop")
 
     out_list[[i]] <- out_df_year %>%
       full_join(punten_df_year, by = c("pointid")) %>%
@@ -295,7 +295,7 @@ buffer_layers_to_perimeter <- function(layer, buffer_km, group_var = NULL) {
 
   if (is.null(group_var)) {
     layer <- layer %>%
-      rownames_to_column("id")
+      tibble::rownames_to_column("id")
 
     polygons <- perimeters %>%
       st_buffer(buffer_to_meters) %>%
@@ -322,7 +322,7 @@ splits_polys <- function(layer, id_name, group_var = NULL) {
   if (is.null(group_var)) {
     out <- layer %>%
       st_cast("POLYGON") %>%
-      rownames_to_column("id") %>%
+      tibble::rownames_to_column("id") %>%
       mutate(id = paste(id_name, id, sep = "_")) %>%
       select(id)
   } else {
@@ -331,7 +331,7 @@ splits_polys <- function(layer, id_name, group_var = NULL) {
       summarise() %>%
       st_cast("MULTIPOLYGON") %>%
       st_cast("POLYGON") %>%
-      rownames_to_column("id") %>%
+      tibble::rownames_to_column("id") %>%
       mutate(id = paste(id_name, id, sep = "_")) %>%
       select(id)
   }
@@ -343,29 +343,25 @@ visualize_weights <- function(x, m = 0.5, b = 8,
                               mode = c("logit", "exponential")) {
   if (is(x, "SpatRaster")) {
     xy <- x %>% terra::xyFromCell(which(x[] == 1))
-    max_dist = (terra::nrow(x)/2) * terra::res(x)[1]
-  }
-  else if (is.numeric(x)) {
+    max_dist <- (terra::nrow(x) / 2) * terra::res(x)[1]
+  } else if (is.numeric(x)) {
     max_dist <- x
-  }
-  else {
+  } else {
     stop("x needs to be numeric or a SpatRaster object")
   }
   if (all(mode == c("logit", "exponential")) || mode == "logit") {
     logfun <- function(x) {
-      return(1/(1 + exp((b) * (x - m))))
+      return(1 / (1 + exp((b) * (x - m))))
     }
     plot_main <- paste0("Mode: logit\nm: ", m, "    b: ",
                         b)
-  }
-  else if (mode == "exponential") {
+  } else if (mode == "exponential") {
     logfun <- function(x) {
-      return(1/(1 + ((b) * x^(m))))
+      return(1 / (1 + ((b) * x^(m))))
     }
     plot_main <- paste0("Mode: exponential\nm: ", m, "    b: ",
                         b)
-  }
-  else {
+  } else {
     stop("Currently only logit and exponential are supported")
   }
   plot(logfun(seq(0, 1, length.out = max_dist)), type = "l",
