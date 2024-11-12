@@ -197,3 +197,37 @@ remove_columns <- function(data_sf) {
 
   return(out_sf)
 }
+
+# Add non-MAS data to MAS data for GBIF publication
+rbind_all_mas_data <- function(sample_data, extra_data) {
+  require("dplyr")
+  require("rlang")
+  require("lubridate")
+
+  # Identify IDs from final MBAG - MAS data
+  sample_oids <- sample_data$oid
+
+  # Add extra data to sample data
+  complete_df <- extra_data %>%
+    # Recalculate and columns to comply with protocol data
+    mutate(distance2plot = NA,
+           datum = ymd(paste(.data$jaar, .data$maand, .data$dag, sep = "-"))
+    ) %>%
+    rename(waarnemer = "waarneme") %>%
+
+    # Only keep data not already in MAS sample
+    dplyr::filter(!.data$oid %in% sample_oids) %>%
+
+    # Adjust subspecies names
+    adjust_subspecies_names_nl() %>%
+
+    # Add final MAS sample data and keep final columns
+    bind_rows(sample_data) %>%
+    select(all_of(names(sample_data))) %>%
+
+    # Add column to distinguish sample and non-sample data
+    mutate(is_mas_sample = .data$oid %in% sample_oids)
+
+
+  return(complete_df)
+}

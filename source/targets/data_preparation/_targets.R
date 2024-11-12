@@ -181,12 +181,30 @@ list(
 
   # 4. Prepare data for publication on GBIF
 
+  # Stop branching over years, bind all data together
+  # Complete dataset from beginning pipeline
+  tar_target(
+    name = complete_data_crs,
+    command = do.call(
+      what = rbind.data.frame,
+      args = c(crs_pipeline, make.row.names = FALSE)
+    )
+  ),
+  # Add non-MAS data to MAS data for GBIF publication
+  # Column is_mas_sample indicates whether the observation is part of the
+  # MBAG - MAS data or not
+  tar_target(
+    name = complete_data_gbif_raw,
+    command = rbind_all_mas_data(
+      sample_data = mas_data_clean,
+      extra_data = complete_data_crs
+    )
+  ),
   # Perform mapping of Darwin Core column names
   tar_target(
     name = darwincore_mapping,
-    command = dwc_mapping(mas_data_clean)
+    command = dwc_mapping(complete_data_gbif_raw)
   ),
-
   # Get taxon names and split dataframe in groups of `size`
   tarchetypes::tar_group_size(
     name = prepare_taxon_mapping,
@@ -221,9 +239,13 @@ list(
     command = map_taxa_manual(
       taxonomy_df = taxon_mapping,
       manual_taxon_list = list(
-        "Veldmuis/Aardmuis" = 2438591, # genus
-        "rat spec." = 2439223,         # genus
-        "spitsmuis spec." = 5534       # family
+        "Huismuis (zoogdier)" = 7429082,        # species
+        "Barmsijs (Grote of Kleine)" = 6782561, # genus
+        "Veldmuis/Aardmuis" = 2438591,          # genus
+        "Wezel/Hermelijn" = 2433922,            # genus
+        "groene kikker-complex" = 2426629,      # genus
+        "rat spec." = 2439223,                  # genus
+        "spitsmuis spec." = 5534                # family
       ),
       vernacular_name_col = "dwc_vernacularName",
       out_cols = c("scientificName", "phylum", "order", "family", "genus",
