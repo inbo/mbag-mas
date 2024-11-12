@@ -1424,6 +1424,8 @@ Het gaat om de volgende stappen (zie ook `dwc_mapping_mas.Rmd` voor een uitgebre
 
 - Dataset preparatie
   - We verwijderen kolommen gerelateerd aan steekproef
+  - We voegen de finale data samen met MAS data die buiten MBAG valt
+    - De kolom `is_mas_sample` duidt aan of ze bij MBAG - MAS horen of niet
   - We passen kolomnamen aan
 - Ruimtelijke verwerking
   - We verwijderen de Amersfoord coördinaten
@@ -1582,11 +1584,11 @@ glimpse(dwc_mapping_final)
 Overige opmerkingen en vragen:
 
 - Ok dat `varbatimBehavior` de Nederlandstalige beschrijving is? De Engelstalige beschrijving staat onder `behavior`. Of mag de Nederlandse beschrijving weg?
--  Wat is het verschil tussen `dwc_individualCount` en `dwc_organismQuantity`? Voorlopig gebruiken we `organismQuantity` voor aantallen en `organismQuantityType = individuals` wanneer broedcode gelijk aan 0 en `organismQuantityType = breeding pairs` wanneer broedcode > 0. In geval van broedcode > 0 moet `organismQuantity` eigenlijk gelijk zijn aan 1.
 - We kunnen ook afwezigheden toevoegen (`occurrenceStatus = "absent"` en `organismQuantity = 0`) aangezien alle vogels worden genoteerd op het moment van tellen vanaf dat telpunt. Hoe doen we dit?
   - We kijken per jaar naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten per jaar. *Voordeel:* geen verandering als er data van een nieuw jaar bijkomt. *Nadeel:* niet volledig aangezien deze lijst niet volledig is.
   - We kijken over de hele dataset naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten. *Voordeel:* steeds meer volledige lijst van soorten. *Nadeel:* dataset zal elk jaar veranderen.
   - Afwezigheden toevoegen o.b.v. externe lijst?
   - ...
+- Buiten MBAG - MAS, publiceren we ook de overige MAS data van de Sovon export. Is de kolomnaam `is_mas_sample` ok?
 
 > Zouden afwezigheden correct zijn? Er is geen streeplijst gebruikt, dus eerder niet.
