@@ -453,8 +453,10 @@ p <- mas_2024_vogels %>%
   labs(y = "Aantal soorten per telpunt", x = "", colour = "Telperiode")
 
 
-save_figure(p, here(media_folder, "aantal_soorten_vogels_strat_pl_zn_2024"), devices,
-  dpi = 300, width = 8, height = 6
+save_figure(
+  p,
+  here(media_folder, "aantal_soorten_vogels_strat_pl_zn_2024"),
+  devices, dpi = 300, width = 8, height = 6
 )
 
 p
@@ -1217,7 +1219,10 @@ p <- mas_2024_zoogdieren %>%
   facet_wrap(~regio) +
   labs(x = "Telperiode", y = "Aantal waarnemingen per telpunt")
 
-save_figure(p, here(media_folder, "waarnemingen_zoogdieren_pl_zn_2024"), devices,
+save_figure(
+  p,
+  here(media_folder, "waarnemingen_zoogdieren_pl_zn_2024"),
+  devices,
   dpi = 300, width = 8, height = 6
 )
 
