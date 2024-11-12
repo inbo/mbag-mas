@@ -191,7 +191,7 @@ list(
     )
   ),
   # Add non-MAS data to MAS data for GBIF publication
-  # Column mas_sample indicates whether the observation is part of the
+  # Column is_mas_sample indicates whether the observation is part of the
   # MBAG - MAS data or not
   tar_target(
     name = complete_data_gbif_raw,

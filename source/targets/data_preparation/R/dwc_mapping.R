@@ -87,7 +87,7 @@ unchanged_mapping <- function(data_df) {
       "dwc_varbatimBehavior"   = "raw_wrntype_omschrijving",
       "dwc_occurrenceRemarks"  = "raw_opmerk",
       "dwc_taxonID"            = "raw_soortnr",
-      "dwc_mas_sample"         = "raw_mas_sample"
+      "dwc_is_mas_sample"         = "raw_is_mas_sample"
     ) %>%
     mutate(
       dwc_identifiedBy = .data$dwc_recordedBy
@@ -244,7 +244,7 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
   col_order <- c(
     "type", "language", "license", "publisher", "rightsHolder", "accessRights",
     "datasetID", "collectionCode", "institutionCode", "datasetName",
-    "basisOfRecord", "eventType", "eventID", "mas_sample",
+    "basisOfRecord", "eventType", "eventID", "is_mas_sample",
     "occurrenceID", "recordedBy", "organismQuantity",
     "organismQuantityType", "occurrenceStatus", "behavior", "varbatimBehavior",
     "occurrenceRemarks", "samplingProtocol", "samplingEffort", "eventDate",

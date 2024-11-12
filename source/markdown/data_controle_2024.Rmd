@@ -1425,7 +1425,7 @@ Het gaat om de volgende stappen (zie ook `dwc_mapping_mas.Rmd` voor een uitgebre
 - Dataset preparatie
   - We verwijderen kolommen gerelateerd aan steekproef
   - We voegen de finale data samen met MAS data die buiten MBAG valt
-    - De kolom `mas_sample` duidt aan of ze bij MBAG - MAS horen of niet
+    - De kolom `is_mas_sample` duidt aan of ze bij MBAG - MAS horen of niet
   - We passen kolomnamen aan
 - Ruimtelijke verwerking
   - We verwijderen de Amersfoord coördinaten
@@ -1589,6 +1589,6 @@ Overige opmerkingen en vragen:
   - We kijken over de hele dataset naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten. *Voordeel:* steeds meer volledige lijst van soorten. *Nadeel:* dataset zal elk jaar veranderen.
   - Afwezigheden toevoegen o.b.v. externe lijst?
   - ...
-- Buiten MBAG - MAS, publiceren we ook de overige MAS data van de Sovon export. Is de kolomnaam `sample_mas` ok?
+- Buiten MBAG - MAS, publiceren we ook de overige MAS data van de Sovon export. Is de kolomnaam `is_mas_sample` ok?
 
 > Zouden afwezigheden correct zijn? Er is geen streeplijst gebruikt, dus eerder niet.
