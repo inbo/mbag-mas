@@ -63,15 +63,16 @@ add_bo_to_frame <- function(
       st_buffer(dist = 300),
     layer = bo_layer,
     grid_group_by_col = "pointid",
-    layer_group_by_col = "SRT_OBJECT")
+    layer_group_by_col = c("SRT_OBJECT", "BH_DOELST"))
 
   bo_maatregelen <- bo_layer %>%
     st_drop_geometry() %>%
     distinct(BH_DOELST, SRT_OBJECT, EENHEID)
 
   aandeel_sb <- points_bo %>%
-    select(pointid, SRT_OBJECT, area_prop) %>%
-    left_join(bo_maatregelen, by = "SRT_OBJECT") %>%
+    ungroup() %>%
+    select(pointid, BH_DOELST, SRT_OBJECT, area_prop) %>%
+    left_join(bo_maatregelen, by = join_by(BH_DOELST, SRT_OBJECT)) %>%
     filter(BH_DOELST %in% bh_doel) %>%
     group_by(pointid) %>%
     summarise(area_prop_sb = sum(area_prop))
