@@ -68,62 +68,41 @@ read_crop_layers_by_year <- function(
   if (cut_bo) {
     if (year >= 2018 && year <= 2023) {
       bo_file_year <- 2022
-
-      ## Read data
-      path_bo <- path_to_bo(jaar = bo_file_year)
-      bo_layer <- sf::st_read(dsn = path_bo, quiet = TRUE) %>%
-        sf::st_transform(crs = 31370)
-
-      # Calculate start and stop year variables
-      bo_layer_filtered <- bo_layer %>%
-        mutate(startjaar = year(.data$START),
-               stopjaar = year(.data$STOP)) %>%
-        filter(.data$startjaar <= year & .data$stopjaar >= year)
-
-      # Take intersection with crop layer
-      crop_layer_intersect <- crop_layer %>%
-        qgisprocess::qgis_run_algorithm_p(
-          algorithm = "native:difference",
-          OVERLAY = bo_layer_filtered,
-          OUTPUT = qgisprocess::qgis_tmp_vector()
-        ) %>%
-        qgisprocess::qgis_extract_output("OUTPUT") %>%
-        sf::st_as_sf()
-      crop_layer_intersect <- sf::st_set_geometry(crop_layer_intersect,
-                                                  "geometry")
-
-      return(crop_layer_intersect)
     } else if (year >= 2024 && year <= 2028) {
       bo_file_year <- 2024
-
-      ## Read data
-      path_bo <- path_to_bo(jaar = bo_file_year)
-      bo_layer <- sf::st_read(dsn = path_bo, quiet = TRUE) %>%
-        sf::st_transform(crs = 31370)
-
-      # Calculate start and stop year variables
-      bo_layer_filtered <- bo_layer %>%
-        mutate(startjaar = year(.data$START),
-               stopjaar = year(.data$STOP)) %>%
-        filter(.data$startjaar <= year & .data$stopjaar >= year)
-
-      # Take intersection with crop layer
-      crop_layer_intersect <- crop_layer %>%
-        qgisprocess::qgis_run_algorithm_p(
-          algorithm = "native:difference",
-          OVERLAY = bo_layer_filtered,
-          OUTPUT = qgisprocess::qgis_tmp_vector()
-        ) %>%
-        qgisprocess::qgis_extract_output("OUTPUT") %>%
-        sf::st_as_sf()
-      crop_layer_intersect <- sf::st_set_geometry(crop_layer_intersect,
-                                                  "geometry")
-
-      return(crop_layer_intersect)
     } else {
       warning("No difference with bo layer taken for years outside 2018-2028.")
       return(crop_layer)
     }
+
+    ## Read data
+    path_bo <- path_to_bo(jaar = bo_file_year)
+    bo_layer <- sf::st_read(dsn = path_bo, quiet = TRUE) %>%
+      sf::st_transform(crs = 31370)
+    if (bo_file_year == 2024) {
+      bo_layer <- bo_layer %>%
+        rename("BH_DOELST" = "BHDOELST")
+    }
+
+    # Calculate start and stop year variables
+    bo_layer_filtered <- bo_layer %>%
+      mutate(startjaar = year(.data$START),
+             stopjaar = year(.data$STOP)) %>%
+      filter(.data$startjaar <= year & .data$stopjaar >= year)
+
+    # Take intersection with crop layer
+    crop_layer_intersect <- crop_layer %>%
+      qgisprocess::qgis_run_algorithm_p(
+        algorithm = "native:difference",
+        OVERLAY = bo_layer_filtered,
+        OUTPUT = qgisprocess::qgis_tmp_vector()
+      ) %>%
+      qgisprocess::qgis_extract_output("OUTPUT") %>%
+      sf::st_as_sf()
+    crop_layer_intersect <- sf::st_set_geometry(crop_layer_intersect,
+                                                "geometry")
+
+    return(crop_layer_intersect)
   } else {
     return(crop_layer)
   }
