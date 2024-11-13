@@ -24,6 +24,10 @@ add_bo_by_year <- function(punten_df, year_var = "jaar", var_col, ...) {
   path_bo <- path_to_bo(jaar = bo_file_year)
   bo_layer <- sf::st_read(dsn = path_bo, quiet = TRUE) %>%
     sf::st_transform(crs = 31370)
+  if (bo_file_year == 2024) {
+    bo_layer <- bo_layer %>%
+      rename("BH_DOELST" = "BHDOELST")
+  }
 
   # Calculate start and stop year variables
   bo_layer_filtered <- bo_layer %>%
