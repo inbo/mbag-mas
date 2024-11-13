@@ -29,8 +29,9 @@ opts_knit$set(root.dir = here::here())
 ```{r}
 # packages
 library(tidyverse)
-library(sf)
+library(Distance)
 library(targets)
+library(sf)
 
 library(INBOtheme)
 theme_set(theme_inbo(transparent = TRUE))
@@ -85,7 +86,8 @@ veldleeuwerik_2024_df <- mas_data_clean %>%
          wrntype > 0) %>%
   mutate(aantal = 1,
          regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio),
-         stratum = paste(openheid_klasse, sbp, sep = " - "))
+         stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
+  st_drop_geometry()
 ```
 
 We kijken naar het aantal broedparen per regio.
@@ -203,3 +205,50 @@ veldleeuwerik_2024_df %>%
     facet_wrap(~regio, scales = "free") +
     labs(x = "Afstand (m)", y = "Aantal broedparen", fill = "Stratum")
 ```
+
+# Distance sampling
+
+We schatten de detectiekans en densiteiten via distance sampling.
+We vergelijken een tweestapsmethode met **mrds** met de directe methode van **Distance**.
+We beschouwen voor de formulatie van de detectiefunctie de half-normal en hazard-rate sleutelfuncties die we laten afhangen van `openheid`.
+
+## Data preparatie
+
+We hebben een kolom `object` nodig: volgnummer voor elke waarneming; een kolom `size`: aantal broedparen per waarneming (overal 1); een kolom `distance`: afstand tot elke waarneming; kolommen met covariaten (hier 1 variabele): `openheid`.
+
+```{r}
+veldleeuwerik_distance <- veldleeuwerik_2024_df %>%
+  select(object = oid,
+         size = aantal,
+         distance = distance2plot,
+         openheid = openheid_klasse)
+```
+
+Om abundanties te schatten, moeten we de oppervlakte van de strata berekenen voor extrapolatie. We trekken een buffer van 300 m rond het steekproefkader.
+
+## Model specificatie
+### MRDS
+
+```{r}
+test <- ddf(
+  data = veldleeuwerik_distance,
+  dsmodel = ~mcds(key="hr", formula = ~openheid),
+  method = "ds",
+  meta.data = list(width = 300, point = TRUE))
+summary(test)
+
+ddf.gof(test)
+plot(test, pdf = TRUE)
+```
+
+### Distance
+
+## Model selectie
+### MRDS
+
+```{r}
+ddf.gof(test)
+plot(test, pdf = TRUE)
+```
+
+### Distance
