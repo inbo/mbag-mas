@@ -32,12 +32,12 @@ library(tidyverse)
 library(sf)
 library(targets)
 
+library(INBOtheme)
+theme_set(theme_inbo(transparent = TRUE))
+
 # Conflicts
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::select)
-
-# Source
-source(here::here("source", "R", "tar_read_sf.R"))
 
 # Paths
 mbag_dir <- here::here()
@@ -60,3 +60,146 @@ We willen de volgende onderzoeksvragen beantwoorden.
 - Hoe is de densiteit van doelsoorten verspreid in Vlaanderen?
 - Kunnen we kerngebieden afbakenen voor doelsoorten binnen Vlaanderen?
 
+We willen deze analyses automatiseren via een [targets pipeline](https://books.ropensci.org/targets/) die we branchen per jaar en per soort.
+Hiervoor moeten we eerst enkele dingen uittesten:
+
+- Kunnen we de detectiecurve fitten op alle data en de densiteitsschatting op een subset van de data toepassen (maxima)?
+- Hoe creëren we een spatiaal model voor densiteiten? Hoe nemen we de detectiekans en onzekerheid mee?
+
+# Test data
+
+We doen de analyses voor 1 branch van de targets pipeline. Namelijk voor de Veldleeuwerik in 2024.
+We selecteren alle waarnemingen met broedcode > 0.
+Alle aantallen met broedcode > 0 zijn 1.
+
+> Broedcodes ok?
+
+```{r}
+# Load mas data
+mas_data_clean <- tar_read("mas_data_clean", store = targets_store)
+
+# Select data Veldleeuwerik 2024
+veldleeuwerik_2024_df <- mas_data_clean %>%
+  filter(naam == "Veldleeuwerik",
+         jaar == 2024,
+         wrntype > 0) %>%
+  mutate(aantal = 1,
+         regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio),
+         stratum = paste(openheid_klasse, sbp, sep = " - "))
+```
+
+We kijken naar het aantal broedparen per regio.
+
+```{r}
+# Visualise
+veldleeuwerik_2024_df %>%
+  ggplot(aes(x = periode_in_jaar, fill = wrntype)) +
+    geom_bar() +
+    facet_wrap(~regio, scales = "free") +
+    labs(x = "Telperiode", y = "Aantal broedparen", fill = "broedcode")
+```
+
+En de per stratum.
+
+```{r}
+# Visualise
+veldleeuwerik_2024_df %>%
+  ggplot(aes(x = periode_in_jaar, fill = stratum)) +
+    geom_bar() +
+    facet_wrap(~regio, scales = "free") +
+    labs(x = "Telperiode", y = "Aantal broedparen", fill = "Stratum")
+```
+
+Alle telperiodes bevinden zich binnen de datumgrenzen.
+We nemen alle telperiode dus mee voor de densiteitsschattingen.
+
+```{r}
+# Load breeding dates file
+datumgrenzen_df <- read_csv2(
+  file.path(mbag_dir, "data", "SOVON",
+            "Interpretatie_Criteria_Broedvogels_v2.csv"))
+
+# Tidy dataframe
+trans_vec <- c("jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug")
+
+datumgrenzen_df2 <- datumgrenzen_df %>%
+  mutate(across(Datum_begin:`Datum eind_oud`, ~ gsub("-", "/", .x))) %>%
+  separate(Datum_begin, into = c("Datum_begin_dag", "Datum_begin_maand"), 
+           sep = "/") %>%
+  separate(Datum_eind, into = c("Datum_eind_dag", "Datum_eind_maand"), 
+           sep = "/") %>%
+  separate(`Datum begin_oud`, into = c("Datum_begin_dag_oud", 
+                                       "Datum_begin_maand_oud"), 
+           sep = "/") %>%
+  separate(`Datum eind_oud`, into = c("Datum_eind_dag_oud", 
+                                      "Datum_eind_maand_oud"), 
+           sep = "/") %>%
+  mutate(Datum_begin_maand = match(Datum_begin_maand, trans_vec),
+         datum_begin = paste(Datum_begin_maand, Datum_begin_dag, sep = "-")) %>%
+  mutate(Datum_eind_maand = match(Datum_eind_maand, trans_vec),
+         datum_eind = paste(Datum_eind_maand, Datum_eind_dag, sep = "-")) %>%
+  mutate(Datum_begin_maand_oud = match(Datum_begin_maand_oud, trans_vec),
+         datum_begin_oud = paste(Datum_begin_maand_oud, Datum_begin_dag_oud, 
+                                 sep = "-")) %>%
+  mutate(Datum_eind_maand_oud = match(Datum_eind_maand_oud, trans_vec),
+         datum_eind_oud = paste(Datum_eind_maand_oud, Datum_eind_dag_oud,
+                                sep = "-")) %>%
+  mutate(across(datum_begin:datum_eind_oud, 
+                ~ ifelse(.x == "NA-NA", NA, .x))) %>%
+  select(id = Id, soort = Soort, datum_begin, datum_eind, datum_begin_oud, 
+         datum_eind_oud, broedcode, broedcode_oud = bc_oud, 
+         wnm_vereist = `Waarnemingen verreist`, Opmerking)
+
+# MAS dates
+r1_start <- "04-01"
+r1_stop <- "04-20"
+r2_start <- "04-21"
+r2_stop <- "05-10"
+r3_start <- "05-11"
+r3_stop <- "06-10"
+r4_start <- "06-21"
+r4_stop <- "07-15"
+
+# Classify
+datumgrenzen_mas <- datumgrenzen_df2 %>%
+  select(id, soort, datum_begin, datum_eind) %>%
+  mutate(
+    jaar = 2024,
+    datum_begin2 = ymd(paste(jaar, datum_begin, sep = "-")),
+    datum_eind2 = ymd(paste(jaar, datum_eind, sep = "-")),
+    R1 = ifelse(ymd(paste(jaar, r1_start, sep = "-")) %within% 
+                  interval(datum_begin2, datum_eind2) &
+                ymd(paste(jaar, r1_stop, sep = "-")) %within% 
+                  interval(datum_begin2, datum_eind2), TRUE, FALSE),
+    R2 = ifelse(ymd(paste(jaar, r2_start, sep = "-")) %within% 
+                  interval(datum_begin2, datum_eind2) &
+                ymd(paste(jaar, r2_stop, sep = "-")) %within% 
+                  interval(datum_begin2, datum_eind2), TRUE, FALSE),
+    R3 = ifelse(ymd(paste(jaar, r3_start, sep = "-")) %within% 
+                  interval(datum_begin2, datum_eind2) &
+                ymd(paste(jaar, r3_stop, sep = "-")) %within% 
+                  interval(datum_begin2, datum_eind2), TRUE, FALSE),
+    R4 = ifelse(ymd(paste(jaar, r4_start, sep = "-")) %within% 
+                  interval(datum_begin2, datum_eind2) &
+                ymd(paste(jaar, r4_stop, sep = "-")) %within% 
+                  interval(datum_begin2, datum_eind2), TRUE, FALSE)
+    
+    ) %>%
+  select(id, soort, datum_begin, datum_eind, R1, R2, R3, R4)
+
+# Show results Veldleeuwerik
+datumgrenzen_mas %>%
+  filter(soort == "Veldleeuwerik") %>%
+  kable()
+```
+
+Ten slotte kijken we naar de afstanden.
+
+```{r}
+# Visualise
+veldleeuwerik_2024_df %>%
+  ggplot(aes(x = distance2plot, fill = stratum)) +
+    geom_histogram() +
+    facet_wrap(~regio, scales = "free") +
+    labs(x = "Afstand (m)", y = "Aantal broedparen", fill = "Stratum")
+```
