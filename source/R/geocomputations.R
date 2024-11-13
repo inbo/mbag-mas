@@ -106,7 +106,7 @@ landusemetrics_grid_cell <- function(
         group_by(!!!syms(grid_group_by_col),
                  !!!syms(layer_group_by_col),
                  cell_area) %>%
-        summarise(area_m2 = sum(area)) %>%
+        summarise(area_m2 = sum(area, na.rm = TRUE)) %>%
         mutate(area_prop = area_m2 / cell_area) %>%
         collect()
     } else {
@@ -116,7 +116,7 @@ landusemetrics_grid_cell <- function(
         group_by(!!!syms(grid_group_by_col),
                  !!!syms(layer_group_by_col),
                  cell_area) %>%
-        summarise(area_m2 = sum(area_w)) %>%
+        summarise(area_m2 = sum(area_w, na.rm = TRUE)) %>%
         mutate(area_prop = area_m2 / cell_area) %>%
         collect()
     }
