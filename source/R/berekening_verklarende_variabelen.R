@@ -88,7 +88,8 @@ read_crop_layers_by_year <- function(
     bo_layer_filtered <- bo_layer %>%
       mutate(startjaar = year(.data$START),
              stopjaar = year(.data$STOP)) %>%
-      filter(.data$startjaar <= year & .data$stopjaar >= year)
+      filter(.data$startjaar <= year & .data$stopjaar >= year) %>%
+      st_buffer(0.1)
 
     # Take intersection with crop layer
     crop_layer_intersect <- crop_layer %>%
