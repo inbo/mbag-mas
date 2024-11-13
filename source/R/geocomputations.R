@@ -89,12 +89,12 @@ landusemetrics_grid_cell <- function(
 
     cell_areas <- grid_cell %>%
       select(!!!syms(grid_group_by_col)) %>%
-      mutate(cell_area = sf::st_area(geometry)) %>%
+      mutate(cell_area = as.numeric(sf::st_area(geometry))) %>%
       sf::st_drop_geometry()
 
     temparrow <- tempfile(fileext = ".parquet")
 
-    int$area <- sf::st_area(int$geometry)
+    int$area <- as.numeric(sf::st_area(int$geometry))
     int <- int %>%
       sf::st_drop_geometry() %>%
       inner_join(cell_areas, by = grid_group_by_col) %>%
