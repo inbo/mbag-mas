@@ -226,6 +226,149 @@ veldleeuwerik_distance <- veldleeuwerik_2024_df %>%
 
 Om abundanties te schatten, moeten we de oppervlakte van de strata berekenen voor extrapolatie. We trekken een buffer van 300 m rond het steekproefkader.
 
+```{r}
+# Lees steekproefkader in
+steekproefkader <- st_read(
+  file.path(mbag_dir, "data", "steekproefkaders",
+            "steekproefkader_mbag_mas.gpkg"))
+
+# Buffer and area
+## Calculate area per region
+region_sf <- steekproefkader %>%
+  mutate(regio = ifelse(grepl("\\sleemstreek$", regio),
+                        "Leemstreek", regio)) %>%
+  st_buffer(dist = 300) %>%
+  group_by(regio) %>%
+  summarise(geom = st_union(geom)) %>%
+  ungroup() %>%
+  mutate(Area = as.numeric(st_area(geom)) / 1e6) %>%
+  select(regio, Area, everything())
+
+## Calculate area for Flanders
+flanders_sf <- steekproefkader %>%
+  st_buffer(dist = 300) %>%
+  summarise(geom = st_union(geom)) %>%
+  ungroup() %>%
+  mutate(regio = "Flanders",
+         Area = as.numeric(st_area(geom)) / 1e6) %>%
+  select(regio, Area, everything())
+
+## Calculate area per stratum
+strata_sf <- steekproefkader %>%
+  mutate(regio = ifelse(grepl("\\sleemstreek$", regio),
+                        "Leemstreek", regio)) %>%
+  st_buffer(dist = 300) %>%
+  group_by(regio, "openheid" = openheid_klasse, sbp) %>%
+  summarise(geom = st_union(geom)) %>%
+  ungroup() %>%
+  mutate(Area = as.numeric(st_area(geom)) / 1e6) %>%
+  select(regio, openheid, sbp, Area, everything())
+```
+
+Voor Vlaanderen:
+
+```{r}
+flanders_sf %>%
+  st_drop_geometry() %>%
+  rename("opp. (km²)" = "Area") %>%
+  kable(digits = 3)
+```
+
+```{r}
+# Visualisation
+flanders_sf %>%
+  ggplot() +
+    geom_sf(aes(fill = regio)) +
+    labs(fill = "") +
+    theme(legend.position = "bottom")
+```
+
+Per landbouwregio:
+
+```{r}
+region_sf %>%
+  st_drop_geometry() %>%
+  mutate(`tot. opp. (km²)` = sum(Area)) %>%
+  rename("opp. (km²)" = "Area") %>%
+  kable(digits = 3)
+```
+
+Als we de oppervlakte optellen komen we dezelfde oppervlakte uit als volledig Vlaanderen.
+
+```{r}
+# Visualisation
+region_sf %>%
+  ggplot() +
+    geom_sf(aes(fill = regio)) +
+    labs(fill = "") +
+    theme(legend.position = "bottom")
+```
+
+Per stratum:
+
+```{r}
+strata_sf %>%
+  st_drop_geometry() %>%
+  group_by(regio) %>%
+  mutate(`tot. opp. regio (km²)` = sum(Area)) %>%
+  ungroup() %>%
+  mutate(`totale oppervlakte (km²)` = sum(Area)) %>%
+  rename("opp. (km²)" = "Area") %>%
+  kable(digits = 3)
+```
+
+Als we de oppervlakte optellen komen we niet dezelfde oppervlakte uit als voor de regio's en volledig Vlaanderen!
+
+```{r, fig.width = 10}
+# Visualisation
+for (region in sort(unique(strata_sf$regio))) {
+  p <- strata_sf %>%
+    filter(regio == region) %>%
+    mutate(stratum = paste(openheid, sbp, sep = " - ")) %>%
+    ggplot() +
+      geom_sf(aes(fill = stratum)) +
+      facet_wrap(~regio, ncol = 2) +
+      labs(fill = "") +
+      theme(legend.position = "bottom")
+  print(p)
+}
+```
+
+We willen een densiteitsschatting voor elk stratum. We maken daarom dataframes om de abundanties en densiteiten te berekenen. `Region_table` met de oppervlaktes per stratum (regio-openheid-sbp), `sample_table` geeft aan welke plots in welke strata voorkomen en welke effort is geleverd (effort is gelijk aan het aantal beschouwde telperiodes per jaar) en `obs_table` die aangeeft welke waarnemingen in welke plots en strata zitten. We selecteren enkel de data per telpunt in de periode met het meeste waarnemingen.
+
+```{r}
+design <- read_csv(
+  file.path(mbag_dir, "data", "steekproefkaders",
+            "steekproef_avimap_mbag_mas.csv"))
+
+# Oppervlakte per stratum
+region_table <- strata_sf %>%
+  st_drop_geometry() %>%
+  mutate(stratum = paste(openheid, sbp, sep = " - ")) %>%
+  mutate(Region.Label = paste(regio, openheid, sbp, sep = " - ")) %>%
+  select(Region.Label, Area)
+
+# Effort per sample en plot per stratum
+effort <- 1
+
+sample_table <- design %>%
+  distinct(pointid, regio, openheid = openheid_klasse, sbp) %>%
+  mutate(Region.Label = paste(regio, openheid, sbp, sep = " - "),
+         Effort = effort) %>%
+  select(Sample.Label = pointid, Region.Label, Effort)
+
+# Waarnemingen per plots en strata
+obs_table <- veldleeuwerik_2024_df %>%
+  group_by(periode_in_jaar,  plotnaam) %>%
+  mutate(n = n()) %>%
+  slice_max(order_by = n, n = 1) %>%
+  ungroup() %>%
+  mutate(Region.Label = paste(regio, openheid = openheid_klasse, sbp,
+                              sep = " - ")) %>%
+  select(object = oid, Region.Label, Sample.Label = plotnaam)
+```
+
+
 ## Model specificatie
 ### MRDS
 
