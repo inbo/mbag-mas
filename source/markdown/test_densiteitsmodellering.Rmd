@@ -415,7 +415,7 @@ Om te controleren of ons model goed past bij de data (“goodness of fit”) mak
 
 De fit is niet perfect, maar goed genoeg voor deze oefening.
 
-```{r, fig.width = 10}
+```{r, fig.heigth = 20}
 par(mfrow = c(2, 2))
 von_mises <- gof_ds(veldleeuwerik_dist_hr)
 von_mises
@@ -439,6 +439,57 @@ par(mfrow = c(1, 1))
 ## Resultaten
 
 ```{r}
-summary(veldleeuwerik_dist_hr)
+sum_dist_veldleeuwerik <- summary(veldleeuwerik_dist_hr)
 ```
 
+### Detectiekans
+
+```{r}
+cbind(veldleeuwerik_dist_hr$ddf$data, 
+      "p(z)" = predict(veldleeuwerik_dist_hr, 
+                       se.fit = TRUE)$fitted, 
+      "standard error" = predict(veldleeuwerik_dist_hr, 
+                                 se.fit = TRUE)$se) %>%
+  select("openheid", "p(z)", "standard error") %>%
+  distinct() %>%
+  arrange(openheid) %>%
+  kable()
+```
+
+### Densiteiten
+
+```{r}
+abundance_veldleeuwerik <- sum_dist_veldleeuwerik$dht$individuals$N
+density_veldleeuwerik <- sum_dist_veldleeuwerik$dht$individuals$D
+```
+
+Abundantie:
+
+```{r}
+abundance_veldleeuwerik %>%
+  select(stratum = Label, abundantie = Estimate, ll = lcl, ul = ucl) %>%
+  kable(digits = 3)
+```
+
+Densiteit:
+
+```{r, warning=FALSE}
+density_veldleeuwerik %>%
+  select(stratum = Label, densiteit = Estimate, ll = lcl, ul = ucl) %>%
+  separate(stratum, into = c("regio", "openheid", "sbp"), sep = " - ") %>%
+  kable(digits = 3)
+```
+
+```{r}
+density_veldleeuwerik %>%
+  filter(Label != "Total") %>%
+  select(stratum = Label, densiteit = Estimate, ll = lcl, ul = ucl) %>%
+  separate(stratum, into = c("regio", "openheid", "sbp"), sep = " - ") %>%
+  mutate(stratum = paste(openheid, sbp, sep = " - ")) %>%
+  ggplot(aes(x = openheid, y = densiteit, colour = sbp)) +
+    geom_point(position = position_dodge(width = 0.5)) +
+    geom_errorbar(aes(ymin = ll, ymax = ul), width = 0.2,
+                  position = position_dodge(width = 0.5)) +
+    labs(y = "aantal broedparen per 100 ha", x = "") +
+    facet_wrap(~regio, ncol = 2, scales = "free")
+```
