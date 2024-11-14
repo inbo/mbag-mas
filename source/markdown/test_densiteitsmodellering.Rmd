@@ -209,7 +209,6 @@ veldleeuwerik_2024_df %>%
 # Distance sampling
 
 We schatten de detectiekans en densiteiten via distance sampling.
-We vergelijken een tweestapsmethode met **mrds** met de directe methode van **Distance**.
 We beschouwen voor de formulatie van de detectiefunctie de half-normal en hazard-rate sleutelfuncties die we laten afhangen van `openheid`.
 
 ## Data preparatie
@@ -318,6 +317,8 @@ strata_sf %>%
 ```
 
 Als we de oppervlakte optellen komen we niet dezelfde oppervlakte uit als voor de regio's en volledig Vlaanderen!
+Dit wil zeggen dat we een apart model moeten fitten voor regio's en specifieke strata.
+Voor Vlaanderen krijgen we een schatting via het regio's model.
 
 ```{r, fig.width = 10}
 # Visualisation
@@ -339,7 +340,8 @@ We willen een densiteitsschatting voor elk stratum. We maken daarom dataframes o
 ```{r}
 design <- read_csv(
   file.path(mbag_dir, "data", "steekproefkaders",
-            "steekproef_avimap_mbag_mas.csv"))
+            "steekproef_avimap_mbag_mas.csv"))  %>%
+  mutate(regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio))
 
 # Oppervlakte per stratum
 region_table <- strata_sf %>%
@@ -368,30 +370,75 @@ obs_table <- veldleeuwerik_2024_df %>%
   select(object = oid, Region.Label, Sample.Label = plotnaam)
 ```
 
+Ten slotte zet de conversiefactor de afstanden om van meter naar vierkante kilometer (= 100 ha).
+
+```{r}
+# Conversion factor from meters to 100 hectares
+conversion_factor <- convert_units("meter", NULL, "Square kilometer")
+```
 
 ## Model specificatie
-### MRDS
+
+We beschouwen voor de formulatie van de detectiefunctie de half-normal en hazard-rate sleutelfuncties die we laten afhangen van `openheid`.
 
 ```{r}
-test <- ddf(
-  data = veldleeuwerik_distance,
-  dsmodel = ~mcds(key="hr", formula = ~openheid),
-  method = "ds",
-  meta.data = list(width = 300, point = TRUE))
-summary(test)
+veldleeuwerik_dist_hn <- ds(data = veldleeuwerik_distance, key = "hn", 
+  formula = ~openheid, adjustment = NULL, truncation = 300, 
+  transect = "point", dht_group = FALSE, 
+  convert_units = conversion_factor, region_table = region_table, 
+  sample_table = sample_table, obs_table = obs_table)
 
-ddf.gof(test)
-plot(test, pdf = TRUE)
+veldleeuwerik_dist_hr <- ds(data = veldleeuwerik_distance, key = "hr", 
+  formula = ~openheid, adjustment = NULL, truncation = 300, 
+  transect = "point", dht_group = FALSE, 
+  convert_units = conversion_factor, region_table = region_table, 
+  sample_table = sample_table, obs_table = obs_table)
 ```
-
-### Distance
 
 ## Model selectie
-### MRDS
+
+We vergelijken de AIC van de verschillende modellen.
+Als het verschil tussen AIC’s kleiner is dan 2, kiezen we het eenvoudigste van deze modellen (model met minste parameters).
+Het Hazard-rate model scoort beter.
 
 ```{r}
-ddf.gof(test)
-plot(test, pdf = TRUE)
+summarize_ds_models(
+    veldleeuwerik_dist_hn,
+    veldleeuwerik_dist_hr
+  ) %>%
+  kable()
 ```
 
-### Distance
+## Model fit
+
+Om te controleren of ons model goed past bij de data (“goodness of fit”) maken we een Q-Q plot waarbij de cumulatieve distributiefunctie van de gefitte detectiefunctie (CDF) wordt vergeleken met de distributie van de data (EDF). De Cramér-von Mises test kwantificeert de informatie van de Q-Q-plot door te testen of punten van de EDF en CDF uit dezelfde verdeling komen. Voor studies met punttransecten geven kansdichtheidsfunctieplots ook een goed idee over model fit.
+
+De fit is niet perfect, maar goed genoeg voor deze oefening.
+
+```{r, fig.width = 10}
+par(mfrow = c(2, 2))
+von_mises <- gof_ds(veldleeuwerik_dist_hr)
+von_mises
+plot(veldleeuwerik_dist_hr, pdf = TRUE, showpoints = TRUE)
+
+# Plot separately for covariate categories
+plot(veldleeuwerik_dist_hr, pdf = TRUE, showpoints = FALSE,
+   subset = openheid == "HOL",
+   main = "HOL", pl.col = alpha("green", 0.5))
+add.df.covar.line(veldleeuwerik_dist_hr, lwd = 3, lty = 1, col = "green",
+  data = data.frame(openheid = "HOL"), pdf = TRUE)
+
+plot(veldleeuwerik_dist_hr, pdf = TRUE, showpoints = FALSE,
+   subset = openheid == "OL",
+   main = "OL", pl.col = alpha("red", 0.5))
+add.df.covar.line(veldleeuwerik_dist_hr, lwd = 3, lty = 1, col = "red",
+  data = data.frame(openheid = "OL"), pdf = TRUE)
+par(mfrow = c(1, 1))
+```
+
+## Resultaten
+
+```{r}
+summary(veldleeuwerik_dist_hr)
+```
+
