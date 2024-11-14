@@ -497,6 +497,18 @@ density_veldleeuwerik %>%
 
 De workflow werkt zoals verwacht.
 
-- Hoe krijgen we confidence limits voor de detectiekans?
+- Hoe krijgen we confidence limits voor de detectiekans? Wat is de distributie van detectiekans?
 - We moeten het model ook fitten voor densiteitsschattingen per regio. Is de detectiekans hetzelfde? We verwachten van wel.
 - Hebben we correct met de maxima kunnen werken?
+
+## Distributie detectiekans
+
+> zie theorie
+
+## Densiteitsschattingen op regio en Vlaams niveau
+
+zelfde model maar met andere region sample en obs tabellen
+
+## Densiteitsschattingen o.b.v. alle telperiodes
+
+effort = 4
