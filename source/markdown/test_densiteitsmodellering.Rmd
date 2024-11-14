@@ -207,11 +207,12 @@ veldleeuwerik_2024_df %>%
 ```
 
 # Distance sampling
+## Test workflow
 
 We schatten de detectiekans en densiteiten via distance sampling.
 We beschouwen voor de formulatie van de detectiefunctie de half-normal en hazard-rate sleutelfuncties die we laten afhangen van `openheid`.
 
-## Data preparatie
+### Data preparatie
 
 We hebben een kolom `object` nodig: volgnummer voor elke waarneming; een kolom `size`: aantal broedparen per waarneming (overal 1); een kolom `distance`: afstand tot elke waarneming; kolommen met covariaten (hier 1 variabele): `openheid`.
 
@@ -232,7 +233,7 @@ steekproefkader <- st_read(
             "steekproefkader_mbag_mas.gpkg"))
 
 # Buffer and area
-## Calculate area per region
+### Calculate area per region
 region_sf <- steekproefkader %>%
   mutate(regio = ifelse(grepl("\\sleemstreek$", regio),
                         "Leemstreek", regio)) %>%
@@ -243,7 +244,7 @@ region_sf <- steekproefkader %>%
   mutate(Area = as.numeric(st_area(geom)) / 1e6) %>%
   select(regio, Area, everything())
 
-## Calculate area for Flanders
+### Calculate area for Flanders
 flanders_sf <- steekproefkader %>%
   st_buffer(dist = 300) %>%
   summarise(geom = st_union(geom)) %>%
@@ -252,7 +253,7 @@ flanders_sf <- steekproefkader %>%
          Area = as.numeric(st_area(geom)) / 1e6) %>%
   select(regio, Area, everything())
 
-## Calculate area per stratum
+### Calculate area per stratum
 strata_sf <- steekproefkader %>%
   mutate(regio = ifelse(grepl("\\sleemstreek$", regio),
                         "Leemstreek", regio)) %>%
@@ -377,7 +378,7 @@ Ten slotte zet de conversiefactor de afstanden om van meter naar vierkante kilom
 conversion_factor <- convert_units("meter", NULL, "Square kilometer")
 ```
 
-## Model specificatie
+### Model specificatie
 
 We beschouwen voor de formulatie van de detectiefunctie de half-normal en hazard-rate sleutelfuncties die we laten afhangen van `openheid`.
 
@@ -395,7 +396,7 @@ veldleeuwerik_dist_hr <- ds(data = veldleeuwerik_distance, key = "hr",
   sample_table = sample_table, obs_table = obs_table)
 ```
 
-## Model selectie
+### Model selectie
 
 We vergelijken de AIC van de verschillende modellen.
 Als het verschil tussen AIC’s kleiner is dan 2, kiezen we het eenvoudigste van deze modellen (model met minste parameters).
@@ -409,7 +410,7 @@ summarize_ds_models(
   kable()
 ```
 
-## Model fit
+### Model fit
 
 Om te controleren of ons model goed past bij de data (“goodness of fit”) maken we een Q-Q plot waarbij de cumulatieve distributiefunctie van de gefitte detectiefunctie (CDF) wordt vergeleken met de distributie van de data (EDF). De Cramér-von Mises test kwantificeert de informatie van de Q-Q-plot door te testen of punten van de EDF en CDF uit dezelfde verdeling komen. Voor studies met punttransecten geven kansdichtheidsfunctieplots ook een goed idee over model fit.
 
@@ -436,13 +437,13 @@ add.df.covar.line(veldleeuwerik_dist_hr, lwd = 3, lty = 1, col = "red",
 par(mfrow = c(1, 1))
 ```
 
-## Resultaten
+### Resultaten
 
 ```{r}
 sum_dist_veldleeuwerik <- summary(veldleeuwerik_dist_hr)
 ```
 
-### Detectiekans
+Detectiekans:
 
 ```{r}
 cbind(veldleeuwerik_dist_hr$ddf$data, 
@@ -455,8 +456,6 @@ cbind(veldleeuwerik_dist_hr$ddf$data,
   arrange(openheid) %>%
   kable()
 ```
-
-### Densiteiten
 
 ```{r}
 abundance_veldleeuwerik <- sum_dist_veldleeuwerik$dht$individuals$N
@@ -493,3 +492,11 @@ density_veldleeuwerik %>%
     labs(y = "aantal broedparen per 100 ha", x = "") +
     facet_wrap(~regio, ncol = 2, scales = "free")
 ```
+
+### Conclusie en vragen
+
+De workflow werkt zoals verwacht.
+
+- Hoe krijgen we confidence limits voor de detectiekans?
+- We moeten het model ook fitten voor densiteitsschattingen per regio. Is de detectiekans hetzelfde? We verwachten van wel.
+- Hebben we correct met de maxima kunnen werken?
