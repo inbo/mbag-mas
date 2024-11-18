@@ -665,7 +665,7 @@ density_veldleeuwerik2 %>%
 ```
 
 De detectiekans is dezelfde als voordien.
-Voordien (bij het stratum-model) hadden we een onderschatting van de totale densiteit binnen het steekproefkader:`r density_veldleeuwerik_tot` t.o.v. `r density_veldleeuwerik2_tot` gemiddeld aantal broedparen per 100 ha.
+Voordien (bij het stratum-model) hadden we een onderschatting van de totale densiteit binnen het steekproefkader:`r round(density_veldleeuwerik_tot, 2)` t.o.v. `r round(density_veldleeuwerik2_tot, 2)` gemiddeld aantal broedparen per 100 ha.
 Dit is omdat we bij het stratum-model geografisch overlap hebben.
 
 Om correcte schattingen te krijgen op regio- en steekproefkader-niveau, kunnen we dus het finale model herfitten op aangepaste datasets.
@@ -783,12 +783,13 @@ In praktijk verwachten we nog altijd enkele uitdagingen:
   - We kunnen eventueel strata met "te weinig data" weglaten uit de analyses en hiervan enkel de absolute aantallen rapporteren. Op regio- of steekproefniveau kunnen ze gewoon opgeteld worden bij de schattingen.
     - Nood aan regels (bv. $n > 15$ per stratum).
     - Automatisatie?
-  - Alternatief is enkel simpele detectiefuncties te fitten (zonder interactietermen). Of we kunnen regels verzinnen om simpele detectiefuncties te fitten als er te veel problemen bij de andere optreden (bv. voor zeldzame soorten is het $a priori$ al niet nuttig om interactietermen toe te voegen).
+  - Alternatief is enkel simpele detectiefuncties te fitten (zonder interactietermen). Of we kunnen regels verzinnen om simpele detectiefuncties te fitten als er te veel problemen bij de andere optreden (bv. voor zeldzame soorten is het *a prior* al niet nuttig om interactietermen toe te voegen).
 
 ```{r}
 design %>%
   filter(regio == "Weidestreek") %>%
-  count(regio, openheid = openheid_klasse, sbp)
+  count(regio, openheid = openheid_klasse, sbp) %>%
+  kable()
 ```
 
 - Hoe automatiseren we detectiefunctie modelselectie in de targets pipeline?
