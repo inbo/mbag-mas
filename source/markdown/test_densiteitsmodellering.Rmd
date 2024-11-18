@@ -336,7 +336,7 @@ for (region in sort(unique(strata_sf$regio))) {
 }
 ```
 
-We willen een densiteitsschatting voor elk stratum. We maken daarom dataframes om de abundanties en densiteiten te berekenen. `Region_table` met de oppervlaktes per stratum (regio-openheid-sbp), `sample_table` geeft aan welke plots in welke strata voorkomen en welke effort is geleverd (effort is gelijk aan het aantal beschouwde telperiodes per jaar) en `obs_table` die aangeeft welke waarnemingen in welke plots en strata zitten. We selecteren enkel de data per telpunt in de periode met het meeste waarnemingen.
+We willen een densiteitsschatting voor elk stratum. We maken daarom dataframes om de abundanties en densiteiten te berekenen. `region_table` met de oppervlaktes per stratum (regio-openheid-sbp), `sample_table` geeft aan welke plots in welke strata voorkomen en welke effort is geleverd (effort is gelijk aan het aantal beschouwde telperiodes per jaar) en `obs_table` die aangeeft welke waarnemingen in welke plots en strata zitten. We selecteren enkel de data per telpunt in de periode met het meeste waarnemingen.
 
 ```{r}
 design <- read_csv(
@@ -473,6 +473,10 @@ abundance_veldleeuwerik %>%
 Densiteit:
 
 ```{r, warning=FALSE}
+density_veldleeuwerik_tot <- density_veldleeuwerik[
+  density_veldleeuwerik$Label == "Total", "Estimate"
+  ]
+
 density_veldleeuwerik %>%
   select(stratum = Label, densiteit = Estimate, ll = lcl, ul = ucl) %>%
   separate(stratum, into = c("regio", "openheid", "sbp"), sep = " - ") %>%
@@ -493,6 +497,10 @@ density_veldleeuwerik %>%
     facet_wrap(~regio, ncol = 2, scales = "free")
 ```
 
+Voor de Weidestreek zijn we niet van plan densiteiten te rapporteren op stratumniveau.
+Voor deze oefening zijn deze hier toch getoond.
+Voor de Weidestreek zullen we enkel op niveau van de landbouwstreek rapporteren (zie verder).
+
 ### Conclusie en vragen
 
 De workflow werkt zoals verwacht.
@@ -506,9 +514,176 @@ De workflow werkt zoals verwacht.
 > zie theorie
 
 ## Densiteitsschattingen op regio en Vlaams niveau
+### Model specificatie
 
-zelfde model maar met andere region sample en obs tabellen
+We fitten het finale tabel als voordien, maar we maken de `region_table`, `sample_table` en `obs_table` aan op regio-niveau in plaats van op stratum-niveau.
+
+```{r}
+# Area per region
+region_table2 <- region_sf %>%
+  st_drop_geometry() %>%
+  select(Region.Label = regio, Area)
+
+# Effort per sample en plot per region
+effort <- 1
+
+sample_table2 <- design %>%
+  distinct(pointid, regio, openheid = openheid_klasse, sbp) %>%
+  mutate(Effort = effort) %>%
+  select(Sample.Label = pointid, Region.Label = regio, Effort)
+
+# Observations per plots en regions
+obs_table2 <- veldleeuwerik_2024_df %>%
+  group_by(periode_in_jaar,  plotnaam) %>%
+  mutate(n = n()) %>%
+  slice_max(order_by = n, n = 1) %>%
+  ungroup() %>%
+  select(object = oid, Region.Label = regio, Sample.Label = plotnaam)
+
+# Distance sampling
+veldleeuwerik_dist_hr2 <- ds(data = veldleeuwerik_distance, key = "hr", 
+  formula = ~openheid, adjustment = NULL, truncation = 300, 
+  transect = "point", dht_group = FALSE, 
+  convert_units = conversion_factor, region_table = region_table2, 
+  sample_table = sample_table2, obs_table = obs_table2)
+```
+
+### Resultaten
+
+```{r}
+sum_dist_veldleeuwerik2 <- summary(veldleeuwerik_dist_hr2)
+```
+
+Detectiekans:
+
+```{r}
+cbind(veldleeuwerik_dist_hr2$ddf$data, 
+      "p(z)" = predict(veldleeuwerik_dist_hr2, 
+                       se.fit = TRUE)$fitted, 
+      "standard error" = predict(veldleeuwerik_dist_hr2, 
+                                 se.fit = TRUE)$se) %>%
+  select("openheid", "p(z)", "standard error") %>%
+  distinct() %>%
+  arrange(openheid) %>%
+  kable()
+```
+
+```{r}
+density_veldleeuwerik2 <- sum_dist_veldleeuwerik2$dht$individuals$D
+```
+
+Densiteit:
+
+```{r, warning=FALSE}
+density_veldleeuwerik2_tot <- density_veldleeuwerik2[
+  density_veldleeuwerik2$Label == "Total", "Estimate"
+  ]
+
+density_veldleeuwerik2 %>%
+  select(regio = Label, densiteit = Estimate, ll = lcl, ul = ucl) %>%
+  kable(digits = 3)
+```
+
+```{r}
+density_veldleeuwerik2 %>%
+  filter(Label != "Total") %>%
+  select(regio = Label, densiteit = Estimate, ll = lcl, ul = ucl) %>%
+  ggplot(aes(x = regio, y = densiteit)) +
+    geom_point(size = 3) +
+    geom_errorbar(aes(ymin = ll, ymax = ul), width = 0.2, linewidth = 1) +
+    labs(y = "aantal broedparen per 100 ha", x = "")
+```
+
+De detectiekans is dezelfde als voordien.
+Voordien (bij het stratum-model) hadden we een onderschatting van de totale densiteit binnen het steekproefkader:`r density_veldleeuwerik_tot` t.o.v. `r density_veldleeuwerik2_tot` gemiddeld aantal broedparen per 100 ha.
+Dit is omdat we bij het stratum-model geografisch overlap hebben.
+
+Om correcte schattingen te krijgen op regio- en steekproefkader-niveau, kunnen we dus het finale model herfitten op aangepaste datasets.
 
 ## Densiteitsschattingen o.b.v. alle telperiodes
+### Model specificatie
 
-effort = 4
+We fitten het regio-model opnieuw, maar deze keer gebruiken we alle data voor de densiteitsschattingen met `effort = 4`.
+Dit om uit te zoeken of het gebruik van de maxima t.o.v. alle data de verwachte uitkomst biedt.
+We verwachten:
+
+1. identieke detectiekans
+   - dezelfde data wordt gebruikt om de detectiekans te schatten als voordien
+2. lagere densiteitsschattingen
+   - door uitmiddeling sampling effort
+3. smallere betrouwbaarheidsintervallen densiteiten
+   - meer data wordt gebruikt
+
+```{r}
+# Effort per sample en plot per region
+effort <- length(unique(veldleeuwerik_2024_df$periode_in_jaar))
+
+sample_table3 <- design %>%
+  distinct(pointid, regio, openheid = openheid_klasse, sbp) %>%
+  mutate(Effort = effort) %>%
+  select(Sample.Label = pointid, Region.Label = regio, Effort)
+
+# Observations per plots en regions
+obs_table3 <- veldleeuwerik_2024_df %>%
+  select(object = oid, Region.Label = regio, Sample.Label = plotnaam)
+
+# Distance sampling
+veldleeuwerik_dist_hr3 <- ds(data = veldleeuwerik_distance, key = "hr", 
+  formula = ~openheid, adjustment = NULL, truncation = 300, 
+  transect = "point", dht_group = FALSE, 
+  convert_units = conversion_factor, region_table = region_table2, 
+  sample_table = sample_table3, obs_table = obs_table3)
+```
+
+### Resultaten
+
+```{r}
+sum_dist_veldleeuwerik3 <- summary(veldleeuwerik_dist_hr3)
+```
+
+Detectiekans:
+
+```{r}
+cbind(veldleeuwerik_dist_hr3$ddf$data, 
+      "p(z)" = predict(veldleeuwerik_dist_hr3, 
+                       se.fit = TRUE)$fitted, 
+      "standard error" = predict(veldleeuwerik_dist_hr3, 
+                                 se.fit = TRUE)$se) %>%
+  select("openheid", "p(z)", "standard error") %>%
+  distinct() %>%
+  arrange(openheid) %>%
+  kable()
+```
+
+```{r}
+density_veldleeuwerik3 <- sum_dist_veldleeuwerik3$dht$individuals$D
+```
+
+Densiteit:
+
+```{r, warning=FALSE}
+density_veldleeuwerik3 %>%
+  select(regio = Label, densiteit = Estimate, ll = lcl, ul = ucl) %>%
+  kable(digits = 3)
+```
+
+```{r}
+density_veldleeuwerik3 %>%
+  filter(Label != "Total") %>%
+  mutate(Dataset = "totaal (effort = 4)") %>%
+  bind_rows(
+    density_veldleeuwerik2 %>%
+      filter(Label != "Total") %>%
+      mutate(Dataset = "maxima (effort = 1)")) %>%
+  select(regio = Label, Dataset, densiteit = Estimate, ll = lcl, ul = ucl) %>%
+  ggplot(aes(x = regio, y = densiteit, colour = Dataset)) +
+    geom_point(size = 3, position = position_dodge(width = 0.5)) +
+    geom_errorbar(aes(ymin = ll, ymax = ul), width = 0.2, linewidth = 1,
+                  position = position_dodge(width = 0.5)) +
+    labs(y = "aantal broedparen per 100 ha", x = "")
+```
+
+Aan alle verwachtingen is voldaan.
+Dit geeft aan dat we op correcte wijze de detectiekans kunnen schatten o.b.v. de volledige dataset en de densiteit o.b.v. een subset (maxima) of de volledige dataset.
+We zien echter wel dat de schattingen en onzekerheden tussen beide methodes sterk verschillend zijn.
+De keuze van ene of de andere methode moet onderbouwd worden o.b.v. ecologische kennis.
