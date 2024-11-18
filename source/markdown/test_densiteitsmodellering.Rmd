@@ -81,12 +81,16 @@ mas_data_clean <- tar_read("mas_data_clean", store = targets_store)
 
 # Select data Veldleeuwerik 2024
 veldleeuwerik_2024_df <- mas_data_clean %>%
-  filter(naam == "Veldleeuwerik",
-         jaar == 2024,
-         wrntype > 0) %>%
-  mutate(aantal = 1,
-         regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio),
-         stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
+  filter(
+    naam == "Veldleeuwerik",
+    jaar == 2024,
+    wrntype > 0
+  ) %>%
+  mutate(
+    aantal = 1,
+    regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio),
+    stratum = paste(openheid_klasse, sbp, sep = " - ")
+  ) %>%
   st_drop_geometry()
 ```
 
@@ -96,9 +100,9 @@ We kijken naar het aantal broedparen per regio.
 # Visualise
 veldleeuwerik_2024_df %>%
   ggplot(aes(x = periode_in_jaar, fill = wrntype)) +
-    geom_bar() +
-    facet_wrap(~regio, scales = "free") +
-    labs(x = "Telperiode", y = "Aantal broedparen", fill = "broedcode")
+  geom_bar() +
+  facet_wrap(~regio, scales = "free") +
+  labs(x = "Telperiode", y = "Aantal broedparen", fill = "broedcode")
 ```
 
 En de per stratum.
@@ -107,9 +111,9 @@ En de per stratum.
 # Visualise
 veldleeuwerik_2024_df %>%
   ggplot(aes(x = periode_in_jaar, fill = stratum)) +
-    geom_bar() +
-    facet_wrap(~regio, scales = "free") +
-    labs(x = "Telperiode", y = "Aantal broedparen", fill = "Stratum")
+  geom_bar() +
+  facet_wrap(~regio, scales = "free") +
+  labs(x = "Telperiode", y = "Aantal broedparen", fill = "Stratum")
 ```
 
 Alle telperiodes bevinden zich binnen de datumgrenzen.
@@ -118,39 +122,68 @@ We nemen alle telperiode dus mee voor de densiteitsschattingen.
 ```{r}
 # Load breeding dates file
 datumgrenzen_df <- read_csv2(
-  file.path(mbag_dir, "data", "SOVON",
-            "Interpretatie_Criteria_Broedvogels_v2.csv"))
+  file.path(
+    mbag_dir, "data", "SOVON",
+    "Interpretatie_Criteria_Broedvogels_v2.csv"
+  )
+)
 
 # Tidy dataframe
 trans_vec <- c("jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug")
 
 datumgrenzen_df2 <- datumgrenzen_df %>%
   mutate(across(Datum_begin:`Datum eind_oud`, ~ gsub("-", "/", .x))) %>%
-  separate(Datum_begin, into = c("Datum_begin_dag", "Datum_begin_maand"), 
-           sep = "/") %>%
-  separate(Datum_eind, into = c("Datum_eind_dag", "Datum_eind_maand"), 
-           sep = "/") %>%
-  separate(`Datum begin_oud`, into = c("Datum_begin_dag_oud", 
-                                       "Datum_begin_maand_oud"), 
-           sep = "/") %>%
-  separate(`Datum eind_oud`, into = c("Datum_eind_dag_oud", 
-                                      "Datum_eind_maand_oud"), 
-           sep = "/") %>%
-  mutate(Datum_begin_maand = match(Datum_begin_maand, trans_vec),
-         datum_begin = paste(Datum_begin_maand, Datum_begin_dag, sep = "-")) %>%
-  mutate(Datum_eind_maand = match(Datum_eind_maand, trans_vec),
-         datum_eind = paste(Datum_eind_maand, Datum_eind_dag, sep = "-")) %>%
-  mutate(Datum_begin_maand_oud = match(Datum_begin_maand_oud, trans_vec),
-         datum_begin_oud = paste(Datum_begin_maand_oud, Datum_begin_dag_oud, 
-                                 sep = "-")) %>%
-  mutate(Datum_eind_maand_oud = match(Datum_eind_maand_oud, trans_vec),
-         datum_eind_oud = paste(Datum_eind_maand_oud, Datum_eind_dag_oud,
-                                sep = "-")) %>%
-  mutate(across(datum_begin:datum_eind_oud, 
-                ~ ifelse(.x == "NA-NA", NA, .x))) %>%
-  select(id = Id, soort = Soort, datum_begin, datum_eind, datum_begin_oud, 
-         datum_eind_oud, broedcode, broedcode_oud = bc_oud, 
-         wnm_vereist = `Waarnemingen verreist`, Opmerking)
+  separate(Datum_begin,
+    into = c("Datum_begin_dag", "Datum_begin_maand"),
+    sep = "/"
+  ) %>%
+  separate(Datum_eind,
+    into = c("Datum_eind_dag", "Datum_eind_maand"),
+    sep = "/"
+  ) %>%
+  separate(`Datum begin_oud`,
+    into = c(
+      "Datum_begin_dag_oud",
+      "Datum_begin_maand_oud"
+    ),
+    sep = "/"
+  ) %>%
+  separate(`Datum eind_oud`,
+    into = c(
+      "Datum_eind_dag_oud",
+      "Datum_eind_maand_oud"
+    ),
+    sep = "/"
+  ) %>%
+  mutate(
+    Datum_begin_maand = match(Datum_begin_maand, trans_vec),
+    datum_begin = paste(Datum_begin_maand, Datum_begin_dag, sep = "-")
+  ) %>%
+  mutate(
+    Datum_eind_maand = match(Datum_eind_maand, trans_vec),
+    datum_eind = paste(Datum_eind_maand, Datum_eind_dag, sep = "-")
+  ) %>%
+  mutate(
+    Datum_begin_maand_oud = match(Datum_begin_maand_oud, trans_vec),
+    datum_begin_oud = paste(Datum_begin_maand_oud, Datum_begin_dag_oud,
+      sep = "-"
+    )
+  ) %>%
+  mutate(
+    Datum_eind_maand_oud = match(Datum_eind_maand_oud, trans_vec),
+    datum_eind_oud = paste(Datum_eind_maand_oud, Datum_eind_dag_oud,
+      sep = "-"
+    )
+  ) %>%
+  mutate(across(
+    datum_begin:datum_eind_oud,
+    ~ ifelse(.x == "NA-NA", NA, .x)
+  )) %>%
+  select(
+    id = Id, soort = Soort, datum_begin, datum_eind, datum_begin_oud,
+    datum_eind_oud, broedcode, broedcode_oud = bc_oud,
+    wnm_vereist = `Waarnemingen verreist`, Opmerking
+  )
 
 # MAS dates
 r1_start <- "04-01"
@@ -169,24 +202,23 @@ datumgrenzen_mas <- datumgrenzen_df2 %>%
     jaar = 2024,
     datum_begin2 = ymd(paste(jaar, datum_begin, sep = "-")),
     datum_eind2 = ymd(paste(jaar, datum_eind, sep = "-")),
-    R1 = ifelse(ymd(paste(jaar, r1_start, sep = "-")) %within% 
-                  interval(datum_begin2, datum_eind2) &
-                ymd(paste(jaar, r1_stop, sep = "-")) %within% 
-                  interval(datum_begin2, datum_eind2), TRUE, FALSE),
-    R2 = ifelse(ymd(paste(jaar, r2_start, sep = "-")) %within% 
-                  interval(datum_begin2, datum_eind2) &
-                ymd(paste(jaar, r2_stop, sep = "-")) %within% 
-                  interval(datum_begin2, datum_eind2), TRUE, FALSE),
-    R3 = ifelse(ymd(paste(jaar, r3_start, sep = "-")) %within% 
-                  interval(datum_begin2, datum_eind2) &
-                ymd(paste(jaar, r3_stop, sep = "-")) %within% 
-                  interval(datum_begin2, datum_eind2), TRUE, FALSE),
-    R4 = ifelse(ymd(paste(jaar, r4_start, sep = "-")) %within% 
-                  interval(datum_begin2, datum_eind2) &
-                ymd(paste(jaar, r4_stop, sep = "-")) %within% 
-                  interval(datum_begin2, datum_eind2), TRUE, FALSE)
-    
-    ) %>%
+    R1 = ifelse(ymd(paste(jaar, r1_start, sep = "-")) %within%
+      interval(datum_begin2, datum_eind2) &
+      ymd(paste(jaar, r1_stop, sep = "-")) %within%
+        interval(datum_begin2, datum_eind2), TRUE, FALSE),
+    R2 = ifelse(ymd(paste(jaar, r2_start, sep = "-")) %within%
+      interval(datum_begin2, datum_eind2) &
+      ymd(paste(jaar, r2_stop, sep = "-")) %within%
+        interval(datum_begin2, datum_eind2), TRUE, FALSE),
+    R3 = ifelse(ymd(paste(jaar, r3_start, sep = "-")) %within%
+      interval(datum_begin2, datum_eind2) &
+      ymd(paste(jaar, r3_stop, sep = "-")) %within%
+        interval(datum_begin2, datum_eind2), TRUE, FALSE),
+    R4 = ifelse(ymd(paste(jaar, r4_start, sep = "-")) %within%
+      interval(datum_begin2, datum_eind2) &
+      ymd(paste(jaar, r4_stop, sep = "-")) %within%
+        interval(datum_begin2, datum_eind2), TRUE, FALSE)
+  ) %>%
   select(id, soort, datum_begin, datum_eind, R1, R2, R3, R4)
 
 # Show results Veldleeuwerik
@@ -201,9 +233,9 @@ Ten slotte kijken we naar de afstanden.
 # Visualise
 veldleeuwerik_2024_df %>%
   ggplot(aes(x = distance2plot, fill = stratum)) +
-    geom_histogram() +
-    facet_wrap(~regio, scales = "free") +
-    labs(x = "Afstand (m)", y = "Aantal broedparen", fill = "Stratum")
+  geom_histogram() +
+  facet_wrap(~regio, scales = "free") +
+  labs(x = "Afstand (m)", y = "Aantal broedparen", fill = "Stratum")
 ```
 
 # Distance sampling
@@ -218,10 +250,12 @@ We hebben een kolom `object` nodig: volgnummer voor elke waarneming; een kolom `
 
 ```{r}
 veldleeuwerik_distance <- veldleeuwerik_2024_df %>%
-  select(object = oid,
-         size = aantal,
-         distance = distance2plot,
-         openheid = openheid_klasse)
+  select(
+    object = oid,
+    size = aantal,
+    distance = distance2plot,
+    openheid = openheid_klasse
+  )
 ```
 
 Om abundanties te schatten, moeten we de oppervlakte van de strata berekenen voor extrapolatie. We trekken een buffer van 300 m rond het steekproefkader.
@@ -229,14 +263,18 @@ Om abundanties te schatten, moeten we de oppervlakte van de strata berekenen voo
 ```{r}
 # Lees steekproefkader in
 steekproefkader <- st_read(
-  file.path(mbag_dir, "data", "steekproefkaders",
-            "steekproefkader_mbag_mas.gpkg"))
+  file.path(
+    mbag_dir, "data", "steekproefkaders",
+    "steekproefkader_mbag_mas.gpkg"
+  )
+)
 
 # Buffer and area
 ### Calculate area per region
 region_sf <- steekproefkader %>%
   mutate(regio = ifelse(grepl("\\sleemstreek$", regio),
-                        "Leemstreek", regio)) %>%
+    "Leemstreek", regio
+  )) %>%
   st_buffer(dist = 300) %>%
   group_by(regio) %>%
   summarise(geom = st_union(geom)) %>%
@@ -249,14 +287,17 @@ flanders_sf <- steekproefkader %>%
   st_buffer(dist = 300) %>%
   summarise(geom = st_union(geom)) %>%
   ungroup() %>%
-  mutate(regio = "Flanders",
-         Area = as.numeric(st_area(geom)) / 1e6) %>%
+  mutate(
+    regio = "Flanders",
+    Area = as.numeric(st_area(geom)) / 1e6
+  ) %>%
   select(regio, Area, everything())
 
 ### Calculate area per stratum
 strata_sf <- steekproefkader %>%
   mutate(regio = ifelse(grepl("\\sleemstreek$", regio),
-                        "Leemstreek", regio)) %>%
+    "Leemstreek", regio
+  )) %>%
   st_buffer(dist = 300) %>%
   group_by(regio, "openheid" = openheid_klasse, sbp) %>%
   summarise(geom = st_union(geom)) %>%
@@ -278,9 +319,9 @@ flanders_sf %>%
 # Visualisation
 flanders_sf %>%
   ggplot() +
-    geom_sf(aes(fill = regio)) +
-    labs(fill = "") +
-    theme(legend.position = "bottom")
+  geom_sf(aes(fill = regio)) +
+  labs(fill = "") +
+  theme(legend.position = "bottom")
 ```
 
 Per landbouwregio:
@@ -299,9 +340,9 @@ Als we de oppervlakte optellen komen we dezelfde oppervlakte uit als volledig Vl
 # Visualisation
 region_sf %>%
   ggplot() +
-    geom_sf(aes(fill = regio)) +
-    labs(fill = "") +
-    theme(legend.position = "bottom")
+  geom_sf(aes(fill = regio)) +
+  labs(fill = "") +
+  theme(legend.position = "bottom")
 ```
 
 Per stratum:
@@ -328,10 +369,10 @@ for (region in sort(unique(strata_sf$regio))) {
     filter(regio == region) %>%
     mutate(stratum = paste(openheid, sbp, sep = " - ")) %>%
     ggplot() +
-      geom_sf(aes(fill = stratum)) +
-      facet_wrap(~regio, ncol = 2) +
-      labs(fill = "") +
-      theme(legend.position = "bottom")
+    geom_sf(aes(fill = stratum)) +
+    facet_wrap(~regio, ncol = 2) +
+    labs(fill = "") +
+    theme(legend.position = "bottom")
   print(p)
 }
 ```
@@ -340,8 +381,11 @@ We willen een densiteitsschatting voor elk stratum. We maken daarom dataframes o
 
 ```{r}
 design <- read_csv(
-  file.path(mbag_dir, "data", "steekproefkaders",
-            "steekproef_avimap_mbag_mas.csv"))  %>%
+  file.path(
+    mbag_dir, "data", "steekproefkaders",
+    "steekproef_avimap_mbag_mas.csv"
+  )
+) %>%
   mutate(regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio))
 
 # Oppervlakte per stratum
@@ -356,18 +400,22 @@ effort <- 1
 
 sample_table <- design %>%
   distinct(pointid, regio, openheid = openheid_klasse, sbp) %>%
-  mutate(Region.Label = paste(regio, openheid, sbp, sep = " - "),
-         Effort = effort) %>%
+  mutate(
+    Region.Label = paste(regio, openheid, sbp, sep = " - "),
+    Effort = effort
+  ) %>%
   select(Sample.Label = pointid, Region.Label, Effort)
 
 # Waarnemingen per plots en strata
 obs_table <- veldleeuwerik_2024_df %>%
-  group_by(periode_in_jaar,  plotnaam) %>%
+  group_by(periode_in_jaar, plotnaam) %>%
   mutate(n = n()) %>%
   slice_max(order_by = n, n = 1) %>%
   ungroup() %>%
-  mutate(Region.Label = paste(regio, openheid = openheid_klasse, sbp,
-                              sep = " - ")) %>%
+  mutate(Region.Label = paste(regio,
+    openheid = openheid_klasse, sbp,
+    sep = " - "
+  )) %>%
   select(object = oid, Region.Label, Sample.Label = plotnaam)
 ```
 
@@ -383,17 +431,21 @@ conversion_factor <- convert_units("meter", NULL, "Square kilometer")
 We beschouwen voor de formulatie van de detectiefunctie de half-normal en hazard-rate sleutelfuncties die we laten afhangen van `openheid`.
 
 ```{r}
-veldleeuwerik_dist_hn <- ds(data = veldleeuwerik_distance, key = "hn", 
-  formula = ~openheid, adjustment = NULL, truncation = 300, 
-  transect = "point", dht_group = FALSE, 
-  convert_units = conversion_factor, region_table = region_table, 
-  sample_table = sample_table, obs_table = obs_table)
+veldleeuwerik_dist_hn <- ds(
+  data = veldleeuwerik_distance, key = "hn",
+  formula = ~openheid, adjustment = NULL, truncation = 300,
+  transect = "point", dht_group = FALSE,
+  convert_units = conversion_factor, region_table = region_table,
+  sample_table = sample_table, obs_table = obs_table
+)
 
-veldleeuwerik_dist_hr <- ds(data = veldleeuwerik_distance, key = "hr", 
-  formula = ~openheid, adjustment = NULL, truncation = 300, 
-  transect = "point", dht_group = FALSE, 
-  convert_units = conversion_factor, region_table = region_table, 
-  sample_table = sample_table, obs_table = obs_table)
+veldleeuwerik_dist_hr <- ds(
+  data = veldleeuwerik_distance, key = "hr",
+  formula = ~openheid, adjustment = NULL, truncation = 300,
+  transect = "point", dht_group = FALSE,
+  convert_units = conversion_factor, region_table = region_table,
+  sample_table = sample_table, obs_table = obs_table
+)
 ```
 
 ### Model selectie
@@ -404,9 +456,9 @@ Het Hazard-rate model scoort beter.
 
 ```{r}
 summarize_ds_models(
-    veldleeuwerik_dist_hn,
-    veldleeuwerik_dist_hr
-  ) %>%
+  veldleeuwerik_dist_hn,
+  veldleeuwerik_dist_hr
+) %>%
   kable()
 ```
 
@@ -423,17 +475,25 @@ von_mises
 plot(veldleeuwerik_dist_hr, pdf = TRUE, showpoints = TRUE)
 
 # Plot separately for covariate categories
-plot(veldleeuwerik_dist_hr, pdf = TRUE, showpoints = FALSE,
-   subset = openheid == "HOL",
-   main = "HOL", pl.col = alpha("green", 0.5))
-add.df.covar.line(veldleeuwerik_dist_hr, lwd = 3, lty = 1, col = "green",
-  data = data.frame(openheid = "HOL"), pdf = TRUE)
+plot(veldleeuwerik_dist_hr,
+  pdf = TRUE, showpoints = FALSE,
+  subset = openheid == "HOL",
+  main = "HOL", pl.col = alpha("green", 0.5)
+)
+add.df.covar.line(veldleeuwerik_dist_hr,
+  lwd = 3, lty = 1, col = "green",
+  data = data.frame(openheid = "HOL"), pdf = TRUE
+)
 
-plot(veldleeuwerik_dist_hr, pdf = TRUE, showpoints = FALSE,
-   subset = openheid == "OL",
-   main = "OL", pl.col = alpha("red", 0.5))
-add.df.covar.line(veldleeuwerik_dist_hr, lwd = 3, lty = 1, col = "red",
-  data = data.frame(openheid = "OL"), pdf = TRUE)
+plot(veldleeuwerik_dist_hr,
+  pdf = TRUE, showpoints = FALSE,
+  subset = openheid == "OL",
+  main = "OL", pl.col = alpha("red", 0.5)
+)
+add.df.covar.line(veldleeuwerik_dist_hr,
+  lwd = 3, lty = 1, col = "red",
+  data = data.frame(openheid = "OL"), pdf = TRUE
+)
 par(mfrow = c(1, 1))
 ```
 
@@ -446,11 +506,14 @@ sum_dist_veldleeuwerik <- summary(veldleeuwerik_dist_hr)
 Detectiekans:
 
 ```{r}
-cbind(veldleeuwerik_dist_hr$ddf$data, 
-      "p(z)" = predict(veldleeuwerik_dist_hr, 
-                       se.fit = TRUE)$fitted, 
-      "standard error" = predict(veldleeuwerik_dist_hr, 
-                                 se.fit = TRUE)$se) %>%
+cbind(veldleeuwerik_dist_hr$ddf$data,
+  "p(z)" = predict(veldleeuwerik_dist_hr,
+    se.fit = TRUE
+  )$fitted,
+  "standard error" = predict(veldleeuwerik_dist_hr,
+    se.fit = TRUE
+  )$se
+) %>%
   select("openheid", "p(z)", "standard error") %>%
   distinct() %>%
   arrange(openheid) %>%
@@ -475,7 +538,7 @@ Densiteit:
 ```{r, warning=FALSE}
 density_veldleeuwerik_tot <- density_veldleeuwerik[
   density_veldleeuwerik$Label == "Total", "Estimate"
-  ]
+]
 
 density_veldleeuwerik %>%
   select(stratum = Label, densiteit = Estimate, ll = lcl, ul = ucl) %>%
@@ -490,11 +553,13 @@ density_veldleeuwerik %>%
   separate(stratum, into = c("regio", "openheid", "sbp"), sep = " - ") %>%
   mutate(stratum = paste(openheid, sbp, sep = " - ")) %>%
   ggplot(aes(x = openheid, y = densiteit, colour = sbp)) +
-    geom_point(position = position_dodge(width = 0.5)) +
-    geom_errorbar(aes(ymin = ll, ymax = ul), width = 0.2,
-                  position = position_dodge(width = 0.5)) +
-    labs(y = "aantal broedparen per 100 ha", x = "") +
-    facet_wrap(~regio, ncol = 2, scales = "free")
+  geom_point(position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = ll, ymax = ul),
+    width = 0.2,
+    position = position_dodge(width = 0.5)
+  ) +
+  labs(y = "aantal broedparen per 100 ha", x = "") +
+  facet_wrap(~regio, ncol = 2, scales = "free")
 ```
 
 Voor de Weidestreek zijn we niet van plan densiteiten te rapporteren op stratumniveau.
@@ -534,18 +599,20 @@ sample_table2 <- design %>%
 
 # Observations per plots en regions
 obs_table2 <- veldleeuwerik_2024_df %>%
-  group_by(periode_in_jaar,  plotnaam) %>%
+  group_by(periode_in_jaar, plotnaam) %>%
   mutate(n = n()) %>%
   slice_max(order_by = n, n = 1) %>%
   ungroup() %>%
   select(object = oid, Region.Label = regio, Sample.Label = plotnaam)
 
 # Distance sampling
-veldleeuwerik_dist_hr2 <- ds(data = veldleeuwerik_distance, key = "hr", 
-  formula = ~openheid, adjustment = NULL, truncation = 300, 
-  transect = "point", dht_group = FALSE, 
-  convert_units = conversion_factor, region_table = region_table2, 
-  sample_table = sample_table2, obs_table = obs_table2)
+veldleeuwerik_dist_hr2 <- ds(
+  data = veldleeuwerik_distance, key = "hr",
+  formula = ~openheid, adjustment = NULL, truncation = 300,
+  transect = "point", dht_group = FALSE,
+  convert_units = conversion_factor, region_table = region_table2,
+  sample_table = sample_table2, obs_table = obs_table2
+)
 ```
 
 ### Resultaten
@@ -557,11 +624,14 @@ sum_dist_veldleeuwerik2 <- summary(veldleeuwerik_dist_hr2)
 Detectiekans:
 
 ```{r}
-cbind(veldleeuwerik_dist_hr2$ddf$data, 
-      "p(z)" = predict(veldleeuwerik_dist_hr2, 
-                       se.fit = TRUE)$fitted, 
-      "standard error" = predict(veldleeuwerik_dist_hr2, 
-                                 se.fit = TRUE)$se) %>%
+cbind(veldleeuwerik_dist_hr2$ddf$data,
+  "p(z)" = predict(veldleeuwerik_dist_hr2,
+    se.fit = TRUE
+  )$fitted,
+  "standard error" = predict(veldleeuwerik_dist_hr2,
+    se.fit = TRUE
+  )$se
+) %>%
   select("openheid", "p(z)", "standard error") %>%
   distinct() %>%
   arrange(openheid) %>%
@@ -577,7 +647,7 @@ Densiteit:
 ```{r, warning=FALSE}
 density_veldleeuwerik2_tot <- density_veldleeuwerik2[
   density_veldleeuwerik2$Label == "Total", "Estimate"
-  ]
+]
 
 density_veldleeuwerik2 %>%
   select(regio = Label, densiteit = Estimate, ll = lcl, ul = ucl) %>%
@@ -589,9 +659,9 @@ density_veldleeuwerik2 %>%
   filter(Label != "Total") %>%
   select(regio = Label, densiteit = Estimate, ll = lcl, ul = ucl) %>%
   ggplot(aes(x = regio, y = densiteit)) +
-    geom_point(size = 3) +
-    geom_errorbar(aes(ymin = ll, ymax = ul), width = 0.2, linewidth = 1) +
-    labs(y = "aantal broedparen per 100 ha", x = "")
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = ll, ymax = ul), width = 0.2, linewidth = 1) +
+  labs(y = "aantal broedparen per 100 ha", x = "")
 ```
 
 De detectiekans is dezelfde als voordien.
@@ -628,11 +698,13 @@ obs_table3 <- veldleeuwerik_2024_df %>%
   select(object = oid, Region.Label = regio, Sample.Label = plotnaam)
 
 # Distance sampling
-veldleeuwerik_dist_hr3 <- ds(data = veldleeuwerik_distance, key = "hr", 
-  formula = ~openheid, adjustment = NULL, truncation = 300, 
-  transect = "point", dht_group = FALSE, 
-  convert_units = conversion_factor, region_table = region_table2, 
-  sample_table = sample_table3, obs_table = obs_table3)
+veldleeuwerik_dist_hr3 <- ds(
+  data = veldleeuwerik_distance, key = "hr",
+  formula = ~openheid, adjustment = NULL, truncation = 300,
+  transect = "point", dht_group = FALSE,
+  convert_units = conversion_factor, region_table = region_table2,
+  sample_table = sample_table3, obs_table = obs_table3
+)
 ```
 
 ### Resultaten
@@ -644,11 +716,14 @@ sum_dist_veldleeuwerik3 <- summary(veldleeuwerik_dist_hr3)
 Detectiekans:
 
 ```{r}
-cbind(veldleeuwerik_dist_hr3$ddf$data, 
-      "p(z)" = predict(veldleeuwerik_dist_hr3, 
-                       se.fit = TRUE)$fitted, 
-      "standard error" = predict(veldleeuwerik_dist_hr3, 
-                                 se.fit = TRUE)$se) %>%
+cbind(veldleeuwerik_dist_hr3$ddf$data,
+  "p(z)" = predict(veldleeuwerik_dist_hr3,
+    se.fit = TRUE
+  )$fitted,
+  "standard error" = predict(veldleeuwerik_dist_hr3,
+    se.fit = TRUE
+  )$se
+) %>%
   select("openheid", "p(z)", "standard error") %>%
   distinct() %>%
   arrange(openheid) %>%
@@ -674,13 +749,17 @@ density_veldleeuwerik3 %>%
   bind_rows(
     density_veldleeuwerik2 %>%
       filter(Label != "Total") %>%
-      mutate(Dataset = "maxima (effort = 1)")) %>%
+      mutate(Dataset = "maxima (effort = 1)")
+  ) %>%
   select(regio = Label, Dataset, densiteit = Estimate, ll = lcl, ul = ucl) %>%
   ggplot(aes(x = regio, y = densiteit, colour = Dataset)) +
-    geom_point(size = 3, position = position_dodge(width = 0.5)) +
-    geom_errorbar(aes(ymin = ll, ymax = ul), width = 0.2, linewidth = 1,
-                  position = position_dodge(width = 0.5)) +
-    labs(y = "aantal broedparen per 100 ha", x = "")
+  geom_point(size = 3, position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = ll, ymax = ul),
+    width = 0.2, linewidth = 1,
+    position = position_dodge(width = 0.5)
+  ) +
+  labs(y = "aantal broedparen per 100 ha", x = "") +
+  theme(legend.position = "bottom")
 ```
 
 Aan alle verwachtingen is voldaan.
