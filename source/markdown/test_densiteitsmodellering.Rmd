@@ -47,7 +47,7 @@ targets_store <- here::here("source", "targets", "data_preparation", "_targets")
 
 # Achtergrond
 
-In kader van het meetnet agrarische soorten (MAS), worden vogels en Haas gemonitord volgens een vast protocol. Hierbij geven tellers waarnemingen in vanaf een telpunt tot 300 meter ver. Dit doen ze 4x per jaar. Doordat we de afstand van de teller tot de waarneming kennen, kunnen we de detectiekans per soort schatten en vervolgens de werkelijke densiteit berekenen (incl. onzekerheid).
+In kader van het meetnet agrarische soorten (MAS), worden vogels en Haas gemonitord volgens een vast protocol. Hierbij geven tellers waarnemingen in vanaf een telpunt tot 300 meter ver. Dit doen ze 4 x per jaar. Doordat we de afstand van de teller tot de waarneming kennen, kunnen we de detectiekans per soort schatten en vervolgens de werkelijke densiteit berekenen (incl. onzekerheid).
 
 Het meetnet dekt verschillende strata: landbouwregio’s, soortbeschermingsplan (SBP; binnen of buiten) en openheid landschap (OL: open landschap, HOL: half-open landschap).
 
@@ -452,7 +452,7 @@ veldleeuwerik_dist_hr <- ds(
 
 We vergelijken de AIC van de verschillende modellen.
 Als het verschil tussen AIC’s kleiner is dan 2, kiezen we het eenvoudigste van deze modellen (model met minste parameters).
-Het Hazard-rate model scoort beter.
+Het hazard-rate model scoort beter.
 
 ```{r}
 summarize_ds_models(
@@ -562,7 +562,7 @@ density_veldleeuwerik %>%
   facet_wrap(~regio, ncol = 2, scales = "free")
 ```
 
-Voor de Weidestreek zijn we niet van plan densiteiten te rapporteren op stratumniveau.
+Voor de Weidestreek zijn we niet van plan densiteiten te rapporteren op stratum-niveau.
 Voor deze oefening zijn deze hier toch getoond.
 Voor de Weidestreek zullen we enkel op niveau van de landbouwstreek rapporteren (zie verder).
 
