@@ -1,0 +1,802 @@
+---
+title: "Test density estimation and modelling"
+author: "Ward Langeraert"
+date: "`r Sys.Date()`"
+output:
+  bookdown::html_document2:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../../output/rapporten/markdown/2024") })
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+# set up
+library(knitr)
+opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  out.width = "100%"
+)
+opts_knit$set(root.dir = here::here())
+```
+
+```{r}
+# packages
+library(tidyverse)
+library(Distance)
+library(targets)
+library(sf)
+
+library(INBOtheme)
+theme_set(theme_inbo(transparent = TRUE))
+
+# Conflicts
+conflicted::conflicts_prefer(dplyr::filter)
+conflicted::conflicts_prefer(dplyr::select)
+
+# Paths
+mbag_dir <- here::here()
+targets_store <- here::here("source", "targets", "data_preparation", "_targets")
+```
+
+# Achtergrond
+
+In kader van het meetnet agrarische soorten (MAS), worden vogels en Haas gemonitord volgens een vast protocol. Hierbij geven tellers waarnemingen in vanaf een telpunt tot 300 meter ver. Dit doen ze 4 x per jaar. Doordat we de afstand van de teller tot de waarneming kennen, kunnen we de detectiekans per soort schatten en vervolgens de werkelijke densiteit berekenen (incl. onzekerheid).
+
+Het meetnet dekt verschillende strata: landbouwregio’s, soortbeschermingsplan (SBP; binnen of buiten) en openheid landschap (OL: open landschap, HOL: half-open landschap).
+
+We willen de volgende onderzoeksvragen beantwoorden.
+
+- Wat is de detectiekans van de soorten binnen het MAS?
+- Wat is de densiteit van soorten binnen het MAS?
+  - Per stratum
+  - Per landbouwregio
+  - Vlaanderen (steekproefkader)
+- Hoe is de densiteit van doelsoorten verspreid in Vlaanderen?
+- Kunnen we kerngebieden afbakenen voor doelsoorten binnen Vlaanderen?
+
+We willen deze analyses automatiseren via een [targets pipeline](https://books.ropensci.org/targets/) die we branchen per jaar en per soort.
+Hiervoor moeten we eerst enkele dingen uittesten:
+
+- Kunnen we de detectiecurve fitten op alle data en de densiteitsschatting op een subset van de data toepassen (maxima)?
+- Hoe creëren we een spatiaal model voor densiteiten? Hoe nemen we de detectiekans en onzekerheid mee?
+
+# Test data
+
+We doen de analyses voor 1 branch van de targets pipeline. Namelijk voor de Veldleeuwerik in 2024.
+We selecteren alle waarnemingen met broedcode > 0.
+Alle aantallen met broedcode > 0 zijn 1.
+
+> Broedcodes ok?
+
+```{r}
+# Load mas data
+mas_data_clean <- tar_read("mas_data_clean", store = targets_store)
+
+# Select data Veldleeuwerik 2024
+veldleeuwerik_2024_df <- mas_data_clean %>%
+  filter(
+    naam == "Veldleeuwerik",
+    jaar == 2024,
+    wrntype > 0
+  ) %>%
+  mutate(
+    aantal = 1,
+    regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio),
+    stratum = paste(openheid_klasse, sbp, sep = " - ")
+  ) %>%
+  st_drop_geometry()
+```
+
+We kijken naar het aantal broedparen per regio.
+
+```{r}
+# Visualise
+veldleeuwerik_2024_df %>%
+  ggplot(aes(x = periode_in_jaar, fill = wrntype)) +
+  geom_bar() +
+  facet_wrap(~regio, scales = "free") +
+  labs(x = "Telperiode", y = "Aantal broedparen", fill = "broedcode")
+```
+
+En de per stratum.
+
+```{r}
+# Visualise
+veldleeuwerik_2024_df %>%
+  ggplot(aes(x = periode_in_jaar, fill = stratum)) +
+  geom_bar() +
+  facet_wrap(~regio, scales = "free") +
+  labs(x = "Telperiode", y = "Aantal broedparen", fill = "Stratum")
+```
+
+Alle telperiodes bevinden zich binnen de datumgrenzen.
+We nemen alle telperiode dus mee voor de densiteitsschattingen.
+
+```{r}
+# Load breeding dates file
+datumgrenzen_df <- read_csv2(
+  file.path(
+    mbag_dir, "data", "SOVON",
+    "Interpretatie_Criteria_Broedvogels_v2.csv"
+  )
+)
+
+# Tidy dataframe
+trans_vec <- c("jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug")
+
+datumgrenzen_df2 <- datumgrenzen_df %>%
+  mutate(across(Datum_begin:`Datum eind_oud`, ~ gsub("-", "/", .x))) %>%
+  separate(Datum_begin,
+    into = c("Datum_begin_dag", "Datum_begin_maand"),
+    sep = "/"
+  ) %>%
+  separate(Datum_eind,
+    into = c("Datum_eind_dag", "Datum_eind_maand"),
+    sep = "/"
+  ) %>%
+  separate(`Datum begin_oud`,
+    into = c(
+      "Datum_begin_dag_oud",
+      "Datum_begin_maand_oud"
+    ),
+    sep = "/"
+  ) %>%
+  separate(`Datum eind_oud`,
+    into = c(
+      "Datum_eind_dag_oud",
+      "Datum_eind_maand_oud"
+    ),
+    sep = "/"
+  ) %>%
+  mutate(
+    Datum_begin_maand = match(Datum_begin_maand, trans_vec),
+    datum_begin = paste(Datum_begin_maand, Datum_begin_dag, sep = "-")
+  ) %>%
+  mutate(
+    Datum_eind_maand = match(Datum_eind_maand, trans_vec),
+    datum_eind = paste(Datum_eind_maand, Datum_eind_dag, sep = "-")
+  ) %>%
+  mutate(
+    Datum_begin_maand_oud = match(Datum_begin_maand_oud, trans_vec),
+    datum_begin_oud = paste(Datum_begin_maand_oud, Datum_begin_dag_oud,
+      sep = "-"
+    )
+  ) %>%
+  mutate(
+    Datum_eind_maand_oud = match(Datum_eind_maand_oud, trans_vec),
+    datum_eind_oud = paste(Datum_eind_maand_oud, Datum_eind_dag_oud,
+      sep = "-"
+    )
+  ) %>%
+  mutate(across(
+    datum_begin:datum_eind_oud,
+    ~ ifelse(.x == "NA-NA", NA, .x)
+  )) %>%
+  select(
+    id = Id, soort = Soort, datum_begin, datum_eind, datum_begin_oud,
+    datum_eind_oud, broedcode, broedcode_oud = bc_oud,
+    wnm_vereist = `Waarnemingen verreist`, Opmerking
+  )
+
+# MAS dates
+r1_start <- "04-01"
+r1_stop <- "04-20"
+r2_start <- "04-21"
+r2_stop <- "05-10"
+r3_start <- "05-11"
+r3_stop <- "06-10"
+r4_start <- "06-21"
+r4_stop <- "07-15"
+
+# Classify
+datumgrenzen_mas <- datumgrenzen_df2 %>%
+  select(id, soort, datum_begin, datum_eind) %>%
+  mutate(
+    jaar = 2024,
+    datum_begin2 = ymd(paste(jaar, datum_begin, sep = "-")),
+    datum_eind2 = ymd(paste(jaar, datum_eind, sep = "-")),
+    R1 = ifelse(ymd(paste(jaar, r1_start, sep = "-")) %within%
+      interval(datum_begin2, datum_eind2) &
+      ymd(paste(jaar, r1_stop, sep = "-")) %within%
+        interval(datum_begin2, datum_eind2), TRUE, FALSE),
+    R2 = ifelse(ymd(paste(jaar, r2_start, sep = "-")) %within%
+      interval(datum_begin2, datum_eind2) &
+      ymd(paste(jaar, r2_stop, sep = "-")) %within%
+        interval(datum_begin2, datum_eind2), TRUE, FALSE),
+    R3 = ifelse(ymd(paste(jaar, r3_start, sep = "-")) %within%
+      interval(datum_begin2, datum_eind2) &
+      ymd(paste(jaar, r3_stop, sep = "-")) %within%
+        interval(datum_begin2, datum_eind2), TRUE, FALSE),
+    R4 = ifelse(ymd(paste(jaar, r4_start, sep = "-")) %within%
+      interval(datum_begin2, datum_eind2) &
+      ymd(paste(jaar, r4_stop, sep = "-")) %within%
+        interval(datum_begin2, datum_eind2), TRUE, FALSE)
+  ) %>%
+  select(id, soort, datum_begin, datum_eind, R1, R2, R3, R4)
+
+# Show results Veldleeuwerik
+datumgrenzen_mas %>%
+  filter(soort == "Veldleeuwerik") %>%
+  kable()
+```
+
+Ten slotte kijken we naar de afstanden.
+
+```{r}
+# Visualise
+veldleeuwerik_2024_df %>%
+  ggplot(aes(x = distance2plot, fill = stratum)) +
+  geom_histogram() +
+  facet_wrap(~regio, scales = "free") +
+  labs(x = "Afstand (m)", y = "Aantal broedparen", fill = "Stratum")
+```
+
+# Distance sampling
+## Test workflow
+
+We schatten de detectiekans en densiteiten via distance sampling.
+We beschouwen voor de formulatie van de detectiefunctie de half-normal en hazard-rate sleutelfuncties die we laten afhangen van `openheid`.
+
+### Data preparatie
+
+We hebben een kolom `object` nodig: volgnummer voor elke waarneming; een kolom `size`: aantal broedparen per waarneming (overal 1); een kolom `distance`: afstand tot elke waarneming; kolommen met covariaten (hier 1 variabele): `openheid`.
+
+```{r}
+veldleeuwerik_distance <- veldleeuwerik_2024_df %>%
+  select(
+    object = oid,
+    size = aantal,
+    distance = distance2plot,
+    openheid = openheid_klasse
+  )
+```
+
+Om abundanties te schatten, moeten we de oppervlakte van de strata berekenen voor extrapolatie. We trekken een buffer van 300 m rond het steekproefkader.
+
+```{r}
+# Lees steekproefkader in
+steekproefkader <- st_read(
+  file.path(
+    mbag_dir, "data", "steekproefkaders",
+    "steekproefkader_mbag_mas.gpkg"
+  )
+)
+
+# Buffer and area
+### Calculate area per region
+region_sf <- steekproefkader %>%
+  mutate(regio = ifelse(grepl("\\sleemstreek$", regio),
+    "Leemstreek", regio
+  )) %>%
+  st_buffer(dist = 300) %>%
+  group_by(regio) %>%
+  summarise(geom = st_union(geom)) %>%
+  ungroup() %>%
+  mutate(Area = as.numeric(st_area(geom)) / 1e6) %>%
+  select(regio, Area, everything())
+
+### Calculate area for Flanders
+flanders_sf <- steekproefkader %>%
+  st_buffer(dist = 300) %>%
+  summarise(geom = st_union(geom)) %>%
+  ungroup() %>%
+  mutate(
+    regio = "Flanders",
+    Area = as.numeric(st_area(geom)) / 1e6
+  ) %>%
+  select(regio, Area, everything())
+
+### Calculate area per stratum
+strata_sf <- steekproefkader %>%
+  mutate(regio = ifelse(grepl("\\sleemstreek$", regio),
+    "Leemstreek", regio
+  )) %>%
+  st_buffer(dist = 300) %>%
+  group_by(regio, "openheid" = openheid_klasse, sbp) %>%
+  summarise(geom = st_union(geom)) %>%
+  ungroup() %>%
+  mutate(Area = as.numeric(st_area(geom)) / 1e6) %>%
+  select(regio, openheid, sbp, Area, everything())
+```
+
+Voor Vlaanderen:
+
+```{r}
+flanders_sf %>%
+  st_drop_geometry() %>%
+  rename("opp. (km²)" = "Area") %>%
+  kable(digits = 3)
+```
+
+```{r}
+# Visualisation
+flanders_sf %>%
+  ggplot() +
+  geom_sf(aes(fill = regio)) +
+  labs(fill = "") +
+  theme(legend.position = "bottom")
+```
+
+Per landbouwregio:
+
+```{r}
+region_sf %>%
+  st_drop_geometry() %>%
+  mutate(`tot. opp. (km²)` = sum(Area)) %>%
+  rename("opp. (km²)" = "Area") %>%
+  kable(digits = 3)
+```
+
+Als we de oppervlakte optellen komen we dezelfde oppervlakte uit als volledig Vlaanderen.
+
+```{r}
+# Visualisation
+region_sf %>%
+  ggplot() +
+  geom_sf(aes(fill = regio)) +
+  labs(fill = "") +
+  theme(legend.position = "bottom")
+```
+
+Per stratum:
+
+```{r}
+strata_sf %>%
+  st_drop_geometry() %>%
+  group_by(regio) %>%
+  mutate(`tot. opp. regio (km²)` = sum(Area)) %>%
+  ungroup() %>%
+  mutate(`totale oppervlakte (km²)` = sum(Area)) %>%
+  rename("opp. (km²)" = "Area") %>%
+  kable(digits = 3)
+```
+
+Als we de oppervlakte optellen komen we niet dezelfde oppervlakte uit als voor de regio's en volledig Vlaanderen!
+Dit wil zeggen dat we een apart model moeten fitten voor regio's en specifieke strata.
+Voor Vlaanderen krijgen we een schatting via het regio's model.
+
+```{r, fig.width = 10}
+# Visualisation
+for (region in sort(unique(strata_sf$regio))) {
+  p <- strata_sf %>%
+    filter(regio == region) %>%
+    mutate(stratum = paste(openheid, sbp, sep = " - ")) %>%
+    ggplot() +
+    geom_sf(aes(fill = stratum)) +
+    facet_wrap(~regio, ncol = 2) +
+    labs(fill = "") +
+    theme(legend.position = "bottom")
+  print(p)
+}
+```
+
+We willen een densiteitsschatting voor elk stratum. We maken daarom dataframes om de abundanties en densiteiten te berekenen. `region_table` met de oppervlaktes per stratum (regio-openheid-sbp), `sample_table` geeft aan welke plots in welke strata voorkomen en welke effort is geleverd (effort is gelijk aan het aantal beschouwde telperiodes per jaar) en `obs_table` die aangeeft welke waarnemingen in welke plots en strata zitten. We selecteren enkel de data per telpunt in de periode met het meeste waarnemingen.
+
+```{r}
+design <- read_csv(
+  file.path(
+    mbag_dir, "data", "steekproefkaders",
+    "steekproef_avimap_mbag_mas.csv"
+  )
+) %>%
+  mutate(regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio))
+
+# Oppervlakte per stratum
+region_table <- strata_sf %>%
+  st_drop_geometry() %>%
+  mutate(stratum = paste(openheid, sbp, sep = " - ")) %>%
+  mutate(Region.Label = paste(regio, openheid, sbp, sep = " - ")) %>%
+  select(Region.Label, Area)
+
+# Effort per sample en plot per stratum
+effort <- 1
+
+sample_table <- design %>%
+  distinct(pointid, regio, openheid = openheid_klasse, sbp) %>%
+  mutate(
+    Region.Label = paste(regio, openheid, sbp, sep = " - "),
+    Effort = effort
+  ) %>%
+  select(Sample.Label = pointid, Region.Label, Effort)
+
+# Waarnemingen per plots en strata
+obs_table <- veldleeuwerik_2024_df %>%
+  group_by(periode_in_jaar, plotnaam) %>%
+  mutate(n = n()) %>%
+  slice_max(order_by = n, n = 1) %>%
+  ungroup() %>%
+  mutate(Region.Label = paste(regio,
+    openheid = openheid_klasse, sbp,
+    sep = " - "
+  )) %>%
+  select(object = oid, Region.Label, Sample.Label = plotnaam)
+```
+
+Ten slotte zet de conversiefactor de afstanden om van meter naar vierkante kilometer (= 100 ha).
+
+```{r}
+# Conversion factor from meters to 100 hectares
+conversion_factor <- convert_units("meter", NULL, "Square kilometer")
+```
+
+### Model specificatie
+
+We beschouwen voor de formulatie van de detectiefunctie de half-normal en hazard-rate sleutelfuncties die we laten afhangen van `openheid`.
+
+```{r}
+veldleeuwerik_dist_hn <- ds(
+  data = veldleeuwerik_distance, key = "hn",
+  formula = ~openheid, adjustment = NULL, truncation = 300,
+  transect = "point", dht_group = FALSE,
+  convert_units = conversion_factor, region_table = region_table,
+  sample_table = sample_table, obs_table = obs_table
+)
+
+veldleeuwerik_dist_hr <- ds(
+  data = veldleeuwerik_distance, key = "hr",
+  formula = ~openheid, adjustment = NULL, truncation = 300,
+  transect = "point", dht_group = FALSE,
+  convert_units = conversion_factor, region_table = region_table,
+  sample_table = sample_table, obs_table = obs_table
+)
+```
+
+### Model selectie
+
+We vergelijken de AIC van de verschillende modellen.
+Als het verschil tussen AIC’s kleiner is dan 2, kiezen we het eenvoudigste van deze modellen (model met minste parameters).
+Het hazard-rate model scoort beter.
+
+```{r}
+summarize_ds_models(
+  veldleeuwerik_dist_hn,
+  veldleeuwerik_dist_hr
+) %>%
+  kable()
+```
+
+### Model fit
+
+Om te controleren of ons model goed past bij de data (“goodness of fit”) maken we een Q-Q plot waarbij de cumulatieve distributiefunctie van de gefitte detectiefunctie (CDF) wordt vergeleken met de distributie van de data (EDF). De Cramér-von Mises test kwantificeert de informatie van de Q-Q-plot door te testen of punten van de EDF en CDF uit dezelfde verdeling komen. Voor studies met punttransecten geven kansdichtheidsfunctieplots ook een goed idee over model fit.
+
+De fit is niet perfect, maar goed genoeg voor deze oefening.
+
+```{r, fig.heigth = 20}
+par(mfrow = c(2, 2))
+von_mises <- gof_ds(veldleeuwerik_dist_hr)
+von_mises
+plot(veldleeuwerik_dist_hr, pdf = TRUE, showpoints = TRUE)
+
+# Plot separately for covariate categories
+plot(veldleeuwerik_dist_hr,
+  pdf = TRUE, showpoints = FALSE,
+  subset = openheid == "HOL",
+  main = "HOL", pl.col = alpha("green", 0.5)
+)
+add.df.covar.line(veldleeuwerik_dist_hr,
+  lwd = 3, lty = 1, col = "green",
+  data = data.frame(openheid = "HOL"), pdf = TRUE
+)
+
+plot(veldleeuwerik_dist_hr,
+  pdf = TRUE, showpoints = FALSE,
+  subset = openheid == "OL",
+  main = "OL", pl.col = alpha("red", 0.5)
+)
+add.df.covar.line(veldleeuwerik_dist_hr,
+  lwd = 3, lty = 1, col = "red",
+  data = data.frame(openheid = "OL"), pdf = TRUE
+)
+par(mfrow = c(1, 1))
+```
+
+### Resultaten
+
+```{r}
+sum_dist_veldleeuwerik <- summary(veldleeuwerik_dist_hr)
+```
+
+Detectiekans:
+
+```{r}
+cbind(veldleeuwerik_dist_hr$ddf$data,
+  "p(z)" = predict(veldleeuwerik_dist_hr,
+    se.fit = TRUE
+  )$fitted,
+  "standard error" = predict(veldleeuwerik_dist_hr,
+    se.fit = TRUE
+  )$se
+) %>%
+  select("openheid", "p(z)", "standard error") %>%
+  distinct() %>%
+  arrange(openheid) %>%
+  kable()
+```
+
+```{r}
+abundance_veldleeuwerik <- sum_dist_veldleeuwerik$dht$individuals$N
+density_veldleeuwerik <- sum_dist_veldleeuwerik$dht$individuals$D
+```
+
+Abundantie:
+
+```{r}
+abundance_veldleeuwerik %>%
+  select(stratum = Label, abundantie = Estimate, ll = lcl, ul = ucl) %>%
+  kable(digits = 3)
+```
+
+Densiteit:
+
+```{r, warning=FALSE}
+density_veldleeuwerik_tot <- density_veldleeuwerik[
+  density_veldleeuwerik$Label == "Total", "Estimate"
+]
+
+density_veldleeuwerik %>%
+  select(stratum = Label, densiteit = Estimate, ll = lcl, ul = ucl) %>%
+  separate(stratum, into = c("regio", "openheid", "sbp"), sep = " - ") %>%
+  kable(digits = 3)
+```
+
+```{r}
+density_veldleeuwerik %>%
+  filter(Label != "Total") %>%
+  select(stratum = Label, densiteit = Estimate, ll = lcl, ul = ucl) %>%
+  separate(stratum, into = c("regio", "openheid", "sbp"), sep = " - ") %>%
+  mutate(stratum = paste(openheid, sbp, sep = " - ")) %>%
+  ggplot(aes(x = openheid, y = densiteit, colour = sbp)) +
+  geom_point(position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = ll, ymax = ul),
+    width = 0.2,
+    position = position_dodge(width = 0.5)
+  ) +
+  labs(y = "aantal broedparen per 100 ha", x = "") +
+  facet_wrap(~regio, ncol = 2, scales = "free")
+```
+
+Voor de Weidestreek zijn we niet van plan densiteiten te rapporteren op stratum-niveau.
+Voor deze oefening zijn deze hier toch getoond.
+Voor de Weidestreek zullen we enkel op niveau van de landbouwstreek rapporteren (zie verder).
+
+### Conclusie en vragen
+
+De workflow werkt zoals verwacht.
+
+- Hoe krijgen we confidence limits voor de detectiekans? Wat is de distributie van detectiekans?
+- We moeten het model ook fitten voor densiteitsschattingen per regio. Is de detectiekans hetzelfde? We verwachten van wel.
+- Hebben we correct met de maxima kunnen werken?
+
+## Distributie detectiekans
+
+> zie theorie
+
+## Densiteitsschattingen op regio en Vlaams niveau
+### Model specificatie
+
+We fitten het finale tabel als voordien, maar we maken de `region_table`, `sample_table` en `obs_table` aan op regio-niveau in plaats van op stratum-niveau.
+
+```{r}
+# Area per region
+region_table2 <- region_sf %>%
+  st_drop_geometry() %>%
+  select(Region.Label = regio, Area)
+
+# Effort per sample en plot per region
+effort <- 1
+
+sample_table2 <- design %>%
+  distinct(pointid, regio, openheid = openheid_klasse, sbp) %>%
+  mutate(Effort = effort) %>%
+  select(Sample.Label = pointid, Region.Label = regio, Effort)
+
+# Observations per plots en regions
+obs_table2 <- veldleeuwerik_2024_df %>%
+  group_by(periode_in_jaar, plotnaam) %>%
+  mutate(n = n()) %>%
+  slice_max(order_by = n, n = 1) %>%
+  ungroup() %>%
+  select(object = oid, Region.Label = regio, Sample.Label = plotnaam)
+
+# Distance sampling
+veldleeuwerik_dist_hr2 <- ds(
+  data = veldleeuwerik_distance, key = "hr",
+  formula = ~openheid, adjustment = NULL, truncation = 300,
+  transect = "point", dht_group = FALSE,
+  convert_units = conversion_factor, region_table = region_table2,
+  sample_table = sample_table2, obs_table = obs_table2
+)
+```
+
+### Resultaten
+
+```{r}
+sum_dist_veldleeuwerik2 <- summary(veldleeuwerik_dist_hr2)
+```
+
+Detectiekans:
+
+```{r}
+cbind(veldleeuwerik_dist_hr2$ddf$data,
+  "p(z)" = predict(veldleeuwerik_dist_hr2,
+    se.fit = TRUE
+  )$fitted,
+  "standard error" = predict(veldleeuwerik_dist_hr2,
+    se.fit = TRUE
+  )$se
+) %>%
+  select("openheid", "p(z)", "standard error") %>%
+  distinct() %>%
+  arrange(openheid) %>%
+  kable()
+```
+
+```{r}
+density_veldleeuwerik2 <- sum_dist_veldleeuwerik2$dht$individuals$D
+```
+
+Densiteit:
+
+```{r, warning=FALSE}
+density_veldleeuwerik2_tot <- density_veldleeuwerik2[
+  density_veldleeuwerik2$Label == "Total", "Estimate"
+]
+
+density_veldleeuwerik2 %>%
+  select(regio = Label, densiteit = Estimate, ll = lcl, ul = ucl) %>%
+  kable(digits = 3)
+```
+
+```{r}
+density_veldleeuwerik2 %>%
+  filter(Label != "Total") %>%
+  select(regio = Label, densiteit = Estimate, ll = lcl, ul = ucl) %>%
+  ggplot(aes(x = regio, y = densiteit)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = ll, ymax = ul), width = 0.2, linewidth = 1) +
+  labs(y = "aantal broedparen per 100 ha", x = "")
+```
+
+De detectiekans is dezelfde als voordien.
+Voordien (bij het stratum-model) hadden we een onderschatting van de totale densiteit binnen het steekproefkader:`r density_veldleeuwerik_tot` t.o.v. `r density_veldleeuwerik2_tot` gemiddeld aantal broedparen per 100 ha.
+Dit is omdat we bij het stratum-model geografisch overlap hebben.
+
+Om correcte schattingen te krijgen op regio- en steekproefkader-niveau, kunnen we dus het finale model herfitten op aangepaste datasets.
+
+## Densiteitsschattingen o.b.v. alle telperiodes
+### Model specificatie
+
+We fitten het regio-model opnieuw, maar deze keer gebruiken we alle data voor de densiteitsschattingen met `effort = 4`.
+Dit om uit te zoeken of het gebruik van de maxima t.o.v. alle data de verwachte uitkomst biedt.
+We verwachten:
+
+1. identieke detectiekans
+   - dezelfde data wordt gebruikt om de detectiekans te schatten als voordien
+2. lagere densiteitsschattingen
+   - door uitmiddeling sampling effort
+3. smallere betrouwbaarheidsintervallen densiteiten
+   - meer data wordt gebruikt
+
+```{r}
+# Effort per sample en plot per region
+effort <- length(unique(veldleeuwerik_2024_df$periode_in_jaar))
+
+sample_table3 <- design %>%
+  distinct(pointid, regio, openheid = openheid_klasse, sbp) %>%
+  mutate(Effort = effort) %>%
+  select(Sample.Label = pointid, Region.Label = regio, Effort)
+
+# Observations per plots en regions
+obs_table3 <- veldleeuwerik_2024_df %>%
+  select(object = oid, Region.Label = regio, Sample.Label = plotnaam)
+
+# Distance sampling
+veldleeuwerik_dist_hr3 <- ds(
+  data = veldleeuwerik_distance, key = "hr",
+  formula = ~openheid, adjustment = NULL, truncation = 300,
+  transect = "point", dht_group = FALSE,
+  convert_units = conversion_factor, region_table = region_table2,
+  sample_table = sample_table3, obs_table = obs_table3
+)
+```
+
+### Resultaten
+
+```{r}
+sum_dist_veldleeuwerik3 <- summary(veldleeuwerik_dist_hr3)
+```
+
+Detectiekans:
+
+```{r}
+cbind(veldleeuwerik_dist_hr3$ddf$data,
+  "p(z)" = predict(veldleeuwerik_dist_hr3,
+    se.fit = TRUE
+  )$fitted,
+  "standard error" = predict(veldleeuwerik_dist_hr3,
+    se.fit = TRUE
+  )$se
+) %>%
+  select("openheid", "p(z)", "standard error") %>%
+  distinct() %>%
+  arrange(openheid) %>%
+  kable()
+```
+
+```{r}
+density_veldleeuwerik3 <- sum_dist_veldleeuwerik3$dht$individuals$D
+```
+
+Densiteit:
+
+```{r, warning=FALSE}
+density_veldleeuwerik3 %>%
+  select(regio = Label, densiteit = Estimate, ll = lcl, ul = ucl) %>%
+  kable(digits = 3)
+```
+
+```{r}
+density_veldleeuwerik3 %>%
+  filter(Label != "Total") %>%
+  mutate(Dataset = "totaal (effort = 4)") %>%
+  bind_rows(
+    density_veldleeuwerik2 %>%
+      filter(Label != "Total") %>%
+      mutate(Dataset = "maxima (effort = 1)")
+  ) %>%
+  select(regio = Label, Dataset, densiteit = Estimate, ll = lcl, ul = ucl) %>%
+  ggplot(aes(x = regio, y = densiteit, colour = Dataset)) +
+  geom_point(size = 3, position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = ll, ymax = ul),
+    width = 0.2, linewidth = 1,
+    position = position_dodge(width = 0.5)
+  ) +
+  labs(y = "aantal broedparen per 100 ha", x = "") +
+  theme(legend.position = "bottom")
+```
+
+Aan alle verwachtingen is voldaan.
+Dit geeft aan dat we op correcte wijze de detectiekans kunnen schatten o.b.v. de volledige dataset en de densiteit o.b.v. een subset (maxima) of de volledige dataset.
+We zien echter wel dat de schattingen en onzekerheden tussen beide methodes sterk verschillend zijn.
+De keuze van ene of de andere methode moet onderbouwd worden o.b.v. ecologische kennis.
+
+## Conclusie
+
+- We kunnen de detectiekans schatten o.b.v. de complete dataset en tegelijk de densiteit schatten o.b.v. een subset van de data.
+  - De keuze van de subset is afhankelijk van de ecologische context en moet met experts worden besproken.
+- We moeten twee modellen fitten om schattingen te krijgen om stratum-niveau, en op regio- en steekproefkader-niveau
+  - We fitten meerdere modellen (bv. op stratum-niveau) waarbij we het beste model voor de detectiefunctie selecteren (sleutelfunctie, covariaten ...).
+  - Het finale model wordt opnieuw gefit waarbij de dataset voor densiteitsschatting wordt aangepast (bv. op regio-niveau).
+
+Technisch gezien lijkt het dus dat we de methodiek van de pilootstudie eenvoudig kunnen toepassen voor de volledige MAS-data.
+In praktijk verwachten we nog altijd enkele uitdagingen:
+
+- Hoe kunnen we de analyses automatiseren als er in sommige strata weinig data aanwezig zijn?
+  - Door de inclusie van de Weidestreek (kleine steekproef) zullen interactietermen met regio waarschijnlijk niet vaak kunnen gefit worden.
+  - We kunnen eventueel strata met "te weinig data" weglaten uit de analyses en hiervan enkel de absolute aantallen rapporteren. Op regio- of steekproefniveau kunnen ze gewoon opgeteld worden bij de schattingen.
+    - Nood aan regels (bv. $n > 15$ per stratum).
+    - Automatisatie?
+  - Alternatief is enkel simpele detectiefuncties te fitten (zonder interactietermen). Of we kunnen regels verzinnen om simpele detectiefuncties te fitten als er te veel problemen bij de andere optreden (bv. voor zeldzame soorten is het $a priori$ al niet nuttig om interactietermen toe te voegen).
+
+```{r}
+design %>%
+  filter(regio == "Weidestreek") %>%
+  count(regio, openheid = openheid_klasse, sbp)
+```
+
+- Hoe automatiseren we detectiefunctie modelselectie in de targets pipeline?
+  - We kunnen bepaalde automatisatie inbouwen: kleinste AIC en als verschil kleiner is dan 2, kies dan het model met de minste parameters.
+  - De praktijk zal moeten uitwijzen of dit effectief correct verloopt. We kunnen de pipeline modelselectie plots en statistieken laten uitschrijven die we kunnen controleren in een apart bestand.
+  - Afhankelijk van de regels zullen we allicht meer of minder problemen krijgen bij model selectie. Enkel strata selecteren met veel data zal niet snel voor problemen zorgen, maar aan de andere kant wil je ook niet te veel data weglaten.
+
+In dit document onderzoeken we de technische mogelijkheden.
+Daarom kozen we voor Veldleeuwerik wat een heel algemene soort is.
+Bovenstaande uitdagingen zullen we op zeldzamere soorten moeten aftoetsen.
+Dit zal in een andere analyse gebeuren (mogelijks tijdens de implementatie van de pipeline) en niet hier.
