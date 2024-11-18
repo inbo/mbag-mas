@@ -788,7 +788,8 @@ In praktijk verwachten we nog altijd enkele uitdagingen:
 ```{r}
 design %>%
   filter(regio == "Weidestreek") %>%
-  count(regio, openheid = openheid_klasse, sbp) %>%
+  count(regio, openheid = openheid_klasse, sbp,
+        name = `Aantal telpunten`) %>%
   kable()
 ```
 
@@ -801,3 +802,16 @@ In dit document onderzoeken we de technische mogelijkheden.
 Daarom kozen we voor Veldleeuwerik wat een heel algemene soort is.
 Bovenstaande uitdagingen zullen we op zeldzamere soorten moeten aftoetsen.
 Dit zal in een andere analyse gebeuren (mogelijks tijdens de implementatie van de pipeline) en niet hier.
+
+# Spatiale predicties
+
+We willen verspreidingskaarten maken voor de densiteiten van doelsoorten binnen het steekproefkader.
+Hierbij horen twee voornaamste uitdagingen:
+
+- Hoe creëren we een spatiaal model voor densiteiten?
+  - methode: Log-Gaussian Cox Process modelling, GLMM ...
+  - software: inla(bru), brms, glmmTMB ...
+- Hoe nemen we de detectiekans en onzekerheid mee?
+  - bestaande tools: DSM ...
+  - herhaaldelijk model fitten van simpele tools (bv. GLMM) voor $B$ random samples uit de verdeling van de detectiekans en posterior samples aggregeren
+  - ...?
