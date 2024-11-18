@@ -766,3 +766,37 @@ Aan alle verwachtingen is voldaan.
 Dit geeft aan dat we op correcte wijze de detectiekans kunnen schatten o.b.v. de volledige dataset en de densiteit o.b.v. een subset (maxima) of de volledige dataset.
 We zien echter wel dat de schattingen en onzekerheden tussen beide methodes sterk verschillend zijn.
 De keuze van ene of de andere methode moet onderbouwd worden o.b.v. ecologische kennis.
+
+## Conclusie
+
+- We kunnen de detectiekans schatten o.b.v. de complete dataset en tegelijk de densiteit schatten o.b.v. een subset van de data.
+  - De keuze van de subset is afhankelijk van de ecologische context en moet met experts worden besproken.
+- We moeten twee modellen fitten om schattingen te krijgen om stratum-niveau, en op regio- en steekproefkader-niveau
+  - We fitten meerdere modellen (bv. op stratum-niveau) waarbij we het beste model voor de detectiefunctie selecteren (sleutelfunctie, covariaten ...).
+  - Het finale model wordt opnieuw gefit waarbij de dataset voor densiteitsschatting wordt aangepast (bv. op regio-niveau).
+
+Technisch gezien lijkt het dus dat we de methodiek van de pilootstudie eenvoudig kunnen toepassen voor de volledige MAS-data.
+In praktijk verwachten we nog altijd enkele uitdagingen:
+
+- Hoe kunnen we de analyses automatiseren als er in sommige strata weinig data aanwezig zijn?
+  - Door de inclusie van de Weidestreek (kleine steekproef) zullen interactietermen met regio waarschijnlijk niet vaak kunnen gefit worden.
+  - We kunnen eventueel strata met "te weinig data" weglaten uit de analyses en hiervan enkel de absolute aantallen rapporteren. Op regio- of steekproefniveau kunnen ze gewoon opgeteld worden bij de schattingen.
+    - Nood aan regels (bv. $n > 15$ per stratum).
+    - Automatisatie?
+  - Alternatief is enkel simpele detectiefuncties te fitten (zonder interactietermen). Of we kunnen regels verzinnen om simpele detectiefuncties te fitten als er te veel problemen bij de andere optreden (bv. voor zeldzame soorten is het $a priori$ al niet nuttig om interactietermen toe te voegen).
+
+```{r}
+design %>%
+  filter(regio == "Weidestreek") %>%
+  count(regio, openheid = openheid_klasse, sbp)
+```
+
+- Hoe automatiseren we detectiefunctie modelselectie in de targets pipeline?
+  - We kunnen bepaalde automatisatie inbouwen: kleinste AIC en als verschil kleiner is dan 2, kies dan het model met de minste parameters.
+  - De praktijk zal moeten uitwijzen of dit effectief correct verloopt. We kunnen de pipeline modelselectie plots en statistieken laten uitschrijven die we kunnen controleren in een apart bestand.
+  - Afhankelijk van de regels zullen we allicht meer of minder problemen krijgen bij model selectie. Enkel strata selecteren met veel data zal niet snel voor problemen zorgen, maar aan de andere kant wil je ook niet te veel data weglaten.
+
+In dit document onderzoeken we de technische mogelijkheden.
+Daarom kozen we voor Veldleeuwerik wat een heel algemene soort is.
+Bovenstaande uitdagingen zullen we op zeldzamere soorten moeten aftoetsen.
+Dit zal in een andere analyse gebeuren (mogelijks tijdens de implementatie van de pipeline) en niet hier.
