@@ -68,7 +68,7 @@ list(
     pattern = map(mas_counts_sovon_files),
     iteration = "list"
   ),
-  # Convert Amersfoord to Lambert coordinates
+  # Convert Amersfoort to Lambert coordinates
   tar_target(
     name = crs_pipeline,
     command = amersfoort_to_lambert72(
