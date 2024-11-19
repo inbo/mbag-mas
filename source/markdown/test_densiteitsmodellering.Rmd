@@ -779,13 +779,14 @@ density_veldleeuwerik3 %>%
 
 Aan alle verwachtingen is voldaan.
 Dit geeft aan dat we op correcte wijze de detectiekans kunnen schatten o.b.v. de volledige dataset en de densiteit o.b.v. een subset (maxima) of de volledige dataset.
-We zien echter wel dat de schattingen en onzekerheden tussen beide methodes sterk verschillend zijn.
-De keuze van ene of de andere methode moet onderbouwd worden o.b.v. ecologische kennis.
+Eigenlijk mogen we deze densiteiten niet rechtsreeks vergelijken; ze meten verschillende dingen.
+De resultaten o.b.v. de totale dataset zijn een schatting van de gemiddelde densiteit per telperiode.
+De resultaten o.b.v. de maxima zijn een schatting van de densiteit per stratum die kan vergeleken worden met referentiewaarden.
 
 ## Conclusie
 
 - We kunnen de detectiekans schatten o.b.v. de complete dataset en tegelijk de densiteit schatten o.b.v. een subset van de data.
-  - De keuze van de subset is afhankelijk van de ecologische context en moet met experts worden besproken.
+  - We kunnen zowel densiteiten rapporteren o.b.v. de volledige dataset als een subset (maxima). Ze hebben een andere betekenis en beantwoorden andere vragen.
 - We moeten twee modellen fitten om schattingen te krijgen om stratum-niveau, en op regio- en steekproefkader-niveau
   - We fitten meerdere modellen (bv. op stratum-niveau) waarbij we het beste model voor de detectiefunctie selecteren (sleutelfunctie, covariaten ...).
   - Het finale model wordt opnieuw gefit waarbij de dataset voor densiteitsschatting wordt aangepast (bv. op regio-niveau).
