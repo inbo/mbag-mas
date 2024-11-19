@@ -833,13 +833,28 @@ Hierbij horen twee voornaamste uitdagingen:
 
 We werken verder met de data van de Veldleeuwerik van 2024.
 
-$$
-y \sim D(\mu, \sigma)\\
-$$
+Heel algemeen kunnen we stellen dat onze responsvariabele $y$ een statistische verdeling $D$ volgt met een gemiddelde- en variantieterm (resp. $\mu$ en $\sigma$).
+In ons geval zal $y$ aantal broedparen zijn.
 
 $$
-g(\mu) = g(\hat{y}) = F + R + \text{offset}
+y \sim D(\mu, \sigma^2)\\
 $$
+
+Het gemiddelde kan gemodelleerd worden via een lineaire predictorterm $L$ van verklarende variabelen.
+We kunnen deze opsplitsen in fixed en random effecten (resp. $L^F$ en $L^R$).
+Ten slotte kunnen we een offset toevoegen die detectiekans in rekening brengt.
+
+$$
+g(\mu) = g(\hat{y}) = L^F + L^R + \text{offset}
+$$
+
+Een eenvoudig voorbeeld is het modelleren van het gemiddeld aantal broedparen $y$ waarbij $D$ de Poissondistributie is en $g()$ het natuurlijk logaritme.
+We kunnen voor elk stratum een intercept toevoegen in $L^F$ en andere variabelen zoals X- en Y-coördinaten.
+In het random effect gedeelde $L^R$ kunnen we een random intercept en slope toevoegen per locatie over de telperiodes heen.
+De offset is dan bv. $\text{log}(p(z_i))$ ($i=1, ..., Z$) met $Z$ het aantal categoriën van covariaten van de detectiefunctie.
+Als we de offset naar de linkerkant van de vergelijking brengen, modelleren we rechtsreeks de densiteit (abundantie gedeeld door detectiekans).
+
+Afhankelijk van de methode zal van dit basisbouwplan afgeweken worden.
 
 ## Density surface modelling
 
