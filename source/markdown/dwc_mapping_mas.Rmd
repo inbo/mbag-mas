@@ -89,16 +89,16 @@ taxon_core <- raw_data
 
 ## Ruimtelijke verwerking
 
-- We verwijderen de Amersfoord coördinaten
+- We verwijderen de Amersfoort coördinaten
 - We zetten de Lambert coördinaten om naar WGS 84 decimale coördinaten
 - We behouden de Lambert coördinaten als verbatim coördinaten
 
 ```{r}
 taxon_core <- taxon_core %>%
-  # Remove Amersfoord coordinates
+  # Remove Amersfoort coordinates
   select(
-    -"raw_x_amersfoord",
-    -"raw_y_amersfoord"
+    -"raw_x_amersfoort",
+    -"raw_y_amersfoort"
   ) %>%
   # Keep original X, Y as verbatim coordinates
   rename(

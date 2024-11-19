@@ -6,10 +6,10 @@ spatial_mapping <- function(data_df) {
 
 
   out_df <- data_df %>%
-    # Remove Amersfoord coordinates
+    # Remove Amersfoort coordinates
     select(
-      -"raw_x_amersfoord",
-      -"raw_y_amersfoord"
+      -"raw_x_amersfoort",
+      -"raw_y_amersfoort"
     ) %>%
     # Keep original X, Y as verbatim coordinates
     rename(
