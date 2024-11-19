@@ -576,7 +576,22 @@ De workflow werkt zoals verwacht.
 
 ## Distributie detectiekans
 
-> zie theorie
+Voor de detectiekans krijgen we enkel de schatting en de standaard error.
+Hoe kunnen we betrouwbaarheidsintervallen afleiden?
+Welke distributie heeft de detectiekans?
+
+### Theorie
+
+- boek, code etc. bekijken
+
+### Parametrische distributies
+
+- normaal (logit transform?)
+- beta
+
+### Bootstrapping
+
+- bootstrap distributie
 
 ## Densiteitsschattingen op regio en Vlaams niveau
 ### Model specificatie
