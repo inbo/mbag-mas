@@ -867,7 +867,33 @@ Nuttige links:\\
 https://github.com/dill/dsm/wiki\\
 https://cran.r-project.org/web/packages/dsm/dsm.pdf\\
 https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105\\
-https://github.com/dill/dsm/wiki/Examples\\
-http://distancesampling.org/R/\\
-https://rdrr.io/cran/dsm/man/dsm.html\\
-https://rdrr.io/cran/dsm/man/dsm-data.html
+https://distancesampling.org/resources/vignettes.html
+
+```{r}
+test_dsm <- dsm(
+  formula = abundance.est ~ sbp * regio + openheid,
+  ddf.obj = veldleeuwerik_dist_hr3,
+  segment.data = dsm_segment_Veldleeuwerik,
+  observation.data = dsm_observation_Veldleeuwerik,
+  segment.area = rep(unique(dsm_segment_Veldleeuwerik$Effort)
+                     * 300 * 300 * pi,
+                     nrow(dsm_segment_Veldleeuwerik)),
+  convert.units = 1 / 10^6)
+
+dsm(
+  formula = abundance.est ~ sbp * regio + openheid,
+  ddf.obj = veldleeuwerik_dist_hr3,
+  segment.data,
+  observation.data,
+  engine = "gam",
+  convert.units = 1 / 10^6,
+  family = poisson(link = "log"),
+  group = FALSE,
+  control = list(keepData = TRUE),
+  availability = 1,
+  segment.area = NULL,
+  weights = NULL,
+  method = "REML"
+)
+```
+
