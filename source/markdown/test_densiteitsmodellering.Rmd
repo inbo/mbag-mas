@@ -779,7 +779,7 @@ density_veldleeuwerik3 %>%
 
 Aan alle verwachtingen is voldaan.
 Dit geeft aan dat we op correcte wijze de detectiekans kunnen schatten o.b.v. de volledige dataset en de densiteit o.b.v. een subset (maxima) of de volledige dataset.
-Eigenlijk mogen we deze densiteiten niet rechtsreeks vergelijken; ze meten verschillende dingen.
+Eigenlijk mogen we deze densiteiten niet rechtstreeks vergelijken; ze meten verschillende dingen.
 De resultaten o.b.v. de totale dataset zijn een schatting van de gemiddelde densiteit per telperiode.
 De resultaten o.b.v. de maxima zijn een schatting van de densiteit per stratum die kan vergeleken worden met referentiewaarden.
 
@@ -849,19 +849,19 @@ $$
 g(\mu) = g(\hat{y}) = L^F + L^R + \text{offset}
 $$
 
-Een eenvoudig voorbeeld is het modelleren van het gemiddeld aantal broedparen $y$ waarbij $D$ de Poissondistributie is en $g()$ het natuurlijk logaritme.
+Een eenvoudig voorbeeld is het modelleren van het gemiddeld aantal broedparen $y$ waarbij $D$ de Poisson distributie is en $g()$ het natuurlijk logaritme.
 We kunnen voor elk stratum een intercept toevoegen in $L^F$ en andere variabelen zoals X- en Y-coördinaten.
 In het random effect gedeelde $L^R$ kunnen we een random intercept en slope toevoegen per locatie over de telperiodes heen.
-De offset is dan bv. $\text{log}(p(z_i))$ ($i=1, ..., Z$) met $Z$ het aantal categoriën van covariaten van de detectiefunctie.
-Als we de offset naar de linkerkant van de vergelijking brengen, modelleren we rechtsreeks de densiteit (abundantie gedeeld door detectiekans).
+De offset is dan bv. $\text{log}(p(z_i))$ ($i=1, ..., Z$) met $Z$ het aantal categorieën van covariaten van de detectiefunctie.
+Als we de offset naar de linkerkant van de vergelijking brengen, modelleren we rechtstreeks de densiteit (abundantie gedeeld door detectiekans).
 
 Afhankelijk van de methode zal van dit basisbouwplan afgeweken worden.
 
 ## Density surface modelling
 
 Density surface modelling (DSM) is de methode om de spatiale distributie van dieren te modelleren via data verzameld in een distance sampling context.
-Deze methodiek sluit rechtsreeks aan bij de resultaten uit het vorige hoofdstuk en is dus een ideale kanshebber om uit te testen.
-De **dsm** package sluit rechtreeks aan op de modeloutput van **Distance**.
+Deze methodiek sluit rechtstreeks aan bij de resultaten uit het vorige hoofdstuk en is dus een ideale kanshebber om uit te testen.
+De **dsm** package sluit rechtstreeks aan op de modeloutput van **Distance**.
 
 Nuttige links:\\
 https://github.com/dill/dsm/wiki\\
