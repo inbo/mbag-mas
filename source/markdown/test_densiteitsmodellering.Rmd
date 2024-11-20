@@ -1041,6 +1041,9 @@ pp_check(test_brms_poisson1, group = "periode_in_jaar", type = "bars_grouped",
 
 We maken predicties voor het volledige steekproefkader voor elke telronde.
 We nemen daarna zowel het gemiddelde per telpunt over de telrondes als het maximum.
+
+> ok voor verwachte waarde maar niet voor onzekerheid
+
 Het is allicht beter een grid te leggen over het steekproefkader en daarna predicties te doen zoals we in het pilootproject deden.
 Dit zal voor een gladde overhang zorgen in densiteiten tussen telpunten.
 Hiervoor moeten we echter voor elke gridcel het stratum berekenen.
@@ -1116,7 +1119,7 @@ for (reg in reg_vec) {
                          limits = c(0, max_est)) +
     coord_sf(crs = 31370) +
     labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
-         title = "Kempen") +
+         title = reg) +
     theme(legend.position = "bottom")
   print(p)
 }
@@ -1131,7 +1134,7 @@ ggplot() +
                        limits = c(0, 20)) +
   coord_sf(crs = 31370) +
   labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
-       title = "Kempen") +
+       title = "Veldleeuwerik") +
   theme(legend.position = "bottom")
 ```
 
