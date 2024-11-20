@@ -1037,6 +1037,92 @@ pp_check(test_brms_poisson1, group = "periode_in_jaar", type = "bars_grouped",
          ndraws = 100)
 ```
 
+#### Resultaten
+
+```{r}
+reg_vec <- sort(unique(veldleeuwerik_2024_df$regio))
+pred_list <- vector(length = length(reg_vec), mode = "list")
+
+for (i in seq_along(reg_vec)) {
+  brms1_pred_path <- file.path(
+    cache_dir,paste0("brms1_pred_", tolower(reg_vec[i]), ".Rds"))
+  if (file.exists(brms1_pred_path)) {
+    pred_veldleeuwerik_reg <- readRDS(brms1_pred_path)
+  } else {
+    new_df_reg <- steekproefkader %>%
+      mutate(
+        regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
+      ) %>%
+      st_drop_geometry() %>%
+      filter(regio == reg_vec[i]) %>%
+      mutate(stratum = ifelse(
+        regio == "Weidestreek", regio,
+        paste(regio, openheid_klasse, sbp, sep = "_"))
+      ) %>%
+      select(plotnaam = pointid, stratum, x_coord, y_coord) %>%
+      expand_grid(periode_in_jaar = unique(analysis_df_brms1$periode_in_jaar))
+    
+    # Maak predicties op basis van model
+    pred_veldleeuwerik_reg <- fitted(
+      test_brms_poisson1, new_df_reg, robust = TRUE, re_formula = NA,
+      offset = FALSE)
+
+    saveRDS(pred_veldleeuwerik_reg, brms1_pred_path)
+  }
+  
+  plot_veldleeuwerik_reg <- new_df_reg %>%
+    bind_cols(pred_veldleeuwerik_reg) %>%
+    summarise(Estimate = mean(Estimate),
+              Q2.5 = mean(Q2.5),
+              Q97.5 = mean(Q97.5),
+              .by = c(plotnaam, stratum, x_coord, y_coord)) %>%
+    select(plotnaam, x_coord, y_coord, Estimate, Q2.5, Q97.5) %>%
+    mutate(across(c(x_coord, y_coord), ~ round(.x, digits = 4)),
+           rel_fout = (Q97.5 - Q2.5) / (2 * Estimate)) %>%
+    st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+    st_buffer(300)
+  rm(pred_veldleeuwerik_reg)
+  
+  pred_list[[i]] <- plot_veldleeuwerik_reg
+}
+
+brms1_pred_df <- bind_rows(pred_list)
+```
+
+
+```{r, fig.width=10}
+for (reg in reg_vec) {
+  plot_data <- brms1_pred_df %>%
+    filter(regio == reg)
+  max_est <- ceiling(max(plot_data$Estimate))
+  
+  p <- ggplot() +
+    geom_sf(data = plot_data, aes(fill = Estimate),
+            colour = alpha("white", 0)) +
+    scale_fill_gradientn(colours = rainbow(5),
+                         breaks = seq(from = 0, to = max_est, length.out = 5),
+                         limits = c(0, max_est)) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+         title = "Kempen") +
+    theme(legend.position = "bottom")
+  print(p)
+}
+```
+
+```{r, fig.width=10}
+ggplot() +
+  geom_sf(data = brms1_pred_df, aes(fill = Estimate),
+          colour = alpha("white", 0)) +
+  scale_fill_gradientn(colours = rainbow(5),
+                       breaks = seq(from = 0, to = 20, length.out = 5),
+                       limits = c(0, 20)) +
+  coord_sf(crs = 31370) +
+  labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+       title = "Kempen") +
+  theme(legend.position = "bottom")
+```
+
 ### Direct modelleren van de densiteiten
 
 - rekening houden met afstand
