@@ -932,23 +932,61 @@ det_prob_df <- cbind(veldleeuwerik_dist_hr$ddf$data,
   distinct()
 
 # Create analysis dataset
-analysis_df_brms1 <- veldleeuwerik_2024_df %>%
+presences_df <- veldleeuwerik_2024_df %>%
   mutate(stratum = ifelse(
     regio == "Weidestreek", regio,
-    paste(regio, openheid_klasse, sbp, sep = " - "))
+    paste(regio, openheid_klasse, sbp, sep = "_"))
   ) %>%
   full_join(det_prob_df, by = join_by(openheid_klasse)) %>%
   count(plotnaam, periode_in_jaar, stratum, x_coord, y_coord, detectiekans) %>%
   mutate(cirkelopp = pi * 300^2,
          ha_100 = 10^6,
          offset = (detectiekans * cirkelopp) / ha_100)
+
+# Add zero counts
+total_df <- mas_data_clean %>%
+  st_drop_geometry() %>%
+  expand(nesting(plotnaam, periode_in_jaar)) %>%
+  anti_join(presences_df, by = join_by(plotnaam, periode_in_jaar)) %>%
+  left_join(design, by = join_by(plotnaam == pointid)) %>%
+  mutate(stratum = ifelse(
+    regio == "Weidestreek", regio,
+    paste(regio, openheid_klasse, sbp, sep = "_"))
+  ) %>%
+  full_join(det_prob_df, by = join_by(openheid_klasse)) %>%
+  mutate(n = 0) %>%
+  mutate(cirkelopp = pi * 300^2,
+         ha_100 = 10^6,
+         offset = (detectiekans * cirkelopp) / ha_100) %>%
+  bind_rows(presences_df)
+
+# Relevel categorical variables to most common ones
+analysis_df_brms1 <- total_df %>%
+  mutate(n_stratum = sum(n),
+         .by = stratum) %>%
+  mutate(n_periode = sum(n),
+         .by = periode_in_jaar)
+
+ref_group_stratum <- analysis_df_brms1$stratum[
+  which.max(analysis_df_brms1$n_stratum)
+  ]
+ref_group_periode <- analysis_df_brms1$periode_in_jaar[
+  which.max(analysis_df_brms1$n_periode)
+  ]
+
+analysis_df_brms1 <- analysis_df_brms1 %>%
+  mutate(
+    stratum = relevel(factor(stratum), ref_group_stratum),
+    periode_in_jaar = relevel(factor(periode_in_jaar), ref_group_periode)
+  ) %>%
+  select(plotnaam, n, stratum, periode_in_jaar, x_coord, y_coord, offset)
 ```
 
 
 ```{r}
 # MCMC parameters
 nchains <- 3           # number of chains
-niter <- 2500          # number of iterations (incl. burn-in)
+niter <- 4500          # number of iterations (incl. burn-in)
 burnin <- 500          # number of initial samples to discard (burn-in)
 nparallel <- nchains   # number of cores used for parallel computing
 thinning <- 2          # thinning
@@ -970,6 +1008,13 @@ test_brms_poisson1 <- brm(
   file = file.path(cache_dir, "test_brms_poisson1"),
   file_refit = "on_change")
 ```
+
+#### MCMC convergentie
+
+```{r}
+plot(test_brms_poisson1, ask = FALSE)
+```
+
 
 ### Direct modelleren van de densiteiten
 
