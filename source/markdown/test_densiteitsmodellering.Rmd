@@ -1085,7 +1085,8 @@ for (i in seq_along(reg_vec)) {
               q97.5 = mean(Q97.5),
               .by = c(plotnaam, stratum, x_coord, y_coord)) %>%
     select(
-      plotnaam, x_coord, y_coord, estimate_mean, estimate_max, q2.5, q97.5
+      plotnaam, stratum, x_coord, y_coord,
+      estimate_mean, estimate_max, q2.5, q97.5
     ) %>%
     mutate(across(c(x_coord, y_coord), ~ round(.x, digits = 4)),
            rel_fout = (q97.5 - q2.5) / (2 * estimate_mean)) %>%
@@ -1096,7 +1097,8 @@ for (i in seq_along(reg_vec)) {
   pred_list[[i]] <- plot_veldleeuwerik_reg
 }
 
-brms1_pred_df <- bind_rows(pred_list)
+brms1_pred_df <- bind_rows(pred_list) %>%
+  separate(stratum, into = c("regio", "openheid", "sbp"))
 ```
 
 
