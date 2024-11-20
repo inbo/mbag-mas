@@ -962,9 +962,9 @@ total_df <- mas_data_clean %>%
 
 # Relevel categorical variables to most common ones
 analysis_df_brms1 <- total_df %>%
-  mutate(n_stratum = sum(n),
+  mutate(n_stratum = n(),
          .by = stratum) %>%
-  mutate(n_periode = sum(n),
+  mutate(n_periode = n(),
          .by = periode_in_jaar)
 
 ref_group_stratum <- analysis_df_brms1$stratum[
@@ -982,11 +982,10 @@ analysis_df_brms1 <- analysis_df_brms1 %>%
   select(plotnaam, n, stratum, periode_in_jaar, x_coord, y_coord, offset)
 ```
 
-
 ```{r}
 # MCMC parameters
 nchains <- 3           # number of chains
-niter <- 4500          # number of iterations (incl. burn-in)
+niter <- 2500          # number of iterations (incl. burn-in)
 burnin <- 500          # number of initial samples to discard (burn-in)
 nparallel <- nchains   # number of cores used for parallel computing
 thinning <- 2          # thinning
@@ -1015,6 +1014,28 @@ test_brms_poisson1 <- brm(
 plot(test_brms_poisson1, ask = FALSE)
 ```
 
+
+#### Model fit
+
+Totaal:
+
+```{r}
+pp_check(test_brms_poisson1, type = "bars", ndraws = 100)
+```
+
+Per stratum:
+
+```{r, fig.width=10}
+pp_check(test_brms_poisson1, group = "stratum", type = "bars_grouped",
+         ndraws = 100)
+```
+
+Per telperiode:
+
+```{r, fig.width=10}
+pp_check(test_brms_poisson1, group = "periode_in_jaar", type = "bars_grouped",
+         ndraws = 100)
+```
 
 ### Direct modelleren van de densiteiten
 
