@@ -1039,17 +1039,22 @@ pp_check(test_brms_poisson1, group = "periode_in_jaar", type = "bars_grouped",
 
 #### Resultaten
 
+We maken predicties voor het volledige steekproefkader voor elke telronde.
+We nemen daarna zowel het gemiddelde per telpunt over de telrondes als het maximum.
+Het is allicht beter een grid te leggen over het steekproefkader en daarna predicties te doen zoals we in het pilootproject deden.
+Dit zal voor een gladde overhang zorgen in densiteiten tussen telpunten.
+Hiervoor moeten we echter voor elke gridcel het stratum berekenen.
+We doen dat voorlopig niet, maar dat is zeker mogelijk.
+
 ```{r}
 reg_vec <- sort(unique(veldleeuwerik_2024_df$regio))
 pred_list <- vector(length = length(reg_vec), mode = "list")
 
 for (i in seq_along(reg_vec)) {
   brms1_pred_path <- file.path(
-    cache_dir,paste0("brms1_pred_", tolower(reg_vec[i]), ".Rds"))
-  if (file.exists(brms1_pred_path)) {
-    pred_veldleeuwerik_reg <- readRDS(brms1_pred_path)
-  } else {
-    new_df_reg <- steekproefkader %>%
+    cache_dir, paste0("brms1_pred_", tolower(reg_vec[i]), ".Rds"))
+  
+  new_df_reg <- steekproefkader %>%
       mutate(
         regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
       ) %>%
@@ -1061,8 +1066,10 @@ for (i in seq_along(reg_vec)) {
       ) %>%
       select(plotnaam = pointid, stratum, x_coord, y_coord) %>%
       expand_grid(periode_in_jaar = unique(analysis_df_brms1$periode_in_jaar))
-    
-    # Maak predicties op basis van model
+  
+  if (file.exists(brms1_pred_path)) {
+    pred_veldleeuwerik_reg <- readRDS(brms1_pred_path)
+  } else {
     pred_veldleeuwerik_reg <- fitted(
       test_brms_poisson1, new_df_reg, robust = TRUE, re_formula = NA,
       offset = FALSE)
@@ -1072,13 +1079,16 @@ for (i in seq_along(reg_vec)) {
   
   plot_veldleeuwerik_reg <- new_df_reg %>%
     bind_cols(pred_veldleeuwerik_reg) %>%
-    summarise(Estimate = mean(Estimate),
-              Q2.5 = mean(Q2.5),
-              Q97.5 = mean(Q97.5),
+    summarise(estimate_mean = mean(Estimate),
+              estimate_max = max(Estimate),
+              q2.5 = mean(Q2.5),
+              q97.5 = mean(Q97.5),
               .by = c(plotnaam, stratum, x_coord, y_coord)) %>%
-    select(plotnaam, x_coord, y_coord, Estimate, Q2.5, Q97.5) %>%
+    select(
+      plotnaam, x_coord, y_coord, estimate_mean, estimate_max, q2.5, q97.5
+    ) %>%
     mutate(across(c(x_coord, y_coord), ~ round(.x, digits = 4)),
-           rel_fout = (Q97.5 - Q2.5) / (2 * Estimate)) %>%
+           rel_fout = (q97.5 - q2.5) / (2 * estimate_mean)) %>%
     st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
     st_buffer(300)
   rm(pred_veldleeuwerik_reg)
@@ -1094,10 +1104,10 @@ brms1_pred_df <- bind_rows(pred_list)
 for (reg in reg_vec) {
   plot_data <- brms1_pred_df %>%
     filter(regio == reg)
-  max_est <- ceiling(max(plot_data$Estimate))
+  max_est <- ceiling(max(plot_data$estimate_mean))
   
   p <- ggplot() +
-    geom_sf(data = plot_data, aes(fill = Estimate),
+    geom_sf(data = plot_data, aes(fill = estimate_mean),
             colour = alpha("white", 0)) +
     scale_fill_gradientn(colours = rainbow(5),
                          breaks = seq(from = 0, to = max_est, length.out = 5),
@@ -1112,7 +1122,7 @@ for (reg in reg_vec) {
 
 ```{r, fig.width=10}
 ggplot() +
-  geom_sf(data = brms1_pred_df, aes(fill = Estimate),
+  geom_sf(data = brms1_pred_df, aes(fill = estimate_mean),
           colour = alpha("white", 0)) +
   scale_fill_gradientn(colours = rainbow(5),
                        breaks = seq(from = 0, to = 20, length.out = 5),
