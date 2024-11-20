@@ -32,6 +32,7 @@ library(tidyverse)
 library(Distance)
 library(targets)
 library(sf)
+library(brms)
 
 library(INBOtheme)
 theme_set(theme_inbo(transparent = TRUE))
@@ -43,6 +44,8 @@ conflicted::conflicts_prefer(dplyr::select)
 # Paths
 mbag_dir <- here::here()
 targets_store <- here::here("source", "targets", "data_preparation", "_targets")
+cache_dir <- here::here("source", "markdown", "cache", "spatial_density")
+dir.create(cache_dir, showWarnings = FALSE, recursive = TRUE)
 ```
 
 # Achtergrond
@@ -805,7 +808,7 @@ In praktijk verwachten we nog altijd enkele uitdagingen:
 design %>%
   filter(regio == "Weidestreek") %>%
   count(regio, openheid = openheid_klasse, sbp,
-        name = `Aantal telpunten`) %>%
+        name = "Aantal telpunten") %>%
   kable()
 ```
 
@@ -903,6 +906,43 @@ $$
 \ln\left(\frac{\lambda_{j,t}}{\text{offset}}\right) = \beta_0 + \sum_{s=2}^S\beta_{s-1}X_{s, j} + \sum_{t=2}^T\gamma_{t-1}X_{t} + f(x_j, y_j) + b_{0,j}
 $$
 
+#### Model specificatie
+
+We fitten bovenstaand model met **brms**.
+We onderscheiden de volgende strata:
+
+```{r}
+design %>%
+  distinct(regio, openheid = openheid_klasse, sbp) %>%
+  mutate(
+    openheid = ifelse(regio == "Weidestreek", "", openheid),
+    sbp = ifelse(regio == "Weidestreek", "", sbp)
+  ) %>%
+  distinct() %>%
+  kable()
+```
+
+Zoals eerder aangegeven tellen alle 4 de telperiodes mee voor Veldleeuwerik.
+
+```{r}
+# Extract detection average detection probabilities
+det_prob_df <- cbind(veldleeuwerik_dist_hr$ddf$data,
+      "detectiekans" = predict(veldleeuwerik_dist_hr)$fitted) %>%
+  select("openheid_klasse" = "openheid", "detectiekans") %>%
+  distinct()
+
+# Create analysis dataset
+analysis_df_brms1 <- veldleeuwerik_2024_df %>%
+  mutate(stratum = ifelse(
+    regio == "Weidestreek", regio,
+    paste(regio, openheid_klasse, sbp, sep = " - "))
+  ) %>%
+  full_join(det_prob_df, by = join_by(openheid_klasse)) %>%
+  count(plotnaam, periode_in_jaar, stratum, x_coord, y_coord, detectiekans) %>%
+  mutate(cirkelopp = pi * 300^2,
+         ha_100 = 10^6,
+         offset = (detectiekans * cirkelopp) / ha_100)
+```
 
 
 ```{r}
@@ -911,14 +951,14 @@ nchains <- 3           # number of chains
 niter <- 2500          # number of iterations (incl. burn-in)
 burnin <- 500          # number of initial samples to discard (burn-in)
 nparallel <- nchains   # number of cores used for parallel computing
-thinning <- 1
+thinning <- 2          # thinning
 ```
 
 ```{r}
-fit_veldleeuwerik <- brm(
-  bf(aantal ~ s(x_plot, y_plot) + (1|plotnaam) + (1|plotnaam:periode_in_jaar) +
-       offset(log(offset))),
-  data = veldleeuwerik_df,
+test_brms_poisson1 <- brm(
+  formula = n ~ stratum + periode_in_jaar + s(x_coord, y_coord) + (1|plotnaam) +
+      offset(log(offset)),
+  data = analysis_df_brms1,
   family = poisson(),
   chains = nchains, 
   warmup = burnin, 
@@ -927,7 +967,7 @@ fit_veldleeuwerik <- brm(
   thin = thinning,
   backend = "cmdstanr",
   seed = 123,
-  file = here(model_path, "fit_veldleeuwerik"),
+  file = file.path(cache_dir, "test_brms_poisson1"),
   file_refit = "on_change")
 ```
 
@@ -950,7 +990,7 @@ https://cran.r-project.org/web/packages/dsm/dsm.pdf\\
 https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105\\
 https://distancesampling.org/resources/vignettes.html
 
-```{r}
+```{r, eval=FALSE}
 test_dsm <- dsm(
   formula = abundance.est ~ sbp * regio + openheid,
   ddf.obj = veldleeuwerik_dist_hr3,
