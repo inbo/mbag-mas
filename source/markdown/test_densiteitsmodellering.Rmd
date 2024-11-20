@@ -834,28 +834,109 @@ Hierbij horen twee voornaamste uitdagingen:
 
 We werken verder met de data van de Veldleeuwerik van 2024.
 
-Heel algemeen kunnen we stellen dat onze responsvariabele $y$ een statistische verdeling $D$ volgt met een gemiddelde- en variantieterm (resp. $\mu$ en $\sigma$).
-In ons geval zal $y$ aantal broedparen zijn.
+In het algemeen stellen we dat onze responsvariabele $y$ een statistische verdeling $D$ volgt, gekarakteriseerd door een verwachtingswaarde $\mu$ en een variantieparameter $\sigma^2$:
 
 $$
-y \sim D(\mu, \sigma^2)\\
+y \sim D(\mu, \sigma^2),
 $$
 
-Het gemiddelde kan gemodelleerd worden via een lineaire predictorterm $L$ van verklarende variabelen.
-We kunnen deze opsplitsen in fixed en random effecten (resp. $L^F$ en $L^R$).
-Ten slotte kunnen we een offset toevoegen die detectiekans in rekening brengt.
+waarbij de responsvariabele $y$ in ons geval het aantal broedparen vertegenwoordigt.
+
+Het gemiddelde $\mu$ wordt gemodelleerd via een **lineaire predictorterm** $L$, bestaande uit verklarende variabelen. Deze lineaire predictor kan worden opgesplitst in:
+- een term met **fixed effects** ($L^F$),
+- een term met **random effects** ($L^R$),
+- en een optionele **offset**, die bijvoorbeeld correcties voor detectiekans of meeteenheden omvat.
+
+De relatie tussen $\mu$ en $L$ wordt beschreven via een linkfunctie $g$, zodat:
 
 $$
-g(\mu) = g(\hat{y}) = L^F + L^R + \text{offset}
+g(\mu) = L = L^F + L^R + \text{offset}.
 $$
 
-Een eenvoudig voorbeeld is het modelleren van het gemiddeld aantal broedparen $y$ waarbij $D$ de Poisson distributie is en $g()$ het natuurlijk logaritme.
-We kunnen voor elk stratum een intercept toevoegen in $L^F$ en andere variabelen zoals X- en Y-coördinaten.
-In het random effect gedeelde $L^R$ kunnen we een random intercept en slope toevoegen per locatie over de telperiodes heen.
-De offset is dan bv. $\text{log}(p(z_i))$ ($i=1, ..., Z$) met $Z$ het aantal categorieën van covariaten van de detectiefunctie.
-Als we de offset naar de linkerkant van de vergelijking brengen, modelleren we rechtstreeks de densiteit (abundantie gedeeld door detectiekans).
+In concrete termen:
+- $L^F$: bevat de vaste effecten van verklarende variabelen (zoals strata, tijdseffecten, of ruimtelijke coördinaten),
+- $L^R$: omvat de random effects die de variabiliteit tussen bijvoorbeeld telcirkels of telperiodes modelleren,
+- \textbf{offset}: corrigeert voor bekende systematische effecten, zoals detectiekans of een schaalfactor om naar een standaardmaat (bijvoorbeeld per 100 ha) om te rekenen.
 
-Afhankelijk van de methode zal van dit basisbouwplan afgeweken worden.
+In ons specifieke geval kan $g(\mu)$ de logaritmische linkfunctie ($\ln(\mu)$) zijn, zoals bij Poisson- of negatieve-binomiale modellen. Hierdoor krijgen we:
+
+$$
+g(\mu) = \ln(\mu) = L^F + L^R + \text{offset}.
+$$
+
+Deze generalisatie biedt flexibiliteit om diverse soorten responsvariabelen en modellen (zoals Poisson, binomiaal, of normaal) te beschrijven, afhankelijk van de aard van $D$.
+
+## GLMM
+### Poisson regressie via een offset
+
+We modelleren het aantal broedparen per telcirkel $j$ in telperiode $t$ met een Poisson-model
+
+$$
+Y_{j,t} \sim Pois(\lambda_{j,t})
+$$
+
+waarbij de verwachte waarde $\lambda_{j,t}$ wordt gemodelleerd als
+
+$$
+\ln(\lambda_{j,t}) = \beta_0 + \sum_{s=2}^S\beta_{s-1}X_{s, j} + \sum_{t=2}^T\gamma_{t-1}X_{t} + f(x_j, y_j) + b_{0,j} + \ln(p_s) + \ln\left(\frac{A_j}{10^6\ \text{m}^2/100\ \text{ha}}\right)
+$$
+
+Hierbij zijn:
+
+- $\beta_0$: Het globale intercept vertegenwoordigt de referentiestratum ($s=1$) en de eerste telperiode ($t=1$). Als referentiestratum en -periode nemen we resp. het stratum, de periode met het hoogste aantal broedparen.
+- $\sum_{s=2}^S\beta_{s-1}X_{s, j}$: Fixed effects voor strata $s=2, ..., S$, waarbij $X_{s, j}$ een dummyvariabele is die aangeeft of telcirkel $j$ tot stratum $s$ behoort. Het eerste stratum ($s=1$) is inbegrepen in het intercept.
+- $\sum_{t=2}^T\gamma_{t-1}X_{t}$: Fixed effects voor telpunten $t=2, ..., T$, waarbij $X_{t}$ een dummyvariabele is die aangeeft of de telling afkomstig is uit telperiode $t$. De eerste telperiode ($t=1$) is inbegrepen in het intercept.
+- $f(x_j, y_j)$: Een gladheidsfunctie die ruimtelijke variatie beschrijft o.b.v. de X- en Y-coördinaten van telpunt $j$,
+- $b_{0,j}$: Een random effect voor telcirkel $j$, dat variatie tussen telcirkels modelleert.
+- $p_s$: De gemiddelde detectiekans in stratum $s$,
+- $A_j = \pi \cdot 300^2=$ `r pi * 300^2` m²: De oppervlakte van telcirkel $j$.
+
+De offset $\ln(p_s) + \ln\left(\frac{A_j}{10^6\ \text{m}^2/100\ \text{ha}}\right)$ kan worden samengevoegd:
+
+$$
+\ln(\lambda_{j,t}) = \beta_0 + \sum_{s=2}^S\beta_{s-1}X_{s, j} + \sum_{t=2}^T\gamma_{t-1}X_{t} + f(x_j, y_j) + b_{0,j} + \ln(\text{offset})
+$$
+
+Zodat we rechtsreeks het aantal broedparen per 100 ha modelleren (= densiteit) waarbij we corrigeren voor de detectiekans:
+
+$$
+\ln\left(\frac{\lambda_{j,t}}{\text{offset}}\right) = \beta_0 + \sum_{s=2}^S\beta_{s-1}X_{s, j} + \sum_{t=2}^T\gamma_{t-1}X_{t} + f(x_j, y_j) + b_{0,j}
+$$
+
+
+
+```{r}
+# MCMC parameters
+nchains <- 3           # number of chains
+niter <- 2500          # number of iterations (incl. burn-in)
+burnin <- 500          # number of initial samples to discard (burn-in)
+nparallel <- nchains   # number of cores used for parallel computing
+thinning <- 1
+```
+
+```{r}
+fit_veldleeuwerik <- brm(
+  bf(aantal ~ s(x_plot, y_plot) + (1|plotnaam) + (1|plotnaam:periode_in_jaar) +
+       offset(log(offset))),
+  data = veldleeuwerik_df,
+  family = poisson(),
+  chains = nchains, 
+  warmup = burnin, 
+  iter = niter,
+  cores = nparallel,
+  thin = thinning,
+  backend = "cmdstanr",
+  seed = 123,
+  file = here(model_path, "fit_veldleeuwerik"),
+  file_refit = "on_change")
+```
+
+### Direct modelleren van de densiteiten
+
+- rekening houden met afstand
+  - per waarneming detectiekans via detectiefunctie nemen en corrigeren
+  - daarna densiteit per telpunt en telperiode optellen
+- via gamma of xpoisson
 
 ## Density surface modelling
 
