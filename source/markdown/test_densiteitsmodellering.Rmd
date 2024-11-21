@@ -993,12 +993,12 @@ thinning <- 2          # thinning
 
 ```{r}
 test_brms_poisson1 <- brm(
-  formula = n ~ stratum + periode_in_jaar + s(x_coord, y_coord) + (1|plotnaam) +
-      offset(log(offset)),
+  formula = n ~ stratum + periode_in_jaar + s(x_coord, y_coord) +
+    (1 | plotnaam) + offset(log(offset)),
   data = analysis_df_brms1,
   family = poisson(),
-  chains = nchains, 
-  warmup = burnin, 
+  chains = nchains,
+  warmup = burnin,
   iter = niter,
   cores = nparallel,
   thin = thinning,
@@ -1056,7 +1056,7 @@ pred_list <- vector(length = length(reg_vec), mode = "list")
 for (i in seq_along(reg_vec)) {
   brms1_pred_path <- file.path(
     cache_dir, paste0("brms1_pred_", tolower(reg_vec[i]), ".Rds"))
-  
+
   new_df_reg <- steekproefkader %>%
       mutate(
         regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
@@ -1069,7 +1069,7 @@ for (i in seq_along(reg_vec)) {
       ) %>%
       select(plotnaam = pointid, stratum, x_coord, y_coord) %>%
       expand_grid(periode_in_jaar = unique(analysis_df_brms1$periode_in_jaar))
-  
+
   if (file.exists(brms1_pred_path)) {
     pred_veldleeuwerik_reg <- readRDS(brms1_pred_path)
   } else {
@@ -1079,7 +1079,7 @@ for (i in seq_along(reg_vec)) {
 
     saveRDS(pred_veldleeuwerik_reg, brms1_pred_path)
   }
-  
+
   plot_veldleeuwerik_reg <- new_df_reg %>%
     bind_cols(pred_veldleeuwerik_reg) %>%
     summarise(estimate_mean = mean(Estimate),
@@ -1096,7 +1096,7 @@ for (i in seq_along(reg_vec)) {
     st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
     st_buffer(300)
   rm(pred_veldleeuwerik_reg)
-  
+
   pred_list[[i]] <- plot_veldleeuwerik_reg
 }
 
@@ -1110,7 +1110,7 @@ for (reg in reg_vec) {
   plot_data <- brms1_pred_df %>%
     filter(regio == reg)
   max_est <- ceiling(max(plot_data$estimate_mean))
-  
+
   p <- ggplot() +
     geom_sf(data = plot_data, aes(fill = estimate_mean),
             colour = alpha("white", 0)) +
