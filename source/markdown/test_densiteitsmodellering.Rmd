@@ -1042,7 +1042,7 @@ pp_check(test_brms_poisson1, group = "periode_in_jaar", type = "bars_grouped",
 We maken predicties voor het volledige steekproefkader voor elke telronde.
 We nemen daarna zowel het gemiddelde per telpunt over de telrondes als het maximum.
 
-> ok voor verwachte waarde maar niet voor onzekerheid
+Dit is ok voor de verwachte waarde, maar niet voor de onzekerheid. In het geval van het maximum kunnen we wel gewoon de schatting behouden per telpunt met de hoogste verwachte waarde en daarvan hebben we een confidence interval
 
 Het is allicht beter een grid te leggen over het steekproefkader en daarna predicties te doen zoals we in het pilootproject deden.
 Dit zal voor een gladde overhang zorgen in densiteiten tussen telpunten.
@@ -1104,6 +1104,7 @@ brms1_pred_df <- bind_rows(pred_list) %>%
   separate(stratum, into = c("regio", "openheid", "sbp"))
 ```
 
+Hoe zien de gemiddelde densiteitsschattingen per telpunt eruit per regio?
 
 ```{r, fig.width=10}
 for (reg in reg_vec) {
@@ -1119,11 +1120,35 @@ for (reg in reg_vec) {
                          limits = c(0, max_est)) +
     coord_sf(crs = 31370) +
     labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
-         title = reg) +
+         title = "Gemiddelde per telpunt over telperiodes", subtitle = reg) +
     theme(legend.position = "bottom")
   print(p)
 }
 ```
+
+We kijken naar de maxima per regio:
+
+```{r, fig.width=10}
+for (reg in reg_vec) {
+  plot_data <- brms1_pred_df %>%
+    filter(regio == reg)
+  max_est <- ceiling(max(plot_data$estimate_max))
+
+  p <- ggplot() +
+    geom_sf(data = plot_data, aes(fill = estimate_max),
+            colour = alpha("white", 0)) +
+    scale_fill_gradientn(colours = rainbow(5),
+                         breaks = seq(from = 0, to = max_est, length.out = 5),
+                         limits = c(0, max_est)) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+         title = "Maximum per telpunt over telperiodes", subtitle = reg) +
+    theme(legend.position = "bottom")
+  print(p)
+}
+```
+
+We bekijken deze twee maten ook voor het steekproefkader:
 
 ```{r, fig.width=10}
 ggplot() +
@@ -1134,9 +1159,30 @@ ggplot() +
                        limits = c(0, 20)) +
   coord_sf(crs = 31370) +
   labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
-       title = "Veldleeuwerik") +
+       title = "Gemiddelde per telpunt over telperiodes") +
   theme(legend.position = "bottom")
 ```
+
+```{r, fig.width=10}
+ggplot() +
+  geom_sf(data = brms1_pred_df, aes(fill = estimate_max),
+          colour = alpha("white", 0)) +
+  scale_fill_gradientn(colours = rainbow(5),
+                       breaks = seq(from = 0, to = 20, length.out = 5),
+                       limits = c(0, 20)) +
+  coord_sf(crs = 31370) +
+  labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+       title = "Maximum per telpunt over telperiodes", subtitle = reg) +
+  theme(legend.position = "bottom")
+```
+
+#### Discussie
+
+- Het model werkt goed.
+- Er is nauwelijks een verschil tussen het gemiddelde en de maxima over de telrondes per telpunt.
+- We moeten nadenken over de gladheidsfunctie $f$.
+- We houden geen rekening met de onzekerheid op de detectiekans.
+- De detectiekans wordt berekend op stratum niveau, maar we modelleren op telpuntniveau. We houden geen rekening met de afstanden waarop individuen gezien zijn op een bepaald telpunt.
 
 ### Direct modelleren van de densiteiten
 
