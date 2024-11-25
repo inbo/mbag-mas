@@ -8,8 +8,10 @@ add_bo_by_year <- function(punten_df, year_var = "jaar", var_col, ...) {
   # Read in bo layer and calculate start and stop year
   ## Get right year for loading data
   year <- pull(distinct(st_drop_geometry(punten_df[year_var])))
-  if (year >= 2018 && year <= 2023) {
+  if (year >= 2018 && year <= 2022) {
     bo_file_year <- 2022
+  } else if (year == 2023) {
+    bo_file_year <- 2023
   } else if (year >= 2024 && year <= 2028) {
     bo_file_year <- 2024
   } else {
@@ -66,8 +68,10 @@ read_crop_layers_by_year <- function(
   crop_layer$jaar <- year
 
   if (cut_bo) {
-    if (year >= 2018 && year <= 2023) {
+    if (year >= 2018 && year <= 2022) {
       bo_file_year <- 2022
+    } else if (year == 2023) {
+      bo_file_year <- 2023
     } else if (year >= 2024 && year <= 2028) {
       bo_file_year <- 2024
     } else {
