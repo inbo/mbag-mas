@@ -1217,6 +1217,75 @@ ggplot() +
 - We houden geen rekening met de onzekerheid op de detectiekans.
 - De detectiekans wordt berekend op stratum niveau, maar we modelleren op telpuntniveau. We houden geen rekening met de afstanden waarop individuen gezien zijn op een bepaald telpunt.
 
+### Poisson regressie met random offset van de predicties
+
+Bij deze methode gaan we rekening houden met de onzekerheid op de detectiekans.
+Hierbij gaan we ervan uit dat de detectiekans een Beta verdeling volgt.
+We sampelen uit deze verdeling om achteraf de predicties van de aantallen om te zetten naar densiteiten.
+
+We modelleren het aantal broedparen per telcirkel $j$ in telperiode $t$ met een Poisson-model
+
+$$
+Y_{j,t} \sim Pois(\lambda_{j,t})
+$$
+
+waarbij de verwachte waarde $\lambda_{j,t}$ wordt gemodelleerd als
+
+$$
+\ln(\lambda_{j,t}) = \beta_0 + \sum_{s=2}^S\beta_{s-1}X_{s, j} + \sum_{t=2}^T\gamma_{t-1}X_{t} + f(x_j, y_j) + b_{0,j}
+$$
+
+#### Model specificatie
+
+```{r}
+test_brms_poisson2 <- brm(
+  formula = n ~ stratum + periode_in_jaar + s(x_coord, y_coord) +
+    (1 | plotnaam),
+  data = analysis_df_brms1,
+  family = poisson(),
+  chains = nchains,
+  warmup = burnin,
+  iter = niter,
+  cores = nparallel,
+  thin = thinning,
+  backend = "cmdstanr",
+  seed = 123,
+  file = file.path(cache_dir, "test_brms_poisson2"),
+  file_refit = "on_change")
+```
+
+#### MCMC convergentie
+
+```{r}
+plot(test_brms_poisson2, ask = FALSE)
+```
+
+#### Model fit
+
+Totaal:
+
+```{r}
+pp_check(test_brms_poisson2, type = "bars", ndraws = 100)
+```
+
+Per stratum:
+
+```{r, fig.width=10}
+pp_check(test_brms_poisson2, group = "stratum", type = "bars_grouped",
+         ndraws = 100)
+```
+
+Per telperiode:
+
+```{r, fig.width=10}
+pp_check(test_brms_poisson2, group = "periode_in_jaar", type = "bars_grouped",
+         ndraws = 100)
+```
+
+#### Resultaten
+
+...
+
 ### Direct modelleren van de densiteiten
 
 - rekening houden met afstand
