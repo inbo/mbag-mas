@@ -46,6 +46,9 @@ mbag_dir <- here::here()
 targets_store <- here::here("source", "targets", "data_preparation", "_targets")
 cache_dir <- here::here("source", "markdown", "cache", "spatial_density")
 dir.create(cache_dir, showWarnings = FALSE, recursive = TRUE)
+
+# Source functions
+source(file.path(mbag_dir, "source", "R", "beta_fit_params.R"))
 ```
 
 # Achtergrond
@@ -509,7 +512,7 @@ sum_dist_veldleeuwerik <- summary(veldleeuwerik_dist_hr)
 Detectiekans:
 
 ```{r}
-cbind(veldleeuwerik_dist_hr$ddf$data,
+det_probs_df <- cbind(veldleeuwerik_dist_hr$ddf$data,
   "p(z)" = predict(veldleeuwerik_dist_hr,
     se.fit = TRUE
   )$fitted,
@@ -519,7 +522,9 @@ cbind(veldleeuwerik_dist_hr$ddf$data,
 ) %>%
   select("openheid", "p(z)", "standard error") %>%
   distinct() %>%
-  arrange(openheid) %>%
+  arrange(openheid)
+
+det_probs_df %>%
   kable()
 ```
 
@@ -589,12 +594,40 @@ Welke distributie heeft de detectiekans?
 
 ### Parametrische distributies
 
-- normaal (logit transform?)
-- beta
+We weten de verwachte waarde en de standaard error van de detectiekansen.
+
+```{r, echo=FALSE}
+det_probs_df %>%
+  kable()
+```
+
+We kunnen er van uitgaan dat deze een $Beta(\alpha, \beta)$ verdeling volgen.
+De aangepaste functie `beta_fit_params()` kan de Beta verdeling karakteriseren op basis van het gemiddelde en de standaarddeviatie door de $\alpha$ en $\beta$ parameters te berekenen via een optimalisatieproces.
+
+```{r}
+range <- seq(0, 1, length.out = 500)
+densities <- sapply(seq_len(nrow(det_probs_df)), function(i) {
+  mean <- det_probs_df$`p(z)`[i]
+  sd <- det_probs_df$`standard error`[i]
+  beta_fit_params(beta_fun = dbeta, mean = mean, sd = sd, x = range)
+})
+
+cbind(densities, range) %>%
+  as_tibble(.name_repair = "minimal") %>%
+  `colnames<-`(c(det_probs_df$openheid, "detectiekans")) %>%
+  pivot_longer(cols = all_of(det_probs_df$openheid),
+               values_to = "densiteit", names_to = "openheid") %>%
+  ggplot(aes(x = detectiekans, y = densiteit, colour = openheid)) +
+    geom_line(linewidth = 1)
+```
+
+Om de onzekerheid van deze parameters mee te nemen in verder analyses, zouden we uit deze Beta verdelingen kunnen samplen.
 
 ### Bootstrapping
 
-- bootstrap distributie
+Om de verdeling van de detectiekans te achterhalen kunnen we altijd bootstrapping toepassen.
+
+...
 
 ## Densiteitsschattingen op regio en Vlaams niveau
 ### Model specificatie
