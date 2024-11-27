@@ -1101,7 +1101,8 @@ for (i in seq_along(reg_vec)) {
         paste(regio, openheid_klasse, sbp, sep = "_"))
       ) %>%
       left_join(analysis_df_brms1 %>% distinct(stratum, offset),
-                by = join_by(stratum)) %>%
+                by = join_by(stratum),
+                relationship = "many-to-many") %>%
       select(plotnaam = pointid, stratum, x_coord, y_coord, offset) %>%
       expand_grid(periode_in_jaar = unique(analysis_df_brms1$periode_in_jaar))
   
@@ -1142,6 +1143,7 @@ for (i in seq_along(reg_vec)) {
     slice_max(order_by = estimate_mean, n = 1) %>%
     group_by(plotnaam, stratum, x_coord, y_coord) %>%
     summarise(estimate_mean = mean(.epred),
+              se = sd(.epred),
               q2.5 = quantile(.epred, 0.025),
               q97.5 = quantile(.epred, 0.975),
               .groups = "drop") %>%
@@ -1159,14 +1161,17 @@ for (i in seq_along(reg_vec)) {
 
   pred_list[[i]] <- plot_veldleeuwerik_reg
 }
+```
 
+
+```{r, warning=FALSE}
 # Combine summary statistics for all regions
 brms1_pred_df <- bind_rows(pred_list) %>%
   separate(stratum, into = c("regio", "openheid", "sbp"))
 ```
 
 ```{r}
-example_points <- c("")
+example_points <- c("Km_10011.4", "Km_39180.1.1", "Ol_5146", "Ol_5259.10")
 ```
 
 We vergelijken de statistieken voor enkele punten in verschillende strata tussen beide methodes (gemiddelde per telpunt en maximum).
@@ -1176,8 +1181,12 @@ We verwachten dat het gemiddelde hoger is voor het maximum en dat de onzekerheid
 brms1_pred_df %>%
   st_drop_geometry() %>%
   filter(plotnaam %in% example_points) %>%
+  mutate(q97.5 - q2.5) %>%
+  arrange(plotnaam, method) %>%
   kable()
 ```
+
+Het gemiddelde is inderdaad hoger voor maximum. De onzekerheid ...
 
 We bekijken de verwachte densiteit over het steekproefkader:
 
@@ -1187,8 +1196,8 @@ brms1_pred_df %>%
   ggplot() +
     geom_sf(aes(fill = estimate_mean), colour = alpha("white", 0)) +
     scale_fill_gradientn(colours = rainbow(5),
-                         breaks = seq(from = 0, to = 20, length.out = 5),
-                         limits = c(0, 20)) +
+                         breaks = seq(from = 0, to = 4, length.out = 5),
+                         limits = c(0, 4)) +
     coord_sf(crs = 31370) +
     labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
          title = "Gemiddelde per telpunt over telperiodes") +
@@ -1201,8 +1210,8 @@ brms1_pred_df %>%
   ggplot() +
     geom_sf(aes(fill = estimate_mean), colour = alpha("white", 0)) +
     scale_fill_gradientn(colours = rainbow(5),
-                         breaks = seq(from = 0, to = 20, length.out = 5),
-                         limits = c(0, 20)) +
+                         breaks = seq(from = 0, to = 4, length.out = 5),
+                         limits = c(0, 4)) +
     coord_sf(crs = 31370) +
     labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
          title = "Maximum per telpunt over telperiodes") +
@@ -1217,8 +1226,8 @@ brms1_pred_df %>%
   ggplot() +
     geom_sf(aes(fill = rel_fout), colour = alpha("white", 0)) +
     scale_fill_gradientn(colours = rainbow(5),
-                         breaks = seq(from = 0, to = 20, length.out = 5),
-                         limits = c(0, 20)) +
+                         breaks = seq(from = 0, to = 2, length.out = 5),
+                         limits = c(0, 2)) +
     coord_sf(crs = 31370) +
     labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
          title = "Gemiddelde per telpunt over telperiodes") +
@@ -1231,8 +1240,8 @@ brms1_pred_df %>%
   ggplot() +
     geom_sf(aes(fill = rel_fout), colour = alpha("white", 0)) +
     scale_fill_gradientn(colours = rainbow(5),
-                         breaks = seq(from = 0, to = 20, length.out = 5),
-                         limits = c(0, 20)) +
+                         breaks = seq(from = 0, to = 2, length.out = 5),
+                         limits = c(0, 2)) +
     coord_sf(crs = 31370) +
     labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
          title = "Maximum per telpunt over telperiodes") +
@@ -1338,6 +1347,22 @@ pp_check(test_brms_poisson2, group = "periode_in_jaar", type = "bars_grouped",
 #### Resultaten
 
 ```{r}
+# Get random samples from detection probability distribution(s)
+r_det_probs <- sapply(seq_len(nrow(det_probs_df)), function(i) {
+  mean <- det_probs_df$`p(z)`[i]
+  sd <- det_probs_df$`standard error`[i]
+  beta_fit_params(beta_fun = rbeta, mean = mean, sd = sd, n = 1000)
+})
+
+r_det_prob_df <- cbind(r_det_probs) %>%
+  as_tibble(.name_repair = "minimal") %>%
+  `colnames<-`(det_probs_df$openheid) %>%
+  pivot_longer(cols = everything(),
+               values_to = "detectiekans", names_to = "openheid") %>%
+  mutate(.draw = row_number(),
+         .by = openheid)
+
+# Prediction per region
 reg_vec <- sort(unique(veldleeuwerik_2024_df$regio))
 pred_list <- vector(length = length(reg_vec), mode = "list")
 
@@ -1357,8 +1382,9 @@ for (i in seq_along(reg_vec)) {
         regio == "Weidestreek", regio,
         paste(regio, openheid_klasse, sbp, sep = "_"))
       ) %>%
-      select(plotnaam = pointid, stratum, x_coord, y_coord) %>%
-      expand_grid(periode_in_jaar = unique(analysis_df_brms2$periode_in_jaar))
+      select(plotnaam = pointid, stratum, x_coord, y_coord,
+             openheid = openheid_klasse, sbp) %>%
+      expand_grid(periode_in_jaar = unique(analysis_df_brms1$periode_in_jaar))
   
   print(paste("Making predictions for", reg_vec[i]))
 
@@ -1368,7 +1394,7 @@ for (i in seq_along(reg_vec)) {
   } else {
     pred_veldleeuwerik_reg <- tidybayes::add_epred_draws(
         newdata = new_df_reg,
-        object = test_brms_poisson1,
+        object = test_brms_poisson2,
         ndraws = 1000,
         re_formula = NA,
         seed = 123)
@@ -1382,8 +1408,17 @@ for (i in seq_along(reg_vec)) {
     mutate(estimate_mean = mean(.epred)) %>%
     group_by(plotnaam) %>%
     slice_max(order_by = estimate_mean, n = 1) %>%
+    ungroup() %>%
+    # Add detection probabilities
+    left_join(r_det_prob_df, by = join_by(openheid, .draw)) %>%
+    mutate(
+      cirkelopp = pi * 300^2,
+      ha_100 = 10^6,
+      offset = (detectiekans * cirkelopp) / ha_100)
+    
     group_by(plotnaam, stratum, x_coord, y_coord) %>%
     summarise(estimate_mean = mean(.epred),
+              se = sd(.epred),
               q2.5 = quantile(.epred, 0.025),
               q97.5 = quantile(.epred, 0.975),
               .groups = "drop") %>%
