@@ -1108,9 +1108,12 @@ for (i in seq_along(reg_vec)) {
   if (file.exists(brms1_pred_path)) {
     pred_veldleeuwerik_reg <- readRDS(brms1_pred_path)
   } else {
-    pred_veldleeuwerik_reg <- new_df_reg %>%
-      tidybayes::add_epred_draws(test_brms_poisson1, re_formula = NA)
-
+    pred_veldleeuwerik_reg <- tidybayes::add_epred_draws(
+        newdata = new_df_reg,
+        object = test_brms_poisson1,
+        ndraws = 1000,
+        re_formula = NA,
+        seed = 123)
     saveRDS(pred_veldleeuwerik_reg, brms1_pred_path)
   }
   
@@ -1153,10 +1156,17 @@ brms1_pred_df <- bind_rows(pred_list) %>%
   separate(stratum, into = c("regio", "openheid", "sbp"))
 ```
 
+```{r}
+example_points <- c("")
+```
+
 We vergelijken de statistieken voor enkele punten in verschillende strata.
 
 ```{r}
-
+brms1_pred_df %>%
+  st_drop_geometry() %>%
+  filter(plotnaam %in% example_points) %>%
+  kable()
 ```
 
 We bekijken de verwachte densiteit over het steekproefkader:
