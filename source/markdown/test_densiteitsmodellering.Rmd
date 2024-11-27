@@ -1088,7 +1088,7 @@ for (i in seq_along(reg_vec)) {
   # Specify cache path
   brms1_pred_path <- file.path(
     cache_dir, paste0("brms1_pred_", tolower(reg_vec[i]), ".Rds"))
-  
+
   # Create new dataframe for complete sampling frame
   new_df_reg <- steekproefkader %>%
       mutate(
@@ -1105,9 +1105,9 @@ for (i in seq_along(reg_vec)) {
                 relationship = "many-to-many") %>%
       select(plotnaam = pointid, stratum, x_coord, y_coord, offset) %>%
       expand_grid(periode_in_jaar = unique(analysis_df_brms1$periode_in_jaar))
-  
+
   print(paste("Making predictions for", reg_vec[i]))
-  
+
   # Draw predictions if file does not exists
   if (file.exists(brms1_pred_path)) {
     pred_veldleeuwerik_reg <- readRDS(brms1_pred_path)
@@ -1120,7 +1120,7 @@ for (i in seq_along(reg_vec)) {
         seed = 123)
     saveRDS(pred_veldleeuwerik_reg, brms1_pred_path)
   }
-  
+
   # Calculate summary statistics for location averaged over time periods
   plot_veldleeuwerik_reg_mean <- pred_veldleeuwerik_reg %>%
     group_by(plotnaam, stratum, x_coord, y_coord) %>%
@@ -1134,7 +1134,7 @@ for (i in seq_along(reg_vec)) {
     st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
     st_buffer(300) %>%
     mutate(method = "mean")
-  
+
   # Calculate summary statistics per location for time period with maximum
   # expected breeding pairs
   plot_veldleeuwerik_reg_max <- pred_veldleeuwerik_reg %>%
@@ -1153,7 +1153,7 @@ for (i in seq_along(reg_vec)) {
     st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
     st_buffer(300) %>%
     mutate(method = "max")
-  
+
   # Combine methods
   plot_veldleeuwerik_reg <- bind_rows(plot_veldleeuwerik_reg_mean,
                                       plot_veldleeuwerik_reg_max)
@@ -1385,7 +1385,7 @@ for (i in seq_along(reg_vec)) {
       select(plotnaam = pointid, stratum, x_coord, y_coord,
              openheid = openheid_klasse, sbp) %>%
       expand_grid(periode_in_jaar = unique(analysis_df_brms1$periode_in_jaar))
-  
+
   print(paste("Making predictions for", reg_vec[i]))
 
   # Draw predictions if file does not exists
