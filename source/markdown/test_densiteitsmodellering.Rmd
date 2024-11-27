@@ -1085,9 +1085,11 @@ reg_vec <- sort(unique(veldleeuwerik_2024_df$regio))
 pred_list <- vector(length = length(reg_vec), mode = "list")
 
 for (i in seq_along(reg_vec)) {
+  # Specify cache path
   brms1_pred_path <- file.path(
     cache_dir, paste0("brms1_pred_", tolower(reg_vec[i]), ".Rds"))
-
+  
+  # Create new dataframe for complete sampling frame
   new_df_reg <- steekproefkader %>%
       mutate(
         regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
@@ -1104,7 +1106,8 @@ for (i in seq_along(reg_vec)) {
       expand_grid(periode_in_jaar = unique(analysis_df_brms1$periode_in_jaar))
   
   print(paste("Making predictions for", reg_vec[i]))
-
+  
+  # Draw predictions if file does not exists
   if (file.exists(brms1_pred_path)) {
     pred_veldleeuwerik_reg <- readRDS(brms1_pred_path)
   } else {
@@ -1117,6 +1120,7 @@ for (i in seq_along(reg_vec)) {
     saveRDS(pred_veldleeuwerik_reg, brms1_pred_path)
   }
   
+  # Calculate summary statistics for location averaged over time periods
   plot_veldleeuwerik_reg_mean <- pred_veldleeuwerik_reg %>%
     group_by(plotnaam, stratum, x_coord, y_coord) %>%
     summarise(estimate_mean = mean(.epred),
@@ -1129,6 +1133,8 @@ for (i in seq_along(reg_vec)) {
     st_buffer(300) %>%
     mutate(method = "mean")
   
+  # Calculate summary statistics per location for time period with maximum
+  # expected breeding pairs
   plot_veldleeuwerik_reg_max <- pred_veldleeuwerik_reg %>%
     group_by(plotnaam, periode_in_jaar) %>%
     mutate(estimate_mean = mean(.epred)) %>%
@@ -1144,14 +1150,17 @@ for (i in seq_along(reg_vec)) {
     st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
     st_buffer(300) %>%
     mutate(method = "max")
-
+  
+  # Combine methods
   plot_veldleeuwerik_reg <- bind_rows(plot_veldleeuwerik_reg_mean,
                                       plot_veldleeuwerik_reg_max)
+  # Remove large object
   rm(pred_veldleeuwerik_reg)
 
   pred_list[[i]] <- plot_veldleeuwerik_reg
 }
 
+# Combine summary statistics for all regions
 brms1_pred_df <- bind_rows(pred_list) %>%
   separate(stratum, into = c("regio", "openheid", "sbp"))
 ```
@@ -1160,7 +1169,8 @@ brms1_pred_df <- bind_rows(pred_list) %>%
 example_points <- c("")
 ```
 
-We vergelijken de statistieken voor enkele punten in verschillende strata.
+We vergelijken de statistieken voor enkele punten in verschillende strata tussen beide methodes (gemiddelde per telpunt en maximum).
+We verwachten dat het gemiddelde hoger is voor het maximum en dat de onzekerheid groter is.
 
 ```{r}
 brms1_pred_df %>%
@@ -1190,13 +1200,13 @@ brms1_pred_df %>%
   filter(method == "max") %>%
   ggplot() +
     geom_sf(aes(fill = estimate_mean), colour = alpha("white", 0)) +
-  scale_fill_gradientn(colours = rainbow(5),
-                       breaks = seq(from = 0, to = 20, length.out = 5),
-                       limits = c(0, 20)) +
-  coord_sf(crs = 31370) +
-  labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
-       title = "Maximum per telpunt over telperiodes", subtitle = reg) +
-  theme(legend.position = "bottom")
+    scale_fill_gradientn(colours = rainbow(5),
+                         breaks = seq(from = 0, to = 20, length.out = 5),
+                         limits = c(0, 20)) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+         title = "Maximum per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
 ```
 
 We bekijken de relatieve fout over het steekproefkader:
@@ -1220,13 +1230,13 @@ brms1_pred_df %>%
   filter(method == "max") %>%
   ggplot() +
     geom_sf(aes(fill = rel_fout), colour = alpha("white", 0)) +
-  scale_fill_gradientn(colours = rainbow(5),
-                       breaks = seq(from = 0, to = 20, length.out = 5),
-                       limits = c(0, 20)) +
-  coord_sf(crs = 31370) +
-  labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
-       title = "Maximum per telpunt over telperiodes", subtitle = reg) +
-  theme(legend.position = "bottom")
+    scale_fill_gradientn(colours = rainbow(5),
+                         breaks = seq(from = 0, to = 20, length.out = 5),
+                         limits = c(0, 20)) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+         title = "Maximum per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
 ```
 
 #### Discussie
@@ -1327,7 +1337,112 @@ pp_check(test_brms_poisson2, group = "periode_in_jaar", type = "bars_grouped",
 
 #### Resultaten
 
-...
+```{r}
+reg_vec <- sort(unique(veldleeuwerik_2024_df$regio))
+pred_list <- vector(length = length(reg_vec), mode = "list")
+
+for (i in seq_along(reg_vec)) {
+  # Specify cache path
+  brms2_pred_path <- file.path(
+    cache_dir, paste0("brms2_pred_", tolower(reg_vec[i]), ".Rds"))
+
+  # Create new dataframe for complete sampling frame
+  new_df_reg <- steekproefkader %>%
+      mutate(
+        regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
+      ) %>%
+      st_drop_geometry() %>%
+      filter(regio == reg_vec[i]) %>%
+      mutate(stratum = ifelse(
+        regio == "Weidestreek", regio,
+        paste(regio, openheid_klasse, sbp, sep = "_"))
+      ) %>%
+      select(plotnaam = pointid, stratum, x_coord, y_coord) %>%
+      expand_grid(periode_in_jaar = unique(analysis_df_brms2$periode_in_jaar))
+  
+  print(paste("Making predictions for", reg_vec[i]))
+
+  # Draw predictions if file does not exists
+  if (file.exists(brms2_pred_path)) {
+    pred_veldleeuwerik_reg <- readRDS(brms2_pred_path)
+  } else {
+    pred_veldleeuwerik_reg <- tidybayes::add_epred_draws(
+        newdata = new_df_reg,
+        object = test_brms_poisson1,
+        ndraws = 1000,
+        re_formula = NA,
+        seed = 123)
+    saveRDS(pred_veldleeuwerik_reg, brms2_pred_path)
+  }
+
+  # Calculate summary statistics per location for time period with maximum
+  # expected breeding pairs
+  plot_veldleeuwerik_reg <- pred_veldleeuwerik_reg %>%
+    group_by(plotnaam, periode_in_jaar) %>%
+    mutate(estimate_mean = mean(.epred)) %>%
+    group_by(plotnaam) %>%
+    slice_max(order_by = estimate_mean, n = 1) %>%
+    group_by(plotnaam, stratum, x_coord, y_coord) %>%
+    summarise(estimate_mean = mean(.epred),
+              q2.5 = quantile(.epred, 0.025),
+              q97.5 = quantile(.epred, 0.975),
+              .groups = "drop") %>%
+    mutate(across(c(x_coord, y_coord), ~ round(.x, digits = 4)),
+           rel_fout = (q97.5 - q2.5) / (2 * estimate_mean)) %>%
+    st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+    st_buffer(300) %>%
+    mutate(method = "max")
+
+  # Remove large object
+  rm(pred_veldleeuwerik_reg)
+
+  pred_list[[i]] <- plot_veldleeuwerik_reg
+}
+
+# Combine summary statistics for all regions
+brms2_pred_df <- bind_rows(pred_list) %>%
+  separate(stratum, into = c("regio", "openheid", "sbp"))
+```
+
+We vergelijken de statistieken voor enkele punten in verschillende strata met de resultaten uit het vorige model.
+We verwachten dat het gemiddelde overeenkomt, maar dat de onzekerheid groter is.
+
+```{r}
+brms2_pred_df %>%
+  st_drop_geometry() %>%
+  filter(plotnaam %in% example_points) %>%
+  kable()
+```
+
+We bekijken de verwachte densiteit over het steekproefkader:
+
+```{r, fig.width=10}
+brms2_pred_df %>%
+  ggplot() +
+    geom_sf(aes(fill = estimate_mean), colour = alpha("white", 0)) +
+    scale_fill_gradientn(colours = rainbow(5),
+                         breaks = seq(from = 0, to = 20, length.out = 5),
+                         limits = c(0, 20)) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+         title = "Maximum per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+We bekijken de relatieve fout over het steekproefkader:
+
+```{r, fig.width=10}
+brms2_pred_df %>%
+  ggplot() +
+    geom_sf(aes(fill = rel_fout), colour = alpha("white", 0)) +
+    scale_fill_gradientn(colours = rainbow(5),
+                         breaks = seq(from = 0, to = 20, length.out = 5),
+                         limits = c(0, 20)) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+         title = "Maximum per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
 
 ### Direct modelleren van de densiteiten
 
