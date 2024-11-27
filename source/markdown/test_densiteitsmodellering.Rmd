@@ -1100,34 +1100,50 @@ for (i in seq_along(reg_vec)) {
         regio == "Weidestreek", regio,
         paste(regio, openheid_klasse, sbp, sep = "_"))
       ) %>%
-      select(plotnaam = pointid, stratum, x_coord, y_coord) %>%
+      left_join(analysis_df_brms1 %>% distinct(stratum, offset),
+                by = join_by(stratum)) %>%
+      select(plotnaam = pointid, stratum, x_coord, y_coord, offset) %>%
       expand_grid(periode_in_jaar = unique(analysis_df_brms1$periode_in_jaar))
 
   if (file.exists(brms1_pred_path)) {
     pred_veldleeuwerik_reg <- readRDS(brms1_pred_path)
   } else {
-    pred_veldleeuwerik_reg <- fitted(
-      test_brms_poisson1, new_df_reg, robust = TRUE, re_formula = NA,
-      offset = FALSE)
+    pred_veldleeuwerik_reg <- new_df_reg %>%
+      tidybayes::add_epred_draws(test_brms_poisson1, re_formula = NA)
 
     saveRDS(pred_veldleeuwerik_reg, brms1_pred_path)
   }
-
-  plot_veldleeuwerik_reg <- new_df_reg %>%
-    bind_cols(pred_veldleeuwerik_reg) %>%
-    summarise(estimate_mean = mean(Estimate),
-              estimate_max = max(Estimate),
-              q2.5 = mean(Q2.5),
-              q97.5 = mean(Q97.5),
-              .by = c(plotnaam, stratum, x_coord, y_coord)) %>%
-    select(
-      plotnaam, stratum, x_coord, y_coord,
-      estimate_mean, estimate_max, q2.5, q97.5
-    ) %>%
+  
+  plot_veldleeuwerik_reg_mean <- pred_veldleeuwerik_reg %>%
+    group_by(plotnaam, stratum, x_coord, y_coord) %>%
+    summarise(estimate_mean = mean(.epred),
+              q2.5 = quantile(.epred, 0.025),
+              q97.5 = quantile(.epred, 0.975)) %>%
+    ungroup() %>%
     mutate(across(c(x_coord, y_coord), ~ round(.x, digits = 4)),
            rel_fout = (q97.5 - q2.5) / (2 * estimate_mean)) %>%
     st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
-    st_buffer(300)
+    st_buffer(300) %>%
+    mutate(method = "mean")
+  
+  plot_veldleeuwerik_reg_max <- pred_veldleeuwerik_reg %>%
+    group_by(plotnaam, periode_in_jaar) %>%
+    mutate(estimate_mean = mean(.epred)) %>%
+    group_by(plotnaam) %>%
+    slice_max(order_by = estimate_mean, n = 1) %>%
+    group_by(plotnaam, stratum, x_coord, y_coord) %>%
+    summarise(estimate_mean = mean(.epred),
+              q2.5 = quantile(.epred, 0.025),
+              q97.5 = quantile(.epred, 0.975)) %>%
+    ungroup() %>%
+    mutate(across(c(x_coord, y_coord), ~ round(.x, digits = 4)),
+           rel_fout = (q97.5 - q2.5) / (2 * estimate_mean)) %>%
+    st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+    st_buffer(300) %>%
+    mutate(method = "max")
+
+  plot_veldleeuwerik_reg <- bind_rows(plot_veldleeuwerik_reg_mean,
+                                      plot_veldleeuwerik_reg_max)
   rm(pred_veldleeuwerik_reg)
 
   pred_list[[i]] <- plot_veldleeuwerik_reg
