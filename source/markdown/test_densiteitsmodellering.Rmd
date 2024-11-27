@@ -1163,10 +1163,12 @@ if (file.exists(brms1_pred_path)) {
     # Combine methods
     plot_veldleeuwerik_reg <- bind_rows(plot_veldleeuwerik_reg_mean,
                                         plot_veldleeuwerik_reg_max)
-    # Remove large object
-    rm(pred_veldleeuwerik_reg)
   
     pred_list[[i]] <- plot_veldleeuwerik_reg
+    
+    # Remove large objects
+    rm(pred_veldleeuwerik_reg)
+    rm(plot_veldleeuwerik_reg)
   }
   
   # Combine summary statistics for all regions
@@ -1174,6 +1176,9 @@ if (file.exists(brms1_pred_path)) {
     separate(stratum, into = c("regio", "openheid", "sbp"))
   
   saveRDS(brms1_pred_df, brms1_pred_path)
+  
+  # Remove large objects
+  rm(pred_list)
 }
 ```
 
@@ -1441,10 +1446,11 @@ if (file.exists(brms2_pred_path)) {
       st_buffer(300) %>%
       mutate(method = "max")
   
-    # Remove large object
-    rm(pred_veldleeuwerik_reg)
-  
     pred_list[[i]] <- plot_veldleeuwerik_reg
+    
+    # Remove large objects
+    rm(pred_veldleeuwerik_reg)
+    rm(plot_veldleeuwerik_reg)
   }
   
   # Combine summary statistics for all regions
@@ -1452,6 +1458,9 @@ if (file.exists(brms2_pred_path)) {
     separate(stratum, into = c("regio", "openheid", "sbp"))
   
   saveRDS(brms2_pred_df, brms2_pred_path)
+  
+  # Remove large objects
+  rm(pred_list)
 }
 ```
 
