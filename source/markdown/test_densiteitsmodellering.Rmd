@@ -922,9 +922,9 @@ Hierbij zijn:
 - $\beta_0$: Het globale intercept vertegenwoordigt de referentiestratum ($s=1$) en de eerste telperiode ($t=1$). Als referentiestratum en -periode nemen we resp. het stratum, de periode met het hoogste aantal broedparen.
 - $\sum_{s=2}^S\beta_{s-1}X_{s, j}$: Fixed effects voor strata $s=2, ..., S$, waarbij $X_{s, j}$ een dummyvariabele is die aangeeft of telcirkel $j$ tot stratum $s$ behoort. Het eerste stratum ($s=1$) is inbegrepen in het intercept.
 - $\sum_{t=2}^T\gamma_{t-1}X_{t}$: Fixed effects voor telpunten $t=2, ..., T$, waarbij $X_{t}$ een dummyvariabele is die aangeeft of de telling afkomstig is uit telperiode $t$. De eerste telperiode ($t=1$) is inbegrepen in het intercept.
-- $f(x_j, y_j)$: Een gladheidsfunctie die ruimtelijke variatie beschrijft o.b.v. de X- en Y-coördinaten van telpunt $j$,
+- $f(x_j, y_j)$: Een gladheidsfunctie die ruimtelijke variatie beschrijft o.b.v. de X- en Y-coördinaten van telpunt $j$.
 - $b_{0,j}$: Een random effect voor telcirkel $j$, dat variatie tussen telcirkels modelleert.
-- $p_s$: De gemiddelde detectiekans in stratum $s$,
+- $p_s$: De gemiddelde detectiekans in stratum $s$ waartoe telpunt $j$ behoort.
 - $A_j = \pi \cdot 300^2=$ `r pi * 300^2` m²: De oppervlakte van telcirkel $j$.
 
 De offset $\ln(p_s) + \ln\left(\frac{A_j}{10^6\ \text{m}^2/100\ \text{ha}}\right)$ kan worden samengevoegd:
@@ -1075,8 +1075,6 @@ pp_check(test_brms_poisson1, group = "periode_in_jaar", type = "bars_grouped",
 We maken predicties voor het volledige steekproefkader voor elke telronde.
 We nemen daarna zowel het gemiddelde per telpunt over de telrondes als het maximum.
 
-Dit is ok voor de verwachte waarde, maar niet voor de onzekerheid. In het geval van het maximum kunnen we wel gewoon de schatting behouden per telpunt met de hoogste verwachte waarde en daarvan hebben we een confidence interval
-
 Het is allicht beter een grid te leggen over het steekproefkader en daarna predicties te doen zoals we in het pilootproject deden.
 Dit zal voor een gladde overhang zorgen in densiteiten tussen telpunten.
 Hiervoor moeten we echter voor elke gridcel het stratum berekenen.
@@ -1104,6 +1102,8 @@ for (i in seq_along(reg_vec)) {
                 by = join_by(stratum)) %>%
       select(plotnaam = pointid, stratum, x_coord, y_coord, offset) %>%
       expand_grid(periode_in_jaar = unique(analysis_df_brms1$periode_in_jaar))
+  
+  print(paste("Making predictions for", reg_vec[i]))
 
   if (file.exists(brms1_pred_path)) {
     pred_veldleeuwerik_reg <- readRDS(brms1_pred_path)
@@ -1118,8 +1118,8 @@ for (i in seq_along(reg_vec)) {
     group_by(plotnaam, stratum, x_coord, y_coord) %>%
     summarise(estimate_mean = mean(.epred),
               q2.5 = quantile(.epred, 0.025),
-              q97.5 = quantile(.epred, 0.975)) %>%
-    ungroup() %>%
+              q97.5 = quantile(.epred, 0.975),
+              .groups = "drop") %>%
     mutate(across(c(x_coord, y_coord), ~ round(.x, digits = 4)),
            rel_fout = (q97.5 - q2.5) / (2 * estimate_mean)) %>%
     st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
@@ -1134,8 +1134,8 @@ for (i in seq_along(reg_vec)) {
     group_by(plotnaam, stratum, x_coord, y_coord) %>%
     summarise(estimate_mean = mean(.epred),
               q2.5 = quantile(.epred, 0.025),
-              q97.5 = quantile(.epred, 0.975)) %>%
-    ungroup() %>%
+              q97.5 = quantile(.epred, 0.975),
+              .groups = "drop") %>%
     mutate(across(c(x_coord, y_coord), ~ round(.x, digits = 4)),
            rel_fout = (q97.5 - q2.5) / (2 * estimate_mean)) %>%
     st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
@@ -1153,69 +1153,63 @@ brms1_pred_df <- bind_rows(pred_list) %>%
   separate(stratum, into = c("regio", "openheid", "sbp"))
 ```
 
-Hoe zien de gemiddelde densiteitsschattingen per telpunt eruit per regio?
+We vergelijken de statistieken voor enkele punten in verschillende strata.
 
-```{r, fig.width=10}
-for (reg in reg_vec) {
-  plot_data <- brms1_pred_df %>%
-    filter(regio == reg)
-  max_est <- ceiling(max(plot_data$estimate_mean))
+```{r}
 
-  p <- ggplot() +
-    geom_sf(data = plot_data, aes(fill = estimate_mean),
-            colour = alpha("white", 0)) +
-    scale_fill_gradientn(colours = rainbow(5),
-                         breaks = seq(from = 0, to = max_est, length.out = 5),
-                         limits = c(0, max_est)) +
-    coord_sf(crs = 31370) +
-    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
-         title = "Gemiddelde per telpunt over telperiodes", subtitle = reg) +
-    theme(legend.position = "bottom")
-  print(p)
-}
 ```
 
-We kijken naar de maxima per regio:
+We bekijken de verwachte densiteit over het steekproefkader:
 
 ```{r, fig.width=10}
-for (reg in reg_vec) {
-  plot_data <- brms1_pred_df %>%
-    filter(regio == reg)
-  max_est <- ceiling(max(plot_data$estimate_max))
-
-  p <- ggplot() +
-    geom_sf(data = plot_data, aes(fill = estimate_max),
-            colour = alpha("white", 0)) +
+brms1_pred_df %>%
+  filter(method == "mean") %>%
+  ggplot() +
+    geom_sf(aes(fill = estimate_mean), colour = alpha("white", 0)) +
     scale_fill_gradientn(colours = rainbow(5),
-                         breaks = seq(from = 0, to = max_est, length.out = 5),
-                         limits = c(0, max_est)) +
+                         breaks = seq(from = 0, to = 20, length.out = 5),
+                         limits = c(0, 20)) +
     coord_sf(crs = 31370) +
     labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
-         title = "Maximum per telpunt over telperiodes", subtitle = reg) +
+         title = "Gemiddelde per telpunt over telperiodes") +
     theme(legend.position = "bottom")
-  print(p)
-}
 ```
 
-We bekijken deze twee maten ook voor het steekproefkader:
-
 ```{r, fig.width=10}
-ggplot() +
-  geom_sf(data = brms1_pred_df, aes(fill = estimate_mean),
-          colour = alpha("white", 0)) +
+brms1_pred_df %>%
+  filter(method == "max") %>%
+  ggplot() +
+    geom_sf(aes(fill = estimate_mean), colour = alpha("white", 0)) +
   scale_fill_gradientn(colours = rainbow(5),
                        breaks = seq(from = 0, to = 20, length.out = 5),
                        limits = c(0, 20)) +
   coord_sf(crs = 31370) +
   labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
-       title = "Gemiddelde per telpunt over telperiodes") +
+       title = "Maximum per telpunt over telperiodes", subtitle = reg) +
   theme(legend.position = "bottom")
 ```
 
+We bekijken de relatieve fout over het steekproefkader:
+
 ```{r, fig.width=10}
-ggplot() +
-  geom_sf(data = brms1_pred_df, aes(fill = estimate_max),
-          colour = alpha("white", 0)) +
+brms1_pred_df %>%
+  filter(method == "mean") %>%
+  ggplot() +
+    geom_sf(aes(fill = rel_fout), colour = alpha("white", 0)) +
+    scale_fill_gradientn(colours = rainbow(5),
+                         breaks = seq(from = 0, to = 20, length.out = 5),
+                         limits = c(0, 20)) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+```{r, fig.width=10}
+brms1_pred_df %>%
+  filter(method == "max") %>%
+  ggplot() +
+    geom_sf(aes(fill = rel_fout), colour = alpha("white", 0)) +
   scale_fill_gradientn(colours = rainbow(5),
                        breaks = seq(from = 0, to = 20, length.out = 5),
                        limits = c(0, 20)) +
@@ -1250,6 +1244,29 @@ waarbij de verwachte waarde $\lambda_{j,t}$ wordt gemodelleerd als
 $$
 \ln(\lambda_{j,t}) = \beta_0 + \sum_{s=2}^S\beta_{s-1}X_{s, j} + \sum_{t=2}^T\gamma_{t-1}X_{t} + f(x_j, y_j) + b_{0,j}
 $$
+
+We gaan er van uit dat de detectiekans een Beta verdeling volgt. Deze waren van de volgende vorm:
+
+```{r}
+cbind(densities, range) %>%
+  as_tibble(.name_repair = "minimal") %>%
+  `colnames<-`(c(det_probs_df$openheid, "detectiekans")) %>%
+  pivot_longer(cols = all_of(det_probs_df$openheid),
+               values_to = "densiteit", names_to = "openheid") %>%
+  ggplot(aes(x = detectiekans, y = densiteit, colour = openheid)) +
+    geom_line(linewidth = 1)
+```
+
+We nemen $K$ random draws van deze verdelingen en delen de voorspelde waarders voor telpunt $j$ achteraf $K$ keer door de offset
+
+$$
+\frac{p_{s, k}A_j}{10^6\ \text{m}^2/100\ \text{ha}}
+$$
+
+- $p_{s, k}$: De $k$-de draw van de gemiddelde detectiekans in stratum $s$ waartoe telpunt $j$ behoort.
+- $A_j = \pi \cdot 300^2=$ `r pi * 300^2` m²: De oppervlakte van telcirkel $j$.
+
+Van deze nieuwe posterior nemen we ten slotte het gemiddelde, 95 % quantielen en relatieve fout zoals voordien.
 
 #### Model specificatie
 
