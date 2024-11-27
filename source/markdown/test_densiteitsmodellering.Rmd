@@ -1125,6 +1125,7 @@ for (i in seq_along(reg_vec)) {
   plot_veldleeuwerik_reg_mean <- pred_veldleeuwerik_reg %>%
     group_by(plotnaam, stratum, x_coord, y_coord) %>%
     summarise(estimate_mean = mean(.epred),
+              se = sd(.epred),
               q2.5 = quantile(.epred, 0.025),
               q97.5 = quantile(.epred, 0.975),
               .groups = "drop") %>%
@@ -1181,7 +1182,6 @@ We verwachten dat het gemiddelde hoger is voor het maximum en dat de onzekerheid
 brms1_pred_df %>%
   st_drop_geometry() %>%
   filter(plotnaam %in% example_points) %>%
-  mutate(q97.5 - q2.5) %>%
   arrange(plotnaam, method) %>%
   kable()
 ```
@@ -1229,7 +1229,7 @@ brms1_pred_df %>%
                          breaks = seq(from = 0, to = 2, length.out = 5),
                          limits = c(0, 2)) +
     coord_sf(crs = 31370) +
-    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+    labs(x = "", y = "", fill = "Relatieve fout",
          title = "Gemiddelde per telpunt over telperiodes") +
     theme(legend.position = "bottom")
 ```
@@ -1243,7 +1243,7 @@ brms1_pred_df %>%
                          breaks = seq(from = 0, to = 2, length.out = 5),
                          limits = c(0, 2)) +
     coord_sf(crs = 31370) +
-    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+    labs(x = "", y = "", fill = "Relatieve fout",
          title = "Maximum per telpunt over telperiodes") +
     theme(legend.position = "bottom")
 ```
@@ -1414,13 +1414,14 @@ for (i in seq_along(reg_vec)) {
     mutate(
       cirkelopp = pi * 300^2,
       ha_100 = 10^6,
-      offset = (detectiekans * cirkelopp) / ha_100)
-    
+      offset = (detectiekans * cirkelopp) / ha_100,
+      .epred2 = .epred / offset
+    ) %>%
     group_by(plotnaam, stratum, x_coord, y_coord) %>%
-    summarise(estimate_mean = mean(.epred),
-              se = sd(.epred),
-              q2.5 = quantile(.epred, 0.025),
-              q97.5 = quantile(.epred, 0.975),
+    summarise(estimate_mean = mean(.epred2),
+              se = sd(.epred2),
+              q2.5 = quantile(.epred2, 0.025),
+              q97.5 = quantile(.epred2, 0.975),
               .groups = "drop") %>%
     mutate(across(c(x_coord, y_coord), ~ round(.x, digits = 4)),
            rel_fout = (q97.5 - q2.5) / (2 * estimate_mean)) %>%
@@ -1474,7 +1475,7 @@ brms2_pred_df %>%
                          breaks = seq(from = 0, to = 20, length.out = 5),
                          limits = c(0, 20)) +
     coord_sf(crs = 31370) +
-    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+    labs(x = "", y = "", fill = "Relatieve fout",
          title = "Maximum per telpunt over telperiodes") +
     theme(legend.position = "bottom")
 ```
