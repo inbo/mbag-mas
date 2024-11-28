@@ -1468,9 +1468,17 @@ We vergelijken de statistieken voor enkele punten in verschillende strata met de
 We verwachten dat het gemiddelde overeenkomt, maar dat de onzekerheid groter is.
 
 ```{r}
-brms2_pred_df %>%
-  st_drop_geometry() %>%
-  filter(plotnaam %in% example_points) %>%
+bind_rows(
+  brms1_pred_df %>%
+    st_drop_geometry() %>%
+    filter(plotnaam %in% example_points,
+           method == "max"),
+  brms2_pred_df %>%
+    st_drop_geometry() %>%
+    filter(plotnaam %in% example_points) %>%
+    mutate(method = "r_det_prob")
+  ) %>%
+  arrange(plotnaam, method) %>%
   kable()
 ```
 
@@ -1496,8 +1504,8 @@ brms2_pred_df %>%
   ggplot() +
     geom_sf(aes(fill = rel_fout), colour = alpha("white", 0)) +
     scale_fill_gradientn(colours = rainbow(5),
-                         breaks = seq(from = 0, to = 20, length.out = 5),
-                         limits = c(0, 20)) +
+                         breaks = seq(from = 0, to = 2, length.out = 5),
+                         limits = c(0, 2)) +
     coord_sf(crs = 31370) +
     labs(x = "", y = "", fill = "Relatieve fout",
          title = "Maximum per telpunt over telperiodes") +
