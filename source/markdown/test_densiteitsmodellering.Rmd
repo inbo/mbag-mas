@@ -1072,12 +1072,19 @@ pp_check(test_brms_poisson1, group = "periode_in_jaar", type = "bars_grouped",
 
 #### Resultaten
 
-We maken predicties voor het volledige steekproefkader voor elke telronde.
+```{r}
+n_draws <- 1000
+```
+
+We maken `r n_draws` predicties voor elk telpunten van het volledige steekproefkader voor elke telronde.
 We nemen daarna zowel het gemiddelde per telpunt over de telrondes als het maximum.
 
-Het is allicht beter een grid te leggen over het steekproefkader en daarna predicties te doen zoals we in het pilootproject deden.
+Zie `?prepare_predictions.brmsfit` en deze interessante [blog post](https://www.andrewheiss.com/blog/2021/11/10/ame-bayes-re-guide/#different-kinds-of-average-predictions-with-multilevel-models).
+
+Het is allicht beter een grid te leggen over het steekproefkader en daarna predicties te doen zoals we in het pilootproject deden, omdat we dan geen overlap hebben tussen telpunten.
 Dit zal voor een gladde overhang zorgen in densiteiten tussen telpunten.
 Hiervoor moeten we echter voor elke gridcel het stratum berekenen.
+Alle data is dan nieuw, terwijl we nu gebruik maken van de random intercepts.
 We doen dat voorlopig niet, maar dat is zeker mogelijk.
 
 ```{r}
@@ -1121,9 +1128,12 @@ if (file.exists(brms1_pred_path)) {
       pred_veldleeuwerik_reg <- tidybayes::add_epred_draws(
           newdata = new_df_reg,
           object = test_brms_poisson1,
-          ndraws = 1000,
-          re_formula = NA,
-          offset = FALSE,
+          ndraws = n_draws,
+          re_formula = ~ (1 | plotnaam), # use random effects
+          allow_new_levels = TRUE,       # allow new locations
+          # draw from the posterior draws of a randomly chosen existing level
+          sample_new_levels = "uncertainty",
+          offset = FALSE,                # divide predictions by offset
           seed = 123)
       saveRDS(pred_veldleeuwerik_reg, brms1_pred_reg_path)
     }
@@ -1184,7 +1194,7 @@ if (file.exists(brms1_pred_path)) {
 ```
 
 ```{r}
-example_points <- c("Km_10011.4", "Km_39180.1.1", "Ol_5146", "Ol_5259.10")
+example_points <- c("Km_19078.3", "Km_31210.4", "Ol_8360.7", "Ol_15393.2")
 ```
 
 We vergelijken de statistieken voor enkele punten in verschillende strata tussen beide methodes (gemiddelde per telpunt en maximum).
@@ -1198,7 +1208,19 @@ brms1_pred_df %>%
   kable()
 ```
 
-Het gemiddelde is inderdaad hoger voor maximum. De onzekerheid ...
+Het gemiddelde is inderdaad hoger voor maximum. De relatieve fout niet altijd.
+
+Hoe goed komt dit overeen met de data?
+
+```{r}
+analysis_df_brms1 %>%
+  filter(plotnaam %in% example_points) %>%
+  mutate(dens = n / offset) %>%
+  select(plotnaam, stratum, periode_in_jaar, dens) %>%
+  arrange(plotnaam, desc(dens))
+```
+
+Niet super.
 
 We bekijken de verwachte densiteit over het steekproefkader:
 
@@ -1311,52 +1333,15 @@ Van deze nieuwe posterior nemen we ten slotte het gemiddelde, 95 % quantielen en
 
 #### Model specificatie
 
-```{r}
-test_brms_poisson2 <- brm(
-  formula = n ~ stratum + periode_in_jaar + s(x_coord, y_coord) +
-    (1 | plotnaam),
-  data = analysis_df_brms1,
-  family = poisson(),
-  chains = nchains,
-  warmup = burnin,
-  iter = niter,
-  cores = nparallel,
-  thin = thinning,
-  backend = "cmdstanr",
-  seed = 123,
-  file = file.path(cache_dir, "test_brms_poisson2"),
-  file_refit = "on_change")
-```
-
-#### MCMC convergentie
-
-```{r}
-plot(test_brms_poisson2, ask = FALSE)
-```
-
-#### Model fit
-
-Totaal:
-
-```{r}
-pp_check(test_brms_poisson2, type = "bars", ndraws = 100)
-```
-
-Per stratum:
-
-```{r, fig.width=10}
-pp_check(test_brms_poisson2, group = "stratum", type = "bars_grouped",
-         ndraws = 100)
-```
-
-Per telperiode:
-
-```{r, fig.width=10}
-pp_check(test_brms_poisson2, group = "periode_in_jaar", type = "bars_grouped",
-         ndraws = 100)
-```
+We gebruiken hetzelfde modelobject als voordien maar maken predicties zonder offset (verwarrend genoeg via het argument `offset = TRUE`).
+Zo kunnen we de resultaten beter vergelijken.
 
 #### Resultaten
+
+We maken `r n_draws` predicties voor elk telpunten van het volledige steekproefkader voor elke telronde.
+We nemen `r n_draws` random waardes uit de verdeling van de detectiekansen.
+We voegen die samen met de oppervlaktes en zetten zo de aantallen om naar aantal per 100 ha, gecorrigeerd voor detectiekans.
+We nemen daarna zowel het gemiddelde per telpunt over de telrondes als het maximum.
 
 ```{r}
 # Specify cache path
@@ -1369,7 +1354,7 @@ if (file.exists(brms2_pred_path)) {
   r_det_probs <- sapply(seq_len(nrow(det_probs_df)), function(i) {
     mean <- det_probs_df$`p(z)`[i]
     sd <- det_probs_df$`standard error`[i]
-    beta_fit_params(beta_fun = rbeta, mean = mean, sd = sd, n = 1000)
+    beta_fit_params(beta_fun = rbeta, mean = mean, sd = sd, n = n_draws)
   })
 
   r_det_prob_df <- cbind(r_det_probs) %>%
@@ -1412,9 +1397,13 @@ if (file.exists(brms2_pred_path)) {
     } else {
       pred_veldleeuwerik_reg <- tidybayes::add_epred_draws(
           newdata = new_df_reg,
-          object = test_brms_poisson2,
-          ndraws = 1000,
-          re_formula = NA,
+          object = test_brms_poisson1,
+          ndraws = n_draws,
+          re_formula = ~ (1 | plotnaam), # use random effects
+          allow_new_levels = TRUE,       # allow new locations
+          # draw from the posterior draws of a randomly chosen existing level
+          sample_new_levels = "uncertainty",
+          offset = TRUE,                 # do not divide predictions by offset
           seed = 123)
       saveRDS(pred_veldleeuwerik_reg, brms2_pred_reg_path)
     }
@@ -1519,6 +1508,97 @@ brms2_pred_df %>%
   - per waarneming detectiekans via detectiefunctie nemen en corrigeren
   - daarna densiteit per telpunt en telperiode optellen
 - via gamma of xpoisson
+
+```{r}
+# Create analysis dataset
+presences_df <- veldleeuwerik_2024_df %>%
+  mutate(stratum = ifelse(
+    regio == "Weidestreek", regio,
+    paste(regio, openheid_klasse, sbp, sep = "_"))
+  )
+  
+
+  count(plotnaam, periode_in_jaar, stratum, x_coord, y_coord, detectiekans) %>%
+  mutate(cirkelopp = pi * 300^2,
+         ha_100 = 10^6,
+         offset = (detectiekans * cirkelopp) / ha_100)
+
+# Add zero counts
+total_df <- mas_data_clean %>%
+  st_drop_geometry() %>%
+  expand(nesting(plotnaam, periode_in_jaar)) %>%
+  anti_join(presences_df, by = join_by(plotnaam, periode_in_jaar)) %>%
+  left_join(design, by = join_by(plotnaam == pointid)) %>%
+  mutate(stratum = ifelse(
+    regio == "Weidestreek", regio,
+    paste(regio, openheid_klasse, sbp, sep = "_"))
+  ) %>%
+  full_join(det_prob_df, by = join_by(openheid_klasse)) %>%
+  mutate(n = 0) %>%
+  mutate(cirkelopp = pi * 300^2,
+         ha_100 = 10^6,
+         offset = (detectiekans * cirkelopp) / ha_100) %>%
+  bind_rows(presences_df)
+
+# Relevel categorical variables to most common ones
+analysis_df_brms1 <- total_df %>%
+  mutate(n_stratum = n(),
+         .by = stratum) %>%
+  mutate(n_periode = n(),
+         .by = periode_in_jaar)
+
+ref_group_stratum <- analysis_df_brms1$stratum[
+  which.max(analysis_df_brms1$n_stratum)
+  ]
+ref_group_periode <- analysis_df_brms1$periode_in_jaar[
+  which.max(analysis_df_brms1$n_periode)
+  ]
+
+analysis_df_brms1 <- analysis_df_brms1 %>%
+  mutate(
+    stratum = relevel(factor(stratum), ref_group_stratum),
+    periode_in_jaar = relevel(factor(periode_in_jaar), ref_group_periode)
+  ) %>%
+  select(plotnaam, n, stratum, periode_in_jaar, x_coord, y_coord, offset)
+```
+
+We willen de detectiekans voorspellen op elke afstand maar dit lukt niet: https://github.com/DistanceDevelopment/Distance/issues/189
+
+
+```{r}
+hazard_rate <- function(dist, scale, shape)  1 - exp((-dist / scale)^(-shape))
+
+veldleeuwerik_2024_df %>%
+  mutate(
+    stratum = ifelse(
+      regio == "Weidestreek", regio,
+      paste(regio, openheid_klasse, sbp, sep = "_")),
+    shape = veldleeuwerik_dist_hr$ddf$par[1],
+    scale = ifelse(
+      openheid_klasse == "HOL", veldleeuwerik_dist_hr$ddf$par[2],
+      veldleeuwerik_dist_hr$ddf$par[2] + veldleeuwerik_dist_hr$ddf$par[3]
+      )
+  ) %>%
+  rowwise() %>%
+  mutate(
+    detectiekans = hazard_rate(distance2plot, scale, shape)
+  )
+
+veldleeuwerik_2024_df %>%
+  select(plotnaam, openheid_klasse, distance2plot) %>%
+  mutate(
+    shape = unname(veldleeuwerik_dist_hr$ddf$par[1]),
+    scale = ifelse(
+      openheid_klasse == "HOL", veldleeuwerik_dist_hr$ddf$par[2],
+      veldleeuwerik_dist_hr$ddf$par[2] + veldleeuwerik_dist_hr$ddf$par[3]
+      )
+  ) %>%
+  rowwise() %>%
+  mutate(
+    detectiekans = hazard_rate(distance2plot, scale, shape)
+  )
+```
+
 
 ## Density surface modelling
 
