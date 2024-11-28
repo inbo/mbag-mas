@@ -1094,7 +1094,7 @@ if (file.exists(brms1_pred_path)) {
     # Specify cache path
     brms1_pred_reg_path <- file.path(
       cache_dir, paste0("brms1_pred_", tolower(reg_vec[i]), ".Rds"))
-  
+
     # Create new dataframe for complete sampling frame
     new_df_reg <- steekproefkader %>%
         mutate(
@@ -1111,9 +1111,9 @@ if (file.exists(brms1_pred_path)) {
                   relationship = "many-to-many") %>%
         select(plotnaam = pointid, stratum, x_coord, y_coord, offset) %>%
         expand_grid(periode_in_jaar = unique(analysis_df_brms1$periode_in_jaar))
-  
+
     print(paste("Making predictions for", reg_vec[i]))
-  
+
     # Draw predictions if file does not exists
     if (file.exists(brms1_pred_reg_path)) {
       pred_veldleeuwerik_reg <- readRDS(brms1_pred_reg_path)
@@ -1123,10 +1123,11 @@ if (file.exists(brms1_pred_path)) {
           object = test_brms_poisson1,
           ndraws = 1000,
           re_formula = NA,
+          offset = FALSE,
           seed = 123)
       saveRDS(pred_veldleeuwerik_reg, brms1_pred_reg_path)
     }
-  
+
     # Calculate summary statistics for location averaged over time periods
     plot_veldleeuwerik_reg_mean <- pred_veldleeuwerik_reg %>%
       group_by(plotnaam, stratum, x_coord, y_coord) %>%
@@ -1140,7 +1141,7 @@ if (file.exists(brms1_pred_path)) {
       st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
       st_buffer(300) %>%
       mutate(method = "mean")
-  
+
     # Calculate summary statistics per location for time period with maximum
     # expected breeding pairs
     plot_veldleeuwerik_reg_max <- pred_veldleeuwerik_reg %>%
@@ -1159,24 +1160,24 @@ if (file.exists(brms1_pred_path)) {
       st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
       st_buffer(300) %>%
       mutate(method = "max")
-  
+
     # Combine methods
     plot_veldleeuwerik_reg <- bind_rows(plot_veldleeuwerik_reg_mean,
                                         plot_veldleeuwerik_reg_max)
-  
+
     pred_list[[i]] <- plot_veldleeuwerik_reg
-    
+
     # Remove large objects
     rm(pred_veldleeuwerik_reg)
     rm(plot_veldleeuwerik_reg)
   }
-  
+
   # Combine summary statistics for all regions
   brms1_pred_df <- bind_rows(pred_list) %>%
     separate(stratum, into = c("regio", "openheid", "sbp"))
-  
+
   saveRDS(brms1_pred_df, brms1_pred_path)
-  
+
   # Remove large objects
   rm(pred_list)
 }
@@ -1370,7 +1371,7 @@ if (file.exists(brms2_pred_path)) {
     sd <- det_probs_df$`standard error`[i]
     beta_fit_params(beta_fun = rbeta, mean = mean, sd = sd, n = 1000)
   })
-  
+
   r_det_prob_df <- cbind(r_det_probs) %>%
     as_tibble(.name_repair = "minimal") %>%
     `colnames<-`(det_probs_df$openheid) %>%
@@ -1378,16 +1379,16 @@ if (file.exists(brms2_pred_path)) {
                  values_to = "detectiekans", names_to = "openheid") %>%
     mutate(.draw = row_number(),
            .by = openheid)
-  
+
   # Prediction per region
   reg_vec <- sort(unique(veldleeuwerik_2024_df$regio))
   pred_list <- vector(length = length(reg_vec), mode = "list")
-  
+
   for (i in seq_along(reg_vec)) {
     # Specify cache path
     brms2_pred_reg_path <- file.path(
       cache_dir, paste0("brms2_pred_", tolower(reg_vec[i]), ".Rds"))
-  
+
     # Create new dataframe for complete sampling frame
     new_df_reg <- steekproefkader %>%
         mutate(
@@ -1402,9 +1403,9 @@ if (file.exists(brms2_pred_path)) {
         select(plotnaam = pointid, stratum, x_coord, y_coord,
                openheid = openheid_klasse, sbp) %>%
         expand_grid(periode_in_jaar = unique(analysis_df_brms1$periode_in_jaar))
-  
+
     print(paste("Making predictions for", reg_vec[i]))
-  
+
     # Draw predictions if file does not exists
     if (file.exists(brms2_pred_reg_path)) {
       pred_veldleeuwerik_reg <- readRDS(brms2_pred_reg_path)
@@ -1417,7 +1418,7 @@ if (file.exists(brms2_pred_path)) {
           seed = 123)
       saveRDS(pred_veldleeuwerik_reg, brms2_pred_reg_path)
     }
-  
+
     # Calculate summary statistics per location for time period with maximum
     # expected breeding pairs
     plot_veldleeuwerik_reg <- pred_veldleeuwerik_reg %>%
@@ -1445,20 +1446,20 @@ if (file.exists(brms2_pred_path)) {
       st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
       st_buffer(300) %>%
       mutate(method = "max")
-  
+
     pred_list[[i]] <- plot_veldleeuwerik_reg
-    
+
     # Remove large objects
     rm(pred_veldleeuwerik_reg)
     rm(plot_veldleeuwerik_reg)
   }
-  
+
   # Combine summary statistics for all regions
   brms2_pred_df <- bind_rows(pred_list) %>%
     separate(stratum, into = c("regio", "openheid", "sbp"))
-  
+
   saveRDS(brms2_pred_df, brms2_pred_path)
-  
+
   # Remove large objects
   rm(pred_list)
 }
