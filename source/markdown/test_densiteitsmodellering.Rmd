@@ -1231,8 +1231,8 @@ brms1_pred_df %>%
   ggplot() +
     geom_sf(aes(fill = estimate_mean), colour = alpha("white", 0)) +
     scale_fill_gradientn(colours = rainbow(5),
-                         breaks = seq(from = 0, to = 4, length.out = 5),
-                         limits = c(0, 4)) +
+                         breaks = seq(from = 0, to = 40, length.out = 5),
+                         limits = c(0, 40)) +
     coord_sf(crs = 31370) +
     labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
          title = "Gemiddelde per telpunt over telperiodes") +
@@ -1245,8 +1245,8 @@ brms1_pred_df %>%
   ggplot() +
     geom_sf(aes(fill = estimate_mean), colour = alpha("white", 0)) +
     scale_fill_gradientn(colours = rainbow(5),
-                         breaks = seq(from = 0, to = 4, length.out = 5),
-                         limits = c(0, 4)) +
+                         breaks = seq(from = 0, to = 40, length.out = 5),
+                         limits = c(0, 40)) +
     coord_sf(crs = 31370) +
     labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
          title = "Maximum per telpunt over telperiodes") +
@@ -1261,8 +1261,8 @@ brms1_pred_df %>%
   ggplot() +
     geom_sf(aes(fill = rel_fout), colour = alpha("white", 0)) +
     scale_fill_gradientn(colours = rainbow(5),
-                         breaks = seq(from = 0, to = 2, length.out = 5),
-                         limits = c(0, 2)) +
+                         breaks = seq(from = 0, to = 4, length.out = 5),
+                         limits = c(0, 4)) +
     coord_sf(crs = 31370) +
     labs(x = "", y = "", fill = "Relatieve fout",
          title = "Gemiddelde per telpunt over telperiodes") +
@@ -1275,8 +1275,8 @@ brms1_pred_df %>%
   ggplot() +
     geom_sf(aes(fill = rel_fout), colour = alpha("white", 0)) +
     scale_fill_gradientn(colours = rainbow(5),
-                         breaks = seq(from = 0, to = 2, length.out = 5),
-                         limits = c(0, 2)) +
+                         breaks = seq(from = 0, to = 4, length.out = 5),
+                         limits = c(0, 4)) +
     coord_sf(crs = 31370) +
     labs(x = "", y = "", fill = "Relatieve fout",
          title = "Maximum per telpunt over telperiodes") +
@@ -1483,8 +1483,8 @@ brms2_pred_df %>%
   ggplot() +
     geom_sf(aes(fill = estimate_mean), colour = alpha("white", 0)) +
     scale_fill_gradientn(colours = rainbow(5),
-                         breaks = seq(from = 0, to = 20, length.out = 5),
-                         limits = c(0, 20)) +
+                         breaks = seq(from = 0, to = 40, length.out = 5),
+                         limits = c(0, 40)) +
     coord_sf(crs = 31370) +
     labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
          title = "Maximum per telpunt over telperiodes") +
@@ -1498,8 +1498,8 @@ brms2_pred_df %>%
   ggplot() +
     geom_sf(aes(fill = rel_fout), colour = alpha("white", 0)) +
     scale_fill_gradientn(colours = rainbow(5),
-                         breaks = seq(from = 0, to = 2, length.out = 5),
-                         limits = c(0, 2)) +
+                         breaks = seq(from = 0, to = 4, length.out = 5),
+                         limits = c(0, 4)) +
     coord_sf(crs = 31370) +
     labs(x = "", y = "", fill = "Relatieve fout",
          title = "Maximum per telpunt over telperiodes") +
