@@ -1509,7 +1509,7 @@ brms2_pred_df %>%
   - daarna densiteit per telpunt en telperiode optellen
 - via gamma of xpoisson
 
-```{r}
+```{r, eval=FALSE}
 # Create analysis dataset
 presences_df <- veldleeuwerik_2024_df %>%
   mutate(stratum = ifelse(
@@ -1565,7 +1565,7 @@ analysis_df_brms1 <- analysis_df_brms1 %>%
 We willen de detectiekans voorspellen op elke afstand maar dit lukt niet: https://github.com/DistanceDevelopment/Distance/issues/189
 
 
-```{r}
+```{r, eval=FALSE}
 hazard_rate <- function(dist, scale, shape)  1 - exp((-dist / scale)^(-shape))
 
 veldleeuwerik_2024_df %>%
