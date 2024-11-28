@@ -1217,7 +1217,8 @@ analysis_df_brms1 %>%
   filter(plotnaam %in% example_points) %>%
   mutate(dens = n / offset) %>%
   select(plotnaam, stratum, periode_in_jaar, dens) %>%
-  arrange(plotnaam, desc(dens))
+  arrange(plotnaam, desc(dens)) %>%
+  kable()
 ```
 
 Niet super.
@@ -1385,8 +1386,11 @@ if (file.exists(brms2_pred_path)) {
           regio == "Weidestreek", regio,
           paste(regio, openheid_klasse, sbp, sep = "_"))
         ) %>%
+        left_join(analysis_df_brms1 %>% distinct(stratum, offset),
+            by = join_by(stratum),
+            relationship = "many-to-many") %>%
         select(plotnaam = pointid, stratum, x_coord, y_coord,
-               openheid = openheid_klasse, sbp) %>%
+               openheid = openheid_klasse, sbp, offset) %>%
         expand_grid(periode_in_jaar = unique(analysis_df_brms1$periode_in_jaar))
 
     print(paste("Making predictions for", reg_vec[i]))
