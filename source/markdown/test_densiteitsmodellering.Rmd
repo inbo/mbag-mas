@@ -1689,10 +1689,14 @@ stan_funs <- "
 
 stanvars <- stanvar(scode = stan_funs, block = "functions")
 
+conflicted::conflicts_prefer(brms::ar)
+conflicted::conflicts_prefer(Distance::create.bins)
+conflicted::conflicts_prefer(stats::lag)
+
 test_hurdle_gamma_trunc <- brm(
-  formula = densiteit | trunc(lb = 1) ~ stratum + periode_in_jaar +
-    s(x_coord, y_coord) + (1 | plotnaam),
-  data = analysis_df_brms2[analysis_df_brms2$densiteit >= 1, ],
+  formula = densiteit  ~ stratum + periode_in_jaar + s(x_coord, y_coord) +
+    (1 | plotnaam),
+  data = analysis_df_brms2,
   family = hurdle_gamma_trunc,
   stanvars = stanvars,
   chains = nchains,
@@ -1701,6 +1705,13 @@ test_hurdle_gamma_trunc <- brm(
   cores = nparallel,
   thin = thinning,
   seed = 123)
+
+posterior_predict_hurdle_gamma_trunc <- function(i, prep, ...) {
+  mu <- brms::get_dpar(prep, "mu", i = i)
+  phi <- brms::get_dpar(prep, "phi", i = i)
+  trials <- prep$data$vint1[i]
+  hurdle_gamma_trunc_rng(mu, phi, trials)
+}
 ```
 
 ```{r}
