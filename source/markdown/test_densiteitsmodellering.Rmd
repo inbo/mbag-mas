@@ -1140,7 +1140,9 @@ if (file.exists(brms1_pred_path)) {
 
     # Calculate summary statistics for location averaged over time periods
     plot_veldleeuwerik_reg_mean <- pred_veldleeuwerik_reg %>%
-      group_by(plotnaam, stratum, x_coord, y_coord) %>%
+      group_by(plotnaam, stratum, x_coord, y_coord, .draw) %>%
+      summarise(.epred = mean(.epred),
+                .groups = "drop_last") %>%
       summarise(estimate_mean = mean(.epred),
                 se = sd(.epred),
                 q2.5 = quantile(.epred, 0.025),
@@ -1208,7 +1210,7 @@ brms1_pred_df %>%
   kable()
 ```
 
-Het gemiddelde is inderdaad hoger voor maximum. De relatieve fout niet altijd.
+Het gemiddelde is inderdaad hoger voor maximum. De relatieve fout telkens kleiner.
 
 Hoe goed komt dit overeen met de data?
 
