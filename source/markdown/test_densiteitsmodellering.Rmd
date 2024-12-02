@@ -1058,7 +1058,6 @@ test_brms_poisson1 <- brm(
 plot(test_brms_poisson1, ask = FALSE)
 ```
 
-
 #### Model fit
 
 Totaal:
@@ -1527,68 +1526,206 @@ brms2_pred_df %>%
 
 ### Direct modelleren van de densiteiten
 
-- rekening houden met afstand
-  - per waarneming detectiekans via detectiefunctie nemen en corrigeren
-  - daarna densiteit per telpunt en telperiode optellen
-- via gamma of xpoisson
+We fitten hetzelfde model als voordien met **brms**.
+Nu berekenen we echter de densiteit reeds vooraf en modelleren we rechtstreeks deze waarden via een hurdle Gamma distributie en een hurdle lognormal distributie (`help("brmsfamily", package="brms")`).
+Elke waarneming heeft een eigen offset afhankelijk van de afstand waarop deze is gezien.
+Zie [deze issue](https://github.com/DistanceDevelopment/Distance/issues/189).
+We hebben geen onzekerheid op deze afstandspecifieke detectiekansen.
 
-```{r, eval=FALSE}
+#### Model specificatie
+
+```{r}
+# Calculate detection probabilities
+det_prob_df2 <- predict_det_probs(veldleeuwerik_dist_hn)
+
 # Create analysis dataset
-presences_df <- veldleeuwerik_2024_df %>%
-  mutate(stratum = ifelse(
-    regio == "Weidestreek", regio,
-    paste(regio, openheid_klasse, sbp, sep = "_"))
-  )
-
-  count(plotnaam, periode_in_jaar, stratum, x_coord, y_coord, detectiekans) %>%
-  mutate(cirkelopp = pi * 300^2,
-         ha_100 = 10^6,
-         offset = (detectiekans * cirkelopp) / ha_100)
-
-# Add zero counts
-total_df <- mas_data_clean %>%
-  st_drop_geometry() %>%
-  expand(nesting(plotnaam, periode_in_jaar)) %>%
-  anti_join(presences_df, by = join_by(plotnaam, periode_in_jaar)) %>%
-  left_join(design, by = join_by(plotnaam == pointid)) %>%
+presences_df2 <- veldleeuwerik_2024_df %>%
   mutate(stratum = ifelse(
     regio == "Weidestreek", regio,
     paste(regio, openheid_klasse, sbp, sep = "_"))
   ) %>%
-  full_join(det_prob_df, by = join_by(openheid_klasse)) %>%
-  mutate(n = 0) %>%
-  mutate(cirkelopp = pi * 300^2,
-         ha_100 = 10^6,
-         offset = (detectiekans * cirkelopp) / ha_100) %>%
-  bind_rows(presences_df)
+  full_join(det_prob_df2, by = join_by("oid" == "object")) %>%
+  rename("detectiekans" = "det_prob") %>%
+  mutate(
+    cirkelopp = pi * 300^2,
+    ha_100 = 10^6,
+    offset = (detectiekans * cirkelopp) / ha_100,
+    densiteit = aantal / offset
+  ) %>%
+  group_by(plotnaam, periode_in_jaar, stratum, x_coord, y_coord) %>%
+  summarise(densiteit = sum(densiteit),
+            .groups = "drop")
+
+# Add zero counts
+total_df2 <- mas_data_clean %>%
+  st_drop_geometry() %>%
+  expand(nesting(plotnaam, periode_in_jaar)) %>%
+  anti_join(presences_df2, by = join_by(plotnaam, periode_in_jaar)) %>%
+  left_join(design, by = join_by(plotnaam == pointid)) %>%
+  mutate(
+    stratum = ifelse(
+      regio == "Weidestreek", regio,
+      paste(regio, openheid_klasse, sbp, sep = "_")
+      ),
+    detectiekans = 1,
+    densiteit = 0,
+    cirkelopp = pi * 300^2,
+    ha_100 = 10^6,
+    offset = (detectiekans * cirkelopp) / ha_100
+  ) %>%
+  select(plotnaam, periode_in_jaar, stratum, x_coord, y_coord, densiteit) %>%
+  bind_rows(presences_df2)
 
 # Relevel categorical variables to most common ones
-analysis_df_brms1 <- total_df %>%
-  mutate(n_stratum = n(),
+analysis_df_brms2 <- total_df2 %>%
+  mutate(n_stratum = sum(densiteit),
          .by = stratum) %>%
-  mutate(n_periode = n(),
+  mutate(n_periode = sum(densiteit),
          .by = periode_in_jaar)
 
-ref_group_stratum <- analysis_df_brms1$stratum[
-  which.max(analysis_df_brms1$n_stratum)
+ref_group_stratum <- analysis_df_brms2$stratum[
+  which.max(analysis_df_brms2$n_stratum)
   ]
-ref_group_periode <- analysis_df_brms1$periode_in_jaar[
-  which.max(analysis_df_brms1$n_periode)
+ref_group_periode <- analysis_df_brms2$periode_in_jaar[
+  which.max(analysis_df_brms2$n_periode)
   ]
 
-analysis_df_brms1 <- analysis_df_brms1 %>%
+analysis_df_brms2 <- analysis_df_brms2 %>%
   mutate(
     stratum = relevel(factor(stratum), ref_group_stratum),
     periode_in_jaar = relevel(factor(periode_in_jaar), ref_group_periode)
   ) %>%
-  select(plotnaam, n, stratum, periode_in_jaar, x_coord, y_coord, offset)
+  select(plotnaam, densiteit, stratum, periode_in_jaar, x_coord, y_coord)
 ```
-
-We willen de detectiekans voorspellen op elke afstand. Zie [deze issue](https://github.com/DistanceDevelopment/Distance/issues/189). 
 
 ```{r}
-predict_det_probs(veldleeuwerik_dist_hn)
+# MCMC parameters
+nchains <- 3           # number of chains
+niter <- 2500          # number of iterations (incl. burn-in)
+burnin <- 500          # number of initial samples to discard (burn-in)
+nparallel <- nchains   # number of cores used for parallel computing
+thinning <- 2          # thinning
 ```
+
+```{r}
+test_brms_gamma1 <- brm(
+  formula = densiteit ~ stratum + periode_in_jaar + s(x_coord, y_coord) +
+    (1 | plotnaam),
+  data = analysis_df_brms2,
+  family = hurdle_gamma(),
+  chains = nchains,
+  warmup = burnin,
+  iter = niter,
+  cores = nparallel,
+  thin = thinning,
+  backend = "cmdstanr",
+  seed = 123,
+  file = file.path(cache_dir, "test_brms_gamma1"),
+  file_refit = "on_change")
+
+test_brms_lognormal1 <- brm(
+  formula = densiteit ~ stratum + periode_in_jaar + s(x_coord, y_coord) +
+    (1 | plotnaam),
+  data = analysis_df_brms2,
+  family = hurdle_lognormal(),
+  chains = nchains,
+  warmup = burnin,
+  iter = niter,
+  cores = nparallel,
+  thin = thinning,
+  backend = "cmdstanr",
+  seed = 123,
+  file = file.path(cache_dir, "test_brms_lognormal1"),
+  file_refit = "on_change")
+```
+
+#### MCMC convergentie
+
+Gamma:
+
+```{r}
+plot(test_brms_gamma1, ask = FALSE)
+```
+
+Lognormal:
+
+```{r}
+plot(test_brms_lognormal1, ask = FALSE)
+```
+
+#### Model fit
+
+Distributie van de data
+
+```{r}
+pp_check(test_brms_gamma1, type = "dens_overlay", ndraws = 100) +
+  ggtitle("Gamma")
+```
+
+```{r}
+pp_check(test_brms_lognormal1, type = "dens_overlay", ndraws = 100) +
+  ggtitle("Lognormal")
+```
+
+Per stratum:
+
+```{r, fig.width=10}
+pp_check(test_brms_gamma1, group = "stratum", type = "dens_overlay_grouped",
+         ndraws = 100) +
+  ggtitle("Gamma")
+```
+
+```{r, fig.width=10}
+pp_check(test_brms_lognormal1, group = "stratum", type = "dens_overlay_grouped",
+         ndraws = 100) +
+  ggtitle("Lognormal")
+```
+
+Per telperiode:
+
+```{r, fig.width=10}
+pp_check(test_brms_gamma1, group = "periode_in_jaar",
+         type = "dens_overlay_grouped",
+         ndraws = 100) +
+  ggtitle("Gamma")
+```
+
+```{r, fig.width=10}
+pp_check(test_brms_lognormal1, group = "periode_in_jaar",
+         type = "dens_overlay_grouped",
+         ndraws = 100) +
+  ggtitle("Lognormal")
+```
+
+Aantal nullen
+
+```{r}
+observed_zeroes <- sum(analysis_df_brms2$densiteit == 0)
+simulated_zeroes <- rowSums(posterior_predict(test_brms_gamma1) == 0)
+ggplot() +
+  geom_histogram(aes(x = simulated_zeroes), bins = 25, colour = "black") +
+  geom_vline(xintercept = observed_zeroes, colour = "firebrick",
+             linetype = "dashed", linewidth = 1) +
+  labs(x = "Aantal nullen", y = "Frequentie")
+```
+
+Samenvattende statistieken
+
+```{r}
+bayesplot::ppc_stat(
+  y = analysis_df_brms2$densiteit,
+  yrep = posterior_predict(test_brms_gamma1),
+  stat = "mean")
+```
+
+```{r}
+bayesplot::ppc_stat(
+  y = analysis_df_brms2$densiteit,
+  yrep = posterior_predict(test_brms_gamma1),
+  stat = "sd")
+```
+
+#### Resultaten
 
 
 ## Density surface modelling
