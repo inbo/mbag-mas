@@ -894,11 +894,13 @@ In concrete termen:
 - $L^R$: omvat de random effects die de variabiliteit tussen bijvoorbeeld telcirkels of telperiodes modelleren,
 - \textbf{offset}: corrigeert voor bekende systematische effecten, zoals detectiekans of een schaalfactor om naar een standaardmaat (bijvoorbeeld per 100 ha) om te rekenen.
 
-In ons specifieke geval kan $g(\mu)$ de logaritmische linkfunctie ($\ln(\mu)$) zijn, zoals bij Poisson- of negatieve-binomiale modellen. Hierdoor krijgen we:
+In ons specifieke geval kan $g(\mu)$ de logaritmische linkfunctie ($\ln(\mu)$) zijn, zoals bij Poisson of Negatief-binomiale modellen. Hierdoor krijgen we:
 
+<!-- spell-check: ignore:start -->
 $$
 g(\mu) = \ln(\mu) = L^F + L^R + \text{offset}.
 $$
+<!-- spell-check: ignore:end -->
 
 Deze generalisatie biedt flexibiliteit om diverse soorten responsvariabelen en modellen (zoals Poisson, binomiaal, of normaal) te beschrijven, afhankelijk van de aard van $D$.
 
@@ -907,15 +909,19 @@ Deze generalisatie biedt flexibiliteit om diverse soorten responsvariabelen en m
 
 We modelleren het aantal broedparen per telcirkel $j$ in telperiode $t$ met een Poisson-model
 
+<!-- spell-check: ignore:start -->
 $$
 Y_{j,t} \sim Pois(\lambda_{j,t})
 $$
+<!-- spell-check: ignore:end -->
 
 waarbij de verwachte waarde $\lambda_{j,t}$ wordt gemodelleerd als
 
+<!-- spell-check: ignore:start -->
 $$
 \ln(\lambda_{j,t}) = \beta_0 + \sum_{s=2}^S\beta_{s-1}X_{s, j} + \sum_{t=2}^T\gamma_{t-1}X_{t} + f(x_j, y_j) + b_{0,j} + \ln(p_s) + \ln\left(\frac{A_j}{10^6\ \text{m}^2/100\ \text{ha}}\right)
 $$
+<!-- spell-check: ignore:end -->
 
 Hierbij zijn:
 
@@ -929,15 +935,19 @@ Hierbij zijn:
 
 De offset $\ln(p_s) + \ln\left(\frac{A_j}{10^6\ \text{m}^2/100\ \text{ha}}\right)$ kan worden samengevoegd:
 
+<!-- spell-check: ignore:start -->
 $$
 \ln(\lambda_{j,t}) = \beta_0 + \sum_{s=2}^S\beta_{s-1}X_{s, j} + \sum_{t=2}^T\gamma_{t-1}X_{t} + f(x_j, y_j) + b_{0,j} + \ln(\text{offset})
 $$
+<!-- spell-check: ignore:end -->
 
 Zodat we rechtsreeks het aantal broedparen per 100 ha modelleren (= densiteit) waarbij we corrigeren voor de detectiekans:
 
+<!-- spell-check: ignore:start -->
 $$
 \ln\left(\frac{\lambda_{j,t}}{\text{offset}}\right) = \beta_0 + \sum_{s=2}^S\beta_{s-1}X_{s, j} + \sum_{t=2}^T\gamma_{t-1}X_{t} + f(x_j, y_j) + b_{0,j}
 $$
+<!-- spell-check: ignore:end -->
 
 #### Model specificatie
 
@@ -1301,15 +1311,19 @@ We sampelen uit deze verdeling om achteraf de predicties van de aantallen om te 
 
 We modelleren het aantal broedparen per telcirkel $j$ in telperiode $t$ met een Poisson-model
 
+<!-- spell-check: ignore:start -->
 $$
 Y_{j,t} \sim Pois(\lambda_{j,t})
 $$
+<!-- spell-check: ignore:end -->
 
 waarbij de verwachte waarde $\lambda_{j,t}$ wordt gemodelleerd als
 
+<!-- spell-check: ignore:start -->
 $$
 \ln(\lambda_{j,t}) = \beta_0 + \sum_{s=2}^S\beta_{s-1}X_{s, j} + \sum_{t=2}^T\gamma_{t-1}X_{t} + f(x_j, y_j) + b_{0,j}
 $$
+<!-- spell-check: ignore:end -->
 
 We gaan er van uit dat de detectiekans een Beta verdeling volgt. Deze waren van de volgende vorm:
 
@@ -1325,9 +1339,11 @@ cbind(densities, range) %>%
 
 We nemen $K$ random draws van deze verdelingen en delen de voorspelde waarders voor telpunt $j$ achteraf $K$ keer door de offset
 
+<!-- spell-check: ignore:start -->
 $$
 \frac{p_{s, k}A_j}{10^6\ \text{m}^2/100\ \text{ha}}
 $$
+<!-- spell-check: ignore:end -->
 
 - $p_{s, k}$: De $k$-de draw van de gemiddelde detectiekans in stratum $s$ waartoe telpunt $j$ behoort.
 - $A_j = \pi \cdot 300^2=$ `r pi * 300^2` m²: De oppervlakte van telcirkel $j$.
