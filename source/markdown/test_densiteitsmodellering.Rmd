@@ -1612,8 +1612,8 @@ https://cran.r-project.org/web/packages/brms/vignettes/brms_customfamilies.html
 ```{r}
 hurdle_gamma_trunc <- custom_family(
   "hurdle_gamma_trunc", dpars = c("mu", "shape", "hu"),
-  links = c("identity", "log", "logit"),
-  lb = c(NA, 0, 0), ub = c(NA, NA, 1),
+  links = c("log", "log", "logit"),
+  lb = c(0, 0, 0), ub = c(NA, NA, 1),
   type = "real"
 )
 
