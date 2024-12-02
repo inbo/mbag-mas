@@ -1522,7 +1522,6 @@ presences_df <- veldleeuwerik_2024_df %>%
     regio == "Weidestreek", regio,
     paste(regio, openheid_klasse, sbp, sep = "_"))
   )
-  
 
   count(plotnaam, periode_in_jaar, stratum, x_coord, y_coord, detectiekans) %>%
   mutate(cirkelopp = pi * 300^2,
