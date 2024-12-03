@@ -1885,11 +1885,11 @@ test_hu_gamma_trunc <- brm(
 ```{r}
 expose_functions(test_hu_gamma_trunc, vectorize = TRUE)
 
-posterior_predict_hurdle_gamma_trunc <- function(i, prep, ...) {
+posterior_predict_hurdle_gamma_trunc <- function(i, prep, ...) { # nolint
   mu <- brms::get_dpar(prep, "mu", i = i)
   shape <- brms::get_dpar(prep, "shape", i = i)
   hu <- brms::get_dpar(prep, "hu", i = i)
-  hurdle_gamma_trunc_rng(mu, shape, hu)
+  hurdle_gamma_trunc_rng(mu, shape, hu) # nolint
 }
 
 pp_check(test_hu_gamma_trunc, type = "dens_overlay", ndraws = 100) +
