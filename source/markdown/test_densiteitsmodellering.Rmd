@@ -1827,7 +1827,8 @@ stan_funs <- "
   }
   
   /* hurdle gamma log-CCDF and log-CDF functions with truncation
-   * Returns the log of the complementary cumulative distribution (CCDF) for y >= 1
+   * Returns the log of the complementary cumulative distribution (CCDF)
+   * for y >= 1
    */
   real hurdle_gamma_trunc_lccdf(real y, real mu, real shape, real hu) {
     if (y < 1) {
@@ -1864,7 +1865,7 @@ conflicted::conflicts_prefer(brms::ar)
 conflicted::conflicts_prefer(Distance::create.bins)
 conflicted::conflicts_prefer(stats::lag)
 
-test_hurdle_gamma_trunc <- brm(
+test_hu_gamma_trunc <- brm(
   formula = densiteit  ~ stratum + periode_in_jaar + s(x_coord, y_coord) +
     (1 | plotnaam),
   data = analysis_df_brms2,
@@ -1881,9 +1882,8 @@ test_hurdle_gamma_trunc <- brm(
   file_refit = "on_change")
 ```
 
-
 ```{r}
-expose_functions(test_hurdle_gamma_trunc, vectorize = TRUE)
+expose_functions(test_hu_gamma_trunc, vectorize = TRUE)
 
 posterior_predict_hurdle_gamma_trunc <- function(i, prep, ...) {
   mu <- brms::get_dpar(prep, "mu", i = i)
@@ -1892,7 +1892,7 @@ posterior_predict_hurdle_gamma_trunc <- function(i, prep, ...) {
   hurdle_gamma_trunc_rng(mu, shape, hu)
 }
 
-pp_check(test_hurdle_gamma_trunc, type = "dens_overlay", ndraws = 100) +
+pp_check(test_hu_gamma_trunc, type = "dens_overlay", ndraws = 100) +
   ggtitle("Gamma truncated")
 ```
 
