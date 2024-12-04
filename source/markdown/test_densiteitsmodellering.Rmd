@@ -1192,6 +1192,7 @@ if (file.exists(brms1_pred_path)) {
     # Remove large objects
     rm(pred_veldleeuwerik_reg)
     rm(plot_veldleeuwerik_reg)
+    gc()
   }
 
   # Combine summary statistics for all regions
@@ -1202,6 +1203,7 @@ if (file.exists(brms1_pred_path)) {
 
   # Remove large objects
   rm(pred_list)
+  gc()
 }
 ```
 
