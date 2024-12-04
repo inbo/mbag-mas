@@ -1113,7 +1113,7 @@ if (file.exists(brms1_pred_path)) {
     # Specify cache path
     brms1_pred_reg_path <- file.path(
       cache_dir, paste0("brms1_pred_", tolower(reg_vec[i])))
-    
+
     strata_df <- steekproefkader %>%
           mutate(
             regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
@@ -1141,7 +1141,7 @@ if (file.exists(brms1_pred_path)) {
           expand_grid(
             periode_in_jaar = unique(analysis_df_brms1$periode_in_jaar)
           )
-      
+
       # Make predictions
       tidybayes::add_epred_draws(
           newdata = new_df_reg,
@@ -1209,7 +1209,7 @@ if (file.exists(brms1_pred_path)) {
     plot_veldleeuwerik_reg <- bind_rows(plot_veldleeuwerik_reg_mean,
                                         plot_veldleeuwerik_reg_max) %>%
       st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
-      st_buffer(300) 
+      st_buffer(300)
 
     pred_list[[i]] <- plot_veldleeuwerik_reg
 
@@ -1444,7 +1444,7 @@ if (file.exists(brms2_pred_path)) {
         expand_grid(
           periode_in_jaar = unique(analysis_df_brms1$periode_in_jaar)
         )
-      
+
       # Make predictions
       pred_veldleeuwerik_reg <- tidybayes::add_epred_draws(
           newdata = new_df_reg,
