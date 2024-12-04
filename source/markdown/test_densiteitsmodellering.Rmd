@@ -1146,6 +1146,7 @@ if (file.exists(brms1_pred_path)) {
           sample_new_levels = "uncertainty",
           offset = FALSE,                # divide predictions by offset
           seed = 123) %>%
+        ungroup() %>%
         arrow::write_dataset(brms1_pred_reg_path)
       pred_veldleeuwerik_reg <- arrow::open_dataset(brms1_pred_reg_path)
     }
@@ -1162,10 +1163,12 @@ if (file.exists(brms1_pred_path)) {
                 .groups = "drop") %>%
       mutate(across(c(x_coord, y_coord), ~ round(.x, digits = 4)),
              rel_fout = (q97.5 - q2.5) / (2 * estimate_mean)) %>%
+      collect()
+      
+    plot_veldleeuwerik_reg_mean <- plot_veldleeuwerik_reg_mean %>%
       st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
       st_buffer(300) %>%
-      mutate(method = "mean") %>%
-      collect()
+      mutate(method = "mean")
 
     # Calculate summary statistics per location for time period with maximum
     # expected breeding pairs
@@ -1182,10 +1185,12 @@ if (file.exists(brms1_pred_path)) {
                 .groups = "drop") %>%
       mutate(across(c(x_coord, y_coord), ~ round(.x, digits = 4)),
              rel_fout = (q97.5 - q2.5) / (2 * estimate_mean)) %>%
+      collect()
+    
+    plot_veldleeuwerik_reg_max <- plot_veldleeuwerik_reg_max %>%
       st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
       st_buffer(300) %>%
-      mutate(method = "max") %>%
-      collect()
+      mutate(method = "max")
 
     # Combine methods
     plot_veldleeuwerik_reg <- bind_rows(plot_veldleeuwerik_reg_mean,
