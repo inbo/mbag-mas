@@ -33,6 +33,7 @@ library(Distance)
 library(targets)
 library(sf)
 library(brms)
+library(arrow)
 
 library(INBOtheme)
 theme_set(theme_inbo(transparent = TRUE))
@@ -1110,7 +1111,7 @@ if (file.exists(brms1_pred_path)) {
   for (i in seq_along(reg_vec)) {
     # Specify cache path
     brms1_pred_reg_path <- file.path(
-      cache_dir, paste0("brms1_pred_", tolower(reg_vec[i]), ".Rds"))
+      cache_dir, paste0("brms1_pred_", tolower(reg_vec[i])))
 
     # Create new dataframe for complete sampling frame
     new_df_reg <- steekproefkader %>%
@@ -1133,9 +1134,9 @@ if (file.exists(brms1_pred_path)) {
 
     # Draw predictions if file does not exists
     if (file.exists(brms1_pred_reg_path)) {
-      pred_veldleeuwerik_reg <- readRDS(brms1_pred_reg_path)
+      pred_veldleeuwerik_reg <- arrow::open_dataset(brms1_pred_reg_path)
     } else {
-      pred_veldleeuwerik_reg <- tidybayes::add_epred_draws(
+      tidybayes::add_epred_draws(
           newdata = new_df_reg,
           object = test_brms_poisson1,
           ndraws = n_draws,
@@ -1144,8 +1145,9 @@ if (file.exists(brms1_pred_path)) {
           # draw from the posterior draws of a randomly chosen existing level
           sample_new_levels = "uncertainty",
           offset = FALSE,                # divide predictions by offset
-          seed = 123)
-      saveRDS(pred_veldleeuwerik_reg, brms1_pred_reg_path)
+          seed = 123) %>%
+        arrow::write_dataset(brms1_pred_reg_path)
+      pred_veldleeuwerik_reg <- arrow::open_dataset(brms1_pred_reg_path)
     }
 
     # Calculate summary statistics for location averaged over time periods
@@ -1162,7 +1164,8 @@ if (file.exists(brms1_pred_path)) {
              rel_fout = (q97.5 - q2.5) / (2 * estimate_mean)) %>%
       st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
       st_buffer(300) %>%
-      mutate(method = "mean")
+      mutate(method = "mean") %>%
+      collect()
 
     # Calculate summary statistics per location for time period with maximum
     # expected breeding pairs
@@ -1181,7 +1184,8 @@ if (file.exists(brms1_pred_path)) {
              rel_fout = (q97.5 - q2.5) / (2 * estimate_mean)) %>%
       st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
       st_buffer(300) %>%
-      mutate(method = "max")
+      mutate(method = "max") %>%
+      collect()
 
     # Combine methods
     plot_veldleeuwerik_reg <- bind_rows(plot_veldleeuwerik_reg_mean,
