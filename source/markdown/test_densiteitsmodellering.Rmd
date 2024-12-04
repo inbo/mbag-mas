@@ -1112,23 +1112,17 @@ if (file.exists(brms1_pred_path)) {
     # Specify cache path
     brms1_pred_reg_path <- file.path(
       cache_dir, paste0("brms1_pred_", tolower(reg_vec[i])))
-
-    # Create new dataframe for complete sampling frame
-    new_df_reg <- steekproefkader %>%
-        mutate(
-          regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
-        ) %>%
-        st_drop_geometry() %>%
-        filter(regio == reg_vec[i]) %>%
-        mutate(stratum = ifelse(
-          regio == "Weidestreek", regio,
-          paste(regio, openheid_klasse, sbp, sep = "_"))
-        ) %>%
-        left_join(analysis_df_brms1 %>% distinct(stratum, offset),
-                  by = join_by(stratum),
-                  relationship = "many-to-many") %>%
-        select(plotnaam = pointid, stratum, x_coord, y_coord, offset) %>%
-        expand_grid(periode_in_jaar = unique(analysis_df_brms1$periode_in_jaar))
+    
+    strata_df <- steekproefkader %>%
+          mutate(
+            regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
+          ) %>%
+          st_drop_geometry() %>%
+          filter(regio == reg_vec[i]) %>%
+          mutate(stratum = ifelse(
+            regio == "Weidestreek", regio,
+            paste(regio, openheid_klasse, sbp, sep = "_"))
+          )
 
     print(paste("Making predictions for", reg_vec[i]))
 
@@ -1136,6 +1130,17 @@ if (file.exists(brms1_pred_path)) {
     if (file.exists(brms1_pred_reg_path)) {
       pred_veldleeuwerik_reg <- arrow::open_dataset(brms1_pred_reg_path)
     } else {
+      # Create new dataframe for complete sampling frame
+      new_df_reg <- strata_df %>%
+          left_join(analysis_df_brms1 %>% distinct(stratum, offset),
+                    by = join_by(stratum),
+                    relationship = "many-to-many") %>%
+          select(plotnaam = pointid, stratum, x_coord, y_coord, offset) %>%
+          expand_grid(
+            periode_in_jaar = unique(analysis_df_brms1$periode_in_jaar)
+          )
+      
+      # Make predictions
       tidybayes::add_epred_draws(
           newdata = new_df_reg,
           object = test_brms_poisson1,
@@ -1153,7 +1158,7 @@ if (file.exists(brms1_pred_path)) {
 
     # Calculate summary statistics for location averaged over time periods
     plot_veldleeuwerik_reg_mean <- pred_veldleeuwerik_reg %>%
-      group_by(plotnaam, stratum, x_coord, y_coord, .draw) %>%
+      group_by(plotnaam, x_coord, y_coord, .draw) %>%
       summarise(.epred = mean(.epred),
                 .groups = "drop_last") %>%
       summarise(estimate_mean = mean(.epred),
@@ -1162,13 +1167,12 @@ if (file.exists(brms1_pred_path)) {
                 q97.5 = quantile(.epred, 0.975),
                 .groups = "drop") %>%
       mutate(across(c(x_coord, y_coord), ~ round(.x, digits = 4)),
-             rel_fout = (q97.5 - q2.5) / (2 * estimate_mean)) %>%
-      collect()
-      
-    plot_veldleeuwerik_reg_mean <- plot_veldleeuwerik_reg_mean %>%
-      st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
-      st_buffer(300) %>%
-      mutate(method = "mean")
+             cv = se / estimate_mean,
+             rel_fout = (q97.5 - q2.5) / (2 * estimate_mean),
+             method = "mean") %>%
+      collect() %>%
+      left_join(distinct(strata_df, plotnaam = pointid, stratum),
+                by = join_by(plotnaam))
 
     # Calculate summary statistics per location for time period with maximum
     # expected breeding pairs
@@ -1184,17 +1188,16 @@ if (file.exists(brms1_pred_path)) {
                 q97.5 = quantile(.epred, 0.975),
                 .groups = "drop") %>%
       mutate(across(c(x_coord, y_coord), ~ round(.x, digits = 4)),
-             rel_fout = (q97.5 - q2.5) / (2 * estimate_mean)) %>%
+             cv = se / estimate_mean,
+             rel_fout = (q97.5 - q2.5) / (2 * estimate_mean),
+             method = "max") %>%
       collect()
-    
-    plot_veldleeuwerik_reg_max <- plot_veldleeuwerik_reg_max %>%
-      st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
-      st_buffer(300) %>%
-      mutate(method = "max")
 
     # Combine methods
     plot_veldleeuwerik_reg <- bind_rows(plot_veldleeuwerik_reg_mean,
-                                        plot_veldleeuwerik_reg_max)
+                                        plot_veldleeuwerik_reg_max) %>%
+      st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+      st_buffer(300) 
 
     pred_list[[i]] <- plot_veldleeuwerik_reg
 
@@ -1404,8 +1407,14 @@ if (file.exists(brms2_pred_path)) {
     brms2_pred_reg_path <- file.path(
       cache_dir, paste0("brms2_pred_", tolower(reg_vec[i]), ".Rds"))
 
-    # Create new dataframe for complete sampling frame
-    new_df_reg <- steekproefkader %>%
+    print(paste("Making predictions for", reg_vec[i]))
+
+    # Draw predictions if file does not exists
+    if (file.exists(brms2_pred_reg_path)) {
+      pred_veldleeuwerik_reg <- readRDS(brms2_pred_reg_path)
+    } else {
+      # Create new dataframe for complete sampling frame
+      new_df_reg <- steekproefkader %>%
         mutate(
           regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
         ) %>%
@@ -1420,14 +1429,11 @@ if (file.exists(brms2_pred_path)) {
             relationship = "many-to-many") %>%
         select(plotnaam = pointid, stratum, x_coord, y_coord,
                openheid = openheid_klasse, sbp, offset) %>%
-        expand_grid(periode_in_jaar = unique(analysis_df_brms1$periode_in_jaar))
-
-    print(paste("Making predictions for", reg_vec[i]))
-
-    # Draw predictions if file does not exists
-    if (file.exists(brms2_pred_reg_path)) {
-      pred_veldleeuwerik_reg <- readRDS(brms2_pred_reg_path)
-    } else {
+        expand_grid(
+          periode_in_jaar = unique(analysis_df_brms1$periode_in_jaar)
+        )
+      
+      # Make predictions
       pred_veldleeuwerik_reg <- tidybayes::add_epred_draws(
           newdata = new_df_reg,
           object = test_brms_poisson1,
