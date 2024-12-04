@@ -1098,7 +1098,7 @@ Hiervoor moeten we echter voor elke gridcel het stratum berekenen.
 Alle data is dan nieuw, terwijl we nu gebruik maken van de random intercepts.
 We doen dat voorlopig niet, maar dat is zeker mogelijk.
 
-```{r}
+```{r, message = FALSE}
 # Specify cache path
 brms1_pred_path <- file.path(cache_dir, paste0("brms1_pred_df.Rds"))
 
@@ -1180,21 +1180,15 @@ if (file.exists(brms1_pred_path)) {
     # Calculate summary statistics per location for time period with maximum
     # expected breeding pairs
     plot_veldleeuwerik_reg_max <- pred_veldleeuwerik_reg %>%
-      group_by(plotnaam, periode_in_jaar) %>%
-      mutate(estimate_mean = mean(.epred)) %>%
-      group_by(plotnaam) %>%
-      # slice_max not supported by arrow
-      mutate(max = max(estimate_mean))  %>%
-      filter(estimate_mean == max) %>%
-      select(-max) %>%
       # quantile not supported by arrow
       collect() %>%
-      group_by(plotnaam) %>%
+      group_by(plotnaam, periode_in_jaar) %>%
       summarise(estimate_mean = mean(.epred),
                 se = sd(.epred),
                 q2.5 = quantile(.epred, 0.025),
-                q97.5 = quantile(.epred, 0.975),
-                .groups = "drop") %>%
+                q97.5 = quantile(.epred, 0.975)) %>%
+      slice_max(order_by = estimate_mean, n = 1) %>%
+      ungroup() %>%
       mutate(cv = se / estimate_mean,
              rel_fout = (q97.5 - q2.5) / (2 * estimate_mean),
              method = "max") %>%
