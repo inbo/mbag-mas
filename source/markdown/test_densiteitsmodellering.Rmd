@@ -34,6 +34,7 @@ library(targets)
 library(sf)
 library(brms)
 library(arrow)
+library(tidypolars)
 
 library(INBOtheme)
 theme_set(theme_inbo(transparent = TRUE))
@@ -1128,7 +1129,8 @@ if (file.exists(brms1_pred_path)) {
 
     # Draw predictions if file does not exists
     if (file.exists(brms1_pred_reg_path)) {
-      pred_veldleeuwerik_reg <- arrow::open_dataset(brms1_pred_reg_path)
+      pred_veldleeuwerik_reg <- tidypolars::read_parquet_polars(
+        brms1_pred_reg_path)
     } else {
       # Create new dataframe for complete sampling frame
       new_df_reg <- strata_df %>%
@@ -1153,24 +1155,28 @@ if (file.exists(brms1_pred_path)) {
           seed = 123) %>%
         ungroup() %>%
         arrow::write_dataset(brms1_pred_reg_path)
-      pred_veldleeuwerik_reg <- arrow::open_dataset(brms1_pred_reg_path)
+      pred_veldleeuwerik_reg <- tidypolars::read_parquet_polars(
+        brms1_pred_reg_path)
     }
 
     # Calculate summary statistics for location averaged over time periods
     plot_veldleeuwerik_reg_mean <- pred_veldleeuwerik_reg %>%
       group_by(plotnaam, x_coord, y_coord, .draw) %>%
       summarise(.epred = mean(.epred),
-                .groups = "drop_last") %>%
-      summarise(estimate_mean = mean(.epred),
-                se = sd(.epred),
-                q2.5 = quantile(.epred, 0.025),
-                q97.5 = quantile(.epred, 0.975),
                 .groups = "drop") %>%
+      # from polars to tibble (quantile not supported)
+      as_tibble() %>%
+      group_by(plotnaam, x_coord, y_coord) %>%
+      summarise(
+        estimate_mean = mean(.epred),
+        se = sd(.epred),
+        q2.5 = quantile(.epred, 0.025),
+        q97.5 = quantile(.epred, 0.975),
+        .groups = "drop") %>%
       mutate(across(c(x_coord, y_coord), ~ round(.x, digits = 4)),
              cv = se / estimate_mean,
              rel_fout = (q97.5 - q2.5) / (2 * estimate_mean),
              method = "mean") %>%
-      collect() %>%
       left_join(distinct(strata_df, plotnaam = pointid, stratum),
                 by = join_by(plotnaam))
 
@@ -1180,8 +1186,13 @@ if (file.exists(brms1_pred_path)) {
       group_by(plotnaam, periode_in_jaar) %>%
       mutate(estimate_mean = mean(.epred)) %>%
       group_by(plotnaam) %>%
-      slice_max(order_by = estimate_mean, n = 1) %>%
-      group_by(plotnaam, stratum, x_coord, y_coord) %>%
+      # slice_max not supported by polars
+      mutate(max = max(estimate_mean))  %>%
+      filter(estimate_mean == max) %>%
+      select(-max) %>%
+      # from polars to tibble (quantile not supported)
+      as_tibble() %>%
+      group_by(plotnaam, x_coord, y_coord) %>%
       summarise(estimate_mean = mean(.epred),
                 se = sd(.epred),
                 q2.5 = quantile(.epred, 0.025),
@@ -1191,7 +1202,8 @@ if (file.exists(brms1_pred_path)) {
              cv = se / estimate_mean,
              rel_fout = (q97.5 - q2.5) / (2 * estimate_mean),
              method = "max") %>%
-      collect()
+      left_join(distinct(strata_df, plotnaam = pointid, stratum),
+                by = join_by(plotnaam))
 
     # Combine methods
     plot_veldleeuwerik_reg <- bind_rows(plot_veldleeuwerik_reg_mean,
