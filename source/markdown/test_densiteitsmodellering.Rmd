@@ -612,7 +612,7 @@ if (file.exists(boot_path)) {
     samples = 1000,
     fun = get_det_probs,      # Function to extract detection probs
     group_vars = "openheid")
-  
+
   saveRDS(boot_df, boot_path)
 }
 ```

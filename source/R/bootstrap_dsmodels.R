@@ -22,12 +22,13 @@ boot_statistic_ds <- function(data, indices, fun, ds_model, ...) {
 
 get_det_probs <- function(ds_model, group_vars) {
   require("dplyr")
+  require("rlang")
 
   cbind(ds_model$ddf$data,
         det_prob = predict(ds_model, se.fit = FALSE)$fitted) %>%
-    distinct(!!sym(group_vars), det_prob) %>%
+    distinct(!!sym(group_vars), .data$det_prob) %>%
     arrange(!!sym(group_vars)) %>%
-    pull(det_prob)
+    pull(.data$det_prob)
 }
 
 bootstrap_ds_model <- function(ds_model, samples, fun, group_vars) {
