@@ -4,11 +4,12 @@ boot_statistic_ds <- function(data, indices, fun, ds_model, ...) {
   subset$object <- rownames(subset)
 
   # Estimate detection probability
-  ds_model <- ds(
+  ds_model <- Distance::ds(
     data = subset,
     key = ds_model$ddf$ds$aux$ddfobj$type,
     formula = as.formula(gsub("\\)", "",
-                              gsub("^.*formula\\s=\\s", "",ds_model$ddf$model)[2])
+                              gsub("^.*formula\\s=\\s", "",
+                                   ds_model$ddf$model)[2])
                          ),
     adjustment = NULL,
     truncation = 300,
@@ -20,6 +21,8 @@ boot_statistic_ds <- function(data, indices, fun, ds_model, ...) {
 }
 
 get_det_probs <- function(ds_model, group_vars) {
+  require("dplyr")
+
   cbind(ds_model$ddf$data,
         det_prob = predict(ds_model, se.fit = FALSE)$fitted) %>%
     distinct(!!sym(group_vars), det_prob) %>%
