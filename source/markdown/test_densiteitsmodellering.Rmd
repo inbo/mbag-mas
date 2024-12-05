@@ -50,6 +50,7 @@ dir.create(cache_dir, showWarnings = FALSE, recursive = TRUE)
 
 # Source functions
 source(file.path(mbag_dir, "source", "R", "beta_fit_params.R"))
+source(file.path(mbag_dir, "source", "R", "bootstrap_dsmodels.R"))
 source(file.path(mbag_dir, "source", "R", "predict_det_probs.R"))
 ```
 
@@ -588,18 +589,29 @@ Voor de detectiekans krijgen we enkel de schatting en de standaard error.
 Hoe kunnen we betrouwbaarheidsintervallen afleiden?
 Welke distributie heeft de detectiekans?
 
-### Theoretisch
-
-- boek, code etc. bekijken
-
-### Aanname parametrische distributie
-
 We weten de verwachte waarde en de standaard error van de detectiekansen.
 
 ```{r, echo=FALSE}
 det_probs_df %>%
   kable()
 ```
+
+### Bootstrapping
+
+Om de verdeling van de detectiekans te achterhalen kunnen we bootstrapping toepassen.
+Het lijkt echter vrij computerintensief om dit voor elke soort voor elk jaar te moeten doen.
+
+```{r, message=FALSE}
+boot_df <- bootstrap_ds_model(
+  ds_model = veldleeuwerik_dist_hr,
+  samples = 1000,
+  fun = get_det_probs,
+  group_vars = "openheid")
+```
+
+### Aanname parametrische distributie
+
+Bootstrapping is waarschijnlijk vrij computerintensief om dit voor elke soort voor elk jaar te moeten doen.
 
 We kunnen er van uitgaan dat de detectiekans een $Beta(\alpha, \beta)$ verdeling volgt.
 De aangepaste functie `beta_fit_params()` kan de Beta verdeling karakteriseren op basis van het gemiddelde en de standaarddeviatie door de $\alpha$ en $\beta$ parameters te berekenen via een optimalisatieproces.
@@ -622,13 +634,6 @@ cbind(densities, range) %>%
 ```
 
 Om de onzekerheid van deze parameters mee te nemen in verder analyses, zouden we uit deze Beta verdelingen kunnen samplen.
-
-### Bootstrapping
-
-Om de verdeling van de detectiekans te achterhalen kunnen we altijd bootstrapping toepassen.
-Het lijkt echter vrij computerintensief om dit voor elke soort voor elk jaar te moeten doen.
-
-> De moeite om eens uit te testen?
 
 ## Densiteitsschattingen op regio en Vlaams niveau
 
@@ -1930,6 +1935,12 @@ Dit type data is te complex om zo te modelleren.
 We zullen deze piste niet verder bekijken.
 
 In [de paper](https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105) rond density surface modelling (zie verder), spreken ze van overdispersed Poisson, Negatief-binomiaal of Tweedie.
+
+### Conclusie GLMM
+
+- smoother functie
+- centreren X- en Y-coördinaten
+- houdt geen rekening met spatiale autocorrelatie tussen telpunten?
 
 ## Density surface modelling
 
