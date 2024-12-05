@@ -601,13 +601,34 @@ det_probs_df %>%
 Om de verdeling van de detectiekans te achterhalen kunnen we bootstrapping toepassen.
 Het lijkt echter vrij computerintensief om dit voor elke soort voor elk jaar te moeten doen.
 
-```{r, message=FALSE}
+```{r, message=FALSE, echo=FALSE}
+boot_path <- file.path(cache_dir, paste0("boot_ds_hr.Rds"))
+
+if (file.exists(boot_path)) {
+  boot_df <- readRDS(boot_path)
+} else {
+  boot_df <- bootstrap_ds_model(
+    ds_model = veldleeuwerik_dist_hr,
+    samples = 1000,
+    fun = get_det_probs,
+    group_vars = "openheid")
+  
+  saveRDS(boot_df, boot_path)
+}
+```
+
+```r
 boot_df <- bootstrap_ds_model(
   ds_model = veldleeuwerik_dist_hr,
   samples = 1000,
   fun = get_det_probs,
   group_vars = "openheid")
 ```
+
+```{r}
+
+```
+
 
 ### Aanname parametrische distributie
 
