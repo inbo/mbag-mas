@@ -1235,11 +1235,12 @@ We verwachten dat het gemiddelde hoger is voor het maximum en dat de onzekerheid
 brms1_pred_df %>%
   st_drop_geometry() %>%
   filter(plotnaam %in% example_points) %>%
+  select(plotnaam, estimate_mean, se, cv, q2.5, q97.5, rel_fout, method) %>%
   arrange(plotnaam, method) %>%
-  kable()
+  kable(digits = 4)
 ```
 
-Het gemiddelde is inderdaad hoger voor maximum. De relatieve fout telkens kleiner.
+Het gemiddelde per telpunt is inderdaad hoger voor maximum. De standaard deviatie telkens kleiner.
 
 Hoe goed komt dit overeen met de data?
 
@@ -1247,7 +1248,9 @@ Hoe goed komt dit overeen met de data?
 analysis_df_brms1 %>%
   filter(plotnaam %in% example_points) %>%
   mutate(dens = n / offset) %>%
-  select(plotnaam, stratum, periode_in_jaar, dens) %>%
+  mutate(mean_dens = mean(dens),
+         .by = plotnaam) %>%
+  select(plotnaam, stratum, periode_in_jaar, dens, mean_dens) %>%
   arrange(plotnaam, desc(dens)) %>%
   kable()
 ```
@@ -1923,7 +1926,7 @@ De kleinste densiteit niet gelijk aan nul is `r round(min(analysis_df_brms2$dens
 Dit type data is te complex om zo te modelleren.
 We zullen deze piste niet verder bekijken.
 
-In [de paper](https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105) rond density surface modelling (zie verder), spreken ze van 
+In [de paper](https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105) rond density surface modelling (zie verder), spreken ze van overdispersed Poisson, negative binomial of Tweedie.
 
 ## Density surface modelling
 
@@ -1936,6 +1939,15 @@ https://github.com/dill/dsm/wiki\\
 https://cran.r-project.org/web/packages/dsm/dsm.pdf\\
 https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105\\
 https://distancesampling.org/resources/vignettes.html
+
+Uit [de paper](https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105) rond DSM blijkt dat dit exact hetzelfde model is als het Poisson model waarbij de offset bestaat uit de detectiekans en de oppervlaktes.
+Het grote verschil is hoe de onzekerheid van de detectiekans wordt doorgerekend.
+
+In ons eerdere Poisson model gingen we ervan uit dat de detectiekans een Beta verdeling volgt.
+We beschouwden de offset als een random variable waaruit we eenvoudig uit konden samplen.
+De random samples van de verwachte waarde van de posterior predictive distribution werden dan gedeeld door de random samples van de offset.
+
+In DSM wordt de onzekerheid via bootstrap procedures berekend waarbij rekening wordt gehouden met spatiale autocorrelatie (moving block bootstrap).
 
 ```{r, eval=FALSE}
 test_dsm <- dsm(
