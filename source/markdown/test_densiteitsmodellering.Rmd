@@ -75,13 +75,11 @@ Hiervoor moeten we eerst enkele dingen uittesten:
 - Kunnen we de detectiecurve fitten op alle data en de densiteitsschatting op een subset van de data toepassen (maxima)?
 - Hoe creëren we een spatiaal model voor densiteiten? Hoe nemen we de detectiekans en onzekerheid mee?
 
-# Test data
+# Test dataset
 
 We doen de analyses voor 1 branch van de targets pipeline. Namelijk voor de Veldleeuwerik in 2024.
 We selecteren alle waarnemingen met broedcode > 0.
 Alle aantallen met broedcode > 0 zijn 1.
-
-> Broedcodes ok?
 
 ```{r}
 # Load mas data
@@ -247,7 +245,7 @@ veldleeuwerik_2024_df %>%
 ```
 
 # Distance sampling
-## Test workflow
+## Testen van de workflow
 
 We schatten de detectiekans en densiteiten via distance sampling.
 We beschouwen voor de formulatie van de detectiefunctie de half-normal en hazard-rate sleutelfuncties die we laten afhangen van `openheid`.
@@ -590,11 +588,11 @@ Voor de detectiekans krijgen we enkel de schatting en de standaard error.
 Hoe kunnen we betrouwbaarheidsintervallen afleiden?
 Welke distributie heeft de detectiekans?
 
-### Theorie
+### Theoretisch
 
 - boek, code etc. bekijken
 
-### Parametrische distributies
+### Aanname parametrische distributie
 
 We weten de verwachte waarde en de standaard error van de detectiekansen.
 
@@ -603,7 +601,7 @@ det_probs_df %>%
   kable()
 ```
 
-We kunnen er van uitgaan dat deze een $Beta(\alpha, \beta)$ verdeling volgen.
+We kunnen er van uitgaan dat de detectiekans een $Beta(\alpha, \beta)$ verdeling volgt.
 De aangepaste functie `beta_fit_params()` kan de Beta verdeling karakteriseren op basis van het gemiddelde en de standaarddeviatie door de $\alpha$ en $\beta$ parameters te berekenen via een optimalisatieproces.
 
 ```{r}
@@ -628,10 +626,14 @@ Om de onzekerheid van deze parameters mee te nemen in verder analyses, zouden we
 ### Bootstrapping
 
 Om de verdeling van de detectiekans te achterhalen kunnen we altijd bootstrapping toepassen.
+Het lijkt echter vrij computerintensief om dit voor elke soort voor elk jaar te moeten doen.
 
-...
+> De moeite om eens uit te testen?
 
 ## Densiteitsschattingen op regio en Vlaams niveau
+
+We hebben de berekeningen gedaan op stratum niveau. Hoe verhoudt zicht dit op regio en Vlaams niveau?
+
 ### Model specificatie
 
 We fitten het finale tabel als voordien, maar we maken de `region_table`, `sample_table` en `obs_table` aan op regio-niveau in plaats van op stratum-niveau.
@@ -731,11 +733,11 @@ Dit om uit te zoeken of het gebruik van de maxima t.o.v. alle data de verwachte 
 We verwachten:
 
 1. identieke detectiekans
-   - dezelfde data wordt gebruikt om de detectiekans te schatten als voordien
+   - dezelfde data worden gebruikt om de detectiekans te schatten als voordien
 2. lagere densiteitsschattingen
    - door uitmiddeling sampling effort
 3. smallere betrouwbaarheidsintervallen densiteiten
-   - meer data wordt gebruikt
+   - meer data worden gebruikt
 
 ```{r}
 # Effort per sample en plot per region
@@ -821,7 +823,7 @@ Eigenlijk mogen we deze densiteiten niet rechtstreeks vergelijken; ze meten vers
 De resultaten o.b.v. de totale dataset zijn een schatting van de gemiddelde densiteit per telperiode.
 De resultaten o.b.v. de maxima zijn een schatting van de densiteit per stratum die kan vergeleken worden met referentiewaarden.
 
-## Conclusie
+## Conclusie distance sampling
 
 - We kunnen de detectiekans schatten o.b.v. de complete dataset en tegelijk de densiteit schatten o.b.v. een subset van de data.
   - We kunnen zowel densiteiten rapporteren o.b.v. de volledige dataset als een subset (maxima). Ze hebben een andere betekenis en beantwoorden andere vragen.
@@ -837,7 +839,7 @@ In praktijk verwachten we nog altijd enkele uitdagingen:
   - We kunnen eventueel strata met "te weinig data" weglaten uit de analyses en hiervan enkel de absolute aantallen rapporteren. Op regio- of steekproefniveau kunnen ze gewoon opgeteld worden bij de schattingen.
     - Nood aan regels (bv. $n > 15$ per stratum).
     - Automatisatie?
-  - Alternatief is enkel simpele detectiefuncties te fitten (zonder interactietermen). Of we kunnen regels verzinnen om simpele detectiefuncties te fitten als er te veel problemen bij de andere optreden (bv. voor zeldzame soorten is het *a prior* al niet nuttig om interactietermen toe te voegen).
+  - Alternatief is enkel simpele detectiefuncties te fitten (zonder interactietermen). Of we kunnen regels verzinnen om simpele detectiefuncties te fitten als er te veel problemen bij de andere optreden (bv. voor zeldzame soorten is het *a priori* al niet nuttig om interactietermen toe te voegen).
 
 ```{r}
 design %>%
@@ -881,6 +883,7 @@ $$
 waarbij de responsvariabele $y$ in ons geval het aantal broedparen vertegenwoordigt.
 
 Het gemiddelde $\mu$ wordt gemodelleerd via een **lineaire predictorterm** $L$, bestaande uit verklarende variabelen. Deze lineaire predictor kan worden opgesplitst in:
+
 - een term met **fixed effects** ($L^F$),
 - een term met **random effects** ($L^R$),
 - en een optionele **offset**, die bijvoorbeeld correcties voor detectiekans of meeteenheden omvat.
@@ -892,19 +895,18 @@ g(\mu) = L = L^F + L^R + \text{offset}.
 $$
 
 In concrete termen:
+
 - $L^F$: bevat de vaste effecten van verklarende variabelen (zoals strata, tijdseffecten, of ruimtelijke coördinaten),
 - $L^R$: omvat de random effects die de variabiliteit tussen bijvoorbeeld telcirkels of telperiodes modelleren,
-- \textbf{offset}: corrigeert voor bekende systematische effecten, zoals detectiekans of een schaalfactor om naar een standaardmaat (bijvoorbeeld per 100 ha) om te rekenen.
+- **offset**: corrigeert voor bekende systematische effecten, zoals detectiekans of een schaalfactor om naar een standaardmaat (bijvoorbeeld per 100 ha) om te rekenen.
 
-In ons specifieke geval kan $g(\mu)$ de logaritmische linkfunctie ($\ln(\mu)$) zijn, zoals bij Poisson of Negatief-binomiale modellen. Hierdoor krijgen we:
+In ons specifieke geval kan $g(\mu)$ de logaritmische linkfunctie zijn $\ln(\mu)$, zoals bij Poisson of Negatief-binomiale modellen. Hierdoor krijgen we:
 
 <!-- spell-check: ignore:start -->
 $$
 g(\mu) = \ln(\mu) = L^F + L^R + \text{offset}.
 $$
 <!-- spell-check: ignore:end -->
-
-Deze generalisatie biedt flexibiliteit om diverse soorten responsvariabelen en modellen (zoals Poisson, binomiaal, of normaal) te beschrijven, afhankelijk van de aard van $D$.
 
 ## GLMM
 ### Poisson regressie via een offset
