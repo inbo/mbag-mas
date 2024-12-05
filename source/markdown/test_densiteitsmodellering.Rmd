@@ -1599,7 +1599,7 @@ brms2_pred_df %>%
                          breaks = seq(from = 0, to = 8, length.out = 5),
                          limits = c(0, 8)) +
     coord_sf(crs = 31370) +
-    labs(x = "", y = "", fill = "Relatieve fout",
+    labs(x = "", y = "", fill = "CV",
          title = "Maximum per telpunt over telperiodes") +
     theme(legend.position = "bottom")
 ```
