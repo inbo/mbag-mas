@@ -909,6 +909,10 @@ $$
 <!-- spell-check: ignore:end -->
 
 ## GLMM
+
+We fitten eerst GLMM's om modelspecificatie te testen en tot meer algemene inzichten te komen.
+Zoals voordien zijn we niet super kritisch over model fit.
+
 ### Poisson regressie via een offset
 
 We modelleren het aantal broedparen per telcirkel $j$ in telperiode $t$ met een Poisson-model
@@ -929,13 +933,13 @@ $$
 
 Hierbij zijn:
 
-- $\beta_0$: Het globale intercept vertegenwoordigt de referentiestratum ($s=1$) en de eerste telperiode ($t=1$). Als referentiestratum en -periode nemen we resp. het stratum, de periode met het hoogste aantal broedparen.
+- $\beta_0$: Het globale intercept vertegenwoordigt de referentiestratum ($s=1$) en -telperiode ($t=1$). Als referentiestratum en -periode nemen we resp. het stratum, de periode met het hoogste aantal broedparen.
 - $\sum_{s=2}^S\beta_{s-1}X_{s, j}$: Fixed effects voor strata $s=2, ..., S$, waarbij $X_{s, j}$ een dummyvariabele is die aangeeft of telcirkel $j$ tot stratum $s$ behoort. Het eerste stratum ($s=1$) is inbegrepen in het intercept.
 - $\sum_{t=2}^T\gamma_{t-1}X_{t}$: Fixed effects voor telpunten $t=2, ..., T$, waarbij $X_{t}$ een dummyvariabele is die aangeeft of de telling afkomstig is uit telperiode $t$. De eerste telperiode ($t=1$) is inbegrepen in het intercept.
 - $f(x_j, y_j)$: Een gladheidsfunctie die ruimtelijke variatie beschrijft o.b.v. de X- en Y-coördinaten van telpunt $j$.
 - $b_{0,j}$: Een random effect voor telcirkel $j$, dat variatie tussen telcirkels modelleert.
 - $p_s$: De gemiddelde detectiekans in stratum $s$ waartoe telpunt $j$ behoort.
-- $A_j = \pi \cdot 300^2=$ `r pi * 300^2` m²: De oppervlakte van telcirkel $j$.
+- $A_j = \pi \cdot 300^2=$ `r round(pi * 300^2, 2)` m²: De oppervlakte van telcirkel $j$.
 
 De offset $\ln(p_s) + \ln\left(\frac{A_j}{10^6\ \text{m}^2/100\ \text{ha}}\right)$ kan worden samengevoegd:
 
@@ -945,7 +949,7 @@ $$
 $$
 <!-- spell-check: ignore:end -->
 
-Zodat we rechtsreeks het aantal broedparen per 100 ha modelleren (= densiteit) waarbij we corrigeren voor de detectiekans:
+Zodat we rechtsreeks het aantal broedparen per 100 ha modelleren (= densiteit) waarbij we corrigeren voor de gemiddelde detectiekans:
 
 <!-- spell-check: ignore:start -->
 $$
@@ -1029,7 +1033,7 @@ analysis_df_brms1 <- analysis_df_brms1 %>%
   select(plotnaam, n, stratum, periode_in_jaar, x_coord, y_coord, offset)
 ```
 
-```{r}
+```{r, class.source="fold-show"}
 # MCMC parameters
 nchains <- 3           # number of chains
 niter <- 2500          # number of iterations (incl. burn-in)
@@ -1038,7 +1042,7 @@ nparallel <- nchains   # number of cores used for parallel computing
 thinning <- 2          # thinning
 ```
 
-```{r}
+```{r, class.source="fold-show"}
 test_brms_poisson1 <- brm(
   formula = n ~ stratum + periode_in_jaar + s(x_coord, y_coord) +
     (1 | plotnaam) + offset(log(offset)),
@@ -1242,7 +1246,7 @@ brms1_pred_df %>%
   kable(digits = 4)
 ```
 
-Het gemiddelde per telpunt is inderdaad hoger voor maximum. De standaard deviatie telkens kleiner.
+Het gemiddelde per telpunt is inderdaad hoger voor maximum. De variatiecoëfficiënt is vaak hoger, maar niet veel.
 
 Hoe goed komt dit overeen met de data?
 
@@ -1257,9 +1261,7 @@ analysis_df_brms1 %>%
   kable()
 ```
 
-Niet super.
-
-We bekijken de verwachte densiteit over het steekproefkader:
+We visualiseren de verwachte densiteit over het steekproefkader:
 
 ```{r, fig.width=10}
 brms1_pred_df %>%
@@ -1289,18 +1291,18 @@ brms1_pred_df %>%
     theme(legend.position = "bottom")
 ```
 
-We bekijken de relatieve fout over het steekproefkader:
+We bekijken de variatiecoëfficiënt (CV) over het steekproefkader:
 
 ```{r, fig.width=10}
 brms1_pred_df %>%
   filter(method == "mean") %>%
   ggplot() +
-    geom_sf(aes(fill = rel_fout), colour = alpha("white", 0)) +
+    geom_sf(aes(fill = cv), colour = alpha("white", 0)) +
     scale_fill_gradientn(colours = rainbow(5),
-                         breaks = seq(from = 0, to = 4, length.out = 5),
-                         limits = c(0, 4)) +
+                         breaks = seq(from = 0, to = 8, length.out = 5),
+                         limits = c(0, 8)) +
     coord_sf(crs = 31370) +
-    labs(x = "", y = "", fill = "Relatieve fout",
+    labs(x = "", y = "", fill = "CV",
          title = "Gemiddelde per telpunt over telperiodes") +
     theme(legend.position = "bottom")
 ```
@@ -1309,12 +1311,12 @@ brms1_pred_df %>%
 brms1_pred_df %>%
   filter(method == "max") %>%
   ggplot() +
-    geom_sf(aes(fill = rel_fout), colour = alpha("white", 0)) +
+    geom_sf(aes(fill = cv), colour = alpha("white", 0)) +
     scale_fill_gradientn(colours = rainbow(5),
-                         breaks = seq(from = 0, to = 4, length.out = 5),
-                         limits = c(0, 4)) +
+                         breaks = seq(from = 0, to = 8, length.out = 5),
+                         limits = c(0, 8)) +
     coord_sf(crs = 31370) +
-    labs(x = "", y = "", fill = "Relatieve fout",
+    labs(x = "", y = "", fill = "CV",
          title = "Maximum per telpunt over telperiodes") +
     theme(legend.position = "bottom")
 ```
@@ -1327,7 +1329,7 @@ brms1_pred_df %>%
 - We houden geen rekening met de onzekerheid op de detectiekans.
 - De detectiekans wordt berekend op stratum niveau, maar we modelleren op telpuntniveau. We houden geen rekening met de afstanden waarop individuen gezien zijn op een bepaald telpunt.
 
-### Poisson regressie met random offset van de predicties
+### Poisson regressie met random offset
 
 Bij deze methode gaan we rekening houden met de onzekerheid op de detectiekans.
 Hierbij gaan we ervan uit dat de detectiekans een Beta verdeling volgt.
@@ -1361,22 +1363,22 @@ cbind(densities, range) %>%
     geom_line(linewidth = 1)
 ```
 
-We nemen $K$ random draws van deze verdelingen en delen de voorspelde waarders voor telpunt $j$ achteraf $K$ keer door de offset
+We nemen $K$ random draws van deze verdelingen en $K$ random drawsvan de verwachte waarde van de posterior predictive distribution voor elk telpunt. De random samples van de verwachte waarde van de posterior predictive distribution worden dan gedeeld door de random samples van de offset voor elk telpunt $j$ $\text{offset}_{j,k}$.
 
 <!-- spell-check: ignore:start -->
 $$
-\frac{p_{s, k}A_j}{10^6\ \text{m}^2/100\ \text{ha}}
+\text{offset}_{j,k} = \frac{p_{s, k}A_j}{10^6\ \text{m}^2/100\ \text{ha}}
 $$
 <!-- spell-check: ignore:end -->
 
 - $p_{s, k}$: De $k$-de draw van de gemiddelde detectiekans in stratum $s$ waartoe telpunt $j$ behoort.
 - $A_j = \pi \cdot 300^2=$ `r pi * 300^2` m²: De oppervlakte van telcirkel $j$.
 
-Van deze nieuwe posterior nemen we ten slotte het gemiddelde, 95 % quantielen en relatieve fout zoals voordien.
+Van deze nieuwe posterior nemen we ten slotte het gemiddelde, 95 % quantielen e.a. zoals voordien.
 
 #### Model specificatie
 
-We gebruiken hetzelfde modelobject als voordien maar maken predicties zonder offset (verwarrend genoeg via het argument `offset = TRUE`).
+We gebruiken hetzelfde modelobject als voordien maar maken predicties zonder offset (via het argument `offset = TRUE`).
 Zo kunnen we de resultaten beter vergelijken.
 
 #### Resultaten
@@ -1384,7 +1386,7 @@ Zo kunnen we de resultaten beter vergelijken.
 We maken `r n_draws` predicties voor elk telpunten van het volledige steekproefkader voor elke telronde.
 We nemen `r n_draws` random waardes uit de verdeling van de detectiekansen.
 We voegen die samen met de oppervlaktes en zetten zo de aantallen om naar aantal per 100 ha, gecorrigeerd voor detectiekans.
-We nemen daarna zowel het gemiddelde per telpunt over de telrondes als het maximum.
+We nemen daarna zowel het maximum per telpunt over de telrondes.
 
 ```{r}
 # Specify cache path
@@ -1480,6 +1482,7 @@ if (file.exists(brms2_pred_path)) {
                 q97.5 = quantile(.epred2, 0.975),
                 .groups = "drop") %>%
       mutate(across(c(x_coord, y_coord), ~ round(.x, digits = 4)),
+             cv = se / estimate_mean,
              rel_fout = (q97.5 - q2.5) / (2 * estimate_mean)) %>%
       st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
       st_buffer(300) %>%
@@ -1541,10 +1544,10 @@ We bekijken de relatieve fout over het steekproefkader:
 ```{r, fig.width=10}
 brms2_pred_df %>%
   ggplot() +
-    geom_sf(aes(fill = rel_fout), colour = alpha("white", 0)) +
+    geom_sf(aes(fill = cv), colour = alpha("white", 0)) +
     scale_fill_gradientn(colours = rainbow(5),
-                         breaks = seq(from = 0, to = 4, length.out = 5),
-                         limits = c(0, 4)) +
+                         breaks = seq(from = 0, to = 8, length.out = 5),
+                         limits = c(0, 8)) +
     coord_sf(crs = 31370) +
     labs(x = "", y = "", fill = "Relatieve fout",
          title = "Maximum per telpunt over telperiodes") +
@@ -1625,7 +1628,7 @@ analysis_df_brms2 <- analysis_df_brms2 %>%
   select(plotnaam, densiteit, stratum, periode_in_jaar, x_coord, y_coord)
 ```
 
-```{r}
+```{r, class.source="fold-show"}
 # MCMC parameters
 nchains <- 3           # number of chains
 niter <- 2500          # number of iterations (incl. burn-in)
@@ -1634,7 +1637,7 @@ nparallel <- nchains   # number of cores used for parallel computing
 thinning <- 2          # thinning
 ```
 
-```{r}
+```{r, class.source="fold-show"}
 test_brms_gamma1 <- brm(
   formula = densiteit ~ stratum + periode_in_jaar + s(x_coord, y_coord) +
     (1 | plotnaam),
@@ -1651,7 +1654,7 @@ test_brms_gamma1 <- brm(
   file_refit = "on_change")
 ```
 
-```{r}
+```{r, class.source="fold-show"}
 test_brms_lognormal1 <- brm(
   formula = densiteit ~ stratum + periode_in_jaar + s(x_coord, y_coord) +
     (1 | plotnaam),
@@ -1934,10 +1937,11 @@ Density surface modelling (DSM) is de methode om de spatiale distributie van die
 Deze methodiek sluit rechtstreeks aan bij de resultaten uit het vorige hoofdstuk en is dus een ideale kanshebber om uit te testen.
 De **dsm** package sluit rechtstreeks aan op de modeloutput van **Distance**.
 
-Nuttige links:\\
-https://github.com/dill/dsm/wiki\\
-https://cran.r-project.org/web/packages/dsm/dsm.pdf\\
-https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105\\
+Nuttige links:
+
+https://github.com/dill/dsm/wiki \\
+https://cran.r-project.org/web/packages/dsm/dsm.pdf \\
+https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105 \\
 https://distancesampling.org/resources/vignettes.html
 
 Uit [de paper](https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105) rond DSM blijkt dat dit exact hetzelfde model is als het Poisson model waarbij de offset bestaat uit de detectiekans en de oppervlaktes.
