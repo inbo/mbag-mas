@@ -610,7 +610,7 @@ if (file.exists(boot_path)) {
   boot_df <- bootstrap_ds_model(
     ds_model = veldleeuwerik_dist_hr,
     samples = 1000,
-    fun = get_det_probs,
+    fun = get_det_probs,      # Function to extract detection probs
     group_vars = "openheid")
   
   saveRDS(boot_df, boot_path)
@@ -621,14 +621,31 @@ if (file.exists(boot_path)) {
 boot_df <- bootstrap_ds_model(
   ds_model = veldleeuwerik_dist_hr,
   samples = 1000,
-  fun = get_det_probs,
+  fun = get_det_probs,      # Function to extract detection probs
   group_vars = "openheid")
 ```
 
 ```{r}
+summary_boot_df <- boot_df %>%
+  tibble::rownames_to_column(var = "sample") %>%
+  pivot_longer(cols = -sample, names_to = "openheid",
+               values_to = "est_boot") %>%
+  mutate(mean_boot = mean(est_boot),
+         se_boot = sd(est_boot),
+         .by = "openheid")
 
+summary_boot_df %>%
+  distinct(openheid, mean_boot, se_boot) %>%
+  kable()
 ```
 
+```{r}
+summary_boot_df %>%
+  ggplot() +
+    geom_density(aes(x = est_boot, colour = openheid),
+                 linewidth = 1) +
+    scale_x_continuous(limits = c(0, 1))
+```
 
 ### Aanname parametrische distributie
 
@@ -636,6 +653,8 @@ Bootstrapping is waarschijnlijk vrij computerintensief om dit voor elke soort vo
 
 We kunnen er van uitgaan dat de detectiekans een $Beta(\alpha, \beta)$ verdeling volgt.
 De aangepaste functie `beta_fit_params()` kan de Beta verdeling karakteriseren op basis van het gemiddelde en de standaarddeviatie door de $\alpha$ en $\beta$ parameters te berekenen via een optimalisatieproces.
+
+De stippellijnen geven de densiteiten via bootstrapping aan.
 
 ```{r}
 range <- seq(0, 1, length.out = 500)
@@ -650,10 +669,15 @@ cbind(densities, range) %>%
   `colnames<-`(c(det_probs_df$openheid, "detectiekans")) %>%
   pivot_longer(cols = all_of(det_probs_df$openheid),
                values_to = "densiteit", names_to = "openheid") %>%
-  ggplot(aes(x = detectiekans, y = densiteit, colour = openheid)) +
-    geom_line(linewidth = 1)
+  ggplot(aes(colour = openheid)) +
+    geom_line(aes(x = detectiekans, y = densiteit),
+              linewidth = 1, alpha = 0.5) +
+    geom_density(data = summary_boot_df, aes(x = est_boot),
+                 linewidth = 1, linetype = "dashed") +
+    scale_x_continuous(limits = c(0, 1))
 ```
 
+De distributie van de Beta verdelingen leunen zeer dicht aan bij deze van de bootstrap samples.
 Om de onzekerheid van deze parameters mee te nemen in verder analyses, zouden we uit deze Beta verdelingen kunnen samplen.
 
 ## Densiteitsschattingen op regio en Vlaams niveau
