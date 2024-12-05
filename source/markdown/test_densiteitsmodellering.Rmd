@@ -1105,33 +1105,33 @@ brms1_pred_path <- file.path(cache_dir, paste0("brms1_pred_df.Rds"))
 if (file.exists(brms1_pred_path)) {
   brms1_pred_df <- readRDS(brms1_pred_path)
 } else {
-  reg_vec <- sort(unique(veldleeuwerik_2024_df$regio))
-  pred_list <- vector(length = length(reg_vec), mode = "list")
+  strat_vec <- as.vector(sort(unique(analysis_df_brms1$stratum)))
+  pred_list <- vector(length = length(strat_vec), mode = "list")
 
-  for (i in seq_along(reg_vec)) {
+  for (i in seq_along(strat_vec)) {
     # Specify cache path
-    brms1_pred_reg_path <- file.path(
-      cache_dir, paste0("brms1_pred_", tolower(reg_vec[i])))
+    brms1_pred_strat_path <- file.path(
+      cache_dir, paste0("brms1_pred_", tolower(strat_vec[i])))
 
     strata_df <- steekproefkader %>%
           mutate(
             regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
           ) %>%
           st_drop_geometry() %>%
-          filter(regio == reg_vec[i]) %>%
           mutate(stratum = ifelse(
             regio == "Weidestreek", regio,
             paste(regio, openheid_klasse, sbp, sep = "_"))
-          )
+          ) %>%
+          filter(stratum == strat_vec[i])
 
-    print(paste("Making predictions for", reg_vec[i]))
+    print(paste("Making predictions for", strat_vec[i]))
 
     # Draw predictions if file does not exists
-    if (file.exists(brms1_pred_reg_path)) {
-      pred_veldleeuwerik_reg <- arrow::open_dataset(brms1_pred_reg_path)
+    if (file.exists(brms1_pred_strat_path)) {
+      pred_veldleeuwerik_strat <- arrow::open_dataset(brms1_pred_strat_path)
     } else {
       # Create new dataframe for complete sampling frame
-      new_df_reg <- strata_df %>%
+      new_df_strat <- strata_df %>%
           left_join(analysis_df_brms1 %>% distinct(stratum, offset),
                     by = join_by(stratum),
                     relationship = "many-to-many") %>%
@@ -1142,7 +1142,7 @@ if (file.exists(brms1_pred_path)) {
 
       # Make predictions
       tidybayes::add_epred_draws(
-          newdata = new_df_reg,
+          newdata = new_df_strat,
           object = test_brms_poisson1,
           ndraws = n_draws,
           re_formula = ~ (1 | plotnaam), # use random effects
@@ -1152,12 +1152,12 @@ if (file.exists(brms1_pred_path)) {
           offset = FALSE,                # divide predictions by offset
           seed = 123) %>%
         ungroup() %>%
-        arrow::write_dataset(brms1_pred_reg_path)
-      pred_veldleeuwerik_reg <- arrow::open_dataset(brms1_pred_reg_path)
+        arrow::write_dataset(brms1_pred_strat_path)
+      pred_veldleeuwerik_strat <- arrow::open_dataset(brms1_pred_strat_path)
     }
 
     # Calculate summary statistics for location averaged over time periods
-    plot_veldleeuwerik_reg_mean <- pred_veldleeuwerik_reg %>%
+    plot_veldleeuwerik_strat_mean <- pred_veldleeuwerik_strat %>%
       group_by(plotnaam, .draw) %>%
       summarise(.epred = mean(.epred),
                 .groups = "drop") %>%
@@ -1179,7 +1179,7 @@ if (file.exists(brms1_pred_path)) {
 
     # Calculate summary statistics per location for time period with maximum
     # expected breeding pairs
-    plot_veldleeuwerik_reg_max <- pred_veldleeuwerik_reg %>%
+    plot_veldleeuwerik_strat_max <- pred_veldleeuwerik_strat %>%
       # quantile not supported by arrow
       collect() %>%
       group_by(plotnaam, periode_in_jaar) %>%
@@ -1188,6 +1188,7 @@ if (file.exists(brms1_pred_path)) {
                 q2.5 = quantile(.epred, 0.025),
                 q97.5 = quantile(.epred, 0.975)) %>%
       slice_max(order_by = estimate_mean, n = 1) %>%
+      select(-periode_in_jaar) %>%
       ungroup() %>%
       mutate(cv = se / estimate_mean,
              rel_fout = (q97.5 - q2.5) / (2 * estimate_mean),
@@ -1197,21 +1198,21 @@ if (file.exists(brms1_pred_path)) {
                 by = join_by(plotnaam))
 
     # Combine methods
-    plot_veldleeuwerik_reg <- bind_rows(plot_veldleeuwerik_reg_mean,
-                                        plot_veldleeuwerik_reg_max) %>%
+    plot_veldleeuwerik_strat <- bind_rows(plot_veldleeuwerik_strat_mean,
+                                        plot_veldleeuwerik_strat_max) %>%
       mutate(across(c(x_coord, y_coord), ~ round(.x, digits = 4))) %>%
       st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
       st_buffer(300)
 
-    pred_list[[i]] <- plot_veldleeuwerik_reg
+    pred_list[[i]] <- plot_veldleeuwerik_strat
 
     # Remove large objects
-    rm(pred_veldleeuwerik_reg)
-    rm(plot_veldleeuwerik_reg)
+    rm(pred_veldleeuwerik_strat)
+    rm(plot_veldleeuwerik_strat)
     gc()
   }
 
-  # Combine summary statistics for all regions
+  # Combine summary statistics for all strata
   brms1_pred_df <- bind_rows(pred_list) %>%
     separate(stratum, into = c("regio", "openheid", "sbp"))
 
@@ -1234,11 +1235,12 @@ We verwachten dat het gemiddelde hoger is voor het maximum en dat de onzekerheid
 brms1_pred_df %>%
   st_drop_geometry() %>%
   filter(plotnaam %in% example_points) %>%
+  select(plotnaam, estimate_mean, se, cv, q2.5, q97.5, rel_fout, method) %>%
   arrange(plotnaam, method) %>%
-  kable()
+  kable(digits = 4)
 ```
 
-Het gemiddelde is inderdaad hoger voor maximum. De relatieve fout telkens kleiner.
+Het gemiddelde per telpunt is inderdaad hoger voor maximum. De standaard deviatie telkens kleiner.
 
 Hoe goed komt dit overeen met de data?
 
@@ -1246,7 +1248,9 @@ Hoe goed komt dit overeen met de data?
 analysis_df_brms1 %>%
   filter(plotnaam %in% example_points) %>%
   mutate(dens = n / offset) %>%
-  select(plotnaam, stratum, periode_in_jaar, dens) %>%
+  mutate(mean_dens = mean(dens),
+         .by = plotnaam) %>%
+  select(plotnaam, stratum, periode_in_jaar, dens, mean_dens) %>%
   arrange(plotnaam, desc(dens)) %>%
   kable()
 ```
@@ -1788,7 +1792,7 @@ Wij hebben geen data tussen 0 en 1. Deze modellen maken daar wel predicties. Het
 We hebben een hurdle model nodig die indien > 0 een truncated Gamma/Lognormal gebruikt vanaf 1.
 Daarvoor moeten we [zelf een familie maken](https://cran.r-project.org/web/packages/brms/vignettes/brms_customfamilies.html).
 
-```{r}
+```{r, eval=FALSE}
 hurdle_gamma_trunc <- custom_family(
   "hurdle_gamma_trunc", dpars = c("mu", "shape", "hu"),
   links = c("log", "log", "logit"),
@@ -1901,9 +1905,7 @@ test_hu_gamma_trunc <- brm(
   seed = 123,
   file = file.path(cache_dir, "test_brms_gamma2"),
   file_refit = "on_change")
-```
 
-```{r}
 expose_functions(test_hu_gamma_trunc, vectorize = TRUE)
 
 posterior_predict_hurdle_gamma_trunc <- function(i, prep, ...) { # nolint
@@ -1922,6 +1924,8 @@ De kleinste densiteit niet gelijk aan nul is `r round(min(analysis_df_brms2$dens
 Dit type data is te complex om zo te modelleren.
 We zullen deze piste niet verder bekijken.
 
+In [de paper](https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105) rond density surface modelling (zie verder), spreken ze van overdispersed Poisson, negative binomial of Tweedie.
+
 ## Density surface modelling
 
 Density surface modelling (DSM) is de methode om de spatiale distributie van dieren te modelleren via data verzameld in een distance sampling context.
@@ -1933,6 +1937,15 @@ https://github.com/dill/dsm/wiki\\
 https://cran.r-project.org/web/packages/dsm/dsm.pdf\\
 https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105\\
 https://distancesampling.org/resources/vignettes.html
+
+Uit [de paper](https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105) rond DSM blijkt dat dit exact hetzelfde model is als het Poisson model waarbij de offset bestaat uit de detectiekans en de oppervlaktes.
+Het grote verschil is hoe de onzekerheid van de detectiekans wordt doorgerekend.
+
+In ons eerdere Poisson model gingen we ervan uit dat de detectiekans een Beta verdeling volgt.
+We beschouwden de offset als een random variable waaruit we eenvoudig uit konden samplen.
+De random samples van de verwachte waarde van de posterior predictive distribution werden dan gedeeld door de random samples van de offset.
+
+In DSM wordt de onzekerheid via bootstrap procedures berekend waarbij rekening wordt gehouden met spatiale autocorrelatie (moving block bootstrap).
 
 ```{r, eval=FALSE}
 test_dsm <- dsm(
@@ -1961,4 +1974,3 @@ dsm(
   method = "REML"
 )
 ```
-
