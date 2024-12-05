@@ -1792,7 +1792,7 @@ Wij hebben geen data tussen 0 en 1. Deze modellen maken daar wel predicties. Het
 We hebben een hurdle model nodig die indien > 0 een truncated Gamma/Lognormal gebruikt vanaf 1.
 Daarvoor moeten we [zelf een familie maken](https://cran.r-project.org/web/packages/brms/vignettes/brms_customfamilies.html).
 
-```{r}
+```{r, eval=FALSE}
 hurdle_gamma_trunc <- custom_family(
   "hurdle_gamma_trunc", dpars = c("mu", "shape", "hu"),
   links = c("log", "log", "logit"),
@@ -1905,9 +1905,7 @@ test_hu_gamma_trunc <- brm(
   seed = 123,
   file = file.path(cache_dir, "test_brms_gamma2"),
   file_refit = "on_change")
-```
 
-```{r}
 expose_functions(test_hu_gamma_trunc, vectorize = TRUE)
 
 posterior_predict_hurdle_gamma_trunc <- function(i, prep, ...) { # nolint
@@ -1976,4 +1974,3 @@ dsm(
   method = "REML"
 )
 ```
-
