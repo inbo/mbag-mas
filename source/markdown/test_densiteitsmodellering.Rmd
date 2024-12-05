@@ -1919,12 +1919,12 @@ pp_check(test_hu_gamma_trunc, type = "dens_overlay", ndraws = 100) +
   ggtitle("Gamma truncated")
 ```
 
-We zien dat dit nog altijd niet het gewenste resultaat heeft.
+Dit geeft nog altijd niet het gewenste resultaat.
 De kleinste densiteit niet gelijk aan nul is `r round(min(analysis_df_brms2$densiteit[analysis_df_brms2$densiteit != 0]), 2)`.
 Dit type data is te complex om zo te modelleren.
 We zullen deze piste niet verder bekijken.
 
-In [de paper](https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105) rond density surface modelling (zie verder), spreken ze van overdispersed Poisson, negative binomial of Tweedie.
+In [de paper](https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105) rond density surface modelling (zie verder), spreken ze van overdispersed Poisson, Negatief-binomiaal of Tweedie.
 
 ## Density surface modelling
 
