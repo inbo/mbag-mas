@@ -1993,6 +1993,10 @@ Density surface modelling (DSM) is de methode om de spatiale distributie van die
 Deze methodiek sluit rechtstreeks aan bij de resultaten uit het vorige hoofdstuk en is dus een ideale kanshebber om uit te testen.
 De **dsm** package sluit rechtstreeks aan op de modeloutput van **Distance**.
 
+```{r}
+library(dsm)
+```
+
 Nuttige links:
 
 https://github.com/dill/dsm/wiki \\
@@ -2009,30 +2013,155 @@ De random samples van de verwachte waarde van de posterior predictive distributi
 
 In DSM wordt de onzekerheid via bootstrap procedures berekend waarbij rekening wordt gehouden met spatiale autocorrelatie (moving block bootstrap).
 
-```{r, eval=FALSE}
-test_dsm <- dsm(
-  formula = abundance.est ~ sbp * regio + openheid,
-  ddf.obj = veldleeuwerik_dist_hr3,
-  segment.data = dsm_segment_Veldleeuwerik,
-  observation.data = dsm_observation_Veldleeuwerik,
-  segment.area = rep(unique(dsm_segment_Veldleeuwerik$Effort)
-                     * 300 * 300 * pi,
-                     nrow(dsm_segment_Veldleeuwerik)),
-  convert.units = 1 / 10^6)
+Het is interessant om de resultaten van beide methodes te vergelijken.
 
-dsm(
-  formula = abundance.est ~ sbp * regio + openheid,
-  ddf.obj = veldleeuwerik_dist_hr3,
-  segment.data,
-  observation.data,
-  engine = "gam",
-  convert.units = 1 / 10^6,
+### Data preparatie
+
+Zie [deze vignette](https://distancesampling.org/resources/vignettes.html) en `?"dsm-data"`.
+
+"The count response can only be used when detection function covariates only vary between segments/points (not within). For example, weather conditions (like visibility or sea state) or foliage cover are usually acceptable as they do not change within the segment, but animal sex or behaviour will not work. The abundance.est response can be used with any covariates in the detection function."
+
+```{r}
+observation_df <- veldleeuwerik_dist_hr3$ddf$data %>%
+  left_join(select(veldleeuwerik_2024_df, oid, Sample.Label = plotnaam),
+            by = join_by("object" == "oid")) %>%
+  select(object, Sample.Label, size, distance, openheid)
+
+segment_df <- sample_table3 %>%
+  left_join(design, by = join_by("Sample.Label" == "pointid")) %>%
+  mutate(
+    stratum = ifelse(
+      regio == "Weidestreek", regio,
+      paste(regio, openheid_klasse, sbp, sep = "_")
+    ),
+    stratum = relevel(factor(stratum), ref_group_stratum)
+  ) %>%
+  select(Sample.Label, Effort, stratum, x_coord, y_coord,
+         openheid = openheid_klasse)
+
+pred_dsm_df <- steekproefkader %>%
+  mutate(
+    regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
+  ) %>%
+  st_drop_geometry() %>%
+  mutate(stratum = ifelse(
+    regio == "Weidestreek", regio,
+    paste(regio, openheid_klasse, sbp, sep = "_"))
+  ) %>%
+  select(Sample.Label = pointid, stratum, x_coord, y_coord) %>%
+  mutate(area = 300 * 300 * pi)
+```
+
+```{r}
+test_dsm1 <- dsm(
+  formula = count ~ stratum + s(x_coord, y_coord),
   family = poisson(link = "log"),
-  group = FALSE,
-  control = list(keepData = TRUE),
-  availability = 1,
-  segment.area = NULL,
-  weights = NULL,
-  method = "REML"
+  ddf.obj = veldleeuwerik_dist_hr3,
+  segment.data = segment_df,
+  observation.data = observation_df,
+  convert.units = 1 / 10^6,
+  method = "REML" # default
+)
+summary(test_dsm1)
+```
+
+```{r}
+test_brms_poisson1 
+```
+
+```{r}
+dsm1_pred <- predict(test_dsm1, pred_dsm_df, pred_dsm_df$area / 10^6)
+dsm1_pred_sf <- pred_dsm_df %>%
+  mutate(estimate = dsm1_pred) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+  st_buffer(300)
+```
+
+```{r}
+dsm1_pred_sf %>%
+  ggplot() +
+    geom_sf(aes(fill = estimate), colour = alpha("white", 0)) +
+    scale_fill_gradientn(
+      colours = rainbow(5),
+      breaks = seq(from = 0, to = 10, length.out = 5),
+      limits = c(0, 10)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+
+```{r}
+par(mfrow = c(2, 2))
+gam.check(test_dsm1)
+par(mfrow = c(1, 1))
+```
+
+These show that there is some deviation in the Q-Q plot. The “line” of points in the plot of the residuals vs. linear predictor plot corresponds to the zeros in the data.
+
+```{r}
+test_dsm2 <- dsm(
+  formula = count ~ stratum + s(x_coord, y_coord),
+  family = quasipoisson(link = "log"),
+  ddf.obj = veldleeuwerik_dist_hr3,
+  segment.data = segment_df,
+  observation.data = observation_df,
+  convert.units = 1 / 10^6,
+  method = "REML" # default
 )
 ```
+
+```{r}
+par(mfrow = c(2, 2))
+gam.check(test_dsm2)
+par(mfrow = c(1, 1))
+```
+
+```{r}
+test_dsm3 <- dsm(
+  formula = count ~ stratum + s(x_coord, y_coord),
+  family = tw(),
+  ddf.obj = veldleeuwerik_dist_hr3,
+  segment.data = segment_df,
+  observation.data = observation_df,
+  convert.units = 1 / 10^6,
+  method = "REML" # default
+)
+```
+
+```{r}
+par(mfrow = c(2, 2))
+gam.check(test_dsm3)
+par(mfrow = c(1, 1))
+```
+
+```{r}
+test_dsm4 <- dsm(
+  formula = count ~ stratum + s(x_coord, y_coord, k = 500),
+  family = tw(),
+  ddf.obj = veldleeuwerik_dist_hr3,
+  segment.data = segment_df,
+  observation.data = observation_df,
+  convert.units = 1 / 10^6,
+  method = "REML" # default
+)
+```
+
+```{r}
+par(mfrow = c(2, 2))
+gam.check(test_dsm4)
+par(mfrow = c(1, 1))
+```
+
+In the top right panel of the above gam.check plots the residuals vs. linear predictor plot includes a odd line of predictions. These are an artifact of the link function, showing the exact zeros in the data. These can be misleading and distracting, making it difficult to see whether residuals show heteroskedasticity.
+
+Randomised quantile residuals (Dunn & Smyth, 1996) avoid this issue by transforming the residuals to be exactly normally distributed. This makes the residuals vs. linear predictor plot much easier to interpret as it therefore doesn’t include the artifacts generated by the link function. These plots can be produced using rqgam.check in dsm:
+
+```{r}
+rqgam_check(test_dsm4)
+```
+
+
+
