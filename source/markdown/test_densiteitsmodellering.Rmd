@@ -2099,14 +2099,21 @@ prediction_grid <- st_make_grid(
   cellsize = units::set_units(300*300*pi, "m^2")
   )
 prediction_grid_sf <- st_sf(geometry = prediction_grid)
-joined_grid <- st_join(prediction_grid_sf, dsm1_pred_sf, join = st_nearest_feature)
+joined_grid <- st_join(prediction_grid_sf, dsm1_pred_sf,
+                       join = st_nearest_feature)
 
-cropped_grid <- qgisprocess::qgis_run_algorithm(
-    "native:intersection",
-    INPUT = joined_grid,
-    OVERLAY = flanders_sf
-  ) %>%
-  st_as_sf()
+if (file.exists(file.path(cache_dir, paste0("cropped_grid_dsm.Rds")))) {
+  cropped_grid <- readRDS(file.path(cache_dir, paste0("cropped_grid_dsm.Rds")))
+} else {
+  cropped_grid <- qgisprocess::qgis_run_algorithm(
+      "native:intersection",
+      INPUT = joined_grid,
+      OVERLAY = flanders_sf
+    ) %>%
+    st_as_sf()
+
+  saveRDS(cropped_grid, file.path(cache_dir, paste0("cropped_grid_dsm.Rds")))
+}
 ```
 
 
