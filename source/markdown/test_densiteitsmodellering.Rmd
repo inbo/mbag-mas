@@ -2018,6 +2018,8 @@ https://cran.r-project.org/web/packages/dsm/dsm.pdf
 
 https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105
 
+https://peerj.com/articles/13950/
+
 https://distancesampling.org/resources/vignettes.html
 
 Uit [de paper](https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105) rond DSM blijkt dat dit exact hetzelfde model is als het Poisson model waarbij de offset bestaat uit de detectiekans en de oppervlaktes.
@@ -2247,26 +2249,29 @@ Dit is niet onverwacht.
 We hebben veel data over heel Vlaanderen.
 Om deze spatiale complexiteit te capteren hebben we een hoge flexibiliteit nodig voor de smoother functie.
 
-## Log-Gaussian Cox Process modelling
+## Gaussian random fields en Log-Gaussian Cox Processes
 
 Uit de vorige analyses blijkt dat we met slim gebruik van GLMM's eigenlijk al vrij ver kunnen komen om de densiteiten te modelleren.
 Voorlopig is de spatiale component nog vrij simplistisch opgesteld.
-
-Enerzijds met betrekking to de gebruikte splines en complexiteit $k$ parameter.
+Enerzijds met betrekking to de gebruikte splines en complexiteit ($k$ parameter).
 Anderzijds zijn er ook gewoon andere methodes om rekening te houden met spatiale correlatie.
 In deze sectie onderzoeken we het gebruik van Gaussian random fields.
 
-Chat GPT:
+### Theoretische achtergrond
+#### ChatGPT
+
+<!-- spell-check: ignore:start -->
+> I have a spatial glmm with smoother s(x_coord, y_coord), I could also use a Gaussian random field instead, what is the difference?
 
 Both smoothers (like `s(x_coord, y_coord)` in generalized additive models (GAMs)) and Gaussian random fields (GRFs) are methods for modeling spatial variation, but they differ in their underlying assumptions, implementation, and flexibility.
 
-1. **Smoothers in GAMs**
+**1. Smoothers in GAMs**
    - **Basis Functions**: Smoothers, such as those created by `s(x_coord, y_coord)` in GAMs (e.g., using the `mgcv` package in R), use basis functions (e.g., thin plate splines, cubic splines) to represent spatial effects. These basis functions are predefined shapes whose parameters are estimated from the data.
    - **Flexibility**: The smoothness of the spatial effect is controlled by penalization during fitting, where a trade-off is made between goodness-of-fit and model complexity.
    - **Local Effects**: Smoothers are generally better for capturing local spatial patterns but may struggle with long-range correlations or irregularly shaped study areas unless carefully parameterized.
    - **Computational Efficiency**: Smoothers can be computationally efficient for moderate-sized datasets, but their computational cost grows with the number of basis functions, which is related to the number of data points.
 
-2. **Gaussian Random Fields**
+**2. Gaussian Random Fields**
    - **Covariance-Based Modeling**: GRFs model spatial effects using a covariance function (e.g., Matérn, exponential), which describes how spatial correlation decays with distance. These models rely on the theory of geostatistics.
    - **Continuous Surface**: GRFs produce a continuous spatial process defined everywhere (not just at observed locations), making them more suitable for spatial prediction (kriging).
    - **Global Effects**: They capture both local and long-range spatial dependencies more naturally than splines, especially with a suitable covariance function.
@@ -2275,17 +2280,16 @@ Both smoothers (like `s(x_coord, y_coord)` in generalized additive models (GAMs)
 
 **Key Differences**
 
-| **Aspect**            | **Smoother (GAM)**                        | **Gaussian Random Field (GRF)**               |
+| **Aspect**             | **Smoother (GAM)**                        | **Gaussian Random Field (GRF)**               |
 |------------------------|-------------------------------------------|-----------------------------------------------|
 | **Model Type**         | Penalized regression (basis functions)    | Covariance-based stochastic process           |
 | **Spatial Scale**      | Local effects with predefined smoothness  | Local and long-range effects                  |
 | **Predictive Surface** | Limited to range of data                  | Continuous spatial surface                    |
 | **Flexibility**        | Limited by basis function choice          | Flexible with proper covariance structure     |
 | **Computational Cost** | Moderate                                  | High for large datasets unless approximated   |
-| **Tool**               | `mgcv::gam()`                            | `INLA`, `TMB`, `spBayes`, or geostatistical tools |
+| **Tool**               | `mgcv::gam()`                             | `INLA`, `TMB`, `spBayes`, or geostatistical tools |
 
-When to Use Each?
-
+**When to Use Each**
 - **Use a smoother in GAMs**:
   - When the dataset is moderate in size and focus is on estimating smooth spatial effects for inference.
   - If computational efficiency is a concern and spatial predictions are not a priority.
@@ -2297,21 +2301,23 @@ When to Use Each?
 
 Each method has trade-offs, so the choice depends on your scientific goals, computational resources, and data structure.
 
+> how does this relate to log gausian cox process?
+
 A **Log-Gaussian Cox Process (LGCP)** is a specific type of stochastic point process used to model spatial or spatiotemporal point patterns. Its connection to smoothers, Gaussian random fields (GRFs), and spatial GLMMs lies in how the intensity of points is modeled.
 
-Overview of LGCP
+**Overview of LGCP**
 
 An LGCP assumes that the intensity of points in space (or space-time) is a **random field** governed by a latent Gaussian process. Specifically:
-- **Point Process**: Points are distributed in space according to an inhomogeneous Poisson process, where the intensity function \(\lambda(s)\) (at location \(s\)) is a random variable.
-- **Log Transformation**: The logarithm of the intensity, \(\log \lambda(s)\), is modeled as a Gaussian random field:
+- **Point Process**: Points are distributed in space according to an inhomogeneous Poisson process, where the intensity function $\lambda(s)$ (at location $s$) is a random variable.
+- **Log Transformation**: The logarithm of the intensity, $\log \lambda(s)$, is modeled as a Gaussian random field:
 
 $$
 \log \lambda(s) = \mu(s) + Z(s),
 $$
 
-where $\mu(s)$ is a deterministic component (e.g., fixed effects or a smooth mean structure), and $Z(s)$ is a zero-mean Gaussian random field (e.g., modeled with a Matérn covariance).
+  where $\mu(s)$ is a deterministic component (e.g., fixed effects or a smooth mean structure), and $Z(s)$ is a zero-mean Gaussian random field (e.g., modeled with a Matérn covariance).
 
-Relationship to Spatial GLMMs
+**Relationship to Spatial GLMMs**
 
 1. **Spatial GLMMs**: 
    - In a spatial GLMM, spatial variation is modeled as a random effect, which can be represented by a smoother or a GRF.
@@ -2325,14 +2331,16 @@ Relationship to Spatial GLMMs
    - The latent Gaussian random field $Z(s)$ in LGCP corresponds to the spatial random effect in a GLMM. Both capture spatial autocorrelation and structure.
    - The difference is the interpretation: in an LGCP, the GRF directly affects the intensity of points, while in a GLMM it models residual variation in responses like counts or presence/absence.
 
-### Relationship to Smoothers
+**Relationship to Smoothers**
+
 - **Smoothers in GAMs**: These can also be thought of as deterministic approximations of spatial variation, where spatial effects are modeled explicitly as smooth functions (e.g., splines).
 - **LGCP vs. Smoothers**: 
   - LGCP's GRF is more flexible and stochastic, explicitly accounting for spatial uncertainty and correlation.
   - Smoothers are deterministic and less flexible for highly irregular or complex spatial patterns.
   - LGCP is better for modeling **point-level spatial variation**, while smoothers are often used for aggregated data.
 
-### Applications and Practical Considerations
+**Applications and Practical Considerations**
+
 1. **When to Use LGCP**:
    - You have individual event locations (e.g., species sightings, disease cases).
    - The goal is to model spatial point patterns with an underlying intensity process that is uncertain or correlated.
@@ -2343,8 +2351,9 @@ Relationship to Spatial GLMMs
    - The focus is on estimation or prediction over discrete regions.
    - Example: Modeling bird counts across fixed survey sites.
 
-### Summary of Connections
-| **Aspect**             | **Spatial GLMM**                             | **LGCP**                                     |
+**Summary of Connections**
+
+| **Aspect**              | **Spatial GLMM**                             | **LGCP**                                     |
 |-------------------------|----------------------------------------------|----------------------------------------------|
 | **Type of Data**        | Count, presence/absence, continuous response | Point patterns                               |
 | **Latent Structure**    | Spatial effect via smoother or GRF           | GRF defines log-intensity of points          |
@@ -2353,6 +2362,27 @@ Relationship to Spatial GLMMs
 | **Computational Tools** | `mgcv`, `INLA`, `TMB`, etc.                  | `lgcp`, `spatstat`, `INLA`, etc.             |
 
 If your data consists of point patterns, LGCP is more appropriate because it models the point-generating mechanism explicitly. Conversely, if you have counts or aggregated data, a spatial GLMM or smoother may suffice.
+<!-- spell-check: ignore:end -->
+
+#### Discussie
+
+Bovenstaand antwoord van ChatGPT klinkt logisch en overzichtelijk.
+Op basis hiervan lijkt het meest correct om een GLMM te fitten waarbij we de spatiale component via een GRF benaderen.
+
+- Complexe spatiale structuur over grote range
+- Modellering van aantallen op vaste meetlocaties
+
+Hier nog enkele interessante links:
+
+https://calgary.converged.yt/articles/poisson_processes.html
+
+https://www.paulamoraga.com/book-spatial/point-process-modeling.html
+
+https://becarioprecario.bitbucket.io/spde-gitbook/ch-lcox.html
+
+https://inlabru-org.github.io/inlabru/articles/2d_lgcp_distancesampling.html
+
+https://doi.org/10.1080/00031305.2024.2316725
 
 # Linken van densiteitschattingen met modelmatige predicties
 
