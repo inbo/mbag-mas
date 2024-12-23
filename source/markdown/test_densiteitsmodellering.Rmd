@@ -2008,12 +2008,9 @@ library(dsm)
 
 Nuttige links:
 
-https://github.com/dill/dsm/wiki
-
-https://cran.r-project.org/web/packages/dsm/dsm.pdf
-
-https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105
-
+https://github.com/dill/dsm/wiki\\
+https://cran.r-project.org/web/packages/dsm/dsm.pdf\\
+https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105\\
 https://distancesampling.org/resources/vignettes.html
 
 Uit [de paper](https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105) rond DSM blijkt dat dit exact hetzelfde model is als het Poisson model waarbij de offset bestaat uit de detectiekans en de oppervlaktes.
@@ -2144,7 +2141,7 @@ Het voordeel is dat er geen overlap is, maar de spatiale join gebeurt via `st_ne
 ```{r}
 prediction_grid <- st_make_grid(
   flanders_sf,
-  cellsize = units::set_units(300*300*pi, "m^2")
+  cellsize = units::set_units(300 * 300 * pi, "m^2")
   )
 prediction_grid_sf <- st_sf(geometry = prediction_grid)
 joined_grid <- st_join(prediction_grid_sf, dsm1_pred_sf,
