@@ -39,6 +39,7 @@ bootstrap_ds_model <- function(ds_model, samples, fun, group_vars) {
     data = ds_model$ddf$data,
     statistic = boot_statistic_ds,
     R = samples,
+    strata = factor(ds_model$ddf$data[[group_vars]]),
     fun = get_det_probs,
     ds_model = ds_model,
     group_vars = group_vars)
