@@ -1422,7 +1422,7 @@ cbind(densities, range) %>%
     geom_line(linewidth = 1)
 ```
 
-We nemen $K$ random draws van deze verdelingen en $K$ random drawsvan de verwachte waarde van de posterior predictive distribution voor elk telpunt. De random samples van de verwachte waarde van de posterior predictive distribution worden dan gedeeld door de random samples van de offset voor elk telpunt $j$ $\text{offset}_{j,k}$.
+We nemen $K$ random draws van deze verdelingen en $K$ random draws van de verwachte waarde van de posterior predictive distribution voor elk telpunt. De random samples van de verwachte waarde van de posterior predictive distribution worden dan gedeeld door de random samples van de offset voor elk telpunt $j$ $\text{offset}_{j,k}$.
 
 <!-- spell-check: ignore:start -->
 $$
@@ -1992,7 +1992,7 @@ In [de paper](https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-
 
 ### Conclusie GLMM
 
-We graken al ver met de GLMM.
+We geraken al ver met de GLMM.
 Er zijn een aantal verbeterpunten mogelijk.
 
 - spatiale component: smoother functie opties bekijken
@@ -2036,7 +2036,9 @@ Het is interessant om de resultaten van beide methodes te vergelijken.
 
 Zie [deze vignette](https://distancesampling.org/resources/vignettes.html) en `?"dsm-data"`.
 
-"The count response can only be used when detection function covariates only vary between segments/points (not within). For example, weather conditions (like visibility or sea state) or foliage cover are usually acceptable as they do not change within the segment, but animal sex or behaviour will not work. The abundance.est response can be used with any covariates in the detection function."
+<!-- spell-check: ignore:start -->
+*"The count response can only be used when detection function covariates only vary between segments/points (not within). For example, weather conditions (like visibility or sea state) or foliage cover are usually acceptable as they do not change within the segment, but animal sex or behaviour will not work. The abundance.est response can be used with any covariates in the detection function."*
+<!-- spell-check: ignore:end -->
 
 ```{r}
 observation_df <- veldleeuwerik_dist_hr3$ddf$data %>%
@@ -2106,6 +2108,7 @@ Zodat we rechtsreeks het aantal broedparen per 100 ha (= 1 km²) modelleren (= d
 $$
 \ln\left(\frac{\lambda_{j,t}}{\text{offset}}\right) = \beta_0 + \sum_{s=2}^S\beta_{s-1}X_{s, j} + \sum_{t=2}^T\gamma_{t-1}X_{t} + f(x_j, y_j)
 $$
+<!-- spell-check: ignore:end -->
 
 ```{r}
 test_dsm1 <- dsm(
