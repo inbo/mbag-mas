@@ -1992,9 +1992,13 @@ In [de paper](https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-
 
 ### Conclusie GLMM
 
-- smoother functie
+We graken al ver met de GLMM.
+Er zijn een aantal verbeterpunten mogelijk.
+
+- spatiale component: smoother functie opties bekijken
 - centreren X- en Y-coördinaten
-- houdt geen rekening met spatiale autocorrelatie tussen telpunten?
+
+Niet mogelijk om individuele waarnemingen te modelleren.
 
 ## Density surface modelling
 
@@ -2008,9 +2012,12 @@ library(dsm)
 
 Nuttige links:
 
-https://github.com/dill/dsm/wiki\\
-https://cran.r-project.org/web/packages/dsm/dsm.pdf\\
-https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105\\
+https://github.com/dill/dsm/wiki
+
+https://cran.r-project.org/web/packages/dsm/dsm.pdf
+
+https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105
+
 https://distancesampling.org/resources/vignettes.html
 
 Uit [de paper](https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105) rond DSM blijkt dat dit exact hetzelfde model is als het Poisson model waarbij de offset bestaat uit de detectiekans en de oppervlaktes.
@@ -2061,6 +2068,8 @@ pred_dsm_df <- steekproefkader %>%
   select(Sample.Label = pointid, stratum, x_coord, y_coord) %>%
   mutate(area = 300 * 300 * pi)
 ```
+
+### Model specificatie en resultaten
 
 We fitten een Poisson model waarbij we de data van alle telperiodes meenemen en de effort gelijk is aan 4.
 Het is niet mogelijk om random effects te gebruiken.
@@ -2220,11 +2229,20 @@ De onderste lijn van punten in de plot van de residuen versus de lineaire voorsp
 rqgam_check(test_dsm2)
 ```
 
-We zien dat $k=100$ nog altijd te laag is.
+We zien dat $k=100$ nog altijd te laag is om de spatiale complexiteit te omvatten.
 
 ### Conclusie DSM
 
-...
+De idee achter DSM is eigenlijk niet zo verschillend als de GLMM's.
+Het grootste verschil is dat geen random effects mogelijk zijn.
+De telperiodes worden in de offset opgenomen als "effort".
+De methode lijkt in dit opzicht weinig flexibel.
+Het lijkt daarom ook weinig voordeel te hebben t.o.v. onze GLMM-methode.
+
+We leerden we dat de spatiale component voorlopig ontoereikend is.
+Dit is niet onverwacht.
+We hebben veel data over heel Vlaanderen.
+Om deze spatiale complexiteit te capteren hebben we een hoge flexibiliteit nodig voor de smoother functie.
 
 ## Log-Gaussian Cox Process modelling
 
@@ -2332,3 +2350,7 @@ Relationship to Spatial GLMMs
 | **Computational Tools** | `mgcv`, `INLA`, `TMB`, etc.                  | `lgcp`, `spatstat`, `INLA`, etc.             |
 
 If your data consists of point patterns, LGCP is more appropriate because it models the point-generating mechanism explicitly. Conversely, if you have counts or aggregated data, a spatial GLMM or smoother may suffice.
+
+# Linken van densiteitschattingen met modelmatige predicties
+
+...
