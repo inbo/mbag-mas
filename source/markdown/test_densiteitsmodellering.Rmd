@@ -744,7 +744,16 @@ cbind(veldleeuwerik_dist_hr2$ddf$data,
 ```
 
 ```{r}
+abundance_veldleeuwerik2 <- sum_dist_veldleeuwerik2$dht$individuals$N
 density_veldleeuwerik2 <- sum_dist_veldleeuwerik2$dht$individuals$D
+```
+
+Abundantie:
+
+```{r}
+abundance_veldleeuwerik2 %>%
+  select(stratum = Label, abundantie = Estimate, ll = lcl, ul = ucl) %>%
+  kable(digits = 3)
 ```
 
 Densiteit:
@@ -977,7 +986,7 @@ waarbij de verwachte waarde $\lambda_{j,t}$ wordt gemodelleerd als
 
 <!-- spell-check: ignore:start -->
 $$
-\ln(\lambda_{j,t}) = \beta_0 + \sum_{s=2}^S\beta_{s-1}X_{s, j} + \sum_{t=2}^T\gamma_{t-1}X_{t} + f(x_j, y_j) + b_{0,j} + \ln(p_s) + \ln\left(\frac{A_j}{10^6\ \text{m}^2/100\ \text{ha}}\right)
+\ln(\lambda_{j,t}) = \beta_0 + \sum_{s=2}^S\beta_{s-1}X_{s, j} + \sum_{t=2}^T\gamma_{t-1}X_{t} + f(x_j, y_j) + b_{0,j} + \ln(p_s) + \ln\left(\frac{A_j}{10^6\ \text{m}^2/\text{km}^2}\right)
 $$
 <!-- spell-check: ignore:end -->
 
@@ -991,7 +1000,7 @@ Hierbij zijn:
 - $p_s$: De gemiddelde detectiekans in stratum $s$ waartoe telpunt $j$ behoort.
 - $A_j = \pi \cdot 300^2=$ `r round(pi * 300^2, 2)` m²: De oppervlakte van telcirkel $j$.
 
-De offset $\ln(p_s) + \ln\left(\frac{A_j}{10^6\ \text{m}^2/100\ \text{ha}}\right)$ kan worden samengevoegd:
+De offset $\ln(p_s) + \ln\left(\frac{A_j}{10^6\ \text{m}^2/\text{km}^2}\right)$ kan worden samengevoegd:
 
 <!-- spell-check: ignore:start -->
 $$
@@ -999,7 +1008,7 @@ $$
 $$
 <!-- spell-check: ignore:end -->
 
-Zodat we rechtsreeks het aantal broedparen per 100 ha modelleren (= densiteit) waarbij we corrigeren voor de gemiddelde detectiekans:
+Zodat we rechtsreeks het aantal broedparen per 100 ha (= 1 km²) modelleren (= densiteit) waarbij we corrigeren voor de gemiddelde detectiekans:
 
 <!-- spell-check: ignore:start -->
 $$
@@ -1417,7 +1426,7 @@ We nemen $K$ random draws van deze verdelingen en $K$ random drawsvan de verwach
 
 <!-- spell-check: ignore:start -->
 $$
-\text{offset}_{j,k} = \frac{p_{s, k}A_j}{10^6\ \text{m}^2/100\ \text{ha}}
+\text{offset}_{j,k} = \frac{p_{s, k}A_j}{10^6\ \text{m}^2/\text{km}^2}
 $$
 <!-- spell-check: ignore:end -->
 
