@@ -2008,16 +2008,20 @@ library(dsm)
 
 Nuttige links:
 
-https://github.com/dill/dsm/wiki \\
-https://cran.r-project.org/web/packages/dsm/dsm.pdf \\
-https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105 \\
+https://github.com/dill/dsm/wiki
+
+https://cran.r-project.org/web/packages/dsm/dsm.pdf
+
+https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105
+
 https://distancesampling.org/resources/vignettes.html
 
 Uit [de paper](https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105) rond DSM blijkt dat dit exact hetzelfde model is als het Poisson model waarbij de offset bestaat uit de detectiekans en de oppervlaktes.
 Het grote verschil is hoe de onzekerheid van de detectiekans wordt doorgerekend.
+De package ondersteunt wel extra features zoals de Tweedie distributie.
 
 In ons eerdere Poisson model gingen we ervan uit dat de detectiekans een Beta verdeling volgt.
-We beschouwden de offset als een random variable waaruit we eenvoudig uit konden samplen.
+We beschouwden de offset als een random variable waaruit we eenvoudig konden samplen.
 De random samples van de verwachte waarde van de posterior predictive distribution werden dan gedeeld door de random samples van de offset.
 
 In DSM wordt de onzekerheid via bootstrap procedures berekend waarbij rekening wordt gehouden met spatiale autocorrelatie (moving block bootstrap).
@@ -2061,6 +2065,42 @@ pred_dsm_df <- steekproefkader %>%
   mutate(area = 300 * 300 * pi)
 ```
 
+We fitten een Poisson model waarbij we de data van alle telperiodes meenemen en de effort gelijk is aan 4.
+Het is niet mogelijk om random effects te gebruiken.
+Herhaalde telperiodes worden opgenomen in de offset.
+
+<!-- spell-check: ignore:start -->
+$$
+Y_{j,t} \sim Pois(\lambda_{j,t})
+$$
+<!-- spell-check: ignore:end -->
+
+waarbij de verwachte waarde $\lambda_{j,t}$ wordt gemodelleerd als
+
+<!-- spell-check: ignore:start -->
+$$
+\ln(\lambda_{j,t}) = \beta_0 + \sum_{s=2}^S\beta_{s-1}X_{s, j} + \sum_{t=2}^T\gamma_{t-1}X_{t} + f(x_j, y_j) + \ln(p_s) + \ln\left(p_sE\frac{A_j}{10^6\ \text{m}^2/\text{km}^2}\right)
+$$
+<!-- spell-check: ignore:end -->
+
+Hierbij zijn:
+
+- $\beta_0$: Het globale intercept vertegenwoordigt de referentiestratum ($s=1$) en -telperiode ($t=1$). Als referentiestratum en -periode nemen we resp. het stratum, de periode met het hoogste aantal broedparen.
+- $\sum_{s=2}^S\beta_{s-1}X_{s, j}$: Fixed effects voor strata $s=2, ..., S$, waarbij $X_{s, j}$ een dummyvariabele is die aangeeft of telcirkel $j$ tot stratum $s$ behoort. Het eerste stratum ($s=1$) is inbegrepen in het intercept.
+- $\sum_{t=2}^T\gamma_{t-1}X_{t}$: Fixed effects voor telpunten $t=2, ..., T$, waarbij $X_{t}$ een dummyvariabele is die aangeeft of de telling afkomstig is uit telperiode $t$. De eerste telperiode ($t=1$) is inbegrepen in het intercept.
+- $f(x_j, y_j)$: Een gladheidsfunctie die ruimtelijke variatie beschrijft o.b.v. de X- en Y-coördinaten van telpunt $j$.
+- $b_{0,j}$: Een random effect voor telcirkel $j$, dat variatie tussen telcirkels modelleert.
+- $p_s$: De gemiddelde detectiekans in stratum $s$ waartoe telpunt $j$ behoort.
+- $E = 4$: Het aantal bezoeken (effort). 
+- $A_j = \pi \cdot 300^2=$ `r round(pi * 300^2, 2)` m²: De oppervlakte van telcirkel $j$.
+
+Zodat we rechtsreeks het aantal broedparen per 100 ha (= 1 km²) modelleren (= densiteit) waarbij we corrigeren voor de gemiddelde detectiekans
+
+<!-- spell-check: ignore:start -->
+$$
+\ln\left(\frac{\lambda_{j,t}}{\text{offset}}\right) = \beta_0 + \sum_{s=2}^S\beta_{s-1}X_{s, j} + \sum_{t=2}^T\gamma_{t-1}X_{t} + f(x_j, y_j)
+$$
+
 ```{r}
 test_dsm1 <- dsm(
   formula = count ~ stratum + s(x_coord, y_coord),
@@ -2071,12 +2111,9 @@ test_dsm1 <- dsm(
   convert.units = 1 / 10^6,
   method = "REML" # default
 )
-summary(test_dsm1)
 ```
 
-```{r}
-test_brms_poisson1 
-```
+We maken opnieuw voorspellingen voor het steekproefkader.
 
 ```{r}
 dsm1_pred <- predict(test_dsm1, pred_dsm_df, pred_dsm_df$area / 10^6)
@@ -2101,7 +2138,9 @@ dsm1_pred_sf %>%
     theme(legend.position = "bottom")
 ```
 
-alternative 
+[Deze vignette](https://distancesampling.org/dsm/articles/lines_gomex/mexico-analysis.html#abundance-estimation) geeft een alternatieve manier voor het maken van voorspellingen.
+Het voordeel is dat er geen overlap is, maar de spatiale join gebeurt via `st_nearest_feature` wat niet 100% correct is.
+
 ```{r}
 prediction_grid <- st_make_grid(
   flanders_sf,
@@ -2125,7 +2164,6 @@ if (file.exists(file.path(cache_dir, paste0("cropped_grid_dsm.Rds")))) {
 }
 ```
 
-
 ```{r}
 cropped_grid %>%
   ggplot() +
@@ -2141,7 +2179,10 @@ cropped_grid %>%
     theme(legend.position = "bottom")
 ```
 
+We zien gelijkaardige resultaten als voordien.
+Zoals verwacht zijn de nummers wel ongeveer een factor 4 kleiner.
 
+We bekijken enkele figuren m.b.t. model fit.
 
 ```{r}
 par(mfrow = c(2, 2))
@@ -2149,12 +2190,17 @@ gam.check(test_dsm1)
 par(mfrow = c(1, 1))
 ```
 
-These show that there is some deviation in the Q-Q plot. The “line” of points in the plot of the residuals vs. linear predictor plot corresponds to the zeros in the data.
+Deze laten zien dat er enige afwijking is in de Q-Q plot. De onderste lijn van punten in de plot van de residuen versus de lineaire voorspeller komt overeen met de nultellingen in de gegevens. Deze kunnen misleidend en afleidend zijn, waardoor het moeilijk is om te zien of residuen heteroskedasticiteit vertonen.
+
+De $k$ parameter die gegeven wordt aan `s()` term bepaalt de complexiteit van de smooths in het model. Door de $k$ parameter in te stellen specificeren we de grootste complexiteit voor die smooth term in het model; zolang dit hoog genoeg is, kunnen we er zeker van zijn dat er genoeg flexibiliteit is. In de uitvoer van gam.check hierboven kunnen we zien dat er een “p-waarde” wordt berekend voor de grootte van de basis, dit kan een goede richtlijn zijn om te bepalen of de basisgrootte moet worden vergroot. We zien dat de default $k$ te klein is. Dit is logisch aangezien we data gebruiken voor Vlaanderen en de complexiteit veel hoger is over de longitude en latitude0
+
+We fitten het model met de Tweedie distributie.
+We verhogen ook $k$ naar 100.
 
 ```{r}
 test_dsm2 <- dsm(
-  formula = count ~ stratum + s(x_coord, y_coord),
-  family = quasipoisson(link = "log"),
+  formula = count ~ stratum + s(x_coord, y_coord, k = 100),
+  family = tw(),
   ddf.obj = veldleeuwerik_dist_hr3,
   segment.data = segment_df,
   observation.data = observation_df,
@@ -2162,6 +2208,8 @@ test_dsm2 <- dsm(
   method = "REML" # default
 )
 ```
+
+De Q-Q plot ziet er beter uit.
 
 ```{r}
 par(mfrow = c(2, 2))
@@ -2169,51 +2217,15 @@ gam.check(test_dsm2)
 par(mfrow = c(1, 1))
 ```
 
-```{r}
-test_dsm3 <- dsm(
-  formula = count ~ stratum + s(x_coord, y_coord),
-  family = tw(),
-  ddf.obj = veldleeuwerik_dist_hr3,
-  segment.data = segment_df,
-  observation.data = observation_df,
-  convert.units = 1 / 10^6,
-  method = "REML" # default
-)
-```
+De onderste lijn van punten in de plot van de residuen versus de lineaire voorspeller komt overeen met de nultellingen in de gegevens. Deze kunnen misleidend en afleidend zijn, waardoor het moeilijk is om te zien of residuen heteroskedasticiteit vertonen. Gerandomiseerde kwantielresiduen vermijden dit probleem door de residuen te transformeren zodat ze exact normaal verdeeld zijn. Dit maakt de plot van residuen versus lineaire voorspeller veel eenvoudiger te interpreteren, omdat de artefacten die door de koppelingsfunctie worden gegenereerd er niet in voorkomen.
 
 ```{r}
-par(mfrow = c(2, 2))
-gam.check(test_dsm3)
-par(mfrow = c(1, 1))
+rqgam_check(test_dsm2)
 ```
 
-```{r}
-test_dsm4 <- dsm(
-  formula = count ~ stratum + s(x_coord, y_coord, k = 500),
-  family = tw(),
-  ddf.obj = veldleeuwerik_dist_hr3,
-  segment.data = segment_df,
-  observation.data = observation_df,
-  convert.units = 1 / 10^6,
-  method = "REML" # default
-)
-```
+We zien dat $k=100$ nog altijd te laag is.
 
-```{r}
-par(mfrow = c(2, 2))
-gam.check(test_dsm4)
-par(mfrow = c(1, 1))
-```
-
-In the top right panel of the above gam.check plots the residuals vs. linear predictor plot includes a odd line of predictions. These are an artifact of the link function, showing the exact zeros in the data. These can be misleading and distracting, making it difficult to see whether residuals show heteroskedasticity.
-
-Randomised quantile residuals (Dunn & Smyth, 1996) avoid this issue by transforming the residuals to be exactly normally distributed. This makes the residuals vs. linear predictor plot much easier to interpret as it therefore doesn’t include the artifacts generated by the link function. These plots can be produced using rqgam.check in dsm:
-
-```{r}
-rqgam_check(test_dsm4)
-```
-
-### Conclusie GLMM
+### Conclusie DSM
 
 ...
 
