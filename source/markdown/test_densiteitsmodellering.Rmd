@@ -2018,6 +2018,8 @@ https://cran.r-project.org/web/packages/dsm/dsm.pdf
 
 https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105
 
+https://converged.yt/talks/edinburgh-gam-2024/
+
 https://peerj.com/articles/13950/
 
 https://distancesampling.org/resources/vignettes.html
@@ -2244,10 +2246,36 @@ De telperiodes worden in de offset opgenomen als "effort".
 De methode lijkt in dit opzicht weinig flexibel.
 Het lijkt daarom ook weinig voordeel te hebben t.o.v. onze GLMM-methode.
 
+We houden voorlopig geen rekening met de covariantie tussen de schatting van de detectiefunctie en het spatiale model.
+Recent onderzoek heeft hier een oplossing voor.
+Dit wordt besproken in de volgende subsectie.
+
 We leerden we dat de spatiale component voorlopig ontoereikend is.
 Dit is niet onverwacht.
 We hebben veel data over heel Vlaanderen.
 Om deze spatiale complexiteit te capteren hebben we een hoge flexibiliteit nodig voor de smoother functie.
+Dit wordt verderop besproken.
+
+## Variance propagation in DSM-achtige modellen
+
+We houden voorlopig echter geen rekening met de covariantie tussen de schatting van de detectiefunctie en het spatiale model.
+
+<!-- spell-check: ignore:start -->
+[Miller et al. (2022)](https://peerj.com/articles/13950/): *"If estimates are coincident in space and time, our general strategy here is to absorb this into the spatial model if possible, using the method of* [Bravington, Miller & Hedley (2021)](https://link.springer.com/article/10.1007/s13253-021-00438-2)*. A typical example is that detection functions will usually be coincident as they are estimated from data collected during the survey, in that case it is likely that weather conditions that affect detectability (e.g., sea state) vary in space, so there will be covariance between the detectability and spatial model that must be accounted for."* (zie ook [deze presentatie](https://converged.yt/talks/edinburgh-gam-2024/)).
+
+[Bravington, Miller & Hedley (2021)](https://link.springer.com/article/10.1007/s13253-021-00438-2): *"Splitting the analysis into two stages is appealing partly because existing domain-specific software and diagnostic expertise can be applied as-is to each stage separately, and partly because it avoids any need to write inevitably complicated code that incorporates two individually complex aspects. It is also straightforward to produce a point estimate of abundance for any desired sub-region straight from the fitted GAM. However, when detectability and density both vary spatially, the problem is what to do about variance given that GAMs do not intrinsically “understand” the notion of uncertainty in their offset."*
+<!-- spell-check: ignore:end -->
+
+[Bravington, Miller & Hedley (2021)](https://link.springer.com/article/10.1007/s13253-021-00438-2) bieden hier een oplossing voor.
+Ze tonen aan hoe statistische onzekerheid over detecteerbaarheid eenvoudig kan worden opgenomen in standaard GAM-software. Eerst wordt de detectiefunctie geschat, waarna de log-likelihood ervan wordt herschreven als een kwadratische benadering rond de puntenschattingen. De onzekerheid van de parameters wordt verwerkt als random effecten in de tweede fase van de GAM. Dit sluit aan bij de formulering van een GAM, waarbij random effecten al zijn geïntegreerd in de **mgcv**-software. Zo wordt het detectiefunctiemodel opnieuw geschat tijdens het fitten van de GAM, waarbij onzekerheid over zowel detecteerbaarheid als densiteit wordt meegenomen.
+
+**Stap 1.** Fit detectiefunctie met **Distance**
+
+**Stap 2.** Fit DSM-achtig model als GLMM met **mgcv**
+
+**Stap 3.** Incorporeer samenvallende offset correcties via de "variance propagation" methode van [Bravington, Miller & Hedley (2021)](https://link.springer.com/article/10.1007/s13253-021-00438-2)
+
+
 
 ## Gaussian random fields en Log-Gaussian Cox Processes
 
