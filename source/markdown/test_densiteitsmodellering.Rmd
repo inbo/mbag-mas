@@ -598,7 +598,7 @@ det_probs_df %>%
 
 ### Bootstrapping
 
-Om de verdeling van de detectiekans te achterhalen kunnen we bootstrapping toepassen.
+Om de verdeling van de detectiekans te achterhalen kunnen we pbootstrapping toepassen.
 Het lijkt echter vrij computerintensief om dit voor elke soort voor elk jaar te moeten doen.
 
 ```{r, message=FALSE, echo=FALSE}
@@ -2203,7 +2203,7 @@ par(mfrow = c(1, 1))
 
 Deze laten zien dat er enige afwijking is in de Q-Q plot. De onderste lijn van punten in de plot van de residuen versus de lineaire voorspeller komt overeen met de nultellingen in de gegevens. Deze kunnen misleidend en afleidend zijn, waardoor het moeilijk is om te zien of residuen heteroskedasticiteit vertonen.
 
-De $k$ parameter die gegeven wordt aan `s()` term bepaalt de complexiteit van de smooths in het model. Door de $k$ parameter in te stellen specificeren we de grootste complexiteit voor die smooth term in het model; zolang dit hoog genoeg is, kunnen we er zeker van zijn dat er genoeg flexibiliteit is. In de uitvoer van gam.check hierboven kunnen we zien dat er een “p-waarde” wordt berekend voor de grootte van de basis, dit kan een goede richtlijn zijn om te bepalen of de basisgrootte moet worden vergroot. We zien dat de default $k$ te klein is. Dit is logisch aangezien we data gebruiken voor Vlaanderen en de complexiteit veel hoger is over de longitude en latitude0
+De $k$ parameter die gegeven wordt aan `s()` term bepaalt de complexiteit van de smooths in het model. Door de $k$ parameter in te stellen specificeren we de grootste complexiteit voor die smooth term in het model; zolang dit hoog genoeg is, kunnen we er zeker van zijn dat er genoeg flexibiliteit is. In de uitvoer van `gam.check()` hierboven kunnen we zien dat er een p-waarde wordt berekend voor de grootte van de basis, dit kan een goede richtlijn zijn om te bepalen of de basisgrootte moet worden vergroot. We zien dat de default $k$ te klein is. Dit is logisch aangezien we data gebruiken voor Vlaanderen en de complexiteit veel hoger is over de longitude en latitude.
 
 We fitten het model met de Tweedie distributie.
 We verhogen ook $k$ naar 100.
@@ -2384,6 +2384,6 @@ https://inlabru-org.github.io/inlabru/articles/2d_lgcp_distancesampling.html
 
 https://doi.org/10.1080/00031305.2024.2316725
 
-# Linken van densiteitschattingen met modelmatige predicties
+# Linken van densiteitsschattingen met modelmatige predicties
 
 ...
