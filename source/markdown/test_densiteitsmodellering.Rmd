@@ -2238,6 +2238,259 @@ rqgam_check(test_dsm2)
 
 We zien dat $k=100$ nog altijd te laag is om de spatiale complexiteit te omvatten.
 
+We maken voorspellingen voor het steekproefkader.
+
+```{r}
+dsm2_pred <- predict(test_dsm2, pred_dsm_df, pred_dsm_df$area / 10^6)
+dsm2_pred_sf <- pred_dsm_df %>%
+  mutate(estimate = dsm2_pred) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370)
+```
+
+```{r}
+dsm2_pred_sf %>%
+  st_buffer(300) %>%
+  ggplot() +
+    geom_sf(aes(fill = estimate), colour = alpha("white", 0)) +
+    scale_fill_gradientn(
+      colours = rainbow(5),
+      breaks = seq(from = 0, to = 10, length.out = 5),
+      limits = c(0, 10)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+### Variance propagation in DSM
+
+Voor de onzekerheid zijn er twee opties:
+
+- `dsm_var_gam()` die aanneemt dat de spatiale model- en detectiefunctieonderdelen van het model onafhankelijk van elkaar zijn. In dit geval worden de gekwadrateerde variatiecoëfficiënten voor elke modelcomponent opgeteld.
+- `dsm_var_prop()` die rekening houdt met het feit dat detectiekans gecorreleerd kan zijn met het ruimtelijke deel van het model. Het gebruikt methoden beschreven in (Bravington, Miller, & Hedley, 2021).
+
+Beide methoden schatten de variantie van de densiteit voor elk element van een lijst. In ons geval willen we een de densiteit verkrijgen voor elk van de telcirkels in het steekproefkader, dus gebruiken we `split()`.
+We maken predicties voor de Weidestreek omdat het anders niet lukt.
+
+```{r}
+test <- pred_dsm_df %>% filter(stratum == "Weidestreek")
+pred_dsm_var <- split(test, 1:nrow(test))
+dsm2_var <- dsm_var_gam(test_dsm2, pred_dsm_var, test$area / 10^6)
+summary(dsm2_var)
+```
+
+```{r}
+dsm2_pred_sf %>%
+  filter(stratum == "Weidestreek") %>%
+  mutate(cv = sqrt(dsm2_var$pred.var) / estimate) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+  st_buffer(300) %>%
+  ggplot() +
+    geom_sf(aes(fill = cv), colour = alpha("white", 0)) +
+    scale_fill_gradientn(
+      colours = rainbow(5)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "cv",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+We houden hier echter geen rekening met de covariantie tussen de schatting van de detectiefunctie en het spatiale model.
+
+<!-- spell-check: ignore:start -->
+[Miller et al. (2022)](https://peerj.com/articles/13950/): *"If estimates are coincident in space and time, our general strategy here is to absorb this into the spatial model if possible, using the method of* [Bravington, Miller & Hedley (2021)](https://link.springer.com/article/10.1007/s13253-021-00438-2)*. A typical example is that detection functions will usually be coincident as they are estimated from data collected during the survey, in that case it is likely that weather conditions that affect detectability (e.g., sea state) vary in space, so there will be covariance between the detectability and spatial model that must be accounted for."* (zie ook [deze presentatie](https://converged.yt/talks/edinburgh-gam-2024/)).
+
+[Bravington, Miller & Hedley (2021)](https://link.springer.com/article/10.1007/s13253-021-00438-2): *"Splitting the analysis into two stages is appealing partly because existing domain-specific software and diagnostic expertise can be applied as-is to each stage separately, and partly because it avoids any need to write inevitably complicated code that incorporates two individually complex aspects. It is also straightforward to produce a point estimate of abundance for any desired sub-region straight from the fitted GAM. However, when detectability and density both vary spatially, the problem is what to do about variance given that GAMs do not intrinsically “understand” the notion of uncertainty in their offset."*
+<!-- spell-check: ignore:end -->
+
+[Bravington, Miller & Hedley (2021)](https://link.springer.com/article/10.1007/s13253-021-00438-2) bieden hier een oplossing voor.
+Ze tonen aan hoe statistische onzekerheid over detectiekans eenvoudig kan worden opgenomen in standaard GAM-software.
+Eerst wordt de detectiefunctie geschat, waarna de log-likelihood ervan wordt herschreven als een kwadratische benadering rond de puntenschattingen.
+De onzekerheid van de parameters wordt verwerkt als random effecten in de tweede fase van de GAM.
+Dit sluit aan bij de formulering van een GAM, waarbij random effecten al zijn geïntegreerd in de **mgcv**-software.
+Zo wordt het detectiefunctiemodel opnieuw geschat tijdens het fitten van de GAM, waarbij onzekerheid over zowel detecteerbaarheid als densiteit wordt meegenomen.
+
+```{r}
+newdat <- pred_dsm_df
+newdat$off.set <- pred_dsm_df$area / 10^6
+varprop <- dsm_varprop(test_dsm2, newdat)
+summary(varprop$old_model)
+summary(varprop$refit)
+```
+
+```{r}
+obs_exp <- function(model, term){
+  oe <- model$data
+  oe$Npredict <- as.vector(predict(model))
+
+  oe <- plyr::ddply(oe, plyr::as.quoted(term), function(x){
+    data.frame(Observed = sum(x[[as.character(model$formula)[2]]]),
+               Expected = sum(x$Npredict))
+  })
+
+  cn <- oe[,1]
+  oe <- t(oe[,2:3])
+  colnames(oe) <- cn
+
+  return(oe)
+}
+
+print(obs_exp(varprop$refit, ~openheid))
+```
+
+```{r}
+pred_dsm_df %>%
+  mutate(estimate = varprop$pred) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+  st_buffer(300) %>%
+  ggplot() +
+    geom_sf(aes(fill = estimate), colour = alpha("white", 0)) +
+    scale_fill_gradientn(
+      colours = rainbow(5),
+      breaks = seq(from = 0, to = 10, length.out = 5),
+      limits = c(0, 10)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+```{r}
+pred_dsm_df %>%
+  mutate(estimate = as.vector(varprop$pred),
+         se = varprop$ses,
+         cv = se / estimate) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+  st_buffer(300) %>%
+  ggplot() +
+    geom_sf(aes(fill = cv), colour = alpha("white", 0)) +
+    scale_fill_gradientn(
+      colours = rainbow(5)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "cv",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+```{r}
+pred_dsm_df %>%
+  mutate(estimate = as.vector(varprop$pred),
+         se = varprop$ses,
+         cv = se / estimate) %>%
+  filter(stratum == "Weidestreek") %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+  st_buffer(300) %>%
+  ggplot() +
+    geom_sf(aes(fill = cv), colour = alpha("white", 0)) +
+    scale_fill_gradientn(
+      colours = rainbow(5)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "cv",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+Zowel de detectiekans als de abundantie zal afhankelijk zijn van openheid.
+De laatste optie lijkt dus het best.
+
+> Kunnen we dit ook toepassen door een GLMM te fitten?
+
+```{r}
+custom_dsm_data <- analysis_df_brms1 %>%
+  left_join(segment_df, by = join_by(stratum, x_coord, y_coord)) %>%
+  mutate(off.set = offset * Effort) %>%
+  group_by(Sample.Label, stratum, x_coord, y_coord, offset, Effort, openheid) %>%
+  summarise(n = sum(n)) %>%
+  ungroup() %>%
+  mutate(openheid = factor(openheid),
+         stratum = factor(stratum)) %>%
+  as.data.frame()
+```
+
+
+```{r, echo=TRUE}
+custom_dsm1 <- gam(
+  n ~ stratum + s(x_coord, y_coord, k = 100) + offset(log(offset)),
+  data = custom_dsm_data,
+  family = tw(),
+  method = "REML",
+  control = list(keepData = TRUE)) # essential for varprop later
+```
+
+
+```{r}
+# Attach the detection function into the gam object
+custom_dsm1$ddf <- veldleeuwerik_dist_hr3$ddf
+# Make it a dsm object so we can use dsm functions later
+class(custom_dsm1) <- c("dsm", class(custom_dsm1))
+```
+
+Hoe doet het model het versus waargenomen bij verschillende openheidsklasses?
+
+```{r}
+obs_exp(custom_dsm1, "openheid")
+```
+
+Q-Q plots
+
+```{r}
+# quantile-quantile plot
+qq.gam(custom_dsm1, rep = 200)
+```
+
+```{r}
+# randomised quantile residuals vs linear predictor
+dsm::rqgam_check(custom_dsm1)
+```
+
+```{r}
+custom_newdat <- newdat %>%
+  left_join(distinct(custom_dsm_data, stratum, offset),
+            by = join_by(stratum),
+            relationship = "many-to-many") %>%
+  select(-area)
+custom_varprop <- dsm_varprop(custom_dsm1, custom_newdat)
+```
+
+```{r}
+custom_newdat %>%
+  mutate(estimate = as.vector(custom_varprop$pred)) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+  st_buffer(300) %>%
+  ggplot() +
+    geom_sf(aes(fill = estimate), colour = alpha("white", 0)) +
+    scale_fill_gradientn(
+      colours = rainbow(5)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+```{r}
+custom_newdat %>%
+  mutate(estimate = as.vector(custom_varprop$pred),
+         se = custom_varprop$ses,
+         cv = se / estimate) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+  st_buffer(300) %>%
+  ggplot() +
+    geom_sf(aes(fill = cv), colour = alpha("white", 0)) +
+    scale_fill_gradientn(
+      colours = rainbow(5)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "cv",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
 ### Conclusie DSM
 
 De idee achter DSM is eigenlijk niet zo verschillend als de GLMM's.
@@ -2254,28 +2507,6 @@ We leerden we dat de spatiale component voorlopig ontoereikend is.
 Dit is niet onverwacht.
 We hebben veel data over heel Vlaanderen.
 Om deze spatiale complexiteit te capteren hebben we een hoge flexibiliteit nodig voor de smoother functie.
-Dit wordt verderop besproken.
-
-## Variance propagation in DSM-achtige modellen
-
-We houden voorlopig echter geen rekening met de covariantie tussen de schatting van de detectiefunctie en het spatiale model.
-
-<!-- spell-check: ignore:start -->
-[Miller et al. (2022)](https://peerj.com/articles/13950/): *"If estimates are coincident in space and time, our general strategy here is to absorb this into the spatial model if possible, using the method of* [Bravington, Miller & Hedley (2021)](https://link.springer.com/article/10.1007/s13253-021-00438-2)*. A typical example is that detection functions will usually be coincident as they are estimated from data collected during the survey, in that case it is likely that weather conditions that affect detectability (e.g., sea state) vary in space, so there will be covariance between the detectability and spatial model that must be accounted for."* (zie ook [deze presentatie](https://converged.yt/talks/edinburgh-gam-2024/)).
-
-[Bravington, Miller & Hedley (2021)](https://link.springer.com/article/10.1007/s13253-021-00438-2): *"Splitting the analysis into two stages is appealing partly because existing domain-specific software and diagnostic expertise can be applied as-is to each stage separately, and partly because it avoids any need to write inevitably complicated code that incorporates two individually complex aspects. It is also straightforward to produce a point estimate of abundance for any desired sub-region straight from the fitted GAM. However, when detectability and density both vary spatially, the problem is what to do about variance given that GAMs do not intrinsically “understand” the notion of uncertainty in their offset."*
-<!-- spell-check: ignore:end -->
-
-[Bravington, Miller & Hedley (2021)](https://link.springer.com/article/10.1007/s13253-021-00438-2) bieden hier een oplossing voor.
-Ze tonen aan hoe statistische onzekerheid over detecteerbaarheid eenvoudig kan worden opgenomen in standaard GAM-software. Eerst wordt de detectiefunctie geschat, waarna de log-likelihood ervan wordt herschreven als een kwadratische benadering rond de puntenschattingen. De onzekerheid van de parameters wordt verwerkt als random effecten in de tweede fase van de GAM. Dit sluit aan bij de formulering van een GAM, waarbij random effecten al zijn geïntegreerd in de **mgcv**-software. Zo wordt het detectiefunctiemodel opnieuw geschat tijdens het fitten van de GAM, waarbij onzekerheid over zowel detecteerbaarheid als densiteit wordt meegenomen.
-
-**Stap 1.** Fit detectiefunctie met **Distance**
-
-**Stap 2.** Fit DSM-achtig model als GLMM met **mgcv**
-
-**Stap 3.** Incorporeer samenvallende offset correcties via de "variance propagation" methode van [Bravington, Miller & Hedley (2021)](https://link.springer.com/article/10.1007/s13253-021-00438-2)
-
-
 
 ## Gaussian random fields en Log-Gaussian Cox Processes
 
