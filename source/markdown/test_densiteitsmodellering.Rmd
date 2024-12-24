@@ -2271,11 +2271,11 @@ Voor de onzekerheid zijn er twee opties:
 - `dsm_var_prop()` die rekening houdt met het feit dat detectiekans gecorreleerd kan zijn met het ruimtelijke deel van het model. Het gebruikt methoden beschreven in (Bravington, Miller, & Hedley, 2021).
 
 Beide methoden schatten de variantie van de densiteit voor elk element van een lijst. In ons geval willen we een de densiteit verkrijgen voor elk van de telcirkels in het steekproefkader, dus gebruiken we `split()`.
-We maken predicties voor de Weidestreek omdat het anders niet lukt.
+We maken predicties voor de Weidestreek omdat het anders niet lukt (+400 Gb).
 
 ```{r}
 test <- pred_dsm_df %>% filter(stratum == "Weidestreek")
-pred_dsm_var <- split(test, 1:nrow(test))
+pred_dsm_var <- split(test, seq_len(nrow(test)))
 dsm2_var <- dsm_var_gam(test_dsm2, pred_dsm_var, test$area / 10^6)
 summary(dsm2_var)
 ```
@@ -2321,17 +2321,17 @@ summary(varprop$refit)
 ```
 
 ```{r}
-obs_exp <- function(model, term){
+obs_exp <- function(model, term) {
   oe <- model$data
   oe$Npredict <- as.vector(predict(model))
 
-  oe <- plyr::ddply(oe, plyr::as.quoted(term), function(x){
+  oe <- plyr::ddply(oe, plyr::as.quoted(term), function(x) {
     data.frame(Observed = sum(x[[as.character(model$formula)[2]]]),
                Expected = sum(x$Npredict))
   })
 
-  cn <- oe[,1]
-  oe <- t(oe[,2:3])
+  cn <- oe[, 1]
+  oe <- t(oe[, 2:3])
   colnames(oe) <- cn
 
   return(oe)
@@ -2404,7 +2404,8 @@ De laatste optie lijkt dus het best.
 custom_dsm_data <- analysis_df_brms1 %>%
   left_join(segment_df, by = join_by(stratum, x_coord, y_coord)) %>%
   mutate(off.set = offset * Effort) %>%
-  group_by(Sample.Label, stratum, x_coord, y_coord, offset, Effort, openheid) %>%
+  group_by(Sample.Label, stratum, x_coord, y_coord,
+           offset, Effort, openheid) %>%
   summarise(n = sum(n)) %>%
   ungroup() %>%
   mutate(openheid = factor(openheid),
