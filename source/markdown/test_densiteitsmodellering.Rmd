@@ -1357,9 +1357,7 @@ brms1_pred_df %>%
   filter(method == "mean") %>%
   ggplot() +
     geom_sf(aes(fill = cv), colour = alpha("white", 0)) +
-    scale_fill_gradientn(colours = rainbow(5),
-                         breaks = seq(from = 0, to = 8, length.out = 5),
-                         limits = c(0, 8)) +
+    scale_fill_gradientn(colours = rainbow(5)) +
     coord_sf(crs = 31370) +
     labs(x = "", y = "", fill = "CV",
          title = "Gemiddelde per telpunt over telperiodes") +
@@ -1371,9 +1369,7 @@ brms1_pred_df %>%
   filter(method == "max") %>%
   ggplot() +
     geom_sf(aes(fill = cv), colour = alpha("white", 0)) +
-    scale_fill_gradientn(colours = rainbow(5),
-                         breaks = seq(from = 0, to = 8, length.out = 5),
-                         limits = c(0, 8)) +
+    scale_fill_gradientn(colours = rainbow(5)) +
     coord_sf(crs = 31370) +
     labs(x = "", y = "", fill = "CV",
          title = "Maximum per telpunt over telperiodes") +
@@ -2491,6 +2487,84 @@ custom_newdat %>%
          title = "Gemiddelde per telpunt over telperiodes") +
     theme(legend.position = "bottom")
 ```
+
+> Kunnen we dit ook toepassen door de GLMM te fitten met random intercepts?
+
+```{r, echo=TRUE}
+custom_dsm2 <- gam(
+  formula = n ~ stratum + periode_in_jaar + s(x_coord, y_coord) +
+    s(plotnaam, bs = "re") + offset(log(offset)),
+  data = analysis_df_brms1 %>% mutate(plotnaam = factor(plotnaam),
+                                      openheid = ifelse(grepl("HOL", stratum),
+                                                        "HOL", "OL")),
+  family = poisson(),
+  method = "REML",
+  control = list(keepData = TRUE)) # essential for varprop later
+```
+
+```{r}
+# Attach the detection function into the gam object
+custom_dsm2$ddf <- veldleeuwerik_dist_hr3$ddf
+# Make it a dsm object so we can use dsm functions later
+class(custom_dsm2) <- c("dsm", class(custom_dsm2))
+```
+
+Hoe doet het model het versus waargenomen bij verschillende openheidsklasses?
+
+```{r}
+obs_exp(custom_dsm2, "openheid")
+```
+
+Q-Q plots
+
+```{r}
+# quantile-quantile plot
+qq.gam(custom_dsm2, rep = 200)
+```
+
+```{r, eval=FALSE}
+custom_newdat <- newdat %>%
+  left_join(distinct(custom_dsm_data, stratum, offset),
+            by = join_by(stratum),
+            relationship = "many-to-many") %>%
+  select(-area)
+custom_varprop <- dsm_varprop(custom_dsm2, custom_newdat)
+```
+
+```{r, eval=FALSE}
+custom_newdat %>%
+  mutate(estimate = as.vector(custom_varprop$pred)) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+  st_buffer(300) %>%
+  ggplot() +
+    geom_sf(aes(fill = estimate), colour = alpha("white", 0)) +
+    scale_fill_gradientn(
+      colours = rainbow(5)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+```{r, eval=FALSE}
+custom_newdat %>%
+  mutate(estimate = as.vector(custom_varprop$pred),
+         se = custom_varprop$ses,
+         cv = se / estimate) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+  st_buffer(300) %>%
+  ggplot() +
+    geom_sf(aes(fill = cv), colour = alpha("white", 0)) +
+    scale_fill_gradientn(
+      colours = rainbow(5)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "cv",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
 
 ### Conclusie DSM
 
