@@ -2547,7 +2547,7 @@ Q-Q plots
 qq.gam(custom_dsm2, rep = 200)
 ```
 
-```{r, eval=FALSE}
+```{r}
 custom_newdat2 <- steekproefkader %>%
   mutate(
       regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
