@@ -2391,10 +2391,34 @@ pred_dsm_df %>%
     theme(legend.position = "bottom")
 ```
 
-Zowel de detectiekans als de abundantie zal afhankelijk zijn van openheid.
-De laatste optie lijkt dus het best.
+```{r}
+cv_weidestreek1 <- dsm2_pred_sf %>%
+  filter(stratum == "Weidestreek") %>%
+  mutate(cv = sqrt(dsm2_var$pred.var) / estimate, 
+         varprop = "no") %>%
+  st_drop_geometry() %>%
+  select(Sample.Label, cv, varprop)
+cv_weidestreek2 <- pred_dsm_df %>%
+  mutate(estimate = as.vector(varprop$pred),
+         se = varprop$ses,
+         cv = se / estimate,
+         varprop = "yes") %>%
+  filter(stratum == "Weidestreek") %>%
+  select(Sample.Label, cv, varprop)
 
-> Kunnen we dit ook toepassen door een GLMM te fitten?
+bind_rows(cv_weidestreek1, cv_weidestreek2) %>%
+  ggplot(aes(x = varprop, y = cv)) +
+    geom_boxplot() +
+    ggtitle(
+      paste("Verdeling van CVs zonder ('no') en met ('yes') rekening te houden",
+            "met covariantie", sep = "\n")
+    )
+```
+
+De cv is niet veel hoger als we rekening houden met de covariantie (mediaan 'no': `r round(median(cv_weidestreek1$cv), 5)`, mediaan 'yes': `r round(median(cv_weidestreek2$cv), 5)`)
+Hoewel zowel de detectiekans als de abundanties afhankelijk zijn van openheid van het landschap.
+
+> Kunnen we dit laatste model ook toepassen door een GLMM te fitten?
 
 ```{r}
 custom_dsm_data <- analysis_df_brms1 %>%
@@ -2408,7 +2432,6 @@ custom_dsm_data <- analysis_df_brms1 %>%
          stratum = factor(stratum)) %>%
   as.data.frame()
 ```
-
 
 ```{r, echo=TRUE}
 custom_dsm1 <- gam(
