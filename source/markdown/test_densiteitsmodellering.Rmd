@@ -2516,10 +2516,12 @@ custom_newdat %>%
 ```{r, echo=TRUE}
 custom_dsm2 <- gam(
   formula = n ~ stratum + periode_in_jaar + s(x_coord, y_coord) +
-    s(plotnaam, bs = "re") + offset(log(offset)),
-  data = analysis_df_brms1 %>% mutate(plotnaam = factor(plotnaam),
-                                      openheid = ifelse(grepl("HOL", stratum),
-                                                        "HOL", "OL")),
+    s(Sample.Label, bs = "re") + offset(log(offset)),
+  data = analysis_df_brms1 %>%
+    mutate(Sample.Label = factor(plotnaam),
+           openheid = factor(ifelse(grepl("HOL", stratum), "HOL", "OL")),
+           Effort = 1) %>%
+    as.data.frame(),
   family = poisson(),
   method = "REML",
   control = list(keepData = TRUE)) # essential for varprop later
@@ -2546,17 +2548,35 @@ qq.gam(custom_dsm2, rep = 200)
 ```
 
 ```{r, eval=FALSE}
-custom_newdat <- newdat %>%
-  left_join(distinct(custom_dsm_data, stratum, offset),
+custom_newdat2 <- steekproefkader %>%
+  mutate(
+      regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
+  ) %>%
+  st_drop_geometry() %>%
+  mutate(stratum = ifelse(
+      regio == "Weidestreek", regio,
+      paste(regio, openheid_klasse, sbp, sep = "_"))
+  ) %>% 
+  left_join(analysis_df_brms1 %>% distinct(stratum, offset),
             by = join_by(stratum),
-            relationship = "many-to-many") %>%
-  select(-area)
-custom_varprop <- dsm_varprop(custom_dsm2, custom_newdat)
+                  relationship = "many-to-many") %>%
+  mutate(off.set = offset,
+         Sample.Label = factor(pointid),
+         openheid = factor(openheid_klasse)) %>%
+  filter(regio == "Leemstreek") %>%
+  select(Sample.Label, stratum, x_coord, y_coord, offset, off.set,
+         openheid) %>%
+  expand_grid(
+      periode_in_jaar = unique(analysis_df_brms1$periode_in_jaar)
+  ) %>%
+  as.data.frame()
+
+custom_varprop2 <- dsm_varprop(custom_dsm2, custom_newdat2)
 ```
 
-```{r, eval=FALSE}
-custom_newdat %>%
-  mutate(estimate = as.vector(custom_varprop$pred)) %>%
+```{r}
+custom_newdat2 %>%
+  mutate(estimate = as.vector(custom_varprop2$pred)) %>%
   st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
   st_buffer(300) %>%
   ggplot() +
@@ -2570,10 +2590,10 @@ custom_newdat %>%
     theme(legend.position = "bottom")
 ```
 
-```{r, eval=FALSE}
-custom_newdat %>%
-  mutate(estimate = as.vector(custom_varprop$pred),
-         se = custom_varprop$ses,
+```{r}
+custom_newdat2 %>%
+  mutate(estimate = as.vector(custom_varprop2$pred),
+         se = custom_varprop2$ses,
          cv = se / estimate) %>%
   st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
   st_buffer(300) %>%
@@ -2587,7 +2607,6 @@ custom_newdat %>%
          title = "Gemiddelde per telpunt over telperiodes") +
     theme(legend.position = "bottom")
 ```
-
 
 ### Conclusie DSM
 
