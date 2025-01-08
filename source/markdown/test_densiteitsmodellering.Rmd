@@ -418,7 +418,7 @@ obs_table <- veldleeuwerik_2024_df %>%
   group_by(periode_in_jaar, plotnaam) %>%
   mutate(n = n()) %>%
   group_by(plotnaam) %>%
-  slice_max(order_by = n, n = 1, with_ties = FALSE) %>%
+  slice_max(order_by = n, n = 1) %>%
   ungroup() %>%
   mutate(Region.Label = paste(regio,
     openheid = openheid_klasse, sbp,
@@ -709,7 +709,7 @@ obs_table2 <- veldleeuwerik_2024_df %>%
   group_by(periode_in_jaar, plotnaam) %>%
   mutate(n = n()) %>%
   group_by(plotnaam) %>%
-  slice_max(order_by = n, n = 1, with_ties = FALSE) %>%
+  slice_max(order_by = n, n = 1) %>%
   ungroup() %>%
   select(object = oid, Region.Label = regio, Sample.Label = plotnaam)
 
@@ -880,38 +880,6 @@ density_veldleeuwerik3 %>%
   labs(y = "aantal broedparen per 100 ha", x = "") +
   theme(legend.position = "bottom")
 ```
-
-```{r}
-veldleeuwerik_2024_df %>%
-  group_by(regio, openheid_klasse, plotnaam, periode_in_jaar) %>%
-  summarise(n = n(),
-            .groups = "drop_last") %>%
-  summarise(maxima = max(n),
-            totaal = sum(n) / 4,
-            .groups = "drop") %>%
-  pivot_longer(cols = c("maxima", "totaal"), values_to = "value",
-               names_to = "method") %>%
-  left_join(det_prob_df, by = join_by(openheid_klasse)) %>%
-  mutate(cirkelopp = pi * 300^2,
-         ha_100 = 10^6,
-         offset = (detectiekans * cirkelopp) / ha_100) %>%
-  mutate(value = value / offset) %>%
-  group_by(regio, method) %>%
-  summarise(densiteit = mean(value),
-            ll = Hmisc::smean.cl.boot(value)[2],
-            ul = Hmisc::smean.cl.boot(value)[3],
-            .groups = "drop") %>%
-  ggplot(aes(x = regio, y = densiteit, colour = method)) +
-  geom_point(size = 3, position = position_dodge(width = 0.5)) +
-  geom_errorbar(aes(ymin = ll, ymax = ul),
-    width = 0.2, linewidth = 1,
-    position = position_dodge(width = 0.5)
-  ) +
-  scale_y_continuous(limits = c(0, NA)) +
-  labs(y = "aantal broedparen per 100 ha", x = "") +
-  theme(legend.position = "bottom")
-```
-
 
 Aan alle verwachtingen is voldaan.
 Dit geeft aan dat we op correcte wijze de detectiekans kunnen schatten o.b.v. de volledige dataset en de densiteit o.b.v. een subset (maxima) of de volledige dataset.
