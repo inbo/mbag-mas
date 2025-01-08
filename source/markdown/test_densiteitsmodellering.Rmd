@@ -417,7 +417,8 @@ sample_table <- design %>%
 obs_table <- veldleeuwerik_2024_df %>%
   group_by(periode_in_jaar, plotnaam) %>%
   mutate(n = n()) %>%
-  slice_max(order_by = n, n = 1) %>%
+  group_by(plotnaam) %>%
+  slice_max(order_by = n, n = 1, with_ties = FALSE) %>%
   ungroup() %>%
   mutate(Region.Label = paste(regio,
     openheid = openheid_klasse, sbp,
@@ -567,6 +568,7 @@ density_veldleeuwerik %>%
     width = 0.2,
     position = position_dodge(width = 0.5)
   ) +
+  scale_y_continuous(limits = c(0, NA)) +
   labs(y = "aantal broedparen per 100 ha", x = "") +
   facet_wrap(~regio, ncol = 2, scales = "free")
 ```
@@ -706,7 +708,8 @@ sample_table2 <- design %>%
 obs_table2 <- veldleeuwerik_2024_df %>%
   group_by(periode_in_jaar, plotnaam) %>%
   mutate(n = n()) %>%
-  slice_max(order_by = n, n = 1) %>%
+  group_by(plotnaam) %>%
+  slice_max(order_by = n, n = 1, with_ties = FALSE) %>%
   ungroup() %>%
   select(object = oid, Region.Label = regio, Sample.Label = plotnaam)
 
@@ -775,6 +778,7 @@ density_veldleeuwerik2 %>%
   ggplot(aes(x = regio, y = densiteit)) +
   geom_point(size = 3) +
   geom_errorbar(aes(ymin = ll, ymax = ul), width = 0.2, linewidth = 1) +
+  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 10, 1)) +
   labs(y = "aantal broedparen per 100 ha", x = "")
 ```
 
@@ -872,9 +876,39 @@ density_veldleeuwerik3 %>%
     width = 0.2, linewidth = 1,
     position = position_dodge(width = 0.5)
   ) +
+  scale_y_continuous(limits = c(0, NA)) +
   labs(y = "aantal broedparen per 100 ha", x = "") +
   theme(legend.position = "bottom")
 ```
+
+```{r}
+veldleeuwerik_2024_df %>%
+  group_by(regio, openheid_klasse, plotnaam, periode_in_jaar) %>%
+  summarise(n = n(),
+            .groups = "drop_last") %>%
+  summarise(maxima = max(n),
+            totaal = sum(n) / 4,
+            .groups = "drop") %>%
+  pivot_longer(cols = c("maxima", "totaal"), values_to = "value",
+               names_to = "method") %>%
+  left_join(det_prob_df, by = join_by(openheid_klasse)) %>%
+  mutate(value = value / detectiekans) %>%
+  group_by(regio, method) %>%
+  summarise(densiteit = mean(value),
+            ll = Hmisc::smean.cl.boot(value)[2],
+            ul = Hmisc::smean.cl.boot(value)[3],
+            .groups = "drop") %>%
+  ggplot(aes(x = regio, y = densiteit, colour = method)) +
+  geom_point(size = 3, position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = ll, ymax = ul),
+    width = 0.2, linewidth = 1,
+    position = position_dodge(width = 0.5)
+  ) +
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(y = "aantal broedparen per 100 ha", x = "") +
+  theme(legend.position = "bottom")
+```
+
 
 Aan alle verwachtingen is voldaan.
 Dit geeft aan dat we op correcte wijze de detectiekans kunnen schatten o.b.v. de volledige dataset en de densiteit o.b.v. een subset (maxima) of de volledige dataset.
@@ -2760,6 +2794,158 @@ https://inlabru-org.github.io/inlabru/articles/2d_lgcp_distancesampling.html
 
 https://doi.org/10.1080/00031305.2024.2316725
 
+### Model fitten
+
+We kijken via [deze paper](https://www.tandfonline.com/doi/epdf/10.1080/00031305.2024.2316725?needAccess=true) hoe we een GRF kunnen toevoegen.
+We fitten het brms Poisson model.
+
+- We laten de offset weg (die kunnen we achteraf toevoegen)
+- 
+
+
+```{r}
+# Get gorilla data
+library(spatstat)
+data(gorillas, package = "spatstat.data")
+
+# Prepare gorilla data
+pp <- data.frame(
+  gorillas, # contains nesting locations
+  # at locations add predictors from ’gorillas.extra’
+  lapply(gorillas.extra, function(x){x[gorillas]}),
+  # indicator for whether row corresponds to a point event or a quadrature point
+  pt = 1,
+  # point pattern weights epsilon > 0
+  wt = 1e-6)
+
+# Prepare quadrature points
+# Extract x and y from predictor image as quadrature points
+q_xy <- data.frame(gorillas.extra[[1]])[ , c("x", "y")]
+
+# Add predictors and set weights using domain area
+quad <- data.frame(
+  q_xy,
+  # at locations add predictors from ’gorillas.extra’
+  lapply(gorillas.extra, function(x){x[q_xy]}),
+  # indicator for whether row corresponds to a point event or a quadrature point
+  pt = 0,
+  # weights are area of tiles
+  wt = area(gorillas$window) / nrow(q_xy))
+
+# Combine gorilla observations with quadrature points
+dat <- merge(pp, quad, all = TRUE)
+
+# Fit brms model
+m <- gam(
+  formula = pt / wt ~ elevation + waterdist + slopeangle + heat + slopetype +
+    vegetation + s(x, y, bs = "gp", k = 400, m = c(3, 568.37)),
+  data = dat,
+  family = poisson,
+  weights = wt, method = "REML")
+
+# Make predictions
+quad$z <- predict(m, newdata = quad, type = "response")
+# create image from coordinates & predicted values
+pred.im <- as.im(quad[ , c("x", "y", "z")],
+                 W = gorillas$window)
+
+plot(log(pred.im), box = F, main = "", col = terrain.colors, ribbon = F)
+points(pp[,c("x","y")], col = rgb(0,0,0,alpha = 0.25), pch = 4)
+```
+
+https://esajournals.onlinelibrary.wiley.com/doi/epdf/10.1002/ecy.2403
+
+https://becarioprecario.bitbucket.io/inla-gitbook/ch-spatial.html#sec:geostats
+
 # Linken van densiteitsschattingen met modelmatige predicties
 
-...
+Kunnen we de aantal per stratum repliceren met brms?
+
+```{r}
+strat_vec <- analysis_df_brms1 %>%
+  filter(grepl("^Leemstreek", stratum)) %>%
+  distinct(stratum) %>%
+  pull(stratum) %>%
+  as.vector() %>%
+  sort()
+pred_list <- vector(length = length(strat_vec), mode = "list")
+
+for (i in seq_along(strat_vec)) {
+    # Specify cache path
+    brms1_pred_strat_path <- file.path(
+      cache_dir, paste0("brms1_pred_", tolower(strat_vec[i])))
+
+    # Get predictions
+    pred_veldleeuwerik_strat <- arrow::open_dataset(brms1_pred_strat_path)
+    
+    # Calculate summary statistics per location for time period with maximum
+    # expected breeding pairs
+    plot_veldleeuwerik_strat_max <- pred_veldleeuwerik_strat %>%
+      # slice_max not supported by arrow
+      collect() %>%
+      group_by(stratum, plotnaam, periode_in_jaar) %>%
+      mutate(estimate_mean = mean(.epred)) %>%
+      slice_max(order_by = estimate_mean, n = 1) %>%
+      ungroup() %>%
+      group_by(stratum, .draw) %>%
+      summarise(total = mean(.epred)) %>%
+      ungroup() %>%
+      group_by(stratum) %>%
+      summarise(
+        densiteit = mean(total),
+        ll = quantile(total, 0.025),
+        ul = quantile(total, 0.975),
+        .groups = "drop")
+        
+    pred_list[[i]] <- plot_veldleeuwerik_strat_max
+}
+
+brms1_pred_totals <- bind_rows(pred_list) %>%
+    separate(stratum, into = c("regio", "openheid", "sbp"))
+```
+
+```{r}
+bind_rows(
+  density_veldleeuwerik %>%
+    filter(Label != "Total") %>%
+    select(stratum = Label, densiteit = Estimate, ll = lcl, ul = ucl) %>%
+    separate(stratum, into = c("regio", "openheid", "sbp"), sep = " - ") %>%
+    filter(regio == "Leemstreek") %>%
+    mutate(method = "distance sampling"),
+  brms1_pred_totals %>%
+    mutate(method = "GLMM")
+  ) %>%
+  ggplot(aes(x = sbp, y = densiteit, colour = method)) +
+  geom_point(position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = ll, ymax = ul),
+    width = 0.2,
+    position = position_dodge(width = 0.5)
+  ) +
+  labs(y = "aantal broedparen per 100 ha", x = "") +
+  facet_wrap(~openheid, ncol = 2)
+```
+
+Kunnen we de maxima modelleren?
+
+```{r}
+analysis_df_brms1 %>%
+  group_by(plotnaam) %>%
+  slice_max(order_by = n, n = 1, with_ties = FALSE) %>%
+  ungroup() %>% View()
+
+test_brms_poisson1 <- brm(
+  formula = n ~ stratum + periode_in_jaar + s(x_coord, y_coord) +
+    (1 | plotnaam) + offset(log(offset)),
+  data = analysis_df_brms1,
+  family = poisson(),
+  chains = nchains,
+  warmup = burnin,
+  iter = niter,
+  cores = nparallel,
+  thin = thinning,
+  backend = "cmdstanr",
+  seed = 123,
+  file = file.path(cache_dir, "test_brms_poisson1"),
+  file_refit = "on_change")
+```
+
