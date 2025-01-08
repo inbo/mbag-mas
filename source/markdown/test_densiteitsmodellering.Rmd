@@ -2899,15 +2899,15 @@ bind_rows(
 Kunnen we de maxima modelleren?
 
 ```{r}
-analysis_df_brms1 %>%
+analysis_df_maxima <- analysis_df_brms1 %>%
   group_by(plotnaam) %>%
   slice_max(order_by = n, n = 1, with_ties = FALSE) %>%
-  ungroup() %>% View()
+  ungroup() %>%
+  select(-periode_in_jaar)
 
-test_brms_poisson1 <- brm(
-  formula = n ~ stratum + periode_in_jaar + s(x_coord, y_coord) +
-    (1 | plotnaam) + offset(log(offset)),
-  data = analysis_df_brms1,
+test_brms_maxima1 <- brm(
+  formula = n ~ stratum + s(x_coord, y_coord) + offset(log(offset)),
+  data = analysis_df_maxima,
   family = poisson(),
   chains = nchains,
   warmup = burnin,
@@ -2916,7 +2916,99 @@ test_brms_poisson1 <- brm(
   thin = thinning,
   backend = "cmdstanr",
   seed = 123,
-  file = file.path(cache_dir, "test_brms_poisson1"),
+  file = file.path(cache_dir, "test_brms_maxima1"),
   file_refit = "on_change")
 ```
 
+```{r}
+pp_check(test_brms_maxima1, type = "bars", ndraws = 100)
+```
+
+```{r}
+pred_list <- vector(length = length(strat_vec), mode = "list")
+
+for (i in seq_along(strat_vec)) {
+    # Specify cache path
+    brms_maxpred_strat_path <- file.path(
+      cache_dir, paste0("brms_maxpred_", tolower(strat_vec[i])))
+
+    strata_df <- steekproefkader %>%
+          mutate(
+            regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
+          ) %>%
+          st_drop_geometry() %>%
+          mutate(stratum = ifelse(
+            regio == "Weidestreek", regio,
+            paste(regio, openheid_klasse, sbp, sep = "_"))
+          ) %>%
+          filter(stratum == strat_vec[i])
+
+    print(paste("Making predictions for", strat_vec[i]))
+
+    # Draw predictions if file does not exists
+    if (file.exists(brms_maxpred_strat_path)) {
+      pred_veldleeuwerik_strat <- arrow::open_dataset(brms_maxpred_strat_path)
+    } else {
+      # Create new dataframe for complete sampling frame
+      new_df_strat <- strata_df %>%
+          left_join(analysis_df_brms1 %>% distinct(stratum, offset),
+                    by = join_by(stratum),
+                    relationship = "many-to-many") %>%
+          select(plotnaam = pointid, stratum, x_coord, y_coord, offset)
+
+      # Make predictions
+      tidybayes::add_epred_draws(
+          newdata = new_df_strat,
+          object = test_brms_maxima1,
+          ndraws = n_draws,
+          offset = FALSE,                # divide predictions by offset
+          seed = 123) %>%
+        ungroup() %>%
+        arrow::write_dataset(brms_maxpred_strat_path)
+      pred_veldleeuwerik_strat <- arrow::open_dataset(brms_maxpred_strat_path)
+    }
+    
+    # Calculate summary statistics per location for time period with maximum
+    # expected breeding pairs
+    plot_veldleeuwerik_strat_max <- pred_veldleeuwerik_strat %>%
+      group_by(stratum, .draw) %>%
+      summarise(total = mean(.epred)) %>%
+      ungroup() %>%
+      # quantile not supported by arrow
+      collect() %>%
+      group_by(stratum) %>%
+      summarise(
+        densiteit = mean(total),
+        ll = quantile(total, 0.025),
+        ul = quantile(total, 0.975),
+        .groups = "drop")
+        
+    pred_list[[i]] <- plot_veldleeuwerik_strat_max
+}
+
+brmsmax_pred_totals <- bind_rows(pred_list) %>%
+    separate(stratum, into = c("regio", "openheid", "sbp"))
+```
+
+```{r}
+bind_rows(
+  density_veldleeuwerik %>%
+    filter(Label != "Total") %>%
+    select(stratum = Label, densiteit = Estimate, ll = lcl, ul = ucl) %>%
+    separate(stratum, into = c("regio", "openheid", "sbp"), sep = " - ") %>%
+    filter(regio == "Leemstreek") %>%
+    mutate(method = "distance sampling"),
+  brms1_pred_totals %>%
+    mutate(method = "GLMM tot"),
+  brmsmax_pred_totals %>%
+    mutate(method = "GLMM max")
+  ) %>%
+  ggplot(aes(x = sbp, y = densiteit, colour = method)) +
+  geom_point(position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = ll, ymax = ul),
+    width = 0.2,
+    position = position_dodge(width = 0.5)
+  ) +
+  labs(y = "aantal broedparen per 100 ha", x = "") +
+  facet_wrap(~openheid, ncol = 2)
+```
