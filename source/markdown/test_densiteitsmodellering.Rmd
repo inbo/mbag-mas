@@ -778,7 +778,7 @@ density_veldleeuwerik2 %>%
   ggplot(aes(x = regio, y = densiteit)) +
   geom_point(size = 3) +
   geom_errorbar(aes(ymin = ll, ymax = ul), width = 0.2, linewidth = 1) +
-  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 10, 1)) +
+  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 100, 2)) +
   labs(y = "aantal broedparen per 100 ha", x = "")
 ```
 
@@ -2839,7 +2839,8 @@ strat_vec <- analysis_df_brms1 %>%
   pull(stratum) %>%
   as.vector() %>%
   sort()
-pred_list <- vector(length = length(strat_vec), mode = "list")
+pred_list1 <- vector(length = length(strat_vec), mode = "list")
+pred_list2 <- pred_list1
 
 for (i in seq_along(strat_vec)) {
     # Specify cache path
@@ -2848,6 +2849,24 @@ for (i in seq_along(strat_vec)) {
 
     # Get predictions
     pred_veldleeuwerik_strat <- arrow::open_dataset(brms1_pred_strat_path)
+    
+    # Calculate summary statistics per location for time period with average
+    # expected breeding pairs
+    plot_veldleeuwerik_strat_mean <- pred_veldleeuwerik_strat %>%
+      group_by(stratum, plotnaam, .draw) %>%
+      summarise(.epred = mean(.epred),
+                .groups = "drop") %>%
+      group_by(stratum, .draw) %>%
+      summarise(total = mean(.epred)) %>%
+      ungroup() %>%
+      # quantile not supported by arrow
+      collect() %>%
+      group_by(stratum) %>%
+      summarise(
+        densiteit = mean(total),
+        ll = quantile(total, 0.025),
+        ul = quantile(total, 0.975),
+        .groups = "drop")
     
     # Calculate summary statistics per location for time period with maximum
     # expected breeding pairs
@@ -2868,10 +2887,13 @@ for (i in seq_along(strat_vec)) {
         ul = quantile(total, 0.975),
         .groups = "drop")
         
-    pred_list[[i]] <- plot_veldleeuwerik_strat_max
+    pred_list1[[i]] <- plot_veldleeuwerik_strat_max
+    pred_list2[[i]] <- plot_veldleeuwerik_strat_mean
 }
 
-brms1_pred_totals <- bind_rows(pred_list) %>%
+brms1_pred_totals1 <- bind_rows(pred_list1) %>%
+    separate(stratum, into = c("regio", "openheid", "sbp"))
+brms1_pred_totals2 <- bind_rows(pred_list2) %>%
     separate(stratum, into = c("regio", "openheid", "sbp"))
 ```
 
@@ -2883,8 +2905,29 @@ bind_rows(
     separate(stratum, into = c("regio", "openheid", "sbp"), sep = " - ") %>%
     filter(regio == "Leemstreek") %>%
     mutate(method = "distance sampling"),
-  brms1_pred_totals %>%
-    mutate(method = "GLMM")
+  brms1_pred_totals1 %>%
+    mutate(method = "GLMM (max. telperiodes)")
+  ) %>%
+  ggplot(aes(x = sbp, y = densiteit, colour = method)) +
+  geom_point(position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = ll, ymax = ul),
+    width = 0.2,
+    position = position_dodge(width = 0.5)
+  ) +
+  labs(y = "aantal broedparen per 100 ha", x = "") +
+  facet_wrap(~openheid, ncol = 2)
+```
+
+```{r}
+bind_rows(
+  density_veldleeuwerik %>%
+    filter(Label != "Total") %>%
+    select(stratum = Label, densiteit = Estimate, ll = lcl, ul = ucl) %>%
+    separate(stratum, into = c("regio", "openheid", "sbp"), sep = " - ") %>%
+    filter(regio == "Leemstreek") %>%
+    mutate(method = "distance sampling"),
+  brms1_pred_totals2 %>%
+    mutate(method = "GLMM (gem. telperiodes)")
   ) %>%
   ggplot(aes(x = sbp, y = densiteit, colour = method)) +
   geom_point(position = position_dodge(width = 0.5)) +
@@ -3011,4 +3054,71 @@ bind_rows(
   ) +
   labs(y = "aantal broedparen per 100 ha", x = "") +
   facet_wrap(~openheid, ncol = 2)
+```
+
+## DSM
+
+```{r}
+observation_df2 <- observation_df %>%
+  filter(object %in% obs_table$object)
+
+segment_df2 <- segment_df %>%
+  mutate(Effort = 1) %>%
+  as.data.frame()
+```
+
+```{r}
+test_dsm_max <- dsm(
+  formula = count ~ stratum + s(x_coord, y_coord, k = 100),
+  family = tw(),
+  ddf.obj = veldleeuwerik_dist_hr,
+  segment.data = segment_df2,
+  observation.data = observation_df2,
+  convert.units = 1 / 10^6,
+  method = "REML" # default
+)
+```
+
+We maken opnieuw voorspellingen voor het steekproefkader.
+
+```{r}
+varprop_max <- dsm_varprop(test_dsm_max, newdat)
+
+print(obs_exp(varprop$refit, ~stratum))
+```
+
+```{r}
+pred_dsm_df %>%
+  mutate(estimate = as.vector(varprop_max$pred)) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+  st_buffer(300) %>%
+  ggplot() +
+    geom_sf(aes(fill = estimate), colour = alpha("white", 0)) +
+    scale_fill_gradientn(
+      colours = rainbow(5),
+      breaks = seq(from = 0, to = 12, length.out = 5),
+      limits = c(0, 12)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+```{r}
+pred_dsm_df %>%
+  mutate(estimate = as.vector(varprop_max$pred),
+         se = varprop_max$ses,
+         cv = se / estimate) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+  st_buffer(300) %>%
+  ggplot() +
+    geom_sf(aes(fill = cv), colour = alpha("white", 0)) +
+    scale_fill_gradientn(
+      colours = rainbow(5)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "cv",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
 ```
