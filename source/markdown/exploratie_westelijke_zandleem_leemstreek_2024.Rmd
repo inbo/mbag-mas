@@ -579,7 +579,7 @@ relfreqs_vogels <- mas_2024_vogels %>%
 
 Overzicht van relatieve frequenties van de 20 meest frequente soorten (of doelsoorten) in een bepaalde regio (gewogen gemiddelde per stratum).
 Elk punt staat voor een relatieve frequentie in een bepaalde telperiode.
-We nemen een gewogen gemiddelde per landbouwstreek waarbij de gewichten afhankelijk zijn van regio (in het geval van de Westelijke leemstreek, westelijk vs. oostelijk) en stratum.
+We nemen een gewogen gemiddelde per landbouwstreek waarbij de gewichten afhankelijk zijn van regio en stratum.
 Over de telperiodes heen mogen we wel een ongewogen gemiddelde nemen want dit zijn replicaten.
 
 ```{r}
