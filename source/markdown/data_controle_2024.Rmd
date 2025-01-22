@@ -69,9 +69,9 @@ In deze markdown controleren we ...
 We doen dit in dit rapport voor de data van 2018-2024.
 
 # Controle data preparatie pipeline {#controle-pipeline}
-## Amersfoord naar Lambert coördinaten (crs_pipeline)
+## Amersfoort naar Lambert coördinaten (crs_pipeline)
 
-In de eerste stap worden Amersfoord coördinaten naar Lambert coördinaten omgezet.
+In de eerste stap worden Amersfoort coördinaten naar Lambert coördinaten omgezet.
 Dit gebeurt via een functie die op verschillende datasets goed getest is.
 
 ## Selectie punten MBAG MAS steekproef (select_sampled_points) {#steekproef}
@@ -1153,8 +1153,8 @@ We lijsten op waar dubbeltellingen zijn verwijderd.
 removed_obs <- select_species_groups %>%
   st_drop_geometry() %>%
   anti_join(st_drop_geometry(remove_double_counts),
-            by = join_by(oid, projectid, plotid, plotnaam, x_amersfoord,
-                         y_amersfoord, x_lambert, y_lambert, soortgrp, soortnr,
+            by = join_by(oid, projectid, plotid, plotnaam, x_amersfoort,
+                         y_amersfoort, x_lambert, y_lambert, soortgrp, soortnr,
                          naam, aantal, jaar, maand, dag, doy, wrntype,
                          broedcode, opmerk, clterr, clterrid, inplot, periodeid,
                          periode, wrntype_omschrijving, sample_order, batch,
@@ -1428,7 +1428,7 @@ Het gaat om de volgende stappen (zie ook `dwc_mapping_mas.Rmd` voor een uitgebre
     - De kolom `is_mas_sample` duidt aan of ze bij MBAG - MAS horen of niet
   - We passen kolomnamen aan
 - Ruimtelijke verwerking
-  - We verwijderen de Amersfoord coördinaten
+  - We verwijderen de Amersfoort coördinaten
   - We zetten de Lambert coördinaten om naar WGS 84 decimale coördinaten
   - We behouden de Lambert coördinaten als verbatim coördinaten
 - Mappen van statische waarden

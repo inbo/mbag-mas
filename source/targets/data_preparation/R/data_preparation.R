@@ -25,14 +25,14 @@ amersfoort_to_lambert72 <- function(sf_object) {
     as_tibble() %>%
     st_as_sf() %>%
     rename(
-      x_amersfoord = "x_coord",
-      y_amersfoord = "y_coord"
+      x_amersfoort = "x_coord",
+      y_amersfoort = "y_coord"
     ) %>%
     mutate(
       x_lambert = unlist(purrr::map(.data$geometry, 1)),
       y_lambert = unlist(purrr::map(.data$geometry, 2))
     ) %>%
-    select("oid":"y_amersfoord", "x_lambert", "y_lambert", everything())
+    select("oid":"y_amersfoort", "x_lambert", "y_lambert", everything())
 
   return(out_sf)
 }

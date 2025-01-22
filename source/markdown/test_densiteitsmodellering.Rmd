@@ -32,6 +32,8 @@ library(tidyverse)
 library(Distance)
 library(targets)
 library(sf)
+library(brms)
+library(arrow)
 
 library(INBOtheme)
 theme_set(theme_inbo(transparent = TRUE))
@@ -43,6 +45,13 @@ conflicted::conflicts_prefer(dplyr::select)
 # Paths
 mbag_dir <- here::here()
 targets_store <- here::here("source", "targets", "data_preparation", "_targets")
+cache_dir <- here::here("source", "markdown", "cache", "spatial_density")
+dir.create(cache_dir, showWarnings = FALSE, recursive = TRUE)
+
+# Source functions
+source(file.path(mbag_dir, "source", "R", "beta_fit_params.R"))
+source(file.path(mbag_dir, "source", "R", "bootstrap_dsmodels.R"))
+source(file.path(mbag_dir, "source", "R", "predict_det_probs.R"))
 ```
 
 # Achtergrond
@@ -67,13 +76,11 @@ Hiervoor moeten we eerst enkele dingen uittesten:
 - Kunnen we de detectiecurve fitten op alle data en de densiteitsschatting op een subset van de data toepassen (maxima)?
 - Hoe creëren we een spatiaal model voor densiteiten? Hoe nemen we de detectiekans en onzekerheid mee?
 
-# Test data
+# Test dataset
 
 We doen de analyses voor 1 branch van de targets pipeline. Namelijk voor de Veldleeuwerik in 2024.
 We selecteren alle waarnemingen met broedcode > 0.
 Alle aantallen met broedcode > 0 zijn 1.
-
-> Broedcodes ok?
 
 ```{r}
 # Load mas data
@@ -239,7 +246,7 @@ veldleeuwerik_2024_df %>%
 ```
 
 # Distance sampling
-## Test workflow
+## Testen van de workflow
 
 We schatten de detectiekans en densiteiten via distance sampling.
 We beschouwen voor de formulatie van de detectiefunctie de half-normal en hazard-rate sleutelfuncties die we laten afhangen van `openheid`.
@@ -410,6 +417,7 @@ sample_table <- design %>%
 obs_table <- veldleeuwerik_2024_df %>%
   group_by(periode_in_jaar, plotnaam) %>%
   mutate(n = n()) %>%
+  group_by(plotnaam) %>%
   slice_max(order_by = n, n = 1) %>%
   ungroup() %>%
   mutate(Region.Label = paste(regio,
@@ -506,7 +514,7 @@ sum_dist_veldleeuwerik <- summary(veldleeuwerik_dist_hr)
 Detectiekans:
 
 ```{r}
-cbind(veldleeuwerik_dist_hr$ddf$data,
+det_probs_df <- cbind(veldleeuwerik_dist_hr$ddf$data,
   "p(z)" = predict(veldleeuwerik_dist_hr,
     se.fit = TRUE
   )$fitted,
@@ -516,7 +524,9 @@ cbind(veldleeuwerik_dist_hr$ddf$data,
 ) %>%
   select("openheid", "p(z)", "standard error") %>%
   distinct() %>%
-  arrange(openheid) %>%
+  arrange(openheid)
+
+det_probs_df %>%
   kable()
 ```
 
@@ -558,6 +568,7 @@ density_veldleeuwerik %>%
     width = 0.2,
     position = position_dodge(width = 0.5)
   ) +
+  scale_y_continuous(limits = c(0, NA)) +
   labs(y = "aantal broedparen per 100 ha", x = "") +
   facet_wrap(~regio, ncol = 2, scales = "free")
 ```
@@ -576,9 +587,105 @@ De workflow werkt zoals verwacht.
 
 ## Distributie detectiekans
 
-> zie theorie
+Voor de detectiekans krijgen we enkel de schatting en de standaard error.
+Hoe kunnen we betrouwbaarheidsintervallen afleiden?
+Welke distributie heeft de detectiekans?
+
+We weten de verwachte waarde en de standaard error van de detectiekansen.
+
+```{r, echo=FALSE}
+det_probs_df %>%
+  kable()
+```
+
+### Bootstrapping
+
+Om de verdeling van de detectiekans te achterhalen kunnen we pbootstrapping toepassen.
+Het lijkt echter vrij computerintensief om dit voor elke soort voor elk jaar te moeten doen.
+
+```{r, message=FALSE, echo=FALSE}
+boot_path <- file.path(cache_dir, paste0("boot_ds_hr.Rds"))
+
+if (file.exists(boot_path)) {
+  boot_df <- readRDS(boot_path)
+} else {
+  boot_df <- bootstrap_ds_model(
+    ds_model = veldleeuwerik_dist_hr,
+    samples = 1000,
+    fun = get_det_probs,      # Function to extract detection probs
+    group_vars = "openheid")
+
+  saveRDS(boot_df, boot_path)
+}
+```
+
+```r
+boot_df <- bootstrap_ds_model(
+  ds_model = veldleeuwerik_dist_hr,
+  samples = 1000,
+  fun = get_det_probs,      # Function to extract detection probs
+  group_vars = "openheid")
+```
+
+```{r}
+summary_boot_df <- boot_df %>%
+  tibble::rownames_to_column(var = "sample") %>%
+  pivot_longer(cols = -sample, names_to = "openheid",
+               values_to = "est_boot") %>%
+  mutate(mean_boot = mean(est_boot),
+         se_boot = sd(est_boot),
+         .by = "openheid")
+
+summary_boot_df %>%
+  distinct(openheid, mean_boot, se_boot) %>%
+  kable()
+```
+
+```{r}
+summary_boot_df %>%
+  ggplot() +
+    geom_density(aes(x = est_boot, colour = openheid),
+                 linewidth = 1) +
+    scale_x_continuous(limits = c(0, 1))
+```
+
+### Aanname parametrische distributie
+
+Bootstrapping is waarschijnlijk vrij computerintensief om dit voor elke soort voor elk jaar te moeten doen.
+
+We kunnen er van uitgaan dat de detectiekans een $Beta(\alpha, \beta)$ verdeling volgt.
+De aangepaste functie `beta_fit_params()` kan de Beta verdeling karakteriseren op basis van het gemiddelde en de standaarddeviatie door de $\alpha$ en $\beta$ parameters te berekenen via een optimalisatieproces.
+
+De stippellijnen geven de densiteiten via bootstrapping aan.
+
+```{r}
+range <- seq(0, 1, length.out = 500)
+densities <- sapply(seq_len(nrow(det_probs_df)), function(i) {
+  mean <- det_probs_df$`p(z)`[i]
+  sd <- det_probs_df$`standard error`[i]
+  beta_fit_params(beta_fun = dbeta, mean = mean, sd = sd, x = range)
+})
+
+cbind(densities, range) %>%
+  as_tibble(.name_repair = "minimal") %>%
+  `colnames<-`(c(det_probs_df$openheid, "detectiekans")) %>%
+  pivot_longer(cols = all_of(det_probs_df$openheid),
+               values_to = "densiteit", names_to = "openheid") %>%
+  ggplot(aes(colour = openheid)) +
+    geom_line(aes(x = detectiekans, y = densiteit),
+              linewidth = 1, alpha = 0.5) +
+    geom_density(data = summary_boot_df, aes(x = est_boot),
+                 linewidth = 1, linetype = "dashed") +
+    scale_x_continuous(limits = c(0, 1))
+```
+
+De distributie van de Beta verdelingen leunen zeer dicht aan bij deze van de bootstrap samples.
+Om de onzekerheid van deze parameters mee te nemen in verder analyses, zouden we uit deze Beta verdelingen kunnen samplen.
 
 ## Densiteitsschattingen op regio en Vlaams niveau
+
+We hebben de berekeningen gedaan op stratum niveau. Hoe verhoudt zicht dit op regio en Vlaams niveau?
+
 ### Model specificatie
 
 We fitten het finale tabel als voordien, maar we maken de `region_table`, `sample_table` en `obs_table` aan op regio-niveau in plaats van op stratum-niveau.
@@ -601,6 +708,7 @@ sample_table2 <- design %>%
 obs_table2 <- veldleeuwerik_2024_df %>%
   group_by(periode_in_jaar, plotnaam) %>%
   mutate(n = n()) %>%
+  group_by(plotnaam) %>%
   slice_max(order_by = n, n = 1) %>%
   ungroup() %>%
   select(object = oid, Region.Label = regio, Sample.Label = plotnaam)
@@ -639,7 +747,16 @@ cbind(veldleeuwerik_dist_hr2$ddf$data,
 ```
 
 ```{r}
+abundance_veldleeuwerik2 <- sum_dist_veldleeuwerik2$dht$individuals$N
 density_veldleeuwerik2 <- sum_dist_veldleeuwerik2$dht$individuals$D
+```
+
+Abundantie:
+
+```{r}
+abundance_veldleeuwerik2 %>%
+  select(stratum = Label, abundantie = Estimate, ll = lcl, ul = ucl) %>%
+  kable(digits = 3)
 ```
 
 Densiteit:
@@ -661,11 +778,12 @@ density_veldleeuwerik2 %>%
   ggplot(aes(x = regio, y = densiteit)) +
   geom_point(size = 3) +
   geom_errorbar(aes(ymin = ll, ymax = ul), width = 0.2, linewidth = 1) +
+  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 100, 2)) +
   labs(y = "aantal broedparen per 100 ha", x = "")
 ```
 
 De detectiekans is dezelfde als voordien.
-Voordien (bij het stratum-model) hadden we een onderschatting van de totale densiteit binnen het steekproefkader:`r density_veldleeuwerik_tot` t.o.v. `r density_veldleeuwerik2_tot` gemiddeld aantal broedparen per 100 ha.
+Voordien (bij het stratum-model) hadden we een onderschatting van de totale densiteit binnen het steekproefkader:`r round(density_veldleeuwerik_tot, 2)` t.o.v. `r round(density_veldleeuwerik2_tot, 2)` gemiddeld aantal broedparen per 100 ha.
 Dit is omdat we bij het stratum-model geografisch overlap hebben.
 
 Om correcte schattingen te krijgen op regio- en steekproefkader-niveau, kunnen we dus het finale model herfitten op aangepaste datasets.
@@ -678,11 +796,11 @@ Dit om uit te zoeken of het gebruik van de maxima t.o.v. alle data de verwachte 
 We verwachten:
 
 1. identieke detectiekans
-   - dezelfde data wordt gebruikt om de detectiekans te schatten als voordien
+   - dezelfde data worden gebruikt om de detectiekans te schatten als voordien
 2. lagere densiteitsschattingen
    - door uitmiddeling sampling effort
 3. smallere betrouwbaarheidsintervallen densiteiten
-   - meer data wordt gebruikt
+   - meer data worden gebruikt
 
 ```{r}
 # Effort per sample en plot per region
@@ -758,19 +876,21 @@ density_veldleeuwerik3 %>%
     width = 0.2, linewidth = 1,
     position = position_dodge(width = 0.5)
   ) +
+  scale_y_continuous(limits = c(0, NA)) +
   labs(y = "aantal broedparen per 100 ha", x = "") +
   theme(legend.position = "bottom")
 ```
 
 Aan alle verwachtingen is voldaan.
 Dit geeft aan dat we op correcte wijze de detectiekans kunnen schatten o.b.v. de volledige dataset en de densiteit o.b.v. een subset (maxima) of de volledige dataset.
-We zien echter wel dat de schattingen en onzekerheden tussen beide methodes sterk verschillend zijn.
-De keuze van ene of de andere methode moet onderbouwd worden o.b.v. ecologische kennis.
+Eigenlijk mogen we deze densiteiten niet rechtstreeks vergelijken; ze meten verschillende dingen.
+De resultaten o.b.v. de totale dataset zijn een schatting van de gemiddelde densiteit per telperiode.
+De resultaten o.b.v. de maxima zijn een schatting van de densiteit per stratum die kan vergeleken worden met referentiewaarden.
 
-## Conclusie
+## Conclusie distance sampling
 
 - We kunnen de detectiekans schatten o.b.v. de complete dataset en tegelijk de densiteit schatten o.b.v. een subset van de data.
-  - De keuze van de subset is afhankelijk van de ecologische context en moet met experts worden besproken.
+  - We kunnen zowel densiteiten rapporteren o.b.v. de volledige dataset als een subset (maxima). Ze hebben een andere betekenis en beantwoorden andere vragen.
 - We moeten twee modellen fitten om schattingen te krijgen om stratum-niveau, en op regio- en steekproefkader-niveau
   - We fitten meerdere modellen (bv. op stratum-niveau) waarbij we het beste model voor de detectiefunctie selecteren (sleutelfunctie, covariaten ...).
   - Het finale model wordt opnieuw gefit waarbij de dataset voor densiteitsschatting wordt aangepast (bv. op regio-niveau).
@@ -783,12 +903,14 @@ In praktijk verwachten we nog altijd enkele uitdagingen:
   - We kunnen eventueel strata met "te weinig data" weglaten uit de analyses en hiervan enkel de absolute aantallen rapporteren. Op regio- of steekproefniveau kunnen ze gewoon opgeteld worden bij de schattingen.
     - Nood aan regels (bv. $n > 15$ per stratum).
     - Automatisatie?
-  - Alternatief is enkel simpele detectiefuncties te fitten (zonder interactietermen). Of we kunnen regels verzinnen om simpele detectiefuncties te fitten als er te veel problemen bij de andere optreden (bv. voor zeldzame soorten is het $a priori$ al niet nuttig om interactietermen toe te voegen).
+  - Alternatief is enkel simpele detectiefuncties te fitten (zonder interactietermen). Of we kunnen regels verzinnen om simpele detectiefuncties te fitten als er te veel problemen bij de andere optreden (bv. voor zeldzame soorten is het *a priori* al niet nuttig om interactietermen toe te voegen).
 
 ```{r}
 design %>%
   filter(regio == "Weidestreek") %>%
-  count(regio, openheid = openheid_klasse, sbp)
+  count(regio, openheid = openheid_klasse, sbp,
+        name = "Aantal telpunten") %>%
+  kable()
 ```
 
 - Hoe automatiseren we detectiefunctie modelselectie in de targets pipeline?
@@ -800,3 +922,2203 @@ In dit document onderzoeken we de technische mogelijkheden.
 Daarom kozen we voor Veldleeuwerik wat een heel algemene soort is.
 Bovenstaande uitdagingen zullen we op zeldzamere soorten moeten aftoetsen.
 Dit zal in een andere analyse gebeuren (mogelijks tijdens de implementatie van de pipeline) en niet hier.
+
+# Spatiale predicties
+
+We willen verspreidingskaarten maken voor de densiteiten van doelsoorten binnen het steekproefkader.
+Hierbij horen twee voornaamste uitdagingen:
+
+- Hoe creëren we een spatiaal model voor densiteiten?
+  - methode: Log-Gaussian Cox Process modelling, GLMM ...
+  - software: inla(bru), brms, glmmTMB ...
+- Hoe nemen we de detectiekans en onzekerheid mee?
+  - bestaande tools: DSM ...
+  - herhaaldelijk model fitten van simpele tools (bv. GLMM) voor $B$ random samples uit de verdeling van de detectiekans en posterior samples aggregeren
+  - ...?
+
+We werken verder met de data van de Veldleeuwerik van 2024.
+
+In het algemeen stellen we dat onze responsvariabele $y$ een statistische verdeling $D$ volgt, gekarakteriseerd door een verwachtingswaarde $\mu$ en een variantieparameter $\sigma^2$:
+
+$$
+y \sim D(\mu, \sigma^2),
+$$
+
+waarbij de responsvariabele $y$ in ons geval het aantal broedparen vertegenwoordigt.
+
+Het gemiddelde $\mu$ wordt gemodelleerd via een **lineaire predictorterm** $L$, bestaande uit verklarende variabelen. Deze lineaire predictor kan worden opgesplitst in:
+
+- een term met **fixed effects** ($L^F$),
+- een term met **random effects** ($L^R$),
+- en een optionele **offset**, die bijvoorbeeld correcties voor detectiekans of meeteenheden omvat.
+
+De relatie tussen $\mu$ en $L$ wordt beschreven via een linkfunctie $g$, zodat:
+
+$$
+g(\mu) = L = L^F + L^R + \text{offset}.
+$$
+
+In concrete termen:
+
+- $L^F$: bevat de vaste effecten van verklarende variabelen (zoals strata, tijdseffecten, of ruimtelijke coördinaten),
+- $L^R$: omvat de random effects die de variabiliteit tussen bijvoorbeeld telcirkels of telperiodes modelleren,
+- **offset**: corrigeert voor bekende systematische effecten, zoals detectiekans of een schaalfactor om naar een standaardmaat (bijvoorbeeld per 100 ha) om te rekenen.
+
+In ons specifieke geval kan $g(\mu)$ de logaritmische linkfunctie zijn $\ln(\mu)$, zoals bij Poisson of Negatief-binomiale modellen. Hierdoor krijgen we:
+
+<!-- spell-check: ignore:start -->
+$$
+g(\mu) = \ln(\mu) = L^F + L^R + \text{offset}.
+$$
+<!-- spell-check: ignore:end -->
+
+## GLMM
+
+We fitten eerst GLMM's om modelspecificatie te testen en tot meer algemene inzichten te komen.
+Zoals voordien zijn we niet super kritisch over model fit.
+
+### Poisson regressie via een offset
+
+We modelleren het aantal broedparen per telcirkel $j$ in telperiode $t$ met een Poisson-model
+
+<!-- spell-check: ignore:start -->
+$$
+Y_{j,t} \sim Pois(\lambda_{j,t})
+$$
+<!-- spell-check: ignore:end -->
+
+waarbij de verwachte waarde $\lambda_{j,t}$ wordt gemodelleerd als
+
+<!-- spell-check: ignore:start -->
+$$
+\ln(\lambda_{j,t}) = \beta_0 + \sum_{s=2}^S\beta_{s-1}X_{s, j} + \sum_{t=2}^T\gamma_{t-1}X_{t} + f(x_j, y_j) + b_{0,j} + \ln(p_s) + \ln\left(\frac{A_j}{10^6\ \text{m}^2/\text{km}^2}\right)
+$$
+<!-- spell-check: ignore:end -->
+
+Hierbij zijn:
+
+- $\beta_0$: Het globale intercept vertegenwoordigt de referentiestratum ($s=1$) en -telperiode ($t=1$). Als referentiestratum en -periode nemen we resp. het stratum, de periode met het hoogste aantal broedparen.
+- $\sum_{s=2}^S\beta_{s-1}X_{s, j}$: Fixed effects voor strata $s=2, ..., S$, waarbij $X_{s, j}$ een dummyvariabele is die aangeeft of telcirkel $j$ tot stratum $s$ behoort. Het eerste stratum ($s=1$) is inbegrepen in het intercept.
+- $\sum_{t=2}^T\gamma_{t-1}X_{t}$: Fixed effects voor telpunten $t=2, ..., T$, waarbij $X_{t}$ een dummyvariabele is die aangeeft of de telling afkomstig is uit telperiode $t$. De eerste telperiode ($t=1$) is inbegrepen in het intercept.
+- $f(x_j, y_j)$: Een gladheidsfunctie die ruimtelijke variatie beschrijft o.b.v. de X- en Y-coördinaten van telpunt $j$.
+- $b_{0,j}$: Een random effect voor telcirkel $j$, dat variatie tussen telcirkels modelleert.
+- $p_s$: De gemiddelde detectiekans in stratum $s$ waartoe telpunt $j$ behoort.
+- $A_j = \pi \cdot 300^2=$ `r round(pi * 300^2, 2)` m²: De oppervlakte van telcirkel $j$.
+
+De offset $\ln(p_s) + \ln\left(\frac{A_j}{10^6\ \text{m}^2/\text{km}^2}\right)$ kan worden samengevoegd:
+
+<!-- spell-check: ignore:start -->
+$$
+\ln(\lambda_{j,t}) = \beta_0 + \sum_{s=2}^S\beta_{s-1}X_{s, j} + \sum_{t=2}^T\gamma_{t-1}X_{t} + f(x_j, y_j) + b_{0,j} + \ln(\text{offset})
+$$
+<!-- spell-check: ignore:end -->
+
+Zodat we rechtsreeks het aantal broedparen per 100 ha (= 1 km²) modelleren (= densiteit) waarbij we corrigeren voor de gemiddelde detectiekans:
+
+<!-- spell-check: ignore:start -->
+$$
+\ln\left(\frac{\lambda_{j,t}}{\text{offset}}\right) = \beta_0 + \sum_{s=2}^S\beta_{s-1}X_{s, j} + \sum_{t=2}^T\gamma_{t-1}X_{t} + f(x_j, y_j) + b_{0,j}
+$$
+<!-- spell-check: ignore:end -->
+
+#### Model specificatie
+
+We fitten bovenstaand model met **brms**.
+We onderscheiden de volgende strata:
+
+```{r}
+design %>%
+  distinct(regio, openheid = openheid_klasse, sbp) %>%
+  mutate(
+    openheid = ifelse(regio == "Weidestreek", "", openheid),
+    sbp = ifelse(regio == "Weidestreek", "", sbp)
+  ) %>%
+  distinct() %>%
+  kable()
+```
+
+Zoals eerder aangegeven tellen alle 4 de telperiodes mee voor Veldleeuwerik.
+
+```{r}
+# Extract detection average detection probabilities
+det_prob_df <- cbind(veldleeuwerik_dist_hr$ddf$data,
+      "detectiekans" = predict(veldleeuwerik_dist_hr)$fitted) %>%
+  select("openheid_klasse" = "openheid", "detectiekans") %>%
+  distinct()
+
+# Create analysis dataset
+presences_df <- veldleeuwerik_2024_df %>%
+  mutate(stratum = ifelse(
+    regio == "Weidestreek", regio,
+    paste(regio, openheid_klasse, sbp, sep = "_"))
+  ) %>%
+  full_join(det_prob_df, by = join_by(openheid_klasse)) %>%
+  count(plotnaam, periode_in_jaar, stratum, x_coord, y_coord, detectiekans) %>%
+  mutate(cirkelopp = pi * 300^2,
+         ha_100 = 10^6,
+         offset = (detectiekans * cirkelopp) / ha_100)
+
+# Add zero counts
+total_df <- mas_data_clean %>%
+  st_drop_geometry() %>%
+  expand(nesting(plotnaam, periode_in_jaar)) %>%
+  anti_join(presences_df, by = join_by(plotnaam, periode_in_jaar)) %>%
+  left_join(design, by = join_by(plotnaam == pointid)) %>%
+  mutate(stratum = ifelse(
+    regio == "Weidestreek", regio,
+    paste(regio, openheid_klasse, sbp, sep = "_"))
+  ) %>%
+  full_join(det_prob_df, by = join_by(openheid_klasse)) %>%
+  mutate(n = 0) %>%
+  mutate(cirkelopp = pi * 300^2,
+         ha_100 = 10^6,
+         offset = (detectiekans * cirkelopp) / ha_100) %>%
+  bind_rows(presences_df)
+
+# Relevel categorical variables to most common ones
+analysis_df_brms1 <- total_df %>%
+  mutate(n_stratum = n(),
+         .by = stratum) %>%
+  mutate(n_periode = n(),
+         .by = periode_in_jaar)
+
+ref_group_stratum <- analysis_df_brms1$stratum[
+  which.max(analysis_df_brms1$n_stratum)
+  ]
+ref_group_periode <- analysis_df_brms1$periode_in_jaar[
+  which.max(analysis_df_brms1$n_periode)
+  ]
+
+analysis_df_brms1 <- analysis_df_brms1 %>%
+  mutate(
+    stratum = relevel(factor(stratum), ref_group_stratum),
+    periode_in_jaar = relevel(factor(periode_in_jaar), ref_group_periode)
+  ) %>%
+  select(plotnaam, n, stratum, periode_in_jaar, x_coord, y_coord, offset)
+```
+
+```{r, class.source="fold-show"}
+# MCMC parameters
+nchains <- 3           # number of chains
+niter <- 2500          # number of iterations (incl. burn-in)
+burnin <- 500          # number of initial samples to discard (burn-in)
+nparallel <- nchains   # number of cores used for parallel computing
+thinning <- 2          # thinning
+```
+
+```{r, class.source="fold-show"}
+test_brms_poisson1 <- brm(
+  formula = n ~ stratum + periode_in_jaar + s(x_coord, y_coord) +
+    (1 | plotnaam) + offset(log(offset)),
+  data = analysis_df_brms1,
+  family = poisson(),
+  chains = nchains,
+  warmup = burnin,
+  iter = niter,
+  cores = nparallel,
+  thin = thinning,
+  backend = "cmdstanr",
+  seed = 123,
+  file = file.path(cache_dir, "test_brms_poisson1"),
+  file_refit = "on_change")
+```
+
+#### MCMC convergentie
+
+```{r}
+plot(test_brms_poisson1, ask = FALSE)
+```
+
+#### Model fit
+
+Totaal:
+
+```{r}
+pp_check(test_brms_poisson1, type = "bars", ndraws = 100)
+```
+
+Per stratum:
+
+```{r, fig.width=10}
+pp_check(test_brms_poisson1, group = "stratum", type = "bars_grouped",
+         ndraws = 100)
+```
+
+Per telperiode:
+
+```{r, fig.width=10}
+pp_check(test_brms_poisson1, group = "periode_in_jaar", type = "bars_grouped",
+         ndraws = 100)
+```
+
+#### Resultaten
+
+```{r}
+n_draws <- 1000
+```
+
+We maken `r n_draws` predicties voor elk telpunten van het volledige steekproefkader voor elke telronde.
+We nemen daarna zowel het gemiddelde per telpunt over de telrondes als het maximum.
+
+Zie `?prepare_predictions.brmsfit` en deze interessante [blog post](https://www.andrewheiss.com/blog/2021/11/10/ame-bayes-re-guide/#different-kinds-of-average-predictions-with-multilevel-models).
+
+Het is allicht beter een grid te leggen over het steekproefkader en daarna predicties te doen zoals we in het pilootproject deden, omdat we dan geen overlap hebben tussen telpunten.
+Dit zal voor een gladde overhang zorgen in densiteiten tussen telpunten.
+Hiervoor moeten we echter voor elke gridcel het stratum berekenen.
+Alle data is dan nieuw, terwijl we nu gebruik maken van de random intercepts.
+We doen dat voorlopig niet, maar dat is zeker mogelijk.
+
+```{r, message = FALSE}
+# Specify cache path
+brms1_pred_path <- file.path(cache_dir, paste0("brms1_pred_df.Rds"))
+
+if (file.exists(brms1_pred_path)) {
+  brms1_pred_df <- readRDS(brms1_pred_path)
+} else {
+  strat_vec <- as.vector(sort(unique(analysis_df_brms1$stratum)))
+  pred_list <- vector(length = length(strat_vec), mode = "list")
+
+  for (i in seq_along(strat_vec)) {
+    # Specify cache path
+    brms1_pred_strat_path <- file.path(
+      cache_dir, paste0("brms1_pred_", tolower(strat_vec[i])))
+
+    strata_df <- steekproefkader %>%
+          mutate(
+            regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
+          ) %>%
+          st_drop_geometry() %>%
+          mutate(stratum = ifelse(
+            regio == "Weidestreek", regio,
+            paste(regio, openheid_klasse, sbp, sep = "_"))
+          ) %>%
+          filter(stratum == strat_vec[i])
+
+    print(paste("Making predictions for", strat_vec[i]))
+
+    # Draw predictions if file does not exists
+    if (file.exists(brms1_pred_strat_path)) {
+      pred_veldleeuwerik_strat <- arrow::open_dataset(brms1_pred_strat_path)
+    } else {
+      # Create new dataframe for complete sampling frame
+      new_df_strat <- strata_df %>%
+          left_join(analysis_df_brms1 %>% distinct(stratum, offset),
+                    by = join_by(stratum),
+                    relationship = "many-to-many") %>%
+          select(plotnaam = pointid, stratum, x_coord, y_coord, offset) %>%
+          expand_grid(
+            periode_in_jaar = unique(analysis_df_brms1$periode_in_jaar)
+          )
+
+      # Make predictions
+      tidybayes::add_epred_draws(
+          newdata = new_df_strat,
+          object = test_brms_poisson1,
+          ndraws = n_draws,
+          re_formula = ~ (1 | plotnaam), # use random effects
+          allow_new_levels = TRUE,       # allow new locations
+          # draw from the posterior draws of a randomly chosen existing level
+          sample_new_levels = "uncertainty",
+          offset = FALSE,                # divide predictions by offset
+          seed = 123) %>%
+        ungroup() %>%
+        arrow::write_dataset(brms1_pred_strat_path)
+      pred_veldleeuwerik_strat <- arrow::open_dataset(brms1_pred_strat_path)
+    }
+
+    # Calculate summary statistics for location averaged over time periods
+    plot_veldleeuwerik_strat_mean <- pred_veldleeuwerik_strat %>%
+      group_by(plotnaam, .draw) %>%
+      summarise(.epred = mean(.epred),
+                .groups = "drop") %>%
+      # quantile not supported by arrow
+      collect() %>%
+      group_by(plotnaam) %>%
+      summarise(
+        estimate_mean = mean(.epred),
+        se = sd(.epred),
+        q2.5 = quantile(.epred, 0.025),
+        q97.5 = quantile(.epred, 0.975),
+        .groups = "drop") %>%
+      mutate(cv = se / estimate_mean,
+             rel_fout = (q97.5 - q2.5) / (2 * estimate_mean),
+             method = "mean") %>%
+      left_join(distinct(strata_df, plotnaam = pointid, stratum,
+                         x_coord, y_coord),
+                by = join_by(plotnaam))
+
+    # Calculate summary statistics per location for time period with maximum
+    # expected breeding pairs
+    plot_veldleeuwerik_strat_max <- pred_veldleeuwerik_strat %>%
+      # quantile not supported by arrow
+      collect() %>%
+      group_by(plotnaam, periode_in_jaar) %>%
+      summarise(estimate_mean = mean(.epred),
+                se = sd(.epred),
+                q2.5 = quantile(.epred, 0.025),
+                q97.5 = quantile(.epred, 0.975)) %>%
+      slice_max(order_by = estimate_mean, n = 1) %>%
+      select(-periode_in_jaar) %>%
+      ungroup() %>%
+      mutate(cv = se / estimate_mean,
+             rel_fout = (q97.5 - q2.5) / (2 * estimate_mean),
+             method = "max") %>%
+      left_join(distinct(strata_df, plotnaam = pointid, stratum,
+                         x_coord, y_coord),
+                by = join_by(plotnaam))
+
+    # Combine methods
+    plot_veldleeuwerik_strat <- bind_rows(plot_veldleeuwerik_strat_mean,
+                                        plot_veldleeuwerik_strat_max) %>%
+      mutate(across(c(x_coord, y_coord), ~ round(.x, digits = 4))) %>%
+      st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+      st_buffer(300)
+
+    pred_list[[i]] <- plot_veldleeuwerik_strat
+
+    # Remove large objects
+    rm(pred_veldleeuwerik_strat)
+    rm(plot_veldleeuwerik_strat)
+    gc()
+  }
+
+  # Combine summary statistics for all strata
+  brms1_pred_df <- bind_rows(pred_list) %>%
+    separate(stratum, into = c("regio", "openheid", "sbp"))
+
+  saveRDS(brms1_pred_df, brms1_pred_path)
+
+  # Remove large objects
+  rm(pred_list)
+  gc()
+}
+```
+
+```{r}
+example_points <- c("Km_19078.3", "Km_31210.4", "Ol_8360.7", "Ol_15393.2")
+```
+
+We vergelijken de statistieken voor enkele punten in verschillende strata tussen beide methodes (gemiddelde per telpunt en maximum).
+We verwachten dat het gemiddelde hoger is voor het maximum en dat de onzekerheid groter is.
+
+```{r}
+brms1_pred_df %>%
+  st_drop_geometry() %>%
+  filter(plotnaam %in% example_points) %>%
+  select(plotnaam, estimate_mean, se, cv, q2.5, q97.5, rel_fout, method) %>%
+  arrange(plotnaam, method) %>%
+  kable(digits = 4)
+```
+
+Het gemiddelde per telpunt is inderdaad hoger voor maximum. De variatiecoëfficiënt is vaak hoger, maar niet veel.
+
+Hoe goed komt dit overeen met de data?
+
+```{r}
+analysis_df_brms1 %>%
+  filter(plotnaam %in% example_points) %>%
+  mutate(dens = n / offset) %>%
+  mutate(mean_dens = mean(dens),
+         .by = plotnaam) %>%
+  select(plotnaam, stratum, periode_in_jaar, dens, mean_dens) %>%
+  arrange(plotnaam, desc(dens)) %>%
+  kable()
+```
+
+We visualiseren de verwachte densiteit over het steekproefkader:
+
+```{r, fig.width=10}
+brms1_pred_df %>%
+  filter(method == "mean") %>%
+  ggplot() +
+    geom_sf(aes(fill = estimate_mean), colour = alpha("white", 0)) +
+    scale_fill_gradientn(colours = rainbow(5),
+                         breaks = seq(from = 0, to = 40, length.out = 5),
+                         limits = c(0, 40)) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+```{r, fig.width=10}
+brms1_pred_df %>%
+  filter(method == "max") %>%
+  ggplot() +
+    geom_sf(aes(fill = estimate_mean), colour = alpha("white", 0)) +
+    scale_fill_gradientn(colours = rainbow(5),
+                         breaks = seq(from = 0, to = 40, length.out = 5),
+                         limits = c(0, 40)) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+         title = "Maximum per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+We bekijken de variatiecoëfficiënt (CV) over het steekproefkader:
+
+```{r, fig.width=10}
+brms1_pred_df %>%
+  filter(method == "mean") %>%
+  ggplot() +
+    geom_sf(aes(fill = cv), colour = alpha("white", 0)) +
+    scale_fill_gradientn(colours = rainbow(5)) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "CV",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+```{r, fig.width=10}
+brms1_pred_df %>%
+  filter(method == "max") %>%
+  ggplot() +
+    geom_sf(aes(fill = cv), colour = alpha("white", 0)) +
+    scale_fill_gradientn(colours = rainbow(5)) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "CV",
+         title = "Maximum per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+#### Discussie
+
+- Het model werkt goed.
+- Er is nauwelijks een verschil tussen het gemiddelde en de maxima over de telrondes per telpunt.
+- We moeten nadenken over de gladheidsfunctie $f$.
+- We houden geen rekening met de onzekerheid op de detectiekans.
+- De detectiekans wordt berekend op stratum niveau, maar we modelleren op telpuntniveau. We houden geen rekening met de afstanden waarop individuen gezien zijn op een bepaald telpunt.
+
+### Poisson regressie met random offset
+
+Bij deze methode gaan we rekening houden met de onzekerheid op de detectiekans.
+Hierbij gaan we ervan uit dat de detectiekans een Beta verdeling volgt.
+We sampelen uit deze verdeling om achteraf de predicties van de aantallen om te zetten naar densiteiten.
+
+We modelleren het aantal broedparen per telcirkel $j$ in telperiode $t$ met een Poisson-model
+
+<!-- spell-check: ignore:start -->
+$$
+Y_{j,t} \sim Pois(\lambda_{j,t})
+$$
+<!-- spell-check: ignore:end -->
+
+waarbij de verwachte waarde $\lambda_{j,t}$ wordt gemodelleerd als
+
+<!-- spell-check: ignore:start -->
+$$
+\ln(\lambda_{j,t}) = \beta_0 + \sum_{s=2}^S\beta_{s-1}X_{s, j} + \sum_{t=2}^T\gamma_{t-1}X_{t} + f(x_j, y_j) + b_{0,j}
+$$
+<!-- spell-check: ignore:end -->
+
+We gaan er van uit dat de detectiekans een Beta verdeling volgt. Deze waren van de volgende vorm:
+
+```{r}
+cbind(densities, range) %>%
+  as_tibble(.name_repair = "minimal") %>%
+  `colnames<-`(c(det_probs_df$openheid, "detectiekans")) %>%
+  pivot_longer(cols = all_of(det_probs_df$openheid),
+               values_to = "densiteit", names_to = "openheid") %>%
+  ggplot(aes(x = detectiekans, y = densiteit, colour = openheid)) +
+    geom_line(linewidth = 1)
+```
+
+We nemen $K$ random draws van deze verdelingen en $K$ random draws van de verwachte waarde van de posterior predictive distribution voor elk telpunt. De random samples van de verwachte waarde van de posterior predictive distribution worden dan gedeeld door de random samples van de offset voor elk telpunt $j$ $\text{offset}_{j,k}$.
+
+<!-- spell-check: ignore:start -->
+$$
+\text{offset}_{j,k} = \frac{p_{s, k}A_j}{10^6\ \text{m}^2/\text{km}^2}
+$$
+<!-- spell-check: ignore:end -->
+
+- $p_{s, k}$: De $k$-de draw van de gemiddelde detectiekans in stratum $s$ waartoe telpunt $j$ behoort.
+- $A_j = \pi \cdot 300^2=$ `r pi * 300^2` m²: De oppervlakte van telcirkel $j$.
+
+Van deze nieuwe posterior nemen we ten slotte het gemiddelde, 95 % quantielen e.a. zoals voordien.
+
+#### Model specificatie
+
+We gebruiken hetzelfde modelobject als voordien maar maken predicties zonder offset (via het argument `offset = TRUE`).
+Zo kunnen we de resultaten beter vergelijken.
+
+#### Resultaten
+
+We maken `r n_draws` predicties voor elk telpunten van het volledige steekproefkader voor elke telronde.
+We nemen `r n_draws` random waardes uit de verdeling van de detectiekansen.
+We voegen die samen met de oppervlaktes en zetten zo de aantallen om naar aantal per 100 ha, gecorrigeerd voor detectiekans.
+We nemen daarna zowel het maximum per telpunt over de telrondes.
+
+```{r}
+# Specify cache path
+brms2_pred_path <- file.path(cache_dir, paste0("brms2_pred_df.Rds"))
+
+if (file.exists(brms2_pred_path)) {
+  brms2_pred_df <- readRDS(brms2_pred_path)
+} else {
+  # Get random samples from detection probability distribution(s)
+  r_det_probs <- sapply(seq_len(nrow(det_probs_df)), function(i) {
+    mean <- det_probs_df$`p(z)`[i]
+    sd <- det_probs_df$`standard error`[i]
+    beta_fit_params(beta_fun = rbeta, mean = mean, sd = sd, n = n_draws)
+  })
+
+  r_det_prob_df <- cbind(r_det_probs) %>%
+    as_tibble(.name_repair = "minimal") %>%
+    `colnames<-`(det_probs_df$openheid) %>%
+    pivot_longer(cols = everything(),
+                 values_to = "detectiekans", names_to = "openheid") %>%
+    mutate(.draw = row_number(),
+           .by = openheid)
+
+  # Prediction per region
+  reg_vec <- sort(unique(veldleeuwerik_2024_df$regio))
+  pred_list <- vector(length = length(reg_vec), mode = "list")
+
+  for (i in seq_along(reg_vec)) {
+    # Specify cache path
+    brms2_pred_reg_path <- file.path(
+      cache_dir, paste0("brms2_pred_", tolower(reg_vec[i]), ".Rds"))
+
+    print(paste("Making predictions for", reg_vec[i]))
+
+    # Draw predictions if file does not exists
+    if (file.exists(brms2_pred_reg_path)) {
+      pred_veldleeuwerik_reg <- readRDS(brms2_pred_reg_path)
+    } else {
+      # Create new dataframe for complete sampling frame
+      new_df_reg <- steekproefkader %>%
+        mutate(
+          regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
+        ) %>%
+        st_drop_geometry() %>%
+        filter(regio == reg_vec[i]) %>%
+        mutate(stratum = ifelse(
+          regio == "Weidestreek", regio,
+          paste(regio, openheid_klasse, sbp, sep = "_"))
+        ) %>%
+        left_join(analysis_df_brms1 %>% distinct(stratum, offset),
+            by = join_by(stratum),
+            relationship = "many-to-many") %>%
+        select(plotnaam = pointid, stratum, x_coord, y_coord,
+               openheid = openheid_klasse, sbp, offset) %>%
+        expand_grid(
+          periode_in_jaar = unique(analysis_df_brms1$periode_in_jaar)
+        )
+
+      # Make predictions
+      pred_veldleeuwerik_reg <- tidybayes::add_epred_draws(
+          newdata = new_df_reg,
+          object = test_brms_poisson1,
+          ndraws = n_draws,
+          re_formula = ~ (1 | plotnaam), # use random effects
+          allow_new_levels = TRUE,       # allow new locations
+          # draw from the posterior draws of a randomly chosen existing level
+          sample_new_levels = "uncertainty",
+          offset = TRUE,                 # do not divide predictions by offset
+          seed = 123)
+      saveRDS(pred_veldleeuwerik_reg, brms2_pred_reg_path)
+    }
+
+    # Calculate summary statistics per location for time period with maximum
+    # expected breeding pairs
+    plot_veldleeuwerik_reg <- pred_veldleeuwerik_reg %>%
+      group_by(plotnaam, periode_in_jaar) %>%
+      mutate(estimate_mean = mean(.epred)) %>%
+      group_by(plotnaam) %>%
+      slice_max(order_by = estimate_mean, n = 1) %>%
+      ungroup() %>%
+      # Add detection probabilities
+      left_join(r_det_prob_df, by = join_by(openheid, .draw)) %>%
+      mutate(
+        cirkelopp = pi * 300^2,
+        ha_100 = 10^6,
+        offset = (detectiekans * cirkelopp) / ha_100,
+        .epred2 = .epred / offset
+      ) %>%
+      group_by(plotnaam, stratum, x_coord, y_coord) %>%
+      summarise(estimate_mean = mean(.epred2),
+                se = sd(.epred2),
+                q2.5 = quantile(.epred2, 0.025),
+                q97.5 = quantile(.epred2, 0.975),
+                .groups = "drop") %>%
+      mutate(across(c(x_coord, y_coord), ~ round(.x, digits = 4)),
+             cv = se / estimate_mean,
+             rel_fout = (q97.5 - q2.5) / (2 * estimate_mean)) %>%
+      st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+      st_buffer(300) %>%
+      mutate(method = "max")
+
+    pred_list[[i]] <- plot_veldleeuwerik_reg
+
+    # Remove large objects
+    rm(pred_veldleeuwerik_reg)
+    rm(plot_veldleeuwerik_reg)
+  }
+
+  # Combine summary statistics for all regions
+  brms2_pred_df <- bind_rows(pred_list) %>%
+    separate(stratum, into = c("regio", "openheid", "sbp"))
+
+  saveRDS(brms2_pred_df, brms2_pred_path)
+
+  # Remove large objects
+  rm(pred_list)
+}
+```
+
+We vergelijken de statistieken voor enkele punten in verschillende strata met de resultaten uit het vorige model.
+We verwachten dat het gemiddelde overeenkomt, maar dat de onzekerheid groter is.
+
+```{r}
+bind_rows(
+  brms1_pred_df %>%
+    st_drop_geometry() %>%
+    filter(plotnaam %in% example_points,
+           method == "max"),
+  brms2_pred_df %>%
+    st_drop_geometry() %>%
+    filter(plotnaam %in% example_points) %>%
+    mutate(method = "r_det_prob")
+  ) %>%
+  arrange(plotnaam, method) %>%
+  kable()
+```
+
+We bekijken de verwachte densiteit over het steekproefkader:
+
+```{r, fig.width=10}
+brms2_pred_df %>%
+  ggplot() +
+    geom_sf(aes(fill = estimate_mean), colour = alpha("white", 0)) +
+    scale_fill_gradientn(colours = rainbow(5),
+                         breaks = seq(from = 0, to = 40, length.out = 5),
+                         limits = c(0, 40)) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+         title = "Maximum per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+We bekijken de relatieve fout over het steekproefkader:
+
+```{r, fig.width=10}
+brms2_pred_df %>%
+  ggplot() +
+    geom_sf(aes(fill = cv), colour = alpha("white", 0)) +
+    scale_fill_gradientn(colours = rainbow(5),
+                         breaks = seq(from = 0, to = 8, length.out = 5),
+                         limits = c(0, 8)) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "CV",
+         title = "Maximum per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+### Direct modelleren van de densiteiten
+
+We fitten hetzelfde model als voordien met **brms**.
+Nu berekenen we echter de densiteit reeds vooraf en modelleren we rechtstreeks deze waarden via een hurdle Gamma distributie en een hurdle lognormal distributie (`help("brmsfamily", package="brms")`).
+Elke waarneming heeft een eigen offset afhankelijk van de afstand waarop deze is gezien.
+Zie [deze issue](https://github.com/DistanceDevelopment/Distance/issues/189).
+We hebben geen onzekerheid op deze afstandspecifieke detectiekansen.
+
+#### Model specificatie
+
+```{r}
+# Calculate detection probabilities
+det_prob_df2 <- predict_det_probs(veldleeuwerik_dist_hn)
+
+# Create analysis dataset
+presences_df2 <- veldleeuwerik_2024_df %>%
+  mutate(stratum = ifelse(
+    regio == "Weidestreek", regio,
+    paste(regio, openheid_klasse, sbp, sep = "_"))
+  ) %>%
+  full_join(det_prob_df2, by = join_by("oid" == "object")) %>%
+  rename("detectiekans" = "det_prob") %>%
+  mutate(
+    cirkelopp = pi * 300^2,
+    ha_100 = 10^6,
+    offset = (detectiekans * cirkelopp) / ha_100,
+    densiteit = aantal / offset
+  ) %>%
+  group_by(plotnaam, periode_in_jaar, stratum, x_coord, y_coord) %>%
+  summarise(densiteit = sum(densiteit),
+            .groups = "drop")
+
+# Add zero counts
+total_df2 <- mas_data_clean %>%
+  st_drop_geometry() %>%
+  expand(nesting(plotnaam, periode_in_jaar)) %>%
+  anti_join(presences_df2, by = join_by(plotnaam, periode_in_jaar)) %>%
+  left_join(design, by = join_by(plotnaam == pointid)) %>%
+  mutate(
+    stratum = ifelse(
+      regio == "Weidestreek", regio,
+      paste(regio, openheid_klasse, sbp, sep = "_")
+      ),
+    detectiekans = 1,
+    densiteit = 0,
+    cirkelopp = pi * 300^2,
+    ha_100 = 10^6,
+    offset = (detectiekans * cirkelopp) / ha_100
+  ) %>%
+  select(plotnaam, periode_in_jaar, stratum, x_coord, y_coord, densiteit) %>%
+  bind_rows(presences_df2)
+
+# Relevel categorical variables to most common ones
+analysis_df_brms2 <- total_df2 %>%
+  mutate(n_stratum = sum(densiteit),
+         .by = stratum) %>%
+  mutate(n_periode = sum(densiteit),
+         .by = periode_in_jaar)
+
+ref_group_stratum <- analysis_df_brms2$stratum[
+  which.max(analysis_df_brms2$n_stratum)
+  ]
+ref_group_periode <- analysis_df_brms2$periode_in_jaar[
+  which.max(analysis_df_brms2$n_periode)
+  ]
+
+analysis_df_brms2 <- analysis_df_brms2 %>%
+  mutate(
+    stratum = relevel(factor(stratum), ref_group_stratum),
+    periode_in_jaar = relevel(factor(periode_in_jaar), ref_group_periode)
+  ) %>%
+  select(plotnaam, densiteit, stratum, periode_in_jaar, x_coord, y_coord)
+```
+
+```{r, class.source="fold-show"}
+# MCMC parameters
+nchains <- 3           # number of chains
+niter <- 2500          # number of iterations (incl. burn-in)
+burnin <- 500          # number of initial samples to discard (burn-in)
+nparallel <- nchains   # number of cores used for parallel computing
+thinning <- 2          # thinning
+```
+
+```{r, class.source="fold-show"}
+test_brms_gamma1 <- brm(
+  formula = densiteit ~ stratum + periode_in_jaar + s(x_coord, y_coord) +
+    (1 | plotnaam),
+  data = analysis_df_brms2,
+  family = hurdle_gamma(),
+  chains = nchains,
+  warmup = burnin,
+  iter = niter,
+  cores = nparallel,
+  thin = thinning,
+  backend = "cmdstanr",
+  seed = 123,
+  file = file.path(cache_dir, "test_brms_gamma1"),
+  file_refit = "on_change")
+```
+
+```{r, class.source="fold-show"}
+test_brms_lognormal1 <- brm(
+  formula = densiteit ~ stratum + periode_in_jaar + s(x_coord, y_coord) +
+    (1 | plotnaam),
+  data = analysis_df_brms2,
+  family = hurdle_lognormal(),
+  chains = nchains,
+  warmup = burnin,
+  iter = niter,
+  cores = nparallel,
+  thin = thinning,
+  backend = "cmdstanr",
+  seed = 123,
+  file = file.path(cache_dir, "test_brms_lognormal1"),
+  file_refit = "on_change")
+```
+
+#### MCMC convergentie
+
+Gamma:
+
+```{r}
+plot(test_brms_gamma1, ask = FALSE)
+```
+
+Lognormal:
+
+```{r}
+plot(test_brms_lognormal1, ask = FALSE)
+```
+
+#### Model fit
+
+Distributie van de data
+
+```{r}
+pp_check(test_brms_gamma1, type = "dens_overlay", ndraws = 100) +
+  ggtitle("Gamma")
+```
+
+```{r}
+pp_check(test_brms_lognormal1, type = "dens_overlay", ndraws = 100) +
+  ggtitle("Lognormal")
+```
+
+Per stratum:
+
+```{r, fig.width=10}
+pp_check(test_brms_gamma1, group = "stratum", type = "dens_overlay_grouped",
+         ndraws = 100) +
+  ggtitle("Gamma")
+```
+
+```{r, fig.width=10}
+pp_check(test_brms_lognormal1, group = "stratum", type = "dens_overlay_grouped",
+         ndraws = 100) +
+  ggtitle("Lognormal")
+```
+
+Per telperiode:
+
+```{r, fig.width=10}
+pp_check(test_brms_gamma1, group = "periode_in_jaar",
+         type = "dens_overlay_grouped",
+         ndraws = 100) +
+  ggtitle("Gamma")
+```
+
+```{r, fig.width=10}
+pp_check(test_brms_lognormal1, group = "periode_in_jaar",
+         type = "dens_overlay_grouped",
+         ndraws = 100) +
+  ggtitle("Lognormal")
+```
+
+Aantal nullen
+
+```{r}
+observed_zeroes <- sum(analysis_df_brms2$densiteit == 0)
+simulated_zeroes <- rowSums(posterior_predict(test_brms_gamma1) == 0)
+ggplot() +
+  geom_histogram(aes(x = simulated_zeroes), bins = 25, colour = "black") +
+  geom_vline(xintercept = observed_zeroes, colour = "firebrick",
+             linetype = "dashed", linewidth = 1) +
+  labs(x = "Aantal nullen", y = "Frequentie") +
+  ggtitle("Gamma")
+```
+
+```{r}
+observed_zeroes <- sum(analysis_df_brms2$densiteit == 0)
+simulated_zeroes <- rowSums(posterior_predict(test_brms_lognormal1) == 0)
+ggplot() +
+  geom_histogram(aes(x = simulated_zeroes), bins = 25, colour = "black") +
+  geom_vline(xintercept = observed_zeroes, colour = "firebrick",
+             linetype = "dashed", linewidth = 1) +
+  labs(x = "Aantal nullen", y = "Frequentie") +
+  ggtitle("Lognormal")
+```
+
+Samenvattende statistieken
+
+```{r}
+bayesplot::ppc_stat(
+    y = analysis_df_brms2$densiteit,
+    yrep = posterior_predict(test_brms_gamma1),
+    stat = "mean"
+  ) +
+  ggtitle("Gamma")
+```
+
+```{r}
+bayesplot::ppc_stat(
+    y = analysis_df_brms2$densiteit,
+    yrep = posterior_predict(test_brms_gamma1),
+    stat = "sd"
+  ) +
+  ggtitle("Gamma")
+```
+
+```{r}
+bayesplot::ppc_stat(
+    y = analysis_df_brms2$densiteit,
+    yrep = posterior_predict(test_brms_lognormal1),
+    stat = "mean"
+  ) +
+  ggtitle("Lognormal")
+```
+
+```{r}
+bayesplot::ppc_stat(
+    y = analysis_df_brms2$densiteit,
+    yrep = posterior_predict(test_brms_lognormal1),
+    stat = "sd"
+  ) +
+  ggtitle("Lognormal")
+```
+
+#### Discussie
+
+Wij hebben geen data tussen 0 en 1. Deze modellen maken daar wel predicties. Het gemiddelde wordt dus lager geschat dan overeenkomt met het gemiddelde inde data.
+We hebben een hurdle model nodig die indien > 0 een truncated Gamma/Lognormal gebruikt vanaf 1.
+Daarvoor moeten we [zelf een familie maken](https://cran.r-project.org/web/packages/brms/vignettes/brms_customfamilies.html).
+
+```{r, eval=FALSE}
+hurdle_gamma_trunc <- custom_family(
+  "hurdle_gamma_trunc", dpars = c("mu", "shape", "hu"),
+  links = c("log", "log", "logit"),
+  lb = c(0, 0, 0), ub = c(NA, NA, 1),
+  type = "real"
+)
+
+stan_funs <- "
+  /* hurdle gamma log-PDF of a single response
+   * Args:
+   *   y: the response value
+   *   alpha: shape parameter of the gamma distribution
+   *   beta: rate parameter of the gamma distribution
+   *   hu: hurdle probability
+   * Returns:
+   *   a scalar to be added to the log posterior
+   */
+  real hurdle_gamma_trunc_lpdf(real y, real mu, real shape, real hu) {
+    if (y == 0) {
+      return bernoulli_lpmf(1 | hu); // Probability of zero
+    } else {
+      // Ensure that y >= 1 by rejecting values between 0 and 1
+      if (y < 1) {
+        // Log of zero, which effectively excludes values between 0 and 1
+        return negative_infinity();
+      } else {
+        // Gamma for y >= 1
+        return bernoulli_lpmf(0 | hu) + gamma_lpdf(y | shape, shape / mu);
+      }
+    }
+  }
+  
+  /* hurdle gamma log-PDF of a single response
+   * logit parameterization of the hurdle part
+   * Args:
+   *   y: the response value
+   *   alpha: shape parameter of the gamma distribution
+   *   beta: rate parameter of the gamma distribution
+   *   hu: linear predictor for the hurdle part
+   * Returns:
+   *   a scalar to be added to the log posterior
+   */
+  real hurdle_gamma_trunc_logit_lpdf(real y, real mu, real shape, real hu) {
+    if (y == 0) {
+      // Probability of zero with logit link
+      return bernoulli_logit_lpmf(1 | hu);
+    } else {
+      // Ensure that y >= 1 by rejecting values between 0 and 1
+      if (y < 1) {
+        // Exclude values between 0 and 1
+        return negative_infinity();
+      } else {
+        // Gamma for y >= 1
+        return bernoulli_logit_lpmf(0 | hu) + gamma_lpdf(y | shape, shape / mu);
+      }
+    }
+  }
+  
+  /* hurdle gamma log-CCDF and log-CDF functions with truncation
+   * Returns the log of the complementary cumulative distribution (CCDF)
+   * for y >= 1
+   */
+  real hurdle_gamma_trunc_lccdf(real y, real mu, real shape, real hu) {
+    if (y < 1) {
+      // Exclude values between 0 and 1
+      return negative_infinity();
+    } else {
+      // Gamma CCDF for y >= 1
+      return bernoulli_lpmf(0 | hu) + gamma_lccdf(y | shape, shape / mu);
+    }
+  }
+  
+  real hurdle_gamma_trunc_lcdf(real y, real mu, real shape, real hu) {
+    // 1 - CCDF
+    return log1m_exp(hurdle_gamma_trunc_lccdf(y | shape, shape / mu, hu));
+  }
+  
+  real hurdle_gamma_trunc_rng(real mu, real shape, real hu) {
+    if (bernoulli_rng(hu) == 1) {
+      return 0; // Generate a zero with probability hu
+    } else {
+      real y;
+      y = gamma_rng(shape, shape / mu); // Initialize y
+      while (y < 1) {
+        y = gamma_rng(shape, shape / mu); // Resample until y >= 1
+      }
+      return y;
+    }
+  }
+"
+
+stanvars <- stanvar(scode = stan_funs, block = "functions")
+
+conflicted::conflicts_prefer(brms::ar)
+conflicted::conflicts_prefer(Distance::create.bins)
+conflicted::conflicts_prefer(stats::lag)
+
+test_hu_gamma_trunc <- brm(
+  formula = densiteit  ~ stratum + periode_in_jaar + s(x_coord, y_coord) +
+    (1 | plotnaam),
+  data = analysis_df_brms2,
+  family = hurdle_gamma_trunc,
+  stanvars = stanvars,
+  chains = nchains,
+  warmup = burnin,
+  iter = niter,
+  cores = nparallel,
+  thin = thinning,
+  backend = "cmdstanr",
+  seed = 123,
+  file = file.path(cache_dir, "test_brms_gamma2"),
+  file_refit = "on_change")
+
+expose_functions(test_hu_gamma_trunc, vectorize = TRUE)
+
+posterior_predict_hurdle_gamma_trunc <- function(i, prep, ...) { # nolint
+  mu <- brms::get_dpar(prep, "mu", i = i)
+  shape <- brms::get_dpar(prep, "shape", i = i)
+  hu <- brms::get_dpar(prep, "hu", i = i)
+  hurdle_gamma_trunc_rng(mu, shape, hu) # nolint
+}
+
+pp_check(test_hu_gamma_trunc, type = "dens_overlay", ndraws = 100) +
+  ggtitle("Gamma truncated")
+```
+
+Dit geeft nog altijd niet het gewenste resultaat.
+De kleinste densiteit niet gelijk aan nul is `r round(min(analysis_df_brms2$densiteit[analysis_df_brms2$densiteit != 0]), 2)`.
+Dit type data is te complex om zo te modelleren.
+We zullen deze piste niet verder bekijken.
+
+In [de paper](https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105) rond density surface modelling (zie verder), spreken ze van overdispersed Poisson, Negatief-binomiaal of Tweedie.
+
+### Conclusie GLMM
+
+We geraken al ver met de GLMM.
+Er zijn een aantal verbeterpunten mogelijk.
+
+- spatiale component: smoother functie opties bekijken
+- centreren X- en Y-coördinaten
+
+Niet mogelijk om individuele waarnemingen te modelleren.
+
+## Density surface modelling
+
+Density surface modelling (DSM) is de methode om de spatiale distributie van dieren te modelleren via data verzameld in een distance sampling context.
+Deze methodiek sluit rechtstreeks aan bij de resultaten uit het vorige hoofdstuk en is dus een ideale kanshebber om uit te testen.
+De **dsm** package sluit rechtstreeks aan op de modeloutput van **Distance**.
+
+```{r}
+library(dsm)
+```
+
+Nuttige links:
+
+https://github.com/dill/dsm/wiki
+
+https://cran.r-project.org/web/packages/dsm/dsm.pdf
+
+https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105
+
+https://converged.yt/talks/edinburgh-gam-2024/
+
+https://peerj.com/articles/13950/
+
+https://distancesampling.org/resources/vignettes.html
+
+Uit [de paper](https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/2041-210X.12105) rond DSM blijkt dat dit exact hetzelfde model is als het Poisson model waarbij de offset bestaat uit de detectiekans en de oppervlaktes.
+Het grote verschil is hoe de onzekerheid van de detectiekans wordt doorgerekend.
+De package ondersteunt wel extra features zoals de Tweedie distributie.
+
+In ons eerdere Poisson model gingen we ervan uit dat de detectiekans een Beta verdeling volgt.
+We beschouwden de offset als een random variable waaruit we eenvoudig konden samplen.
+De random samples van de verwachte waarde van de posterior predictive distribution werden dan gedeeld door de random samples van de offset.
+
+In DSM wordt de onzekerheid via bootstrap procedures berekend waarbij rekening wordt gehouden met spatiale autocorrelatie (moving block bootstrap).
+
+Het is interessant om de resultaten van beide methodes te vergelijken.
+
+### Data preparatie
+
+Zie [deze vignette](https://distancesampling.org/resources/vignettes.html) en `?"dsm-data"`.
+
+<!-- spell-check: ignore:start -->
+*"The count response can only be used when detection function covariates only vary between segments/points (not within). For example, weather conditions (like visibility or sea state) or foliage cover are usually acceptable as they do not change within the segment, but animal sex or behaviour will not work. The abundance.est response can be used with any covariates in the detection function."*
+<!-- spell-check: ignore:end -->
+
+```{r}
+observation_df <- veldleeuwerik_dist_hr3$ddf$data %>%
+  left_join(select(veldleeuwerik_2024_df, oid, Sample.Label = plotnaam),
+            by = join_by("object" == "oid")) %>%
+  select(object, Sample.Label, size, distance, openheid)
+
+segment_df <- sample_table3 %>%
+  left_join(design, by = join_by("Sample.Label" == "pointid")) %>%
+  mutate(
+    stratum = ifelse(
+      regio == "Weidestreek", regio,
+      paste(regio, openheid_klasse, sbp, sep = "_")
+    ),
+    stratum = relevel(factor(stratum), ref_group_stratum)
+  ) %>%
+  select(Sample.Label, Effort, stratum, x_coord, y_coord,
+         openheid = openheid_klasse)
+
+pred_dsm_df <- steekproefkader %>%
+  mutate(
+    regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
+  ) %>%
+  st_drop_geometry() %>%
+  mutate(stratum = ifelse(
+    regio == "Weidestreek", regio,
+    paste(regio, openheid_klasse, sbp, sep = "_"))
+  ) %>%
+  select(Sample.Label = pointid, stratum, x_coord, y_coord) %>%
+  mutate(area = 300 * 300 * pi)
+```
+
+### Model specificatie en resultaten
+
+We fitten een Poisson model waarbij we de data van alle telperiodes meenemen en de effort gelijk is aan 4.
+Het is niet mogelijk om random effects te gebruiken.
+Herhaalde telperiodes worden opgenomen in de offset.
+
+<!-- spell-check: ignore:start -->
+$$
+Y_{j,t} \sim Pois(\lambda_{j,t})
+$$
+<!-- spell-check: ignore:end -->
+
+waarbij de verwachte waarde $\lambda_{j,t}$ wordt gemodelleerd als
+
+<!-- spell-check: ignore:start -->
+$$
+\ln(\lambda_{j,t}) = \beta_0 + \sum_{s=2}^S\beta_{s-1}X_{s, j} + \sum_{t=2}^T\gamma_{t-1}X_{t} + f(x_j, y_j) + \ln(p_s) + \ln\left(p_sE\frac{A_j}{10^6\ \text{m}^2/\text{km}^2}\right)
+$$
+<!-- spell-check: ignore:end -->
+
+Hierbij zijn:
+
+- $\beta_0$: Het globale intercept vertegenwoordigt de referentiestratum ($s=1$) en -telperiode ($t=1$). Als referentiestratum en -periode nemen we resp. het stratum, de periode met het hoogste aantal broedparen.
+- $\sum_{s=2}^S\beta_{s-1}X_{s, j}$: Fixed effects voor strata $s=2, ..., S$, waarbij $X_{s, j}$ een dummyvariabele is die aangeeft of telcirkel $j$ tot stratum $s$ behoort. Het eerste stratum ($s=1$) is inbegrepen in het intercept.
+- $\sum_{t=2}^T\gamma_{t-1}X_{t}$: Fixed effects voor telpunten $t=2, ..., T$, waarbij $X_{t}$ een dummyvariabele is die aangeeft of de telling afkomstig is uit telperiode $t$. De eerste telperiode ($t=1$) is inbegrepen in het intercept.
+- $f(x_j, y_j)$: Een gladheidsfunctie die ruimtelijke variatie beschrijft o.b.v. de X- en Y-coördinaten van telpunt $j$.
+- $b_{0,j}$: Een random effect voor telcirkel $j$, dat variatie tussen telcirkels modelleert.
+- $p_s$: De gemiddelde detectiekans in stratum $s$ waartoe telpunt $j$ behoort.
+- $E = 4$: Het aantal bezoeken (effort). 
+- $A_j = \pi \cdot 300^2=$ `r round(pi * 300^2, 2)` m²: De oppervlakte van telcirkel $j$.
+
+Zodat we rechtsreeks het aantal broedparen per 100 ha (= 1 km²) modelleren (= densiteit) waarbij we corrigeren voor de gemiddelde detectiekans
+
+<!-- spell-check: ignore:start -->
+$$
+\ln\left(\frac{\lambda_{j,t}}{\text{offset}}\right) = \beta_0 + \sum_{s=2}^S\beta_{s-1}X_{s, j} + \sum_{t=2}^T\gamma_{t-1}X_{t} + f(x_j, y_j)
+$$
+<!-- spell-check: ignore:end -->
+
+```{r}
+test_dsm1 <- dsm(
+  formula = count ~ stratum + s(x_coord, y_coord),
+  family = poisson(link = "log"),
+  ddf.obj = veldleeuwerik_dist_hr3,
+  segment.data = segment_df,
+  observation.data = observation_df,
+  convert.units = 1 / 10^6,
+  method = "REML" # default
+)
+```
+
+We maken opnieuw voorspellingen voor het steekproefkader.
+
+```{r}
+dsm1_pred <- predict(test_dsm1, pred_dsm_df, pred_dsm_df$area / 10^6)
+dsm1_pred_sf <- pred_dsm_df %>%
+  mutate(estimate = dsm1_pred) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370)
+```
+
+```{r}
+dsm1_pred_sf %>%
+  st_buffer(300) %>%
+  ggplot() +
+    geom_sf(aes(fill = estimate), colour = alpha("white", 0)) +
+    scale_fill_gradientn(
+      colours = rainbow(5),
+      breaks = seq(from = 0, to = 10, length.out = 5),
+      limits = c(0, 10)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+[Deze vignette](https://distancesampling.org/dsm/articles/lines_gomex/mexico-analysis.html#abundance-estimation) geeft een alternatieve manier voor het maken van voorspellingen.
+Het voordeel is dat er geen overlap is, maar de spatiale join gebeurt via `st_nearest_feature` wat niet 100% correct is.
+
+```{r}
+prediction_grid <- st_make_grid(
+  flanders_sf,
+  cellsize = units::set_units(300 * 300 * pi, "m^2")
+  )
+prediction_grid_sf <- st_sf(geometry = prediction_grid)
+joined_grid <- st_join(prediction_grid_sf, dsm1_pred_sf,
+                       join = st_nearest_feature)
+
+if (file.exists(file.path(cache_dir, paste0("cropped_grid_dsm.Rds")))) {
+  cropped_grid <- readRDS(file.path(cache_dir, paste0("cropped_grid_dsm.Rds")))
+} else {
+  cropped_grid <- qgisprocess::qgis_run_algorithm(
+      "native:intersection",
+      INPUT = joined_grid,
+      OVERLAY = flanders_sf
+    ) %>%
+    st_as_sf()
+
+  saveRDS(cropped_grid, file.path(cache_dir, paste0("cropped_grid_dsm.Rds")))
+}
+```
+
+```{r}
+cropped_grid %>%
+  ggplot() +
+    geom_sf(aes(fill = estimate), colour = NA) +
+    scale_fill_gradientn(
+      colours = rainbow(5),
+      breaks = seq(from = 0, to = 10, length.out = 5),
+      limits = c(0, 10)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+We zien gelijkaardige resultaten als voordien.
+Zoals verwacht zijn de nummers wel ongeveer een factor 4 kleiner.
+
+We bekijken enkele figuren m.b.t. model fit.
+
+```{r}
+par(mfrow = c(2, 2))
+gam.check(test_dsm1)
+par(mfrow = c(1, 1))
+```
+
+Deze laten zien dat er enige afwijking is in de Q-Q plot. De onderste lijn van punten in de plot van de residuen versus de lineaire voorspeller komt overeen met de nultellingen in de gegevens. Deze kunnen misleidend en afleidend zijn, waardoor het moeilijk is om te zien of residuen heteroskedasticiteit vertonen.
+
+De $k$ parameter die gegeven wordt aan `s()` term bepaalt de complexiteit van de smooths in het model. Door de $k$ parameter in te stellen specificeren we de grootste complexiteit voor die smooth term in het model; zolang dit hoog genoeg is, kunnen we er zeker van zijn dat er genoeg flexibiliteit is. In de uitvoer van `gam.check()` hierboven kunnen we zien dat er een p-waarde wordt berekend voor de grootte van de basis, dit kan een goede richtlijn zijn om te bepalen of de basisgrootte moet worden vergroot. We zien dat de default $k$ te klein is. Dit is logisch aangezien we data gebruiken voor Vlaanderen en de complexiteit veel hoger is over de longitude en latitude.
+
+We fitten het model met de Tweedie distributie.
+We verhogen ook $k$ naar 100.
+
+```{r}
+test_dsm2 <- dsm(
+  formula = count ~ stratum + s(x_coord, y_coord, k = 100),
+  family = tw(),
+  ddf.obj = veldleeuwerik_dist_hr3,
+  segment.data = segment_df,
+  observation.data = observation_df,
+  convert.units = 1 / 10^6,
+  method = "REML" # default
+)
+```
+
+De Q-Q plot ziet er beter uit.
+
+```{r}
+par(mfrow = c(2, 2))
+gam.check(test_dsm2)
+par(mfrow = c(1, 1))
+```
+
+De onderste lijn van punten in de plot van de residuen versus de lineaire voorspeller komt overeen met de nultellingen in de gegevens. Deze kunnen misleidend en afleidend zijn, waardoor het moeilijk is om te zien of residuen heteroskedasticiteit vertonen. Gerandomiseerde kwantielresiduen vermijden dit probleem door de residuen te transformeren zodat ze exact normaal verdeeld zijn. Dit maakt de plot van residuen versus lineaire voorspeller veel eenvoudiger te interpreteren, omdat de artefacten die door de koppelingsfunctie worden gegenereerd er niet in voorkomen.
+
+```{r}
+rqgam_check(test_dsm2)
+```
+
+We zien dat $k=100$ nog altijd te laag is om de spatiale complexiteit te omvatten.
+
+We maken voorspellingen voor het steekproefkader.
+
+```{r}
+dsm2_pred <- predict(test_dsm2, pred_dsm_df, pred_dsm_df$area / 10^6)
+dsm2_pred_sf <- pred_dsm_df %>%
+  mutate(estimate = dsm2_pred) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370)
+```
+
+```{r}
+dsm2_pred_sf %>%
+  st_buffer(300) %>%
+  ggplot() +
+    geom_sf(aes(fill = estimate), colour = alpha("white", 0)) +
+    scale_fill_gradientn(
+      colours = rainbow(5),
+      breaks = seq(from = 0, to = 10, length.out = 5),
+      limits = c(0, 10)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+### Variance propagation in DSM
+
+Voor de onzekerheid zijn er twee opties:
+
+- `dsm_var_gam()` die aanneemt dat de spatiale model- en detectiefunctieonderdelen van het model onafhankelijk van elkaar zijn. In dit geval worden de gekwadrateerde variatiecoëfficiënten voor elke modelcomponent opgeteld.
+- `dsm_var_prop()` die rekening houdt met het feit dat detectiekans gecorreleerd kan zijn met het ruimtelijke deel van het model. Het gebruikt methoden beschreven in (Bravington, Miller, & Hedley, 2021).
+
+Beide methoden schatten de variantie van de densiteit voor elk element van een lijst. In ons geval willen we een de densiteit verkrijgen voor elk van de telcirkels in het steekproefkader, dus gebruiken we `split()`.
+We maken predicties voor de Weidestreek omdat het anders niet lukt (+400 Gb).
+
+```{r}
+test <- pred_dsm_df %>% filter(stratum == "Weidestreek")
+pred_dsm_var <- split(test, seq_len(nrow(test)))
+dsm2_var <- dsm_var_gam(test_dsm2, pred_dsm_var, test$area / 10^6)
+summary(dsm2_var)
+```
+
+```{r}
+dsm2_pred_sf %>%
+  filter(stratum == "Weidestreek") %>%
+  mutate(cv = sqrt(dsm2_var$pred.var) / estimate) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+  st_buffer(300) %>%
+  ggplot() +
+    geom_sf(aes(fill = cv), colour = alpha("white", 0)) +
+    scale_fill_gradientn(
+      colours = rainbow(5)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "cv",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+We houden hier echter geen rekening met de covariantie tussen de schatting van de detectiefunctie en het spatiale model.
+
+<!-- spell-check: ignore:start -->
+[Miller et al. (2022)](https://peerj.com/articles/13950/): *"If estimates are coincident in space and time, our general strategy here is to absorb this into the spatial model if possible, using the method of* [Bravington, Miller & Hedley (2021)](https://link.springer.com/article/10.1007/s13253-021-00438-2)*. A typical example is that detection functions will usually be coincident as they are estimated from data collected during the survey, in that case it is likely that weather conditions that affect detectability (e.g., sea state) vary in space, so there will be covariance between the detectability and spatial model that must be accounted for."* (zie ook [deze presentatie](https://converged.yt/talks/edinburgh-gam-2024/)).
+
+[Bravington, Miller & Hedley (2021)](https://link.springer.com/article/10.1007/s13253-021-00438-2): *"Splitting the analysis into two stages is appealing partly because existing domain-specific software and diagnostic expertise can be applied as-is to each stage separately, and partly because it avoids any need to write inevitably complicated code that incorporates two individually complex aspects. It is also straightforward to produce a point estimate of abundance for any desired sub-region straight from the fitted GAM. However, when detectability and density both vary spatially, the problem is what to do about variance given that GAMs do not intrinsically “understand” the notion of uncertainty in their offset."*
+<!-- spell-check: ignore:end -->
+
+[Bravington, Miller & Hedley (2021)](https://link.springer.com/article/10.1007/s13253-021-00438-2) bieden hier een oplossing voor.
+Ze tonen aan hoe statistische onzekerheid over detectiekans eenvoudig kan worden opgenomen in standaard GAM-software.
+Eerst wordt de detectiefunctie geschat, waarna de log-likelihood ervan wordt herschreven als een kwadratische benadering rond de puntenschattingen.
+De onzekerheid van de parameters wordt verwerkt als random effecten in de tweede fase van de GAM.
+Dit sluit aan bij de formulering van een GAM, waarbij random effecten al zijn geïntegreerd in de **mgcv**-software.
+Zo wordt het detectiefunctiemodel opnieuw geschat tijdens het fitten van de GAM, waarbij onzekerheid over zowel detecteerbaarheid als densiteit wordt meegenomen.
+
+```{r}
+newdat <- pred_dsm_df
+newdat$off.set <- pred_dsm_df$area / 10^6
+varprop <- dsm_varprop(test_dsm2, newdat)
+summary(varprop$old_model)
+summary(varprop$refit)
+```
+
+```{r}
+obs_exp <- function(model, term) {
+  oe <- model$data
+  oe$Npredict <- as.vector(predict(model))
+
+  oe <- plyr::ddply(oe, plyr::as.quoted(term), function(x) {
+    data.frame(Observed = sum(x[[as.character(model$formula)[2]]]),
+               Expected = sum(x$Npredict))
+  })
+
+  cn <- oe[, 1]
+  oe <- t(oe[, 2:3])
+  colnames(oe) <- cn
+
+  return(oe)
+}
+
+print(obs_exp(varprop$refit, ~openheid))
+```
+
+```{r}
+pred_dsm_df %>%
+  mutate(estimate = varprop$pred) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+  st_buffer(300) %>%
+  ggplot() +
+    geom_sf(aes(fill = estimate), colour = alpha("white", 0)) +
+    scale_fill_gradientn(
+      colours = rainbow(5),
+      breaks = seq(from = 0, to = 10, length.out = 5),
+      limits = c(0, 10)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+```{r}
+pred_dsm_df %>%
+  mutate(estimate = as.vector(varprop$pred),
+         se = varprop$ses,
+         cv = se / estimate) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+  st_buffer(300) %>%
+  ggplot() +
+    geom_sf(aes(fill = cv), colour = alpha("white", 0)) +
+    scale_fill_gradientn(
+      colours = rainbow(5)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "cv",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+```{r}
+pred_dsm_df %>%
+  mutate(estimate = as.vector(varprop$pred),
+         se = varprop$ses,
+         cv = se / estimate) %>%
+  filter(stratum == "Weidestreek") %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+  st_buffer(300) %>%
+  ggplot() +
+    geom_sf(aes(fill = cv), colour = alpha("white", 0)) +
+    scale_fill_gradientn(
+      colours = rainbow(5)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "cv",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+```{r}
+cv_weidestreek1 <- dsm2_pred_sf %>%
+  filter(stratum == "Weidestreek") %>%
+  mutate(cv = sqrt(dsm2_var$pred.var) / estimate,
+         varprop = "no") %>%
+  st_drop_geometry() %>%
+  select(Sample.Label, cv, varprop)
+cv_weidestreek2 <- pred_dsm_df %>%
+  mutate(estimate = as.vector(varprop$pred),
+         se = varprop$ses,
+         cv = se / estimate,
+         varprop = "yes") %>%
+  filter(stratum == "Weidestreek") %>%
+  select(Sample.Label, cv, varprop)
+
+bind_rows(cv_weidestreek1, cv_weidestreek2) %>%
+  ggplot(aes(x = varprop, y = cv)) +
+    geom_boxplot() +
+    ggtitle(
+      paste("Verdeling van CVs zonder ('no') en met ('yes') rekening te houden",
+            "met covariantie", sep = "\n")
+    )
+```
+
+De cv is niet veel hoger als we rekening houden met de covariantie (mediaan 'no': `r round(median(cv_weidestreek1$cv), 5)`, mediaan 'yes': `r round(median(cv_weidestreek2$cv), 5)`)
+Hoewel zowel de detectiekans als de abundanties afhankelijk zijn van openheid van het landschap.
+
+> Kunnen we dit laatste model ook toepassen door een GLMM te fitten?
+
+```{r}
+custom_dsm_data <- analysis_df_brms1 %>%
+  left_join(segment_df, by = join_by(stratum, x_coord, y_coord)) %>%
+  mutate(off.set = offset * Effort) %>%
+  group_by(Sample.Label, stratum, x_coord, y_coord,
+           offset, Effort, openheid) %>%
+  summarise(n = sum(n)) %>%
+  ungroup() %>%
+  mutate(openheid = factor(openheid),
+         stratum = factor(stratum)) %>%
+  as.data.frame()
+```
+
+```{r, echo=TRUE}
+custom_dsm1 <- gam(
+  n ~ stratum + s(x_coord, y_coord, k = 100) + offset(log(offset)),
+  data = custom_dsm_data,
+  family = tw(),
+  method = "REML",
+  control = list(keepData = TRUE)) # essential for varprop later
+```
+
+
+```{r}
+# Attach the detection function into the gam object
+custom_dsm1$ddf <- veldleeuwerik_dist_hr3$ddf
+# Make it a dsm object so we can use dsm functions later
+class(custom_dsm1) <- c("dsm", class(custom_dsm1))
+```
+
+Hoe doet het model het versus waargenomen bij verschillende openheidsklasses?
+
+```{r}
+obs_exp(custom_dsm1, "openheid")
+```
+
+Q-Q plots
+
+```{r}
+# quantile-quantile plot
+qq.gam(custom_dsm1, rep = 200)
+```
+
+```{r}
+# randomised quantile residuals vs linear predictor
+dsm::rqgam_check(custom_dsm1)
+```
+
+```{r}
+custom_newdat <- newdat %>%
+  left_join(distinct(custom_dsm_data, stratum, offset),
+            by = join_by(stratum),
+            relationship = "many-to-many") %>%
+  select(-area)
+custom_varprop <- dsm_varprop(custom_dsm1, custom_newdat)
+```
+
+```{r}
+custom_newdat %>%
+  mutate(estimate = as.vector(custom_varprop$pred)) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+  st_buffer(300) %>%
+  ggplot() +
+    geom_sf(aes(fill = estimate), colour = alpha("white", 0)) +
+    scale_fill_gradientn(
+      colours = rainbow(5)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+```{r}
+custom_newdat %>%
+  mutate(estimate = as.vector(custom_varprop$pred),
+         se = custom_varprop$ses,
+         cv = se / estimate) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+  st_buffer(300) %>%
+  ggplot() +
+    geom_sf(aes(fill = cv), colour = alpha("white", 0)) +
+    scale_fill_gradientn(
+      colours = rainbow(5)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "cv",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+> Kunnen we dit ook toepassen door de GLMM te fitten met random intercepts?
+
+```{r, echo=TRUE}
+custom_dsm2 <- gam(
+  formula = n ~ stratum + periode_in_jaar + s(x_coord, y_coord) +
+    s(Sample.Label, bs = "re") + offset(log(offset)),
+  data = analysis_df_brms1 %>%
+    mutate(Sample.Label = factor(plotnaam),
+           openheid = factor(ifelse(grepl("HOL", stratum), "HOL", "OL")),
+           Effort = 1) %>%
+    as.data.frame(),
+  family = poisson(),
+  method = "REML",
+  control = list(keepData = TRUE)) # essential for varprop later
+```
+
+```{r}
+# Attach the detection function into the gam object
+custom_dsm2$ddf <- veldleeuwerik_dist_hr3$ddf
+# Make it a dsm object so we can use dsm functions later
+class(custom_dsm2) <- c("dsm", class(custom_dsm2))
+```
+
+Hoe doet het model het versus waargenomen bij verschillende openheidsklasses?
+
+```{r}
+obs_exp(custom_dsm2, "openheid")
+```
+
+Q-Q plots
+
+```{r}
+# quantile-quantile plot
+qq.gam(custom_dsm2, rep = 200)
+```
+
+```{r}
+custom_newdat2 <- steekproefkader %>%
+  mutate(
+      regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
+  ) %>%
+  st_drop_geometry() %>%
+  mutate(stratum = ifelse(
+      regio == "Weidestreek", regio,
+      paste(regio, openheid_klasse, sbp, sep = "_"))
+  ) %>%
+  left_join(analysis_df_brms1 %>% distinct(stratum, offset),
+            by = join_by(stratum),
+                  relationship = "many-to-many") %>%
+  mutate(off.set = offset,
+         Sample.Label = factor(pointid),
+         openheid = factor(openheid_klasse)) %>%
+  filter(regio == "Leemstreek") %>%
+  select(Sample.Label, stratum, x_coord, y_coord, offset, off.set,
+         openheid) %>%
+  expand_grid(
+      periode_in_jaar = unique(analysis_df_brms1$periode_in_jaar)
+  ) %>%
+  as.data.frame()
+
+custom_varprop2 <- dsm_varprop(custom_dsm2, custom_newdat2)
+```
+
+```{r}
+custom_newdat2 %>%
+  mutate(estimate = as.vector(custom_varprop2$pred)) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+  st_buffer(300) %>%
+  ggplot() +
+    geom_sf(aes(fill = estimate), colour = alpha("white", 0)) +
+    scale_fill_gradientn(
+      colours = rainbow(5)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+```{r}
+custom_newdat2 %>%
+  mutate(estimate = as.vector(custom_varprop2$pred),
+         se = custom_varprop2$ses,
+         cv = se / estimate) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+  st_buffer(300) %>%
+  ggplot() +
+    geom_sf(aes(fill = cv), colour = alpha("white", 0)) +
+    scale_fill_gradientn(
+      colours = rainbow(5)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "cv",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+### Conclusie DSM
+
+De idee achter DSM is eigenlijk niet zo verschillend als de GLMM's.
+Het grootste verschil is dat geen random effects mogelijk zijn.
+De telperiodes worden in de offset opgenomen als "effort".
+De methode lijkt in dit opzicht weinig flexibel.
+Het lijkt daarom ook weinig voordeel te hebben t.o.v. onze GLMM-methode.
+
+We houden voorlopig geen rekening met de covariantie tussen de schatting van de detectiefunctie en het spatiale model.
+Recent onderzoek heeft hier een oplossing voor.
+Dit wordt besproken in de volgende subsectie.
+
+We leerden we dat de spatiale component voorlopig ontoereikend is.
+Dit is niet onverwacht.
+We hebben veel data over heel Vlaanderen.
+Om deze spatiale complexiteit te capteren hebben we een hoge flexibiliteit nodig voor de smoother functie.
+
+## Gaussian random fields en Log-Gaussian Cox Processes
+
+Uit de vorige analyses blijkt dat we met slim gebruik van GLMM's eigenlijk al vrij ver kunnen komen om de densiteiten te modelleren.
+Voorlopig is de spatiale component nog vrij simplistisch opgesteld.
+Enerzijds met betrekking to de gebruikte splines en complexiteit ($k$ parameter).
+Anderzijds zijn er ook gewoon andere methodes om rekening te houden met spatiale correlatie.
+In deze sectie onderzoeken we het gebruik van Gaussian random fields.
+
+### Theoretische achtergrond
+#### ChatGPT
+
+<!-- spell-check: ignore:start -->
+> I have a spatial glmm with smoother s(x_coord, y_coord), I could also use a Gaussian random field instead, what is the difference?
+
+Both smoothers (like `s(x_coord, y_coord)` in generalized additive models (GAMs)) and Gaussian random fields (GRFs) are methods for modeling spatial variation, but they differ in their underlying assumptions, implementation, and flexibility.
+
+**1. Smoothers in GAMs**
+   - **Basis Functions**: Smoothers, such as those created by `s(x_coord, y_coord)` in GAMs (e.g., using the `mgcv` package in R), use basis functions (e.g., thin plate splines, cubic splines) to represent spatial effects. These basis functions are predefined shapes whose parameters are estimated from the data.
+   - **Flexibility**: The smoothness of the spatial effect is controlled by penalization during fitting, where a trade-off is made between goodness-of-fit and model complexity.
+   - **Local Effects**: Smoothers are generally better for capturing local spatial patterns but may struggle with long-range correlations or irregularly shaped study areas unless carefully parameterized.
+   - **Computational Efficiency**: Smoothers can be computationally efficient for moderate-sized datasets, but their computational cost grows with the number of basis functions, which is related to the number of data points.
+
+**2. Gaussian Random Fields**
+   - **Covariance-Based Modeling**: GRFs model spatial effects using a covariance function (e.g., Matérn, exponential), which describes how spatial correlation decays with distance. These models rely on the theory of geostatistics.
+   - **Continuous Surface**: GRFs produce a continuous spatial process defined everywhere (not just at observed locations), making them more suitable for spatial prediction (kriging).
+   - **Global Effects**: They capture both local and long-range spatial dependencies more naturally than splines, especially with a suitable covariance function.
+   - **Flexibility**: GRFs can be more flexible in capturing complex spatial structures but require careful selection of the covariance function and its parameters (e.g., range, sill).
+   - **Computational Cost**: GRFs can be computationally intensive, particularly for large datasets, due to the inversion of large covariance matrices. Approximation methods like INLA-SPDE or predictive processes can alleviate this.
+
+**Key Differences**
+
+| **Aspect**             | **Smoother (GAM)**                        | **Gaussian Random Field (GRF)**               |
+|------------------------|-------------------------------------------|-----------------------------------------------|
+| **Model Type**         | Penalized regression (basis functions)    | Covariance-based stochastic process           |
+| **Spatial Scale**      | Local effects with predefined smoothness  | Local and long-range effects                  |
+| **Predictive Surface** | Limited to range of data                  | Continuous spatial surface                    |
+| **Flexibility**        | Limited by basis function choice          | Flexible with proper covariance structure     |
+| **Computational Cost** | Moderate                                  | High for large datasets unless approximated   |
+| **Tool**               | `mgcv::gam()`                             | `INLA`, `TMB`, `spBayes`, or geostatistical tools |
+
+**When to Use Each**
+- **Use a smoother in GAMs**:
+  - When the dataset is moderate in size and focus is on estimating smooth spatial effects for inference.
+  - If computational efficiency is a concern and spatial predictions are not a priority.
+  
+- **Use a Gaussian random field**:
+  - When the goal is spatial prediction or understanding spatial correlation.
+  - If the dataset is large but you can use approximation methods (e.g., SPDE with INLA).
+  - When long-range dependencies are important. 
+
+Each method has trade-offs, so the choice depends on your scientific goals, computational resources, and data structure.
+
+> how does this relate to log gausian cox process?
+
+A **Log-Gaussian Cox Process (LGCP)** is a specific type of stochastic point process used to model spatial or spatiotemporal point patterns. Its connection to smoothers, Gaussian random fields (GRFs), and spatial GLMMs lies in how the intensity of points is modeled.
+
+**Overview of LGCP**
+
+An LGCP assumes that the intensity of points in space (or space-time) is a **random field** governed by a latent Gaussian process. Specifically:
+- **Point Process**: Points are distributed in space according to an inhomogeneous Poisson process, where the intensity function $\lambda(s)$ (at location $s$) is a random variable.
+- **Log Transformation**: The logarithm of the intensity, $\log \lambda(s)$, is modeled as a Gaussian random field:
+
+$$
+\log \lambda(s) = \mu(s) + Z(s),
+$$
+
+  where $\mu(s)$ is a deterministic component (e.g., fixed effects or a smooth mean structure), and $Z(s)$ is a zero-mean Gaussian random field (e.g., modeled with a Matérn covariance).
+
+**Relationship to Spatial GLMMs**
+
+1. **Spatial GLMMs**: 
+   - In a spatial GLMM, spatial variation is modeled as a random effect, which can be represented by a smoother or a GRF.
+   - If a GRF is used in the GLMM, the latent spatial effect plays a similar role to $Z(s)$ in the LGCP.
+
+2. **LGCP as a Point Process Model**:
+   - While spatial GLMMs are typically used for areal or lattice data (e.g., counts or measurements over predefined regions), LGCPs are specifically for point patterns.
+   - LGCP extends spatial GLMM concepts to continuous space, focusing on the **density of points** rather than discrete counts or measurements.
+
+3. **Use of GRFs**:
+   - The latent Gaussian random field $Z(s)$ in LGCP corresponds to the spatial random effect in a GLMM. Both capture spatial autocorrelation and structure.
+   - The difference is the interpretation: in an LGCP, the GRF directly affects the intensity of points, while in a GLMM it models residual variation in responses like counts or presence/absence.
+
+**Relationship to Smoothers**
+
+- **Smoothers in GAMs**: These can also be thought of as deterministic approximations of spatial variation, where spatial effects are modeled explicitly as smooth functions (e.g., splines).
+- **LGCP vs. Smoothers**: 
+  - LGCP's GRF is more flexible and stochastic, explicitly accounting for spatial uncertainty and correlation.
+  - Smoothers are deterministic and less flexible for highly irregular or complex spatial patterns.
+  - LGCP is better for modeling **point-level spatial variation**, while smoothers are often used for aggregated data.
+
+**Applications and Practical Considerations**
+
+1. **When to Use LGCP**:
+   - You have individual event locations (e.g., species sightings, disease cases).
+   - The goal is to model spatial point patterns with an underlying intensity process that is uncertain or correlated.
+   - Example: Modeling where bird sightings are more likely across a landscape.
+
+2. **When to Use Spatial GLMMs or Smoothers**:
+   - You have count or presence/absence data aggregated over regions or grids.
+   - The focus is on estimation or prediction over discrete regions.
+   - Example: Modeling bird counts across fixed survey sites.
+
+**Summary of Connections**
+
+| **Aspect**              | **Spatial GLMM**                             | **LGCP**                                     |
+|-------------------------|----------------------------------------------|----------------------------------------------|
+| **Type of Data**        | Count, presence/absence, continuous response | Point patterns                               |
+| **Latent Structure**    | Spatial effect via smoother or GRF           | GRF defines log-intensity of points          |
+| **Model Focus**         | Response prediction and spatial effect       | Intensity prediction and point clustering    |
+| **Point Process**       | No                                           | Yes (Poisson process with stochastic rate)   |
+| **Computational Tools** | `mgcv`, `INLA`, `TMB`, etc.                  | `lgcp`, `spatstat`, `INLA`, etc.             |
+
+If your data consists of point patterns, LGCP is more appropriate because it models the point-generating mechanism explicitly. Conversely, if you have counts or aggregated data, a spatial GLMM or smoother may suffice.
+<!-- spell-check: ignore:end -->
+
+#### Discussie
+
+Bovenstaand antwoord van ChatGPT klinkt logisch en overzichtelijk.
+Op basis hiervan lijkt het meest correct om een GLMM te fitten waarbij we de spatiale component via een GRF benaderen.
+
+- Complexe spatiale structuur over grote range
+- Modellering van aantallen op vaste meetlocaties
+
+Hier nog enkele interessante links:
+
+https://calgary.converged.yt/articles/poisson_processes.html
+
+https://www.paulamoraga.com/book-spatial/point-process-modeling.html
+
+https://becarioprecario.bitbucket.io/spde-gitbook/ch-lcox.html
+
+https://inlabru-org.github.io/inlabru/articles/2d_lgcp_distancesampling.html
+
+https://doi.org/10.1080/00031305.2024.2316725
+
+### Model fitten
+
+We kijken via [deze paper](https://www.tandfonline.com/doi/epdf/10.1080/00031305.2024.2316725?needAccess=true) hoe we een GRF kunnen toevoegen.
+We fitten het brms Poisson model.
+
+- We laten de offset weg (die kunnen we achteraf toevoegen)
+- 
+
+
+```{r}
+# Get gorilla data
+library(spatstat)
+data(gorillas, package = "spatstat.data")
+
+# Prepare gorilla data
+pp <- data.frame(
+  gorillas, # contains nesting locations
+  # at locations add predictors from ’gorillas.extra’
+  lapply(gorillas.extra, function(x) x[gorillas]),
+  # indicator for whether row corresponds to a point event or a quadrature point
+  pt = 1,
+  # point pattern weights epsilon > 0
+  wt = 1e-6)
+
+# Prepare quadrature points
+# Extract x and y from predictor image as quadrature points
+q_xy <- data.frame(gorillas.extra[[1]])[, c("x", "y")]
+
+# Add predictors and set weights using domain area
+quad <- data.frame(
+  q_xy,
+  # at locations add predictors from ’gorillas.extra’
+  lapply(gorillas.extra, function(x) x[q_xy]),
+  # indicator for whether row corresponds to a point event or a quadrature point
+  pt = 0,
+  # weights are area of tiles
+  wt = area(gorillas$window) / nrow(q_xy))
+
+# Combine gorilla observations with quadrature points
+dat <- merge(pp, quad, all = TRUE)
+
+# Fit brms model
+m <- gam(
+  formula = pt / wt ~ elevation + waterdist + slopeangle + heat + slopetype +
+    vegetation + s(x, y, bs = "gp", k = 400, m = c(3, 568.37)),
+  data = dat,
+  family = poisson,
+  weights = wt, method = "REML")
+
+# Make predictions
+quad$z <- predict(m, newdata = quad, type = "response")
+# create image from coordinates & predicted values
+pred_im <- as.im(quad[, c("x", "y", "z")],
+                 W = gorillas$window)
+
+plot(log(pred_im), box = FALSE, main = "", col = terrain.colors, ribbon = FALSE)
+points(pp[, c("x", "y")], col = rgb(0, 0, 0, alpha = 0.25), pch = 4)
+```
+
+https://esajournals.onlinelibrary.wiley.com/doi/epdf/10.1002/ecy.2403
+
+https://becarioprecario.bitbucket.io/inla-gitbook/ch-spatial.html#sec:geostats
+
+# Linken van densiteitsschattingen met modelmatige predicties
+
+Kunnen we de aantal per stratum repliceren met brms?
+
+```{r}
+strat_vec <- analysis_df_brms1 %>%
+  filter(grepl("^Leemstreek", stratum)) %>%
+  distinct(stratum) %>%
+  pull(stratum) %>%
+  as.vector() %>%
+  sort()
+pred_list1 <- vector(length = length(strat_vec), mode = "list")
+pred_list2 <- pred_list1
+
+for (i in seq_along(strat_vec)) {
+    # Specify cache path
+    brms1_pred_strat_path <- file.path(
+      cache_dir, paste0("brms1_pred_", tolower(strat_vec[i])))
+
+    # Get predictions
+    pred_veldleeuwerik_strat <- arrow::open_dataset(brms1_pred_strat_path)
+
+    # Calculate summary statistics per location for time period with average
+    # expected breeding pairs
+    plot_veldleeuwerik_strat_mean <- pred_veldleeuwerik_strat %>%
+      group_by(stratum, plotnaam, .draw) %>%
+      summarise(.epred = mean(.epred),
+                .groups = "drop") %>%
+      group_by(stratum, .draw) %>%
+      summarise(total = mean(.epred)) %>%
+      ungroup() %>%
+      # quantile not supported by arrow
+      collect() %>%
+      group_by(stratum) %>%
+      summarise(
+        densiteit = mean(total),
+        ll = quantile(total, 0.025),
+        ul = quantile(total, 0.975),
+        .groups = "drop")
+
+    # Calculate summary statistics per location for time period with maximum
+    # expected breeding pairs
+    plot_veldleeuwerik_strat_max <- pred_veldleeuwerik_strat %>%
+      # slice_max not supported by arrow
+      collect() %>%
+      group_by(stratum, plotnaam, periode_in_jaar) %>%
+      mutate(estimate_mean = mean(.epred)) %>%
+      slice_max(order_by = estimate_mean, n = 1) %>%
+      ungroup() %>%
+      group_by(stratum, .draw) %>%
+      summarise(total = mean(.epred)) %>%
+      ungroup() %>%
+      group_by(stratum) %>%
+      summarise(
+        densiteit = mean(total),
+        ll = quantile(total, 0.025),
+        ul = quantile(total, 0.975),
+        .groups = "drop")
+
+    pred_list1[[i]] <- plot_veldleeuwerik_strat_max
+    pred_list2[[i]] <- plot_veldleeuwerik_strat_mean
+}
+
+brms1_pred_totals1 <- bind_rows(pred_list1) %>%
+    separate(stratum, into = c("regio", "openheid", "sbp"))
+brms1_pred_totals2 <- bind_rows(pred_list2) %>%
+    separate(stratum, into = c("regio", "openheid", "sbp"))
+```
+
+```{r}
+bind_rows(
+  density_veldleeuwerik %>%
+    filter(Label != "Total") %>%
+    select(stratum = Label, densiteit = Estimate, ll = lcl, ul = ucl) %>%
+    separate(stratum, into = c("regio", "openheid", "sbp"), sep = " - ") %>%
+    filter(regio == "Leemstreek") %>%
+    mutate(method = "distance sampling"),
+  brms1_pred_totals1 %>%
+    mutate(method = "GLMM (max. telperiodes)")
+  ) %>%
+  ggplot(aes(x = sbp, y = densiteit, colour = method)) +
+  geom_point(position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = ll, ymax = ul),
+    width = 0.2,
+    position = position_dodge(width = 0.5)
+  ) +
+  labs(y = "aantal broedparen per 100 ha", x = "") +
+  facet_wrap(~openheid, ncol = 2)
+```
+
+```{r}
+bind_rows(
+  density_veldleeuwerik %>%
+    filter(Label != "Total") %>%
+    select(stratum = Label, densiteit = Estimate, ll = lcl, ul = ucl) %>%
+    separate(stratum, into = c("regio", "openheid", "sbp"), sep = " - ") %>%
+    filter(regio == "Leemstreek") %>%
+    mutate(method = "distance sampling"),
+  brms1_pred_totals2 %>%
+    mutate(method = "GLMM (gem. telperiodes)")
+  ) %>%
+  ggplot(aes(x = sbp, y = densiteit, colour = method)) +
+  geom_point(position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = ll, ymax = ul),
+    width = 0.2,
+    position = position_dodge(width = 0.5)
+  ) +
+  labs(y = "aantal broedparen per 100 ha", x = "") +
+  facet_wrap(~openheid, ncol = 2)
+```
+
+Kunnen we de maxima modelleren?
+
+```{r}
+analysis_df_maxima <- analysis_df_brms1 %>%
+  group_by(plotnaam) %>%
+  slice_max(order_by = n, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  select(-periode_in_jaar)
+
+test_brms_maxima1 <- brm(
+  formula = n ~ stratum + s(x_coord, y_coord) + offset(log(offset)),
+  data = analysis_df_maxima,
+  family = poisson(),
+  chains = nchains,
+  warmup = burnin,
+  iter = niter,
+  cores = nparallel,
+  thin = thinning,
+  backend = "cmdstanr",
+  seed = 123,
+  file = file.path(cache_dir, "test_brms_maxima1"),
+  file_refit = "on_change")
+```
+
+```{r}
+pp_check(test_brms_maxima1, type = "bars", ndraws = 100)
+```
+
+```{r}
+pred_list <- vector(length = length(strat_vec), mode = "list")
+
+for (i in seq_along(strat_vec)) {
+    # Specify cache path
+    brms_maxpred_strat_path <- file.path(
+      cache_dir, paste0("brms_maxpred_", tolower(strat_vec[i])))
+
+    strata_df <- steekproefkader %>%
+          mutate(
+            regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
+          ) %>%
+          st_drop_geometry() %>%
+          mutate(stratum = ifelse(
+            regio == "Weidestreek", regio,
+            paste(regio, openheid_klasse, sbp, sep = "_"))
+          ) %>%
+          filter(stratum == strat_vec[i])
+
+    print(paste("Making predictions for", strat_vec[i]))
+
+    # Draw predictions if file does not exists
+    if (file.exists(brms_maxpred_strat_path)) {
+      pred_veldleeuwerik_strat <- arrow::open_dataset(brms_maxpred_strat_path)
+    } else {
+      # Create new dataframe for complete sampling frame
+      new_df_strat <- strata_df %>%
+          left_join(analysis_df_brms1 %>% distinct(stratum, offset),
+                    by = join_by(stratum),
+                    relationship = "many-to-many") %>%
+          select(plotnaam = pointid, stratum, x_coord, y_coord, offset)
+
+      # Make predictions
+      tidybayes::add_epred_draws(
+          newdata = new_df_strat,
+          object = test_brms_maxima1,
+          ndraws = n_draws,
+          offset = FALSE,                # divide predictions by offset
+          seed = 123) %>%
+        ungroup() %>%
+        arrow::write_dataset(brms_maxpred_strat_path)
+      pred_veldleeuwerik_strat <- arrow::open_dataset(brms_maxpred_strat_path)
+    }
+
+    # Calculate summary statistics per location for time period with maximum
+    # expected breeding pairs
+    plot_veldleeuwerik_strat_max <- pred_veldleeuwerik_strat %>%
+      group_by(stratum, .draw) %>%
+      summarise(total = mean(.epred)) %>%
+      ungroup() %>%
+      # quantile not supported by arrow
+      collect() %>%
+      group_by(stratum) %>%
+      summarise(
+        densiteit = mean(total),
+        ll = quantile(total, 0.025),
+        ul = quantile(total, 0.975),
+        .groups = "drop")
+
+    pred_list[[i]] <- plot_veldleeuwerik_strat_max
+}
+
+brmsmax_pred_totals <- bind_rows(pred_list) %>%
+    separate(stratum, into = c("regio", "openheid", "sbp"))
+```
+
+```{r}
+bind_rows(
+  density_veldleeuwerik %>%
+    filter(Label != "Total") %>%
+    select(stratum = Label, densiteit = Estimate, ll = lcl, ul = ucl) %>%
+    separate(stratum, into = c("regio", "openheid", "sbp"), sep = " - ") %>%
+    filter(regio == "Leemstreek") %>%
+    mutate(method = "distance sampling"),
+  brms1_pred_totals %>%
+    mutate(method = "GLMM tot"),
+  brmsmax_pred_totals %>%
+    mutate(method = "GLMM max")
+  ) %>%
+  ggplot(aes(x = sbp, y = densiteit, colour = method)) +
+  geom_point(position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = ll, ymax = ul),
+    width = 0.2,
+    position = position_dodge(width = 0.5)
+  ) +
+  labs(y = "aantal broedparen per 100 ha", x = "") +
+  facet_wrap(~openheid, ncol = 2)
+```
+
+## DSM
+
+```{r}
+observation_df2 <- observation_df %>%
+  filter(object %in% obs_table$object)
+
+segment_df2 <- segment_df %>%
+  mutate(Effort = 1) %>%
+  as.data.frame()
+```
+
+```{r}
+test_dsm_max <- dsm(
+  formula = count ~ stratum + s(x_coord, y_coord, k = 100),
+  family = tw(),
+  ddf.obj = veldleeuwerik_dist_hr,
+  segment.data = segment_df2,
+  observation.data = observation_df2,
+  convert.units = 1 / 10^6,
+  method = "REML" # default
+)
+```
+
+We maken opnieuw voorspellingen voor het steekproefkader.
+
+```{r}
+varprop_max <- dsm_varprop(test_dsm_max, newdat)
+
+print(obs_exp(varprop$refit, ~stratum))
+```
+
+```{r}
+pred_dsm_df %>%
+  mutate(estimate = as.vector(varprop_max$pred)) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+  st_buffer(300) %>%
+  ggplot() +
+    geom_sf(aes(fill = estimate), colour = alpha("white", 0)) +
+    scale_fill_gradientn(
+      colours = rainbow(5),
+      breaks = seq(from = 0, to = 12, length.out = 5),
+      limits = c(0, 12)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
+
+```{r}
+pred_dsm_df %>%
+  mutate(estimate = as.vector(varprop_max$pred),
+         se = varprop_max$ses,
+         cv = se / estimate) %>%
+  st_as_sf(coords = c("x_coord", "y_coord"), crs = 31370) %>%
+  st_buffer(300) %>%
+  ggplot() +
+    geom_sf(aes(fill = cv), colour = alpha("white", 0)) +
+    scale_fill_gradientn(
+      colours = rainbow(5)
+    ) +
+    coord_sf(crs = 31370) +
+    labs(x = "", y = "", fill = "cv",
+         title = "Gemiddelde per telpunt over telperiodes") +
+    theme(legend.position = "bottom")
+```
