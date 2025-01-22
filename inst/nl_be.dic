@@ -16,12 +16,15 @@
 'gewasgroep'
 'ms
 'naam'
+'no'
 'rotating
 'url'
+'yes'
 +
 --\
 -de
 -periode
+-software
 -telperiode
 -trekking
 ...'
@@ -38,6 +41,7 @@ BO's
 BSCX00
 Bootstrapping
 Bosonderzoek
+Bravington
 CHM
 CRS
 CSV-bestand
@@ -65,6 +69,7 @@ Duinen/Weidestreek
 DwC
 EPSG
 FVRT02
+GAM-software
 GL
 GLMM
 GLMM-methode
@@ -76,6 +81,7 @@ Geule
 Gittargets
 HGL
 Hazegraspolder
+Hedley
 Homotypic
 JJNN16
 KC
@@ -194,6 +200,7 @@ cvvi
 day
 density
 design'
+detecteerbaarheid
 distance
 distribution
 double
@@ -247,12 +254,15 @@ linkfunctie
 ll'en
 lm.Rmd
 lm.Rproj
+log-likelihood
 longitude
 maken'
 manual
 mapping
 markdown
 mas
+mgcv
+model-
 modelling
 monocotylen
 montanus
@@ -262,6 +272,7 @@ names
 niet-kerend
 nultellingen
 occurrence
+openheidsklasses
 openness
 opvalllende
 overlappen'
@@ -284,6 +295,7 @@ predictive
 predictorterm
 probleemtelpunt
 proffessionele
+propagation
 publicatieklaar
 puntenset
 punttransecten
