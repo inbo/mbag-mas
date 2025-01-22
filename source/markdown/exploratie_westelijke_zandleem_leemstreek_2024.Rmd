@@ -380,7 +380,7 @@ cum_aantal_spec_strat <- mas_2024_vogels %>%
 cum_p2 <- cum_aantal_spec_strat %>%
   mutate(stratum = factor(stratum, levels = c(
     "HOL", "OL", "HOL - binnen", "HOL - buiten", "OL - binnen", "OL - buiten"
-  )))
+  ))) %>%
   ggplot(aes(x = datum, y = cum_sum, colour = stratum)) +
   # Add shade for counting periods
   annotate("rect",
@@ -442,7 +442,7 @@ cum_p2 <- cum_aantal_spec_strat %>%
   # Add line
   geom_line(linewidth = 1) +
   facet_wrap(~landbouwstreek) +
-  labs(x = "", y = "Totaal aantal soorten", colour = "Regio") +
+  labs(x = "", y = "Totaal aantal soorten", colour = "Stratum") +
   theme(legend.position = "bottom")
 ```
 
@@ -462,7 +462,7 @@ Een overzicht van het aantal soorten per telpunt in de Westelijke leemstreek en 
 p <- mas_2024_vogels %>%
   st_drop_geometry() %>%
   group_by(
-    landbouwstreek, jaar, plotnaam, openheid_klasse, sbp, periode_in_jaar,
+    landbouwstreek, jaar, plotnaam, stratum, periode_in_jaar,
     naam
   ) %>%
   summarise(
@@ -473,14 +473,14 @@ p <- mas_2024_vogels %>%
     aantal_soorten = n(),
     .groups = "drop"
   ) %>%
-  mutate(stratum = paste(openheid_klasse, sbp, sep = " -\n")) %>%
+  mutate(stratum = gsub(" - ", " -\n", stratum)) %>%
   ggplot() +
   geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
   geom_boxplot(aes(
     x = stratum, y = aantal_soorten,
     colour = periode_in_jaar
   )) +
-  facet_wrap(~landbouwstreek) +
+  facet_wrap(~landbouwstreek, scales = "free_x") +
   labs(y = "Aantal soorten per telpunt", x = "", colour = "Telperiode")
 
 
@@ -527,13 +527,11 @@ Voor roofvogels hielden we geen rekening met broedcode, omdat we voor deze soort
 # Get design to add absences
 bezoekenlijst_2024 <- mas_2024_vogels %>%
   st_drop_geometry() %>%
-  mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
   distinct(landbouwstreek, regio, jaar, stratum, plotnaam, periode_in_jaar)
 
 # Calculate relative frequencies
 # We want a number for each bird species for each region, stratum, period
 relfreqs_vogels <- mas_2024_vogels %>%
-  mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
   st_drop_geometry() %>%
   # Only keep breeding birds except for predators
   filter(ifelse(naam %in% roofvogels_f(), wrntype >= 0L, wrntype > 0L)) %>%
@@ -572,15 +570,11 @@ relfreqs_vogels <- mas_2024_vogels %>%
     names_to = "naam",
     values_to = "relfreq"
   ) %>%
-  separate_wider_delim(stratum, " - ",
-    names = c("openheid_klasse", "sbp")
-  ) %>%
   # Add stratum weights
   full_join(select(gewichten_mas_2024, -n),
     relationship = "many-to-many",
-    by = join_by(landbouwstreek, openheid_klasse, sbp)
+    by = join_by(landbouwstreek, stratum)
   ) %>%
-  mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
   distinct()
 ```
 
@@ -622,7 +616,7 @@ relfreq_vogels_regio <- relfreqs_vogels %>%
     names_from = "landbouwstreek",
     values_from = "gemiddelde_freq"
   ) %>%
-  select(naam, `Westelijke leemstreek`, Zandstreek,
+  select(naam, `Westelijke leemstreek`, `Westelijke zandleemstreek`,
          gewogen_gemiddelde = order_var) %>%
   arrange(desc(gewogen_gemiddelde)) %>%
   rownames_to_column(var = "rang") %>%
@@ -683,7 +677,7 @@ save_figure(p, here(media_folder, "vogelfreqs_w_lm_zlm_2024"), devices,
 p
 ```
 
-Top 20 van soorten die in termen van verschil in gemiddelde relatieve frequentie van voorkomen meer voorkomen in de Zandstreek dan in de Westelijke leemstreek:
+Top 20 van soorten die in termen van verschil in gemiddelde relatieve frequentie van voorkomen meer voorkomen in de Westelijke zandleemstreek dan in de Westelijke leemstreek:
 
 ```{r}
 # Calculate relative frequency per region per period as weighted mean
@@ -701,7 +695,7 @@ relfreqs_vogels %>%
     values_from = gemiddelde_freq,
     values_fill = 0
   ) %>%
-  mutate(verschilfreq = `Zandstreek` - `Westelijke leemstreek`) %>%
+  mutate(verschilfreq = `Westelijke zandleemstreek` - `Westelijke leemstreek`) %>%
   ungroup() %>%
   slice_max(verschilfreq, n = 20) %>%
   kable(digits = 2)
@@ -722,12 +716,12 @@ relfreqs_vogels %>%
     values_from = gemiddelde_freq,
     values_fill = 0
   ) %>%
-  mutate(verschilfreq = `Zandstreek` - `Westelijke leemstreek`) %>%
+  mutate(verschilfreq = `Westelijke zandleemstreek` - `Westelijke leemstreek`) %>%
   ungroup() %>%
   arrange(desc(verschilfreq)) %>%
   rownames_to_column(var = "rang") %>%
   mutate(rang = as.numeric(rang)) %>%
-  select(rang, naam, Zandstreek, `Westelijke leemstreek`, verschilfreq) %>%
+  select(rang, naam, `Westelijke zandleemstreek`, `Westelijke leemstreek`, verschilfreq) %>%
   write_csv(here(media_folder, "relfreq_vogels_diff_w_lm_zlm_2024.csv"))
 ```
 
@@ -743,7 +737,7 @@ relfreq_diff_zn <- relfreqs_vogels %>%
     values_from = gemiddelde_freq,
     values_fill = 0
   ) %>%
-  mutate(verschilfreq = `Zandstreek` - `Westelijke leemstreek`) %>%
+  mutate(verschilfreq = `Westelijke zandleemstreek` - `Westelijke leemstreek`) %>%
   # Retrieve 20 most common species + goal species
   mutate(naam = reorder(naam, verschilfreq,
     FUN = "mean",
@@ -767,7 +761,7 @@ relfreq_diff_zn %>%
   ) +
   labs(
     y = "", x = "Verschil in relatieve frequentie",
-    title = "Algemener in de Zandstreek"
+    title = "Algemener in de Westelijke zandleemstreek"
   ) +
   scale_y_discrete(labels = function(x) highlight(x, doelsoorten, "red")) +
   coord_cartesian(xlim = c(
@@ -784,7 +778,7 @@ relfreq_diff_zn %>%
   guides(colour = guide_legend(override.aes = list(size = 3)))
 ```
 
-Top 20 van soorten die in termen van verschil in gemiddelde relatieve frequentie van voorkomen meer voorkomen in de Westelijke leemstreek dan in de Zandstreek:
+Top 20 van soorten die in termen van verschil in gemiddelde relatieve frequentie van voorkomen meer voorkomen in de Westelijke leemstreek dan in de Westelijke zandleemstreek:
 
 ```{r}
 # Calculate relative frequency per region per period as weighted mean
@@ -802,7 +796,7 @@ relfreqs_vogels %>%
     values_from = gemiddelde_freq,
     values_fill = 0
   ) %>%
-  mutate(verschilfreq = `Westelijke leemstreek` - `Zandstreek`) %>%
+  mutate(verschilfreq = `Westelijke leemstreek` - `Westelijke zandleemstreek`) %>%
   ungroup() %>%
   slice_max(verschilfreq, n = 20) %>%
   kable(digits = 2)
@@ -820,7 +814,7 @@ relfreq_diff_lm <- relfreqs_vogels %>%
     values_from = gemiddelde_freq,
     values_fill = 0
   ) %>%
-  mutate(verschilfreq = `Westelijke leemstreek` - `Zandstreek`) %>%
+  mutate(verschilfreq = `Westelijke leemstreek` - `Westelijke zandleemstreek`) %>%
   # Retrieve 20 most common species + goal species
   mutate(naam = reorder(naam, verschilfreq,
     FUN = "mean",
@@ -875,7 +869,7 @@ relfreq_diff_total <- relfreqs_vogels %>%
     values_from = gemiddelde_freq,
     values_fill = 0
   ) %>%
-  mutate(verschilfreq = `Zandstreek` - `Westelijke leemstreek`) %>%
+  mutate(verschilfreq = `Westelijke zandleemstreek` - `Westelijke leemstreek`) %>%
   # Retrieve 20 most common species IN BOTH DIRECTIONS + goal species
   mutate(naam = reorder(naam, verschilfreq,
     FUN = "mean",
@@ -933,7 +927,7 @@ p <- relfreq_diff_total %>%
     colour = "black"
   ) +
   annotate("text",
-    label = c("Zandstreek"),
+    label = c("Westelijke zandleemstreek"),
     x = c(abs(max(relfreq_diff_zn$verschilfreq)) + 0.01),
     y = c(length(unique(relfreq_diff_total$naam)) - 10 + 1),
     size = 2, hjust = "left", colour = "black", angle = 90
@@ -952,7 +946,7 @@ save_figure(p, here(media_folder, "vogelfreqs_diff_w_lm_zlm_2024"), devices,
 p
 ```
 
-Top 20 van soorten die in termen van ratio in gemiddelde relatieve frequentie van voorkomen meer voorkomen in de Zandstreek dan in de Westelijke leemstreek (uitgesloten soorten die slechts in 1 van de 2 landbouwstreken voorkomen):
+Top 20 van soorten die in termen van ratio in gemiddelde relatieve frequentie van voorkomen meer voorkomen in de Westelijke zandleemstreek dan in de Westelijke leemstreek (uitgesloten soorten die slechts in 1 van de 2 landbouwstreken voorkomen):
 
 ```{r}
 # Calculate relative frequency per region per period as weighted mean
@@ -970,14 +964,14 @@ relfreq_vogels_ratio <- relfreqs_vogels %>%
     values_from = gemiddelde_freq,
     values_fill = 0
   ) %>%
-  mutate(ratiofreq = `Zandstreek` / `Westelijke leemstreek`) %>%
+  mutate(ratiofreq = `Westelijke zandleemstreek` / `Westelijke leemstreek`) %>%
   ungroup() %>%
-  arrange(desc(ratiofreq), desc(Zandstreek), `Westelijke leemstreek`) %>%
+  arrange(desc(ratiofreq), desc(`Westelijke zandleemstreek`), `Westelijke leemstreek`) %>%
   rownames_to_column(var = "rang") %>%
   mutate(rang = as.numeric(rang),
          ratio_zn_lm = ratiofreq,
          ratio_lm_zn = 1 / ratiofreq) %>%
-  select(rang, naam, Zandstreek, `Westelijke leemstreek`, ratio_zn_lm, ratio_lm_zn)
+  select(rang, naam, `Westelijke zandleemstreek`, `Westelijke leemstreek`, ratio_zn_lm, ratio_lm_zn)
 
 write_csv(relfreq_vogels_ratio, here(media_folder,
                                      "relfreq_vogels_ratio_w_lm_zlm_2024.csv"))
@@ -1005,7 +999,7 @@ relfreq_ratio_zn <- relfreqs_vogels %>%
     values_from = gemiddelde_freq,
     values_fill = 0
   ) %>%
-  mutate(ratio_zn_lm = `Zandstreek` / `Westelijke leemstreek`) %>%
+  mutate(ratio_zn_lm = `Westelijke zandleemstreek` / `Westelijke leemstreek`) %>%
   # Retrieve 20 most common species + goal species
   full_join(relfreq_vogels_ratio %>%
               select(rang, naam, ratio_zn_lm_mean = ratio_zn_lm),
@@ -1030,7 +1024,7 @@ p <- relfreq_ratio_zn %>%
   ) +
   labs(
     y = "", x = "Ratio van relatieve frequenties",
-    title = "Algemener in de Zandstreek"
+    title = "Algemener in de Westelijke zandleemstreek"
   ) +
   scale_y_discrete(labels = function(x) highlight(x, doelsoorten, "red")) +
   theme(
@@ -1048,7 +1042,7 @@ save_figure(p, here(media_folder, "vogelfreqs_ratio_w_lm_zlm_2024"), devices,
 p
 ```
 
-De volgende soorten zijn enkel in de Zandstreek gezien.
+De volgende soorten zijn enkel in de Westelijke zandleemstreek gezien.
 
 ```{r}
 relfreq_vogels_ratio %>%
@@ -1056,7 +1050,7 @@ relfreq_vogels_ratio %>%
   kable(digits = 5)
 ```
 
-Top 20 van soorten die in termen van ratio in gemiddelde relatieve frequentie van voorkomen meer voorkomen in de Westelijke leemstreek dan in de Zandstreek (uitgesloten soorten die slechts in 1 van de 2 landbouwstreken voorkomen):
+Top 20 van soorten die in termen van ratio in gemiddelde relatieve frequentie van voorkomen meer voorkomen in de Westelijke leemstreek dan in de Westelijke zandleemstreek (uitgesloten soorten die slechts in 1 van de 2 landbouwstreken voorkomen):
 
 ```{r}
 # Top 20 most frequent species
@@ -1080,7 +1074,7 @@ relfreq_ratio_lm <- relfreqs_vogels %>%
     values_from = gemiddelde_freq,
     values_fill = 0
   ) %>%
-  mutate(ratio_lm_zn = `Westelijke leemstreek` / `Zandstreek`) %>%
+  mutate(ratio_lm_zn = `Westelijke leemstreek` / `Westelijke zandleemstreek`) %>%
   # Retrieve 20 most common species + goal species
   full_join(relfreq_vogels_ratio %>%
               select(rang, naam, ratio_lm_zn_mean = ratio_lm_zn),
@@ -1161,7 +1155,7 @@ relfreqs_doelsoorten <- relfreqs_vogels %>%
     names_from = "landbouwstreek",
     values_from = "gemiddelde_freq"
   ) %>%
-  select(naam, `Westelijke leemstreek`, Zandstreek, gewogen_gemiddelde = order_var)
+  select(naam, `Westelijke leemstreek`, `Westelijke zandleemstreek`, gewogen_gemiddelde = order_var)
 
 relfreqs_doelsoorten %>%
   arrange(desc(gewogen_gemiddelde)) %>%
@@ -1176,7 +1170,7 @@ p <- relfreqs_vogels %>%
   full_join(
     relfreqs_doelsoorten %>%
       pivot_longer(
-        cols = c("Westelijke leemstreek", "Zandstreek"),
+        cols = c("Westelijke leemstreek", "Westelijke zandleemstreek"),
         names_to = "landbouwstreek",
         values_to = "gemiddelde_freq"
       ) %>%
@@ -1186,6 +1180,9 @@ p <- relfreqs_vogels %>%
   mutate(naam = reorder(naam, gewogen_gemiddelde,
     decreasing = FALSE
   )) %>%
+  mutate(stratum = factor(stratum, levels = c(
+    "HOL", "OL", "HOL - binnen", "HOL - buiten", "OL - binnen", "OL - buiten"
+  ))) %>%
   ggplot() +
   geom_vline(xintercept = 0, alpha = 0.2, linetype = "dashed") +
   geom_point(aes(x = relfreq, y = naam, colour = stratum),
