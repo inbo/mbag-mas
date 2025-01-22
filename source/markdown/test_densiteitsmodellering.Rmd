@@ -2399,7 +2399,7 @@ pred_dsm_df %>%
 ```{r}
 cv_weidestreek1 <- dsm2_pred_sf %>%
   filter(stratum == "Weidestreek") %>%
-  mutate(cv = sqrt(dsm2_var$pred.var) / estimate, 
+  mutate(cv = sqrt(dsm2_var$pred.var) / estimate,
          varprop = "no") %>%
   st_drop_geometry() %>%
   select(Sample.Label, cv, varprop)
@@ -2561,7 +2561,7 @@ custom_newdat2 <- steekproefkader %>%
   mutate(stratum = ifelse(
       regio == "Weidestreek", regio,
       paste(regio, openheid_klasse, sbp, sep = "_"))
-  ) %>% 
+  ) %>%
   left_join(analysis_df_brms1 %>% distinct(stratum, offset),
             by = join_by(stratum),
                   relationship = "many-to-many") %>%
@@ -2783,7 +2783,7 @@ data(gorillas, package = "spatstat.data")
 pp <- data.frame(
   gorillas, # contains nesting locations
   # at locations add predictors from ’gorillas.extra’
-  lapply(gorillas.extra, function(x){x[gorillas]}),
+  lapply(gorillas.extra, function(x) x[gorillas]),
   # indicator for whether row corresponds to a point event or a quadrature point
   pt = 1,
   # point pattern weights epsilon > 0
@@ -2791,13 +2791,13 @@ pp <- data.frame(
 
 # Prepare quadrature points
 # Extract x and y from predictor image as quadrature points
-q_xy <- data.frame(gorillas.extra[[1]])[ , c("x", "y")]
+q_xy <- data.frame(gorillas.extra[[1]])[, c("x", "y")]
 
 # Add predictors and set weights using domain area
 quad <- data.frame(
   q_xy,
   # at locations add predictors from ’gorillas.extra’
-  lapply(gorillas.extra, function(x){x[q_xy]}),
+  lapply(gorillas.extra, function(x) x[q_xy]),
   # indicator for whether row corresponds to a point event or a quadrature point
   pt = 0,
   # weights are area of tiles
@@ -2817,11 +2817,11 @@ m <- gam(
 # Make predictions
 quad$z <- predict(m, newdata = quad, type = "response")
 # create image from coordinates & predicted values
-pred.im <- as.im(quad[ , c("x", "y", "z")],
+pred_im <- as.im(quad[, c("x", "y", "z")],
                  W = gorillas$window)
 
-plot(log(pred.im), box = F, main = "", col = terrain.colors, ribbon = F)
-points(pp[,c("x","y")], col = rgb(0,0,0,alpha = 0.25), pch = 4)
+plot(log(pred_im), box = FALSE, main = "", col = terrain.colors, ribbon = FALSE)
+points(pp[, c("x", "y")], col = rgb(0, 0, 0, alpha = 0.25), pch = 4)
 ```
 
 https://esajournals.onlinelibrary.wiley.com/doi/epdf/10.1002/ecy.2403
@@ -2849,7 +2849,7 @@ for (i in seq_along(strat_vec)) {
 
     # Get predictions
     pred_veldleeuwerik_strat <- arrow::open_dataset(brms1_pred_strat_path)
-    
+
     # Calculate summary statistics per location for time period with average
     # expected breeding pairs
     plot_veldleeuwerik_strat_mean <- pred_veldleeuwerik_strat %>%
@@ -2867,7 +2867,7 @@ for (i in seq_along(strat_vec)) {
         ll = quantile(total, 0.025),
         ul = quantile(total, 0.975),
         .groups = "drop")
-    
+
     # Calculate summary statistics per location for time period with maximum
     # expected breeding pairs
     plot_veldleeuwerik_strat_max <- pred_veldleeuwerik_strat %>%
@@ -2886,7 +2886,7 @@ for (i in seq_along(strat_vec)) {
         ll = quantile(total, 0.025),
         ul = quantile(total, 0.975),
         .groups = "drop")
-        
+
     pred_list1[[i]] <- plot_veldleeuwerik_strat_max
     pred_list2[[i]] <- plot_veldleeuwerik_strat_mean
 }
@@ -3010,7 +3010,7 @@ for (i in seq_along(strat_vec)) {
         arrow::write_dataset(brms_maxpred_strat_path)
       pred_veldleeuwerik_strat <- arrow::open_dataset(brms_maxpred_strat_path)
     }
-    
+
     # Calculate summary statistics per location for time period with maximum
     # expected breeding pairs
     plot_veldleeuwerik_strat_max <- pred_veldleeuwerik_strat %>%
@@ -3025,7 +3025,7 @@ for (i in seq_along(strat_vec)) {
         ll = quantile(total, 0.025),
         ul = quantile(total, 0.975),
         .groups = "drop")
-        
+
     pred_list[[i]] <- plot_veldleeuwerik_strat_max
 }
 
