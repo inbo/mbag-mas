@@ -59,7 +59,6 @@ targets_store <- here::here("source", "targets", "data_preparation", "_targets")
 Exploratie gegevens van de telpunten die in 2024 reeds zijn geteld die deel uitmaken van MBAG.
 Het gaat om telpunten in de Westelijke Leemstreek en Westelijke Zandleemstreek (scheidingslijn Leuven).
 
-
 ```{r}
 mas_data_clean <- targets::tar_read("mas_data_clean", store = targets_store)
 mas_2024_clean <- mas_data_clean %>%
@@ -455,7 +454,7 @@ save_figure(p, here(media_folder, "cum_soorten_vogels_w_lm_zlm_2024"), devices,
 )
 ```
 
-Een overzicht van het aantal soorten per telpunt in de Westelijke leemstreek en de Zandstreek.
+Een overzicht van het aantal soorten per telpunt in de Westelijke leemstreek en de Westelijke zandleemstreek.
 
 ```{r}
 # Calculate the number of species per stratum per period per region
@@ -1211,6 +1210,10 @@ mas_2024_zoogdieren <- mas_2024_clean %>%
 
 ## Enkele cijfers
 
+We bekijken eerst enkele cijfers per stratum.
+We hebben een beperkt aantal telpunten binnen sbp.
+Voor verdere analyses beschouwen we enkel de strata HOL en OL in de Westelijke leemstreek.
+
 ```{r}
 # Calculate number of observations and species per stratum
 summary_zoogdieren_2024 <- mas_2024_zoogdieren %>%
@@ -1220,11 +1223,12 @@ summary_zoogdieren_2024 <- mas_2024_zoogdieren %>%
   group_by(regio, jaar, openheid_klasse, sbp) %>%
   mutate(
     aantal_waarnemingen = n_distinct(oid),
+    aantal_telpunten = n_distinct(plotid),
     aantal_soorten_stratum = n_distinct(naam)
   ) %>%
   ungroup() %>%
   distinct(
-    regio, jaar, openheid_klasse, sbp, aantal_waarnemingen,
+    regio, jaar, openheid_klasse, sbp, aantal_waarnemingen, aantal_telpunten,
     aantal_soorten_stratum, aantal_soorten_regiojaar
   ) %>%
   arrange(regio, jaar, openheid_klasse, sbp)
@@ -1234,6 +1238,16 @@ write_csv(summary_zoogdieren_2024,
 
 summary_zoogdieren_2024 %>%
   kable()
+```
+
+```{r}
+mas_2024_zoogdieren <- mas_2024_zoogdieren %>%
+  mutate(stratum = ifelse(
+    regio == "Westelijke zandleemstreek",
+    paste(openheid_klasse, sbp, sep = " - "),
+    openheid_klasse
+    )
+  )
 ```
 
 We kijken naar het aantal waarnemingen.
@@ -1258,12 +1272,12 @@ save_figure(
 p
 ```
 
-Voor verdere analyses groeperen we de Westelijke en Oostelijke Westelijke leemstreek tot de Polders.
+We voegen de gewichten toe.
 
 ```{r}
 # Add weigths to dataset
 mas_2024_zoogdieren <- full_join(mas_2024_zoogdieren, gewichten_mas_2024,
-  by = join_by(regio, openheid_klasse, sbp)
+  by = join_by(regio, stratum)
 )
 ```
 
@@ -1361,23 +1375,25 @@ We bekijken dit ook per stratum.
 # Calculate the cumulative number of species over time for each stratum
 cum_aantal_spec_strat <- mas_2024_zoogdieren %>%
   st_drop_geometry() %>%
-  group_by(landbouwstreek, openheid_klasse, sbp, naam) %>%
+  group_by(landbouwstreek, stratum, naam) %>%
   filter(datum == min(datum)) %>%
   slice(1) %>% # takes the first occurrence if there is a tie
   ungroup() %>%
-  group_by(landbouwstreek, openheid_klasse, sbp, datum) %>%
+  group_by(landbouwstreek, stratum, datum) %>%
   summarise(
     n_spec = n_distinct(naam),
     .groups = "drop"
   ) %>%
-  group_by(landbouwstreek, openheid_klasse, sbp) %>%
+  group_by(landbouwstreek, stratum) %>%
   arrange(datum) %>%
   mutate(cum_sum = cumsum(n_spec)) %>%
   ungroup()
 
 # Create plot per stratum
 cum_p2 <- cum_aantal_spec_strat %>%
-  mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
+  mutate(stratum = factor(stratum, levels = c(
+    "HOL", "OL", "HOL - binnen", "HOL - buiten", "OL - binnen", "OL - buiten"
+  ))) %>%
   ggplot(aes(x = datum, y = cum_sum, colour = stratum)) +
   annotate("rect",
     xmin = ymd(paste(jaar, r1_start, sep = "-")),
@@ -1456,7 +1472,6 @@ Voor elke soort kunnen we de relatieve frequentie ($P$) berekenen als de proport
 # Calculate relative frequencies
 # We want a number for each species for each region, stratum, period
 relfreqs_zoogdieren <- mas_2024_zoogdieren %>%
-  mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
   st_drop_geometry() %>%
   # Number of individuals per species per plot
   group_by(landbouwstreek, plotnaam, jaar, stratum, periode_in_jaar, naam) %>%
@@ -1493,21 +1508,17 @@ relfreqs_zoogdieren <- mas_2024_zoogdieren %>%
     names_to = "naam",
     values_to = "relfreq"
   ) %>%
-  separate_wider_delim(stratum, " - ",
-    names = c("openheid_klasse", "sbp")
-  ) %>%
   # Add stratum weights
   full_join(select(gewichten_mas_2024, -n),
     relationship = "many-to-many",
-    by = join_by(landbouwstreek, openheid_klasse, sbp)
+    by = join_by(landbouwstreek, stratum)
   ) %>%
-  mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
   distinct()
 ```
 
 Overzicht van relatieve frequenties van de 20 meest frequente soorten in een bepaalde regio (gewogen gemiddelde).
 Elk punt staat voor een relatieve frequentie in een bepaalde telperiode.
-We nemen een gewogen gemiddelde per landbouwstreek waarbij de gewichten afhankelijk zijn van regio (in het geval van de Polders, westelijk vs. oostelijk) en stratum.
+We nemen een gewogen gemiddelde per landbouwstreek waarbij de gewichten afhankelijk zijn van regio en stratum.
 Over de telperiodes heen mogen we wel een ongewogen gemiddelde nemen want dit zijn replicaten.
 
 ```{r}
@@ -1533,7 +1544,7 @@ relfreq_zoogdieren_regio <- relfreqs_zoogdieren %>%
     names_from = "landbouwstreek",
     values_from = "gemiddelde_freq"
   ) %>%
-  select(naam, Polders, Zandstreek, gewogen_gemiddelde = order_var) %>%
+  select(naam, `Westelijke leemstreek`, `Westelijke zandleemstreek`, gewogen_gemiddelde = order_var) %>%
   arrange(desc(gewogen_gemiddelde)) %>%
   rownames_to_column(var = "rang") %>%
   mutate(rang = as.numeric(rang))
@@ -1586,7 +1597,7 @@ save_figure(p, here(media_folder, "zoogdierfreqs_w_lm_zlm_2024"), devices,
 p
 ```
 
-Top 20 van soorten die in termen van verschil in gemiddelde relatieve frequentie van voorkomen meer voorkomen in de Zandstreek dan in de Polders:
+Top 20 van soorten die in termen van verschil in gemiddelde relatieve frequentie van voorkomen meer voorkomen in de Westelijke zandleemstreek dan in de Westelijke leemstreek:
 
 ```{r}
 # Calculate relative frequency per region per period as weighted mean
@@ -1604,12 +1615,12 @@ relfreqs_zoogdieren_diff <- relfreqs_zoogdieren %>%
     values_from = gemiddelde_freq,
     values_fill = 0
   ) %>%
-  mutate(verschilfreq = `Zandstreek` - `Polders`) %>%
+  mutate(verschilfreq = `Westelijke zandleemstreek` - `Westelijke leemstreek`) %>%
   ungroup() %>%
   arrange(desc(verschilfreq)) %>%
   rownames_to_column(var = "rang") %>%
   mutate(rang = as.numeric(rang)) %>%
-  select(rang, naam, Zandstreek, Polders, verschilfreq)
+  select(rang, naam, `Westelijke zandleemstreek`, `Westelijke leemstreek`, verschilfreq)
 
 
 write_csv(
@@ -1633,7 +1644,7 @@ relfreq_diff_zn <- relfreqs_zoogdieren %>%
     values_from = gemiddelde_freq,
     values_fill = 0
   ) %>%
-  mutate(verschilfreq = `Zandstreek` - `Polders`) %>%
+  mutate(verschilfreq = `Westelijke zandleemstreek` - `Westelijke leemstreek`) %>%
   mutate(naam = reorder(naam, verschilfreq,
     FUN = "mean",
     decreasing = FALSE
@@ -1666,7 +1677,7 @@ p <- relfreq_diff_zn %>%
   annotate("segment",
     x = 0.01,
     y = 0.75,
-    xend = 0.05,
+    xend = 0.03,
     yend = 0.75,
     arrow = arrow(type = "closed", length = unit(0.015, "npc")),
     colour = "black"
@@ -1674,19 +1685,19 @@ p <- relfreq_diff_zn %>%
   annotate("segment",
     x = -0.01,
     y = 0.75,
-    xend = -0.05,
+    xend = -0.03,
     yend = 0.75,
     arrow = arrow(type = "closed", length = unit(0.015, "npc")),
     colour = "black"
   ) +
   annotate("text",
-    label = c("Zandstreek"),
+    label = c("Westelijke zandleemstreek"),
     x = 0.01,
     y = 0.6,
     size = 2, hjust = "left", colour = "black"
   ) +
   annotate("text",
-    label = c("Polders"),
+    label = c("Westelijke leemstreek"),
     x = -0.01,
     y = 0.6,
     size = 2, hjust = "right", colour = "black"
@@ -1743,7 +1754,7 @@ p <- relfreqs_zoogdieren %>%
   ) +
   scale_y_continuous(limits = c(0, NA)) +
   labs(y = "Relatieve frequentie", x = "", shape = "Telperiode") +
-  facet_grid(~landbouwstreek) +
+  facet_grid(~landbouwstreek, scales = "free_x") +
   theme(legend.position = "top")
 
 save_figure(p, here(media_folder, "relfreq_haas_w_lm_zlm_2024"), devices,
