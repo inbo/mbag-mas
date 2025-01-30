@@ -91,7 +91,7 @@ mas_2024_vogels <- mas_2024_clean %>%
 ## Enkele cijfers
 
 We bekijken eerst enkele cijfers per stratum.
-We hebben een beperkt aantal telpunten binnen sbp.
+We hebben een beperkt aantal telpunten binnen sbp in de Westelijke leemstreek.
 Voor verdere analyses beschouwen we enkel de strata HOL en OL in de Westelijke leemstreek.
 
 ```{r}
@@ -155,8 +155,6 @@ save_figure(p, here(media_folder, "tellingen_vogels_w_lm_zlm_2024"), devices,
 
 p
 ```
-
-De telpunten zijn niet in alle periodes geteld.
 
 ```{r}
 # Count number of counting periods
@@ -1230,7 +1228,7 @@ mas_2024_zoogdieren <- mas_2024_clean %>%
 ## Enkele cijfers
 
 We bekijken eerst enkele cijfers per stratum.
-We hebben een beperkt aantal telpunten binnen sbp.
+We hebben een beperkt aantal telpunten binnen sbp in de Westelijke leemstreek.
 Voor verdere analyses beschouwen we enkel de strata HOL en OL in de Westelijke leemstreek.
 
 ```{r}
@@ -1534,7 +1532,7 @@ relfreqs_zoogdieren <- mas_2024_zoogdieren %>%
   distinct()
 ```
 
-Overzicht van relatieve frequenties van de 20 meest frequente soorten in een bepaalde regio (gewogen gemiddelde).
+Overzicht van relatieve frequenties in een bepaalde regio (gewogen gemiddelde).
 Elk punt staat voor een relatieve frequentie in een bepaalde telperiode.
 We nemen een gewogen gemiddelde per landbouwstreek waarbij de gewichten afhankelijk zijn van regio en stratum.
 Over de telperiodes heen mogen we wel een ongewogen gemiddelde nemen want dit zijn replicaten.
@@ -1616,7 +1614,7 @@ save_figure(p, here(media_folder, "zoogdierfreqs_w_lm_zlm_2024"), devices,
 p
 ```
 
-Top 20 van soorten die in termen van verschil in gemiddelde relatieve frequentie van voorkomen meer voorkomen in de Westelijke zandleemstreek dan in de Westelijke leemstreek:
+Verschil in gemiddelde relatieve frequentie tussen de Westelijke zandleemstreek en de Westelijke leemstreek:
 
 ```{r}
 # Calculate relative frequency per region per period as weighted mean
@@ -1737,7 +1735,6 @@ p
 ## Haas
 
 We bekijken Haas in meer detail.
-Er worden in beide regio's meest individuen gespot in periode 3, dan 1, dan 4 en dan 2.
 
 ```{r}
 # Count number of individuals per region and period for Hare
