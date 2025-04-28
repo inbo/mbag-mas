@@ -80,3 +80,59 @@ Om een verderzetting van MAS te beargumenteren, moeten we aantonen dat dit wette
 
 - Voor de soorten uit bovenstaande tabel ga we na hoe vaak ze gezien zijn in MAS (2024) en ABV (laatste volledige cyclus, in landbouwstratum)
 - Alle relevante cijfers worden samengebracht in een tabel (bv. ook totaal aantal telpunten/ km-hokken)
+
+# Data inlezen
+
+```{r}
+indicator_species_nl <- c(
+  "Boerenzwaluw",
+  "Geelgors",
+  "Gele Kwikstaart",
+  "Grasmus",
+  "Graspieper",
+  "Grauwe Gors",
+  "Grauwe Klauwier",
+  "Grutto",
+  "Kievit",
+  "Kneu",
+  "Patrijs",
+  "Ringmus",
+  "Roek",
+  "Roodborsttapuit",
+  "Scholekster",
+  "Spreeuw",
+  "Torenvalk",
+  "Veldleeuwerik",
+  "Wulp",
+  "Zomertortel"
+)
+```
+
+## MAS
+
+Voor MAS filteren we de data van 2024. We selecteren de data van de doelsoorten.
+
+```{r}
+# Load data
+mas_data_clean <- targets::tar_read("mas_data_clean", store = targets_store)
+
+# Filter data by year
+mas_2024_clean <- mas_data_clean %>%
+  filter(jaar == 2024)
+
+# Filter indicator species
+mas_2024_indicator <- mas_2024_clean %>%
+  filter(naam %in% indicator_species_nl)
+```
+
+We controleren of alle indicatorsoorten aanwezig zijn in deze dataset.
+
+```{r}
+identical(
+  sort(unique(mas_2024_indicator[["naam"]])),
+  sort(indicator_species_nl)
+)
+```
+
+## ABV
+
