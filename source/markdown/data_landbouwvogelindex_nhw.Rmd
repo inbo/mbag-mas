@@ -136,3 +136,30 @@ identical(
 
 ## ABV
 
+We downloaden de dataset: ABV - Common breeding birds in Flanders, Belgium (post 2016).
+Ze wordt opgeslaan in de folder `data > abv > gbif_download_2025_04_28`.
+
+> GBIF.org (28 April 2025) GBIF Occurrence Download https://doi.org/10.15468/dl.w3cmdg
+
+```{r}
+# Load ABV data
+abv_data_dir <- here("data", "abv", "gbif_download_2025_04_28")
+abv_data_post2016 <- read_delim(
+  file.path(abv_data_dir, "occurrence.txt"),
+  delim = "\t",
+  show_col_types = FALSE
+)
+
+# Remove NA columns
+abv_data_post2016 <- abv_data_post2016[, colSums(is.na(abv_data_post2016)) <
+                                         nrow(abv_data_post2016)]
+
+glimpse(abv_data_post2016)
+```
+
+We selecteren de data van de laatste 3-jarige cyclus en selecteren de data van de doelsoorten.
+
+
+We downloaden de stratum data van zenodo en voegen ze toe aan de dataset.
+
+
