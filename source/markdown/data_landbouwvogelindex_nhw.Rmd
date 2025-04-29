@@ -208,20 +208,26 @@ identical(
 )
 
 # Which
-setdiff(indicator_species_nl, unique(abv_indicator_full[["vernacularName"]]))
+setdiff(indicator_species_nl, unique(abv_indicator[["vernacularName"]]))
 ```
 
-De Grauwe Gors werd niet gezien in de laatste cyclus.
-Werd deze wel in andere jaren gezien?
+De Grauwe Gors en de Grauwe Klauwier werd niet gezien uitsluitend in de laatste cyclus in het `Landbouw` stratum.
+Werden deze wel in andere jaren en/of strata gezien?
 
 ```{r}
 abv_data_post2016 %>%
-  filter(tolower(vernacularName) %in% tolower("Grauwe Gors")) %>%
-  select(
-    UTM, year, Stratum, individualCount, eventDate, level3Name, level2Name
+  filter(
+    tolower(vernacularName) %in% tolower(c("Grauwe Gors", "Grauwe Klauwier"))
   ) %>%
-  arrange(UTM, eventDate, desc(year), level3Name, level2Name) %>%
+  select(
+    vernacularName, UTM, eventDate, Stratum, individualCount, level3Name,
+    level2Name
+  ) %>%
+  arrange(
+    vernacularName, UTM, eventDate, level3Name, level2Name
+  ) %>%
   kable()
 ```
 
-Ze werd wel gezien in vorige jaren in 'landbouw-hokken'.
+De Grauwe Gors werd wel gezien in vorige jaren in 'landbouw-hokken'.
+De Grauwe Klauwier werd enkel gezien in 2024 en enkel in het `Heide en duin` stratum.
