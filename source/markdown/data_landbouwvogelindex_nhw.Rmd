@@ -132,6 +132,9 @@ identical(
   sort(unique(mas_2024_indicator[["naam"]])),
   sort(indicator_species_nl)
 )
+
+# Which
+setdiff(indicator_species_nl, unique(mas_2024_indicator[["naam"]]))
 ```
 
 ## ABV
@@ -158,7 +161,41 @@ glimpse(abv_data_post2016)
 ```
 
 We selecteren de data van de laatste 3-jarige cyclus en selecteren de data van de doelsoorten.
+De laatste cyclus was 2022 - 2024.
 
+```{r}
+abv_indicator <- abv_data_post2016 %>%
+  filter(
+    year %in% 2022:2024,
+    tolower(vernacularName) %in% tolower(indicator_species_nl)
+  ) %>%
+  mutate(vernacularName = stringr::str_to_title(vernacularName))
+```
+
+We controleren of alle indicatorsoorten aanwezig zijn in deze dataset.
+
+```{r}
+identical(
+  sort(unique(abv_indicator[["vernacularName"]])),
+  sort(indicator_species_nl)
+)
+
+# Which
+setdiff(indicator_species_nl, unique(abv_indicator[["vernacularName"]]))
+```
+
+
+De Grauwe Gors werd niet gezien in de laatste cyclus.
+Werd deze wel in andere jaren gezien?
+
+```{r}
+abv_data_post2016 %>%
+  filter(tolower(vernacularName) %in% tolower("Grauwe Gors")) %>%
+  select(verbatimLocality, year, verbatimLocality, individualCount, eventDate,
+         level3Name, level2Name) %>%
+  arrange(verbatimLocality, eventDate, desc(year), level3Name, level2Name) %>%
+  kable()
+```
 
 We downloaden de stratum data van zenodo en voegen ze toe aan de dataset.
 
