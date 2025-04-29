@@ -17,7 +17,6 @@ editor_options:
 ```{r setup, include=FALSE}
 # set up
 library(knitr)
-library(here)
 opts_chunk$set(
   echo = TRUE,
   warning = FALSE,
@@ -30,6 +29,8 @@ opts_knit$set(root.dir = here::here())
 ```{r}
 # packages
 library(tidyverse)
+library(here)
+library(zen4R)     # Download from zenodo
 library(INBOtheme)
 library(sf)
 
@@ -146,9 +147,9 @@ Ze wordt opgeslaan in de folder `data > abv > gbif_download_2025_04_28`.
 
 ```{r}
 # Load ABV data
-abv_data_dir <- here("data", "abv", "gbif_download_2025_04_28")
+abv_data_dir <- here("data", "abv")
 abv_data_post2016 <- read_delim(
-  file.path(abv_data_dir, "occurrence.txt"),
+  file.path(abv_data_dir, 'gbif_download_2025_04_28', "occurrence.txt"),
   delim = "\t",
   show_col_types = FALSE
 )
@@ -160,14 +161,40 @@ abv_data_post2016 <- abv_data_post2016[, colSums(is.na(abv_data_post2016)) <
 glimpse(abv_data_post2016)
 ```
 
-We selecteren de data van de laatste 3-jarige cyclus en selecteren de data van de doelsoorten.
-De laatste cyclus was 2022 - 2024.
+We downloaden de stratum data van zenodo en voegen ze toe aan de dataset.
+
+```{r}
+# Download data from zenodo if necessary
+file_sampling_framework <- file.path(abv_data_dir, "steekproefkader.csv")
+
+if (file.exists(file_sampling_framework)) {
+  sampling_framework_abv <- read_csv(file_sampling_framework,
+                                     show_col_types = FALSE)
+} else {
+  download_zenodo(
+    doi = "10.5281/zenodo.10103472",
+    path = abv_data_dir,
+    files = list("steekproefkader.csv"))
+
+  sampling_framework_abv <- read_csv(file_sampling_framework,
+                                     show_col_types = FALSE)
+}
+
+# Join with abv data
+abv_data_post2016 <- abv_data_post2016 %>%
+  mutate(UTM = gsub("ABV\\_", "", verbatimLocality)) %>%
+  left_join(sampling_framework_abv, by = join_by(UTM))
+```
+
+We selecteren de data van de laatste 3-jarige cyclus (2022 - 2024).
+We selecteren de data van de doelsoorten en de hokken die tot het `Landbouw` stratum behoren. 
 
 ```{r}
 abv_indicator <- abv_data_post2016 %>%
   filter(
     year %in% 2022:2024,
-    tolower(vernacularName) %in% tolower(indicator_species_nl)
+    tolower(vernacularName) %in% tolower(indicator_species_nl),
+    tolower(Stratum) == "landbouw"
   ) %>%
   mutate(vernacularName = stringr::str_to_title(vernacularName))
 ```
@@ -181,9 +208,8 @@ identical(
 )
 
 # Which
-setdiff(indicator_species_nl, unique(abv_indicator[["vernacularName"]]))
+setdiff(indicator_species_nl, unique(abv_indicator_full[["vernacularName"]]))
 ```
-
 
 De Grauwe Gors werd niet gezien in de laatste cyclus.
 Werd deze wel in andere jaren gezien?
@@ -191,12 +217,11 @@ Werd deze wel in andere jaren gezien?
 ```{r}
 abv_data_post2016 %>%
   filter(tolower(vernacularName) %in% tolower("Grauwe Gors")) %>%
-  select(verbatimLocality, year, verbatimLocality, individualCount, eventDate,
-         level3Name, level2Name) %>%
-  arrange(verbatimLocality, eventDate, desc(year), level3Name, level2Name) %>%
+  select(
+    UTM, year, Stratum, individualCount, eventDate, level3Name, level2Name
+  ) %>%
+  arrange(UTM, eventDate, desc(year), level3Name, level2Name) %>%
   kable()
 ```
 
-We downloaden de stratum data van zenodo en voegen ze toe aan de dataset.
-
-
+Ze werd wel gezien in vorige jaren in 'landbouw-hokken'.
