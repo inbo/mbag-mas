@@ -123,7 +123,8 @@ mas_2024_clean <- mas_data_clean %>%
 
 # Filter indicator species
 mas_2024_indicator <- mas_2024_clean %>%
-  filter(naam %in% indicator_species_nl)
+  filter(naam %in% indicator_species_nl) %>%
+  mutate(naam = factor(naam, levels = indicator_species_nl))
 ```
 
 We controleren of alle indicatorsoorten aanwezig zijn in deze dataset.
@@ -194,7 +195,10 @@ abv_indicator <- abv_data_post2016 %>%
     tolower(vernacularName) %in% tolower(indicator_species_nl),
     tolower(Stratum) == "landbouw"
   ) %>%
-  mutate(vernacularName = stringr::str_to_title(vernacularName))
+  mutate(
+    naam = factor(stringr::str_to_title(vernacularName),
+                  levels = indicator_species_nl)
+  )
 ```
 
 We controleren of alle indicatorsoorten aanwezig zijn in deze dataset.
@@ -231,6 +235,61 @@ De Grauwe Gors werd wel gezien in vorige jaren in 'landbouw-hokken'.
 De Grauwe Klauwier werd enkel gezien in 2024 en enkel in het `Heide en duin` stratum.
 
 # Data exploratie
-## MAS
+## Aantal telpunten
 
+We vergelijken het aantal telpunten en km-hokken van beide datasets.
+
+```{r}
+# Number of visited points MAS
+tot_points_mas <- length(unique(mas_data_clean$plotnaam))
+# Count number of points MAS
+mas_telpunten <- mas_2024_indicator %>%
+  st_drop_geometry() %>%
+  summarise(aantal_telpunten_mas = n_distinct(plotnaam),
+            prop_telpunten_mas = aantal_telpunten_mas / tot_points_mas,
+            .by = naam)
+
+# Number of visited points ABV
+tot_points_abv <- 
+  abv_data_post2016 %>%
+  filter(year %in% 2022:2024,
+         tolower(Stratum) == "landbouw") %>%
+  distinct(UTM) %>%
+  nrow()
+# Count number of points ABV
+abv_telpunten <- abv_indicator %>%
+  summarise(aantal_kmhokken_abv = n_distinct(UTM),
+            prop_kmhokken_abv = aantal_kmhokken_abv / tot_points_abv,
+            .by = naam)
+
+# Join numbers
+full_join(mas_telpunten, abv_telpunten, by = join_by(naam)) %>%
+  select(naam, starts_with("aantal"), starts_with("prop")) %>%
+  arrange(desc(aantal_telpunten_mas)) %>%
+  kable()
+```
+
+Alle soorten worden in totaal vaker gezien in MAS. Dit is logisch want het totaal aantal telpunten is hoger dan het aantal hokken in ABV.
+
+```{r}
+full_join(abv_telpunten, mas_telpunten, by = join_by(naam)) %>%
+  ggplot(aes(x = aantal_kmhokken_abv, y = aantal_telpunten_mas)) +
+  ggrepel::geom_text_repel(aes(label = naam)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick") 
+```
+
+Proportioneel, worden de meeste soorten vaker gezien in ABV.
+
+```{r}
+full_join(abv_telpunten, mas_telpunten, by = join_by(naam)) %>%
+  ggplot(aes(x = prop_kmhokken_abv, y = prop_telpunten_mas)) +
+  ggrepel::geom_text_repel(aes(label = naam)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick") 
+```
+
+## Aantal telperiodes
+
+## Aantal individuen
 
