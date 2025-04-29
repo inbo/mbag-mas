@@ -238,6 +238,7 @@ De Grauwe Klauwier werd enkel gezien in 2024 en enkel in het `Heide en duin` str
 ## Aantal telpunten
 
 We vergelijken het aantal telpunten en km-hokken van beide datasets.
+We delen ook door het totaal aantal bezochte telpunten (MAS) en het totaal aantal bezochte hokken in `Landbouw` stratum (ABV).
 
 ```{r}
 # Number of visited points MAS
@@ -246,7 +247,8 @@ tot_points_mas <- length(unique(mas_data_clean$plotnaam))
 mas_telpunten <- mas_2024_indicator %>%
   st_drop_geometry() %>%
   summarise(aantal_telpunten_mas = n_distinct(plotnaam),
-            prop_telpunten_mas = aantal_telpunten_mas / tot_points_mas,
+            tot_telpunten_mas = tot_points_mas,
+            prop_telpunten_mas = aantal_telpunten_mas / tot_telpunten_mas,
             .by = naam)
 
 # Number of visited points ABV
@@ -259,12 +261,15 @@ tot_points_abv <-
 # Count number of points ABV
 abv_telpunten <- abv_indicator %>%
   summarise(aantal_kmhokken_abv = n_distinct(UTM),
-            prop_kmhokken_abv = aantal_kmhokken_abv / tot_points_abv,
+            tot_hokken_abv = tot_points_abv,
+            prop_kmhokken_abv = aantal_kmhokken_abv / tot_hokken_abv,
             .by = naam)
 
 # Join numbers
 full_join(mas_telpunten, abv_telpunten, by = join_by(naam)) %>%
-  select(naam, starts_with("aantal"), starts_with("prop")) %>%
+  select(
+    naam, starts_with("aantal"), starts_with("prop"),starts_with("tot_")
+  ) %>%
   arrange(desc(aantal_telpunten_mas)) %>%
   kable()
 ```
@@ -289,7 +294,52 @@ full_join(abv_telpunten, mas_telpunten, by = join_by(naam)) %>%
   geom_abline(slope = 1, intercept = 0, colour = "firebrick") 
 ```
 
-## Aantal telperiodes
-
 ## Aantal individuen
 
+We vergelijken het aantal individuen in van beide datasets.
+We delen ook door het totaal aantal bezochte telpunten (MAS) en het totaal aantal bezochte hokken in `Landbouw` stratum (ABV).
+
+```{r}
+# Count number of points MAS
+mas_individuals <- mas_2024_indicator %>%
+  st_drop_geometry() %>%
+  summarise(aantal_individuen_mas = sum(aantal),
+            tot_telpunten_mas = tot_points_mas,
+            rel_aantal_mas = aantal_individuen_mas / tot_telpunten_mas,
+            .by = naam)
+
+# Count number of points ABV
+abv_individuals <- abv_indicator %>%
+  summarise(aantal_individuen_abv = sum(individualCount),
+            tot_hokken_abv = tot_points_abv,
+            rel_aantal_abv = aantal_individuen_abv / tot_hokken_abv,
+            .by = naam)
+
+# Join numbers
+full_join(mas_individuals, abv_individuals, by = join_by(naam)) %>%
+  select(
+    naam, starts_with("aantal"), starts_with("rel"),starts_with("tot_")
+  ) %>%
+  arrange(desc(aantal_individuen_mas)) %>%
+  kable()
+```
+
+Alle soorten worden in totaal vaker gezien in MAS. Dit is logisch want het totaal aantal telpunten is hoger dan het aantal hokken in ABV.
+
+```{r}
+full_join(mas_individuals, abv_individuals, by = join_by(naam)) %>%
+  ggplot(aes(x = aantal_individuen_abv, y = aantal_individuen_mas)) +
+  ggrepel::geom_text_repel(aes(label = naam)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick") 
+```
+
+Proportioneel, worden de meeste soorten vaker gezien in ABV.
+
+```{r}
+full_join(mas_individuals, abv_individuals, by = join_by(naam)) %>%
+  ggplot(aes(x = rel_aantal_abv, y = rel_aantal_mas)) +
+  ggrepel::geom_text_repel(aes(label = naam)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick") 
+```
