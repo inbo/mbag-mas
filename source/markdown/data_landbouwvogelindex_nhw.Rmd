@@ -4,7 +4,7 @@ author: "Ward Langeraert"
 date: "`r Sys.Date()`"
 output:
   bookdown::html_document2:
-    code_folding: hide
+    code_folding: show
     toc: true
     toc_float: true
     toc_collapsed: true
@@ -157,8 +157,6 @@ abv_data_post2016 <- read_delim(
 # Remove NA columns
 abv_data_post2016 <- abv_data_post2016[, colSums(is.na(abv_data_post2016)) <
                                          nrow(abv_data_post2016)]
-
-glimpse(abv_data_post2016)
 ```
 
 We downloaden de stratum data van zenodo en voegen ze toe aan de dataset.
@@ -231,3 +229,8 @@ abv_data_post2016 %>%
 
 De Grauwe Gors werd wel gezien in vorige jaren in 'landbouw-hokken'.
 De Grauwe Klauwier werd enkel gezien in 2024 en enkel in het `Heide en duin` stratum.
+
+# Data exploratie
+## MAS
+
+
