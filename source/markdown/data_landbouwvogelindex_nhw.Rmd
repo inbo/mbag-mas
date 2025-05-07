@@ -258,6 +258,8 @@ Voor `Landbouw` (het meest algemene stratum) wil dit zeggen dat uit de beschikba
 
 Bij MAS zijn de inclusiekansen niet gelijk. In elk stratum (landbouwstreek, open of half-open landschap, binnen of buiten SBP) worden telkens 50 telpunten geselecteerd, ongeacht de oppervlakte van het stratum. Dit betekent dat grotere strata relatief minder vertegenwoordigd zijn dan kleinere, wat leidt tot ongelijke inclusiekansen tussen strata. Bovendien wordt de Oostelijke Leemstreek overbemonsterd omwille van de langere telgeschiedenis in die regio. In de Weidestreek wordt daarnaast geen verdere opsplitsing in substrata gemaakt, waardoor ook binnen deze streek de verdeling van de telpunten niet proportioneel is aan oppervlakte of habitattypes.
 
+Met deze ongelijke inclusiekansen moet rekening gehouden worden voor een uitspraak op niveau Vlaanderen. Zo zullen de hogere inclusiekansen voor de Oostelijke leemstreek resulteren in een lager gewicht bij de berekening voor niveau Vlaanderen (cf. Horvitz-Thomson schatter). Stel dat we dit niet doen, dan zou een soort, zoals de Veldleeuwerik, die meer voorkomt in de Oostelijke leemstreek, de schatting voor Vlaanderen naar boven vertekenen. Door er wel mee rekening te houden, bekomen we onvertekende schatters voor een uitspraak op niveau Vlaanderen.
+
 # Ruwe aantallen
 ## Aan- afwezigheid
 
