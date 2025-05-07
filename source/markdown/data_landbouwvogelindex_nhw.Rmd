@@ -150,7 +150,7 @@ Ze wordt opgeslaan in de folder `data > abv > gbif_download_2025_04_28`.
 # Load ABV data
 abv_data_dir <- here("data", "abv")
 abv_data_post2016 <- read_delim(
-  file.path(abv_data_dir, 'gbif_download_2025_04_28', "occurrence.txt"),
+  file.path(abv_data_dir, "gbif_download_2025_04_28", "occurrence.txt"),
   delim = "\t",
   show_col_types = FALSE
 )
@@ -173,7 +173,8 @@ if (file.exists(file_sampling_framework)) {
   download_zenodo(
     doi = "10.5281/zenodo.10103472",
     path = abv_data_dir,
-    files = list("steekproefkader.csv"))
+    files = list("steekproefkader.csv")
+  )
 
   sampling_framework_abv <- read_csv(file_sampling_framework,
                                      show_col_types = FALSE)
@@ -268,7 +269,7 @@ mas_telpunten <- mas_2024_indicator %>%
             .by = naam)
 
 # Number of visited points ABV
-tot_points_abv <- 
+tot_points_abv <-
   abv_data_post2016 %>%
   filter(year %in% 2022:2024,
          tolower(Stratum) == "landbouw") %>%
@@ -286,7 +287,7 @@ joined_number_points <- full_join(mas_telpunten, abv_telpunten,
                                   by = join_by(naam)) %>%
   mutate(tot_hokken_abv = tot_points_abv) %>%
   replace_na(list(aantal_kmhokken_abv = 0, prop_kmhokken_abv = 0))
-  
+
 joined_number_points %>%
   select(
     naam, starts_with("aantal"), starts_with("prop"), starts_with("tot_")
@@ -304,7 +305,7 @@ joined_number_points %>%
   geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
   ggrepel::geom_text_repel(aes(label = naam)) +
   geom_point() +
-  geom_abline(slope = 1, intercept = 0, colour = "firebrick") 
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick")
 ```
 
 Proportioneel, worden de meeste soorten vaker gezien in ABV.
@@ -316,7 +317,7 @@ joined_number_points %>%
   geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
   ggrepel::geom_text_repel(aes(label = naam)) +
   geom_point() +
-  geom_abline(slope = 1, intercept = 0, colour = "firebrick") 
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick")
 ```
 
 ## Aantal individuen
@@ -364,7 +365,7 @@ joined_number_individuals %>%
   geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
   ggrepel::geom_text_repel(aes(label = naam)) +
   geom_point() +
-  geom_abline(slope = 1, intercept = 0, colour = "firebrick") 
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick")
 ```
 
 Proportioneel, worden de meeste soorten vaker gezien in ABV.
@@ -376,7 +377,7 @@ joined_number_individuals %>%
   geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
   ggrepel::geom_text_repel(aes(label = naam)) +
   geom_point() +
-  geom_abline(slope = 1, intercept = 0, colour = "firebrick") 
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick")
 ```
 
 # Gecorrigeerde aantallen
@@ -419,7 +420,7 @@ joined_number_points_corr %>%
   geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
   ggrepel::geom_text_repel(aes(label = naam)) +
   geom_point() +
-  geom_abline(slope = 1, intercept = 0, colour = "firebrick") 
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick")
 ```
 
 Proportioneel, worden de meeste soorten vaker gezien in ABV.
@@ -432,7 +433,7 @@ joined_number_points_corr %>%
   geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
   ggrepel::geom_text_repel(aes(label = naam)) +
   geom_point() +
-  geom_abline(slope = 1, intercept = 0, colour = "firebrick") 
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick")
 ```
 
 ## Aantal individuen
@@ -474,7 +475,7 @@ joined_number_individuals_corr %>%
   geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
   ggrepel::geom_text_repel(aes(label = naam)) +
   geom_point() +
-  geom_abline(slope = 1, intercept = 0, colour = "firebrick") 
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick")
 ```
 
 We verwijderen Spreeuw voor visualisatie:
@@ -487,7 +488,7 @@ joined_number_individuals_corr %>%
   geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
   ggrepel::geom_text_repel(aes(label = naam), max.overlaps = 20) +
   geom_point() +
-  geom_abline(slope = 1, intercept = 0, colour = "firebrick") 
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick")
 ```
 
 Proportioneel is er door de correctie een veel sterkere 1 op 1 relatie tussen aantallen gezien bij MAS en aantallen gezien bij ABV.
@@ -499,7 +500,7 @@ joined_number_individuals_corr %>%
   geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
   ggrepel::geom_text_repel(aes(label = naam)) +
   geom_point() +
-  geom_abline(slope = 1, intercept = 0, colour = "firebrick") 
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick")
 ```
 
 We verwijderen Spreeuw voor visualisatie:
@@ -512,5 +513,5 @@ joined_number_individuals_corr %>%
   geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
   ggrepel::geom_text_repel(aes(label = naam), max.overlaps = 20) +
   geom_point() +
-  geom_abline(slope = 1, intercept = 0, colour = "firebrick") 
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick")
 ```
