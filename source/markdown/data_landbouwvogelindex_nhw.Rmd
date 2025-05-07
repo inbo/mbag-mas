@@ -282,9 +282,12 @@ abv_telpunten <- abv_indicator %>%
             .by = naam)
 
 # Join numbers
-full_join(mas_telpunten, abv_telpunten, by = join_by(naam)) %>%
+joined_number_points <- full_join(mas_telpunten, abv_telpunten,
+                                  by = join_by(naam)) %>%
   mutate(tot_hokken_abv = tot_points_abv) %>%
-  replace_na(list(aantal_kmhokken_abv = 0, prop_kmhokken_abv = 0)) %>%
+  replace_na(list(aantal_kmhokken_abv = 0, prop_kmhokken_abv = 0))
+  
+joined_number_points %>%
   select(
     naam, starts_with("aantal"), starts_with("prop"), starts_with("tot_")
   ) %>%
@@ -295,9 +298,7 @@ full_join(mas_telpunten, abv_telpunten, by = join_by(naam)) %>%
 Alle soorten worden in totaal vaker gezien in MAS. Dit is logisch want het totaal aantal telpunten is hoger dan het aantal hokken in ABV.
 
 ```{r}
-full_join(abv_telpunten, mas_telpunten, by = join_by(naam)) %>%
-  mutate(tot_hokken_abv = tot_points_abv) %>%
-  replace_na(list(aantal_kmhokken_abv = 0, prop_kmhokken_abv = 0)) %>%
+joined_number_points %>%
   ggplot(aes(x = aantal_kmhokken_abv, y = aantal_telpunten_mas)) +
   geom_hline(yintercept = 0, colour = "lightgrey", linetype = "dashed") +
   geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
@@ -309,9 +310,7 @@ full_join(abv_telpunten, mas_telpunten, by = join_by(naam)) %>%
 Proportioneel, worden de meeste soorten vaker gezien in ABV.
 
 ```{r}
-full_join(abv_telpunten, mas_telpunten, by = join_by(naam)) %>%
-  mutate(tot_hokken_abv = tot_points_abv) %>%
-  replace_na(list(aantal_kmhokken_abv = 0, prop_kmhokken_abv = 0)) %>%
+joined_number_points %>%
   ggplot(aes(x = prop_kmhokken_abv, y = prop_telpunten_mas)) +
   geom_hline(yintercept = 0, colour = "lightgrey", linetype = "dashed") +
   geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
@@ -343,9 +342,12 @@ abv_individuals <- abv_indicator %>%
             .by = naam)
 
 # Join numbers
-full_join(mas_individuals, abv_individuals, by = join_by(naam)) %>%
+joined_number_individuals <- full_join(mas_individuals, abv_individuals,
+                                       by = join_by(naam)) %>%
   mutate(tot_hokken_abv = tot_points_abv) %>%
-  replace_na(list(aantal_individuen_abv = 0, rel_aantal_abv = 0)) %>%
+  replace_na(list(aantal_individuen_abv = 0, rel_aantal_abv = 0))
+
+joined_number_individuals %>%
   select(
     naam, starts_with("aantal"), starts_with("rel"), starts_with("tot_")
   ) %>%
@@ -356,9 +358,7 @@ full_join(mas_individuals, abv_individuals, by = join_by(naam)) %>%
 Alle soorten worden in totaal vaker gezien in MAS. Dit is logisch want het totaal aantal telpunten is hoger dan het aantal hokken in ABV.
 
 ```{r}
-full_join(mas_individuals, abv_individuals, by = join_by(naam)) %>%
-  mutate(tot_hokken_abv = tot_points_abv) %>%
-  replace_na(list(aantal_individuen_abv = 0, rel_aantal_abv = 0)) %>%
+joined_number_individuals %>%
   ggplot(aes(x = aantal_individuen_abv, y = aantal_individuen_mas)) +
   geom_hline(yintercept = 0, colour = "lightgrey", linetype = "dashed") +
   geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
@@ -370,9 +370,7 @@ full_join(mas_individuals, abv_individuals, by = join_by(naam)) %>%
 Proportioneel, worden de meeste soorten vaker gezien in ABV.
 
 ```{r}
-full_join(mas_individuals, abv_individuals, by = join_by(naam)) %>%
-  mutate(tot_hokken_abv = tot_points_abv) %>%
-  replace_na(list(aantal_individuen_abv = 0, rel_aantal_abv = 0)) %>%
+joined_number_individuals %>%
   ggplot(aes(x = rel_aantal_abv, y = rel_aantal_mas)) +
   geom_hline(yintercept = 0, colour = "lightgrey", linetype = "dashed") +
   geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
@@ -399,9 +397,12 @@ abv_telpunten2 <- abv_indicator %>%
             .by = naam)
 
 # Join numbers
-full_join(mas_telpunten, abv_telpunten2, by = join_by(naam)) %>%
+joined_number_points_corr <- full_join(mas_telpunten, abv_telpunten2,
+                                       by = join_by(naam)) %>%
   mutate(tot_hokken_abv = tot_points_abv) %>%
-  replace_na(list(aantal_kmhokken_abv = 0, prop_kmhokken_abv = 0)) %>%
+  replace_na(list(aantal_kmhokken_abv = 0, prop_kmhokken_abv = 0))
+
+joined_number_points_corr %>%
   select(
     naam, starts_with("aantal"), starts_with("prop"), starts_with("tot_")
   ) %>%
@@ -409,12 +410,10 @@ full_join(mas_telpunten, abv_telpunten2, by = join_by(naam)) %>%
   kable()
 ```
 
-Alle soorten worden in totaal vaker gezien in MAS. Dit is logisch want het totaal aantal telpunten is hoger dan het aantal hokken in ABV.
+Alle soorten worden nog steeds vaker gezien in MAS ondanks de correctie. Dit is logisch want het totaal aantal telpunten is hoger dan het aantal hokken in ABV.
 
 ```{r}
-full_join(abv_telpunten, mas_telpunten, by = join_by(naam)) %>%
-  mutate(tot_hokken_abv = tot_points_abv) %>%
-  replace_na(list(aantal_kmhokken_abv = 0, prop_kmhokken_abv = 0)) %>%
+joined_number_points_corr %>%
   ggplot(aes(x = aantal_kmhokken_abv, y = aantal_telpunten_mas)) +
   geom_hline(yintercept = 0, colour = "lightgrey", linetype = "dashed") +
   geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
@@ -424,11 +423,10 @@ full_join(abv_telpunten, mas_telpunten, by = join_by(naam)) %>%
 ```
 
 Proportioneel, worden de meeste soorten vaker gezien in ABV.
+Door de correctie is dit zelfs nog sterker geworden.
 
 ```{r}
-full_join(abv_telpunten, mas_telpunten, by = join_by(naam)) %>%
-  mutate(tot_hokken_abv = tot_points_abv) %>%
-  replace_na(list(aantal_kmhokken_abv = 0, prop_kmhokken_abv = 0)) %>%
+joined_number_points_corr %>%
   ggplot(aes(x = prop_kmhokken_abv, y = prop_telpunten_mas)) +
   geom_hline(yintercept = 0, colour = "lightgrey", linetype = "dashed") +
   geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
@@ -452,9 +450,12 @@ abv_individuals2 <- abv_indicator %>%
             .by = naam)
 
 # Join numbers
-full_join(mas_individuals, abv_individuals2, by = join_by(naam)) %>%
+joined_number_individuals_corr <- full_join(mas_individuals, abv_individuals2,
+                                            by = join_by(naam)) %>%
   mutate(tot_hokken_abv = tot_points_abv) %>%
-  replace_na(list(aantal_individuen_abv = 0, rel_aantal_abv = 0)) %>%
+  replace_na(list(aantal_individuen_abv = 0, rel_aantal_abv = 0))
+
+joined_number_individuals_corr %>%
   select(
     naam, starts_with("aantal"), starts_with("rel"), starts_with("tot_")
   ) %>%
@@ -462,12 +463,12 @@ full_join(mas_individuals, abv_individuals2, by = join_by(naam)) %>%
   kable()
 ```
 
-Alle soorten worden in totaal vaker gezien in MAS. Dit is logisch want het totaal aantal telpunten is hoger dan het aantal hokken in ABV.
+Alle soorten worden in totaal vaker gezien in MAS.
+Dit is logisch want het totaal aantal telpunten is hoger dan het aantal hokken in ABV.
+Door de correctie is dit nog sterker dan voordien.
 
 ```{r}
-full_join(mas_individuals, abv_individuals, by = join_by(naam)) %>%
-  mutate(tot_hokken_abv = tot_points_abv) %>%
-  replace_na(list(aantal_individuen_abv = 0, rel_aantal_abv = 0)) %>%
+joined_number_individuals_corr %>%
   ggplot(aes(x = aantal_individuen_abv, y = aantal_individuen_mas)) +
   geom_hline(yintercept = 0, colour = "lightgrey", linetype = "dashed") +
   geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
@@ -479,9 +480,7 @@ full_join(mas_individuals, abv_individuals, by = join_by(naam)) %>%
 We verwijderen Spreeuw voor visualisatie:
 
 ```{r}
-full_join(mas_individuals, abv_individuals, by = join_by(naam)) %>%
-  mutate(tot_hokken_abv = tot_points_abv) %>%
-  replace_na(list(aantal_individuen_abv = 0, rel_aantal_abv = 0)) %>%
+joined_number_individuals_corr %>%
   filter(naam != "Spreeuw") %>%
   ggplot(aes(x = aantal_individuen_abv, y = aantal_individuen_mas)) +
   geom_hline(yintercept = 0, colour = "lightgrey", linetype = "dashed") +
@@ -491,12 +490,22 @@ full_join(mas_individuals, abv_individuals, by = join_by(naam)) %>%
   geom_abline(slope = 1, intercept = 0, colour = "firebrick") 
 ```
 
-Proportioneel, worden de meeste soorten vaker gezien in ABV.
+Proportioneel is er door de correctie een veel sterkere 1 op 1 relatie tussen aantallen gezien bij MAS en aantallen gezien bij ABV.
 
 ```{r}
-full_join(mas_individuals, abv_individuals, by = join_by(naam)) %>%
-  mutate(tot_hokken_abv = tot_points_abv) %>%
-  replace_na(list(aantal_individuen_abv = 0, rel_aantal_abv = 0)) %>%
+joined_number_individuals_corr %>%
+  ggplot(aes(x = rel_aantal_abv, y = rel_aantal_mas)) +
+  geom_hline(yintercept = 0, colour = "lightgrey", linetype = "dashed") +
+  geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
+  ggrepel::geom_text_repel(aes(label = naam)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick") 
+```
+
+We verwijderen Spreeuw voor visualisatie:
+
+```{r}
+joined_number_individuals_corr %>%
   filter(naam != "Spreeuw") %>%
   ggplot(aes(x = rel_aantal_abv, y = rel_aantal_mas)) +
   geom_hline(yintercept = 0, colour = "lightgrey", linetype = "dashed") +
