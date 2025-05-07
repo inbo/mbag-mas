@@ -131,7 +131,7 @@ We controleren of alle indicatorsoorten aanwezig zijn in deze dataset.
 
 ```{r}
 identical(
-  sort(unique(mas_2024_indicator[["naam"]])),
+  as.vector(sort(unique(mas_2024_indicator[["naam"]]))),
   sort(indicator_species_nl)
 )
 
@@ -206,13 +206,13 @@ We controleren of alle indicatorsoorten aanwezig zijn in deze dataset.
 
 ```{r}
 identical(
-  sort(unique(abv_indicator[["vernacularName"]])),
+  sort(unique(abv_indicator[["naam"]])),
   sort(indicator_species_nl)
 )
 
 # Which
 setdiff(tolower(indicator_species_nl),
-        tolower(unique(abv_indicator[["vernacularName"]])))
+        tolower(unique(abv_indicator[["naam"]])))
 ```
 
 De Grauwe Gors en de Grauwe Klauwier werd niet gezien uitsluitend in de laatste cyclus in het `Landbouw` stratum.
@@ -252,7 +252,7 @@ In de volgende sectie geven we eerst de ruwe aantallen mee.
 In de laatste sectie doen we een poging doen om te corrigeren voor de ongelijke telinspanningen.
 
 # Ruwe aantallen
-## Aantal telpunten
+## Aan- afwezigheid
 
 We vergelijken het aantal telpunten en km-hokken van beide datasets.
 We delen ook door het totaal aantal bezochte telpunten (MAS) en het totaal aantal bezochte hokken in `Landbouw` stratum (ABV).
@@ -297,6 +297,8 @@ joined_number_points %>%
 ```
 
 Alle soorten worden in totaal vaker gezien in MAS. Dit is logisch want het totaal aantal telpunten is hoger dan het aantal hokken in ABV.
+
+> De rode lijn geeft een 1 op 1 relatie aan. Boven de lijn beteken meer in MAS, onder de lijn meer in ABV.
 
 ```{r}
 joined_number_points %>%
@@ -384,15 +386,16 @@ joined_number_individuals %>%
 
 We corrigeren nu deze aantallen voor de ongelijke telinspanningen tussen beide meetnetten.
 
-## Aantal telpunten
+## Aan- afwezigheid
 
 Voor het vergelijken van het aantal telpunten moeten we rekening houden met het feit dat telpunten van MAS 4x per jaar worden bezocht en telpunten van ABV 3x per jaar.
-We vermenigvuldigen de aantallen van ABV daarom met $4/3$.
+Dat er 6x geteld wordt per km-hok, maar wel de helft korter dan bij MAS.
+We vermenigvuldigen de aantallen van ABV daarom met $1/6 \times 2 \times 4/3 = 4/9$.
 
 ```{r}
 # Count number of points ABV
 abv_telpunten2 <- abv_indicator %>%
-  summarise(aantal_kmhokken_abv = n_distinct(UTM) * (4 / 3),
+  summarise(aantal_kmhokken_abv = n_distinct(UTM) * (4 / 9),
             tot_hokken_abv = tot_points_abv,
             prop_kmhokken_abv = aantal_kmhokken_abv / tot_hokken_abv,
             .by = naam)
@@ -423,8 +426,7 @@ joined_number_points_corr %>%
   geom_abline(slope = 1, intercept = 0, colour = "firebrick")
 ```
 
-Proportioneel, worden de meeste soorten vaker gezien in ABV.
-Door de correctie is dit zelfs nog sterker geworden.
+Proportioneel, worden de meeste soorten na correctie vaker gezien in MAS.
 
 ```{r}
 joined_number_points_corr %>%
@@ -441,6 +443,8 @@ joined_number_points_corr %>%
 Voor het vergelijken van het aantal individuen moeten we rekening houden met het feit dat telpunten van MAS 4x per jaar worden bezocht en telpunten van ABV 3x per jaar.
 Dat er 6x geteld wordt per km-hok, maar wel de helft korter dan bij MAS.
 We vermenigvuldigen de aantallen van ABV daarom met $1/6 \times 2 \times 4/3 = 4/9$.
+
+We houden geen rekening met het verschil in de afstand tot waar soorten mogen geregistreerd worden omdat 300 m al een grote afstand is.
 
 ```{r}
 # Count number of points ABV
