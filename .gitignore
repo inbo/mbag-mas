@@ -40,3 +40,4 @@ temp
 # knitr and R markdown default cache directories
 *_cache/
 /cache/
+source/markdown/cache
