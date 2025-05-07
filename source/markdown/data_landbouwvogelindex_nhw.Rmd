@@ -238,18 +238,25 @@ De Grauwe Klauwier werd enkel gezien in 2024 en enkel in het `Heide en duin` str
 
 # Vergelijking van de meetnetten
 
+Het is moeilijk om beide meetnetten te vergelijken omdat de telinspanningen niet hetzelfde zijn en bijgevolg de kans op detectie verschilt.
+
 |    | MAS | ABV |
 |----|-----|-----|
 | lengte telcyclus | 1 cyclus = 1 jaar | 1 cyclus = 3 jaar |
 | aantal telrondes per jaar | 4 telrondes per jaar | 3 telrondes per jaar |
-| aantal tellingen per locatie | afzonderlijke telpunten | 6 telpunten per km-hok |
+| aantal telpunten per steekproefeenheid | telpunt = steekproefeenheid | 6 telpunten per km-hok |
 | duur telling | 10' per telpunt | 5' per telpunt |
 | afstand | 300 m | ongelimiteerd |
 
-We zien dat het moeilijk is beide meetnetten te vergelijken omdat ze verschillen in detectiekans omdat de inspanningen niet hetzelfde zijn.
-
 In de volgende sectie geven we eerst de ruwe aantallen mee.
 In de laatste sectie doen we een poging doen om te corrigeren voor de ongelijke telinspanningen.
+
+Een belangrijk punt waarvoor we niet corrigeren is het verschil in de steekproeftrekking tussen beide meetnetten:
+
+ABV is een aselecte gestratificeerde steekproef waarbij zeldzamere habitats overbemonsterd worden.
+Voor `Landbouw` (het meest algemene stratum) wil dit zeggen dat uit de beschikbare hokken binnen dit stratum op een willekeurige manier een beperkt aantal hokken geselecteerd wordt voor bemonstering. Er is dus geen systematische voorkeur voor bepaalde locaties binnen landbouwgebied; elk hok binnen dit stratum heeft een gelijke kans om geselecteerd te worden (gelijke inclusiekansen).
+
+Bij MAS zijn de inclusiekansen niet gelijk. In elk stratum (landbouwstreek, open of half-open landschap, binnen of buiten SBP) worden telkens 50 telpunten geselecteerd, ongeacht de oppervlakte van het stratum. Dit betekent dat grotere strata relatief minder vertegenwoordigd zijn dan kleinere, wat leidt tot ongelijke inclusiekansen tussen strata. Bovendien wordt de Oostelijke Leemstreek overbemonsterd omwille van de langere telgeschiedenis in die regio. In de Weidestreek wordt daarnaast geen verdere opsplitsing in substrata gemaakt, waardoor ook binnen deze streek de verdeling van de telpunten niet proportioneel is aan oppervlakte of habitattypes.
 
 # Ruwe aantallen
 ## Aan- afwezigheid
