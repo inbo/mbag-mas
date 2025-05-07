@@ -82,6 +82,10 @@ Om een verderzetting van MAS te beargumenteren, moeten we aantonen dat dit wette
 - Voor de soorten uit bovenstaande tabel ga we na hoe vaak ze gezien zijn in MAS (2024) en ABV (laatste volledige cyclus, in landbouwstratum)
 - Alle relevante cijfers worden samengebracht in een tabel (bv. ook totaal aantal telpunten/ km-hokken)
 
+# Vergelijking van de meetnetten
+
+
+
 # Data inlezen
 
 ```{r}
@@ -234,7 +238,7 @@ abv_data_post2016 %>%
 De Grauwe Gors werd wel gezien in vorige jaren in 'landbouw-hokken'.
 De Grauwe Klauwier werd enkel gezien in 2024 en enkel in het `Heide en duin` stratum.
 
-# Data exploratie
+# Ruwe aantallen
 ## Aantal telpunten
 
 We vergelijken het aantal telpunten en km-hokken van beide datasets.
@@ -343,3 +347,8 @@ full_join(mas_individuals, abv_individuals, by = join_by(naam)) %>%
   geom_point() +
   geom_abline(slope = 1, intercept = 0, colour = "firebrick") 
 ```
+
+# Gecorrigeerde aantallen
+
+...
+
