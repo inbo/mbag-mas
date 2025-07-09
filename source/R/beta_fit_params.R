@@ -29,8 +29,8 @@ beta_fit_params <- function(beta_fun, mean, sd, ...) {
     # Calculate the mean based on the current parameters
     calc_mean <- shape1 / (shape1 + shape2)
     # Calculate the sd based on the current parameters
-    calc_sd <- sqrt((shape1 * shape2) /
-                      ((shape1 + shape2)^2 * (shape1 + shape2 + 1))
+    calc_sd <- sqrt(
+      (shape1 * shape2) / ((shape1 + shape2)^2 * (shape1 + shape2 + 1))
     )
 
     # Minimize the error between target and calculated values

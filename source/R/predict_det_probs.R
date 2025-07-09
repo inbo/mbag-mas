@@ -11,7 +11,8 @@ predict_det_probs <- function(ds_model, ...) {
       distance = data$distance[i],
       ddfobj = ddf_object,
       index = i,
-      ...)
+      ...
+    )
   })
 
   # Add detection probabilities to dataframe

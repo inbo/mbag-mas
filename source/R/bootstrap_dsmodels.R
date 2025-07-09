@@ -7,15 +7,15 @@ boot_statistic_ds <- function(data, indices, fun, ds_model, ...) {
   ds_model <- Distance::ds(
     data = subset,
     key = ds_model$ddf$ds$aux$ddfobj$type,
-    formula = as.formula(gsub("\\)", "",
-                              gsub("^.*formula\\s=\\s", "",
-                                   ds_model$ddf$model)[2])
-                         ),
+    formula = as.formula(
+      gsub("\\)", "", gsub("^.*formula\\s=\\s", "", ds_model$ddf$model)[2])
+    ),
     adjustment = NULL,
     truncation = 300,
     transect = "point",
     dht_group = FALSE,
-    quiet = TRUE)
+    quiet = TRUE
+  )
 
   return(fun(ds_model, ...))
 }
@@ -42,7 +42,8 @@ bootstrap_ds_model <- function(ds_model, samples, fun, group_vars) {
     strata = factor(ds_model$ddf$data[[group_vars]]),
     fun = get_det_probs,
     ds_model = ds_model,
-    group_vars = group_vars)
+    group_vars = group_vars
+  )
 
   # Create dataframe of bootstrap samples
   colnames <- sort(unique(ds_model$ddf$data[[group_vars]]))
