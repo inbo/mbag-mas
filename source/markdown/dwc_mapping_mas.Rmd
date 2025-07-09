@@ -154,6 +154,7 @@ taxon_core <- taxon_core %>%
 
 **Vragen**
 
+<!-- spell-check: ignore:start -->
 > Beantwoord door Stijn Cooleman
 
 - Wat vul ik in voor volgende termen?
@@ -164,6 +165,7 @@ taxon_core <- taxon_core %>%
   - `dwc_samplingEffort` --> "10 minutes" is een van de beste waarden om hierin te mappen volgens mij (obv m'n tellingen op het terrein) voor het MAS-project, in lijn met andere voorbeelden via https://dwc.tdwg.org/list/#dwc_samplingEffort
 - Is `dwc_language = "en"` ok? --> ok
 - Is `dwc_eventType = "Survey"` ok? --> ok
+<!-- spell-check: ignore:end -->
 
 ## Ongewijzigde waarden
 
@@ -191,6 +193,7 @@ taxon_core <- taxon_core %>%
 
 **Vragen**
 
+<!-- spell-check: ignore:start -->
 -  Ok dat `dwc_varbatimBehavior` de Nederlandstalige beschrijving is? De Engelstalige beschrijving wordt in de volgende sectie onder `dwc_behavior` aangemaakt. Of mag de Nederlandse beschrijving dan weg?
 
 > Stijn: ja, idd. als de Engelstalige beschrijvingen voor gedragingen/broedcodes in dwc_behavior gegeven is, dan wordt de Nederlandstalige beschrijving in een verbatim dataveld redundant, althans in GBIF. 
@@ -203,6 +206,8 @@ In my opinion, the latter terms should be consistently mapped to dwc:behavior.
 -  Wat is het verschil tussen `dwc_individualCount` en `dwc_organismQuantity`? Voorlopig gebruiken we `organismQuantity` voor aantallen en `organismQuantityType = individuals` wanneer broedcode gelijk aan 0 en `organismQuantityType = breeding pairs` wanneer broedcode > 0. In geval van broedcode > 0 moet `organismQuantity` eigenlijk gelijk zijn aan 1.
 
 > Stijn: perfect, in dit geval, gezien de standaardwijze van data-input via avimap per territorium (niet per individu)
+
+<!-- spell-check: ignore:end -->
 
 ## Gewijzigde waarden
 
@@ -434,9 +439,12 @@ manual_taxa_df %>%
   kable()
 ```
 
+<!-- spell-check: ignore:start -->
 > Stijn: dit is idd. een optie. een andere optie is meer gedetailleerd beide wetenschappelijke namen bijkomend samenvoegen in dwc_verbatimIdentification, of eventueel in dwc_scientificName, als 'species aggregate' als dwc_taxonRank kan (zoals in enkele meetnetten.be-datasets)
 er zijn namelijk meer dan deze 2 soorten Microtus muizen mogelijk in Vlaanderen volgens https://waarnemingen.be/search/?q=Microtus
 Bijv.: taxonRank = "species aggregate" voor scientificName = "Myotis mystacinus/brandtii" (2 verschillende, op elkaar gelijkende soorten, o.a. https://waarnemingen.be/species/373/) : https://www.gbif.org/species/180180210/verbatim
+
+<!-- spell-check: ignore:end -->
 
 We voeren de finale mapping uit om alle kolommen van interesse te bekomen.
 
