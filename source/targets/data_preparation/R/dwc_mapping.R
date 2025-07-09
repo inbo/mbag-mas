@@ -40,7 +40,7 @@ static_mapping <- function(data_df) {
 
   out_df <- data_df %>%
     mutate(
-      dwc_type                 = NA,
+      dwc_type                 = "Event",
       dwc_datasetID            = NA,
       dwc_language             = "en",
       dwc_license              = paste0("http://creativecommons.org/",
@@ -56,8 +56,8 @@ static_mapping <- function(data_df) {
       dwc_kingdom              = "Animalia",
       dwc_nomenclaturalCode    = "ICZN",
       dwc_eventType            = "Survey",
-      dwc_samplingProtocol     = NA,
-      dwc_samplingEffort       = NA,
+      dwc_samplingProtocol     = "Point count",
+      dwc_samplingEffort       = "10 minutes",
       dwc_continent            = "Europe",
       dwc_country              = "Belgium",
       dwc_stateProvince        = "Flanders",
