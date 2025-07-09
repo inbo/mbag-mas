@@ -1481,15 +1481,32 @@ taxon_data %>%
 ```
 
 Matching ziet er op het eerste zicht goed uit.
-Enkel voor “Veldmuis/Aardmuis”, “rat spec.” en “spitsmuis spec.” niet.
+Enkel voor `r taxon_data$dwc_vernacularName[is.na(taxon_data$scientificName)]` niet.
 Deze moeten we manueel mappen (manual_taxon_mapping).
 
 ```{r}
 manual_taxon_data <- tar_read("manual_taxon_mapping", store = targets_store)
 
 manual_taxon_data %>%
-  filter(is.na(species)) %>%
-  select(dwc_vernacularName, dwc_class, family, scientificName, rank, key) %>%
+  filter(dwc_vernacularName %in%
+           taxon_data$dwc_vernacularName[is.na(taxon_data$scientificName)]) %>%
+  select(dwc_vernacularName, dwc_class, family, genus, species, scientificName,
+         rank, key) %>%
+  arrange(dwc_vernacularName) %>%
+  kable()
+```
+
+Voor sommige soorten kunnen we zgn. "aggregate species" maken.
+
+```{r}
+species_agg_data <- tar_read("map_species_aggregates", store = targets_store)
+
+species_agg_data %>%
+  filter(dwc_vernacularName %in%
+           taxon_data$dwc_vernacularName[is.na(taxon_data$scientificName)]) %>%
+  select(dwc_vernacularName, dwc_class, family, genus, species, scientificName,
+         rank, key) %>%
+  arrange(dwc_vernacularName) %>%
   kable()
 ```
 
