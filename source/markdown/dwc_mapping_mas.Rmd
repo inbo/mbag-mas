@@ -197,7 +197,7 @@ taxon_core <- taxon_core %>%
 
 Gewijzigde waarden worden gebruikt voor Darwin Core-termen waarvoor de inhoud in `raw_data` als basis wordt gebruikt, maar deze moet worden gestandaardiseerd. Dit geldt voor Darwin Core-termen waarvoor we een vocabulaire gebruiken of waar we willen transformeren voor de duidelijkheid of om duidelijke fouten te corrigeren.
 
-- We creëren een `dwc_occurrenceID` en een `dwc_occurrenceID`
+- We creëren een `dwc_occurrenceID` en een `dwc_eventID`
 - We voegen `dwc_class` toe o.b.v. de `soortgrp`
 - We voegen `dwc_occurrenceStatus` toe o.b.v. de `dwc_organismQuantity` 
 - We voegen `dwc_behavior` toe als Engelse vertaling van `dwc_varbatimBehavior`
