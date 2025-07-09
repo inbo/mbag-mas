@@ -676,9 +676,11 @@ binnen_sbp <- perimeters_data %>%
   )
 
 buiten_sbp <- perimeters_data %>%
-  st_difference(sbp_akkervogels %>%
-    st_union() %>%
-    st_combine()) %>%
+  st_difference(
+    sbp_akkervogels %>%
+      st_union() %>%
+      st_combine()
+  ) %>%
   select(Naam) %>%
   mutate(
     opp = st_area(.),
@@ -711,9 +713,11 @@ binnen_sbp <- selectie_openheid_klasses %>%
   )
 
 buiten_sbp <- selectie_openheid_klasses %>%
-  st_difference(sbp_akkervogels %>%
-    st_union() %>%
-    st_combine()) %>%
+  st_difference(
+    sbp_akkervogels %>%
+      st_union() %>%
+      st_combine()
+  ) %>%
   select(Naam) %>%
   mutate(
     opp = st_area(.),
@@ -750,9 +754,11 @@ binnen_sbp <- st_buffer(steekproefkader_finaal, 300) %>%
   )
 
 buiten_sbp <- st_buffer(steekproefkader_finaal, 300) %>%
-  st_difference(sbp_akkervogels %>%
-    st_union() %>%
-    st_combine()) %>%
+  st_difference(
+    sbp_akkervogels %>%
+      st_union() %>%
+      st_combine()
+  ) %>%
   select(Naam) %>%
   mutate(
     opp = st_area(.),
@@ -796,9 +802,11 @@ binnen_sbp <- st_buffer(steekproefkader_finaal, 300) %>%
 buiten_sbp <- st_buffer(steekproefkader_finaal, 300) %>%
   group_by(Naam) %>%
   summarise(.groups = "drop") %>%
-  st_difference(sbp_akkervogels %>%
-    st_union() %>%
-    st_combine()) %>%
+  st_difference(
+    sbp_akkervogels %>%
+      st_union() %>%
+      st_combine()
+  ) %>%
   select(Naam) %>%
   mutate(
     opp = st_area(.),
@@ -980,9 +988,11 @@ balansvergelijking <- do.call(rbind, lapply(min_n_per_stratum, first_samples,
   steekproef_df = steekproef,
   multiplicatie = 1
 )) %>%
-  bind_rows(steekproefkader_finaal %>%
-    filter(openheid_klasse %in% c("OL", "HOL")) %>%
-    mutate(puntenset = "volledige steekproefkader")) %>%
+  bind_rows(
+    steekproefkader_finaal %>%
+      filter(openheid_klasse %in% c("OL", "HOL")) %>%
+      mutate(puntenset = "volledige steekproefkader")
+  ) %>%
   mutate(sbp_akkervogels = ifelse(is_sbp,
     "binnen sbp",
     "buiten sbp"
@@ -1161,11 +1171,13 @@ oude_cirkels <- read_sf(here(
 )) %>%
   st_transform(crs = 31370) %>%
   st_filter(perimeters_data) %>%
-  mutate(is_sbp = st_intersects(.,
-    st_union(sbp_akkervogels),
-    sparse = FALSE
+  mutate(
+    is_sbp = st_intersects(.,
+      st_union(sbp_akkervogels),
+      sparse = FALSE
+    ) %>%
+      as.logical()
   ) %>%
-    as.logical()) %>%
   st_join(ol_hol) %>%
   rename(definitief_punt = naam) %>%
   select(definitief_punt, openheid_klasse, is_sbp) %>%
@@ -1198,8 +1210,10 @@ Er zijn een aantal punten die overlappen voor minstens 50 % en tot hetzelfde str
 ```{r}
 # welke punten overlappen minstens 50 %
 intersect <- st_intersection(oude_cirkels_buffer, cirkels_zandstreek) %>%
-  mutate(intersect_area = st_area(.) %>%
-    units::drop_units()) %>%
+  mutate(
+    intersect_area = st_area(.) %>%
+      units::drop_units()
+  ) %>%
   filter(
     intersect_area >= 0.5 * 300 * 300 * pi, # 50 %
     openheid_sbp == openheid_sbp.1
@@ -1220,12 +1234,14 @@ intersect %>%
 
 ```{r}
 # visualisatie
-mapview(oude_cirkels_buffer %>%
-          filter(definitief_punt %in% intersect$definitief_punt),
-        col.regions = "red", layer = "bestaande punten"
+mapview(
+  oude_cirkels_buffer %>%
+    filter(definitief_punt %in% intersect$definitief_punt),
+  col.regions = "red", layer = "bestaande punten"
 ) +
-  mapview(cirkels_zandstreek %>% filter(pointid %in% intersect$pointid),
-          layer = "nieuwe punten"
+  mapview(
+    cirkels_zandstreek %>% filter(pointid %in% intersect$pointid),
+    layer = "nieuwe punten"
   )
 ```
 

@@ -125,14 +125,20 @@ modified_mapping <- function(data_df) {
           "Nest-indicating behaviour",
         .data$dwc_varbatimBehavior == "Paar in broedbiotoop" ~
           "Pair in breeding habitat"
-        ),
+      ),
       # If the distance is < 100 m --> 10 m
       # If the distance is >= 100 m --> 0.1 * distance
       # If the distance is unknown --> 30 m (0.1 * 300 m)
       dwc_coordinateUncertaintyInMeters =
-        ifelse(is.na(.data$raw_distance2plot), 30,
-          ifelse(.data$raw_distance2plot < 100,
-                 10, 0.1 * .data$raw_distance2plot)),
+        ifelse(
+          is.na(.data$raw_distance2plot),
+          30,
+          ifelse(
+            .data$raw_distance2plot < 100,
+            10,
+            0.1 * .data$raw_distance2plot
+          )
+        ),
       dwc_organismQuantityType = ifelse(.data$raw_wrntype == "0",
                                         "individuals", "breeding pairs")
     ) %>%
@@ -188,12 +194,12 @@ map_taxa_manual <- function(
 
   # Get taxonomic info for provided taxon keys
   mapped_taxa_list <- lapply(manual_taxon_list, function(key) {
-      taxon_data <- rgbif::name_usage(key)$data
-      cols_to_get <- intersect(colnames(taxon_data), out_cols)
+    taxon_data <- rgbif::name_usage(key)$data
+    cols_to_get <- intersect(colnames(taxon_data), out_cols)
 
-      taxon_data %>%
-        select(all_of(cols_to_get))
-    })
+    taxon_data %>%
+      select(all_of(cols_to_get))
+  })
   mapped_taxa_df <- do.call(bind_rows, mapped_taxa_list) %>%
     mutate(!!vernacular_name_col := names(manual_taxon_list))
 
@@ -203,12 +209,14 @@ map_taxa_manual <- function(
     left_join(
       mapped_taxa_df,
       by = "dwc_vernacularName",
-      suffix = c("", ".df2")) %>%
+      suffix = c("", ".df2")
+    ) %>%
     mutate(
       across(
         all_of(setdiff(colnames(mapped_taxa_df), vernacular_name_col)),
         ~ coalesce(.x, get(paste0(cur_column(), ".df2"))),
-        .names = "{.col}")
+        .names = "{.col}"
+      )
     ) %>%
     select(-ends_with(".df2"))
 
