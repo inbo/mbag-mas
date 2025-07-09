@@ -26,10 +26,11 @@ paths_to_lbg_year <- function(
 
   # List paths to files
   file_paths <- list.files(
-      file.path(proj_path, "data", "landbouwgebruikspercelen"),
-      pattern = "Landbouwgebruikspercelen",
-      full.names = TRUE,
-      recursive = TRUE)
+    file.path(proj_path, "data", "landbouwgebruikspercelen"),
+    pattern = "Landbouwgebruikspercelen",
+    full.names = TRUE,
+    recursive = TRUE
+  )
 
   # Select geopackage files
   gpkg_files <- file_paths[grepl(pattern = ".gpkg$", file_paths)]
@@ -38,7 +39,7 @@ paths_to_lbg_year <- function(
   year <- sapply(as.list(gpkg_files), function(file) {
     unique(as.numeric(
       stringr::str_extract_all(file, "[0-9]+")[[1]]
-      ))
+    ))
   })
   indices <- year >= start_year
 

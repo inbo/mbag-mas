@@ -127,7 +127,8 @@ calc_crop_prop_by_year <- function(punten_df, crop_layer, group_by_col) {
       mutate(weight = 1 / n),
     grid_group_by_col = "pointid",
     layer_group_by_col = group_by_col,
-    weight_col = "weight")
+    weight_col = "weight"
+  )
 
   points_vzml <- points_vzml %>%
     ungroup()
@@ -170,11 +171,13 @@ add_sbp_per_regio <- function(punten_sf, perimeters) {
     punten_df_regio <- punten_sf %>% filter(.data$regio == r)
     sbp_akkervogels_regio <- read_sbp_akkervogels(
       path = path_to_sbp_akkervogels(),
-      gebied = perimeters %>% filter(.data$Naam == r))
+      gebied = perimeters %>% filter(.data$Naam == r)
+    )
 
     telpunten_2018_2022_regio <- add_stratum_sbp(
       punten_sf = punten_df_regio,
-      sbp       = sbp_akkervogels_regio) %>%
+      sbp = sbp_akkervogels_regio
+    ) %>%
       mutate(sbp = ifelse(.data$is_sbp == TRUE, "binnen", "buiten"))
 
     out_list[[i]] <- telpunten_2018_2022_regio
