@@ -241,7 +241,7 @@ list(
       taxonomy_df = taxon_mapping,
       manual_taxon_list = list(
         "Huismuis (zoogdier)" = 7429082,        # species
-        "Barmsijs (Grote of Kleine)" = 6782561, # genus
+        "Barmsijs (Grote of Kleine)" = 5231630, # species
         "Veldmuis/Aardmuis" = 2438591,          # genus
         "Wezel/Hermelijn" = 2433922,            # genus
         "groene kikker-complex" = 2426629,      # genus
@@ -253,12 +253,26 @@ list(
                    "species", "authorship", "rank", "key")
     )
   ),
+  # Add species aggregates
+  tar_target(
+    name = map_species_aggregates,
+    command = add_species_aggregates(
+      taxonomy_df = manual_taxon_mapping,
+      manual_taxon_list = list(
+        "Barmsijs (Grote of Kleine)" = "Acanthis flammea flammea/cabaret",
+        "Veldmuis/Aardmuis" = "Microtus arvalis/agrestis",
+        "Wezel/Hermelijn" = "Mustela nivalis/erminea",
+        "rat spec." = "Rattus norvegicus/rattus"
+      ),
+      vernacular_name_col = "dwc_vernacularName"
+    )
+  ),
   # Join taxon names and sort columns
   tar_target(
     name = dwc_mapping_final,
     command = finalise_dwc_df(
       data_df = darwincore_mapping,
-      taxonomy_df = manual_taxon_mapping
+      taxonomy_df = map_species_aggregates
     )
   ),
   # Write out GBIF dataset
