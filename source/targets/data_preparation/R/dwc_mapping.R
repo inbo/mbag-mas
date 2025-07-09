@@ -41,7 +41,7 @@ static_mapping <- function(data_df) {
   out_df <- data_df %>%
     mutate(
       dwc_type                 = "Event",
-      dwc_datasetID            = NA,
+      # dwc_datasetID            = NA, # doi after first publication
       dwc_language             = "en",
       dwc_license              = paste0("http://creativecommons.org/",
                                         "publicdomain/zero/1.0/"),
