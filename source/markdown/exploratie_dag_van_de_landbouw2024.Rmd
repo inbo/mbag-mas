@@ -132,7 +132,7 @@ We selecteren de data voor de westelijke Polders als alle punten ten westen van 
 
 ```{r}
 mas_data_depot <- mas_data_depot %>%
-          filter(x_lambert < 50990)
+  filter(x_lambert < 50990)
 mapview(depot_data_final, layer = "Depotter") +
   mapview(mas_data_depot, col.regions = "red",
           layer = "Referentiegebied Polders")
