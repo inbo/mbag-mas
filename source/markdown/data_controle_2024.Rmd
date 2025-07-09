@@ -1609,7 +1609,7 @@ empty_col_df <- dwc_mapping_final[
 sort(colnames(empty_col_df))
 ```
 
-> Aanvullen
+> ok
 
 Hoe ziet de dataset er uit?
 
