@@ -584,7 +584,7 @@ taxon_core_final <- taxon_core %>%
 # Select and sort columns
 col_order <- c(
   "type", "language", "license", "publisher", "rightsHolder", "accessRights",
-  "datasetID", "collectionCode", "institutionCode", "datasetName",
+  # "datasetID", "collectionCode", "institutionCode",
   "basisOfRecord", "eventType", "eventID",
   "occurrenceID", "recordedBy", "organismQuantity",
   "organismQuantityType", "occurrenceStatus", "behavior", "varbatimBehavior",

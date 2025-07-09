@@ -250,7 +250,8 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
   # Select and sort columns
   col_order <- c(
     "type", "language", "license", "publisher", "rightsHolder", "accessRights",
-    "datasetID", "collectionCode", "institutionCode", "datasetName",
+    # "datasetID",
+    "collectionCode", "institutionCode",
     "basisOfRecord", "eventType", "eventID", "is_mas_sample",
     "occurrenceID", "recordedBy", "organismQuantity",
     "organismQuantityType", "occurrenceStatus", "behavior", "varbatimBehavior",
