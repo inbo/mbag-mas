@@ -587,16 +587,17 @@ telcirkels_landgebruik <- lapply(punten, function(streek) {
 })
 
 # Classificatie landgebruik
-telcirkels_selectie_landgbrk <- lapply(telcirkels_landgebruik,
-                                          function(streek) {
-  punten_selectie_landgebruik(
-    lum_extract_result = streek,
-    legend_rast = read_legend_lum(file = path_to_legend_lum()),
-    max_prop_overige = 0.5,
-    min_prop_akker = 0.3,
-    min_prop_akker_grasland = 0.4
-  )
-})
+telcirkels_selectie_landgbrk <- lapply(
+  telcirkels_landgebruik, function(streek) {
+    punten_selectie_landgebruik(
+      lum_extract_result = streek,
+      legend_rast = read_legend_lum(file = path_to_legend_lum()),
+      max_prop_overige = 0.5,
+      min_prop_akker = 0.3,
+      min_prop_akker_grasland = 0.4
+    )
+  }
+)
 
 # Selecteer op landgebruik
 selectie_landgebruik <- lapply(names(punten), function(i) {
@@ -785,7 +786,7 @@ sbp_akkervogels_duinen <- read_sbp_akkervogels(
   gebied = kleine_landbouwstreken$Duinen,
   path_extra_soorten = path_to_sbp_akkervogels(
     file = "sbp_overige_soorten.shp"
-    ),
+  ),
   extra_soorten = c(
     "hamster", "bruine kiekendief", "zomertortel",
     "grauwe kiekendief"

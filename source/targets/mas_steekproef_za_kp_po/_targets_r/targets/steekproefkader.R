@@ -4,7 +4,7 @@ list(
     command = selectie_openheid(
       gebied = perimeters_data,
       ol_strata = c("OL", "HOL")
-      ),
+    ),
     pattern = map(perimeters_data),
     iteration = "list"
   ),
@@ -21,7 +21,7 @@ list(
       buffer_line = 100,
       layer_line = list(highway = c("motorway", "motorway_link")),
       update_osm_layer = FALSE
-      ),
+    ),
     pattern = map(selectie_openheid_klasses),
     iteration = "list"
   ),
@@ -36,7 +36,7 @@ list(
       historic_exclude = NULL,
       waterway = NULL,
       update_osm_layer = FALSE
-      ),
+    ),
     pattern = map(selectie_openheid_klasses, exclusie_osm_landgebruiken),
     iteration = "list"
   ),
@@ -47,7 +47,7 @@ list(
       gebieden = perimeters_data,
       interpoint_distance = 50,
       border_distance = 300
-      ),
+    ),
     pattern = map(perimeters_data, paden),
     iteration = "list"
   ) ,
@@ -58,19 +58,19 @@ list(
       radius = 300,
       file = vito_lum_2019_file,
       legend = legend_lum
-      ),
+    ),
     pattern = map(punten),
     iteration = "list"
   ),
   tar_target(
     name = telcirkels_selectie_landgebruik,
-      command = punten_selectie_landgebruik(
-        lum_extract_result = telcirkels_landgebruik,
-        legend_rast = legend_lum,
-        max_prop_overige = 0.5,
-        min_prop_akker = 0.3,
-        min_prop_akker_grasland = 0.4
-        ),
+    command = punten_selectie_landgebruik(
+      lum_extract_result = telcirkels_landgebruik,
+      legend_rast = legend_lum,
+      max_prop_overige = 0.5,
+      min_prop_akker = 0.3,
+      min_prop_akker_grasland = 0.4
+    ),
     pattern = map(telcirkels_landgebruik)
   ),
   tar_target(
@@ -78,7 +78,7 @@ list(
     command = selectie_landgebruik_vito(
       punten_sf = punten,
       selectie_df = telcirkels_selectie_landgebruik
-      ),
+    ),
     pattern = map(punten, telcirkels_selectie_landgebruik),
     iteration = "list"
   ),

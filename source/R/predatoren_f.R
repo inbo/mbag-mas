@@ -21,7 +21,8 @@ roofvogels_f <- function() {
     "Visarend",
     "Wespendief",
     "Zeearend",
-    "Zwarte Wouw")
+    "Zwarte Wouw"
+  )
 
   return(roofvogels)
 }
@@ -33,7 +34,8 @@ kraaiachtigen_f <- function() {
     "Kauw",
     "Raaf",
     "Roek",
-    "Zwarte Kraai")
+    "Zwarte Kraai"
+  )
 
   return(kraaiachtigen)
 }
