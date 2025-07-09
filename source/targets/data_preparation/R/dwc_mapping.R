@@ -244,7 +244,7 @@ add_species_aggregates <- function(
 
   # Get other taxa
   other_taxa_df <- taxonomy_df %>%
-    filter(!dwc_vernacularName %in% names(manual_taxon_list))
+    filter(!.data[[vernacular_name_col]] %in% names(manual_taxon_list))
 
   # Join datasets
   return(bind_rows(other_taxa_df, aggregate_taxa_df))
