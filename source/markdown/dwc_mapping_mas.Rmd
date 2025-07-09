@@ -565,7 +565,7 @@ sort(colnames(taxon_core)[grepl("^raw\\_", colnames(taxon_core))])
   - `raw_sbp` --> Overlap steekproefkader zenodo?
   - `raw_openheid_klasse` --> Overlap steekproefkader zenodo?
   - `raw_regio` --> Overlap steekproefkader zenodo?
-  - `raw_periode_in_jaar`: 1 van 4 telperiodes
+  - `raw_periode_in_jaar`: 1 van 4 telperiodes --> optioneel laat dit temporele dataveld toe om alle tellingen (events) in een jaar te groeperen per telperiode (als parentEvent)
   - `raw_status_teller`: is de waarnemer een professional of een vrijwilliger?
 - Kan hier nog iets mee gedaan worden?
   - `raw_doy`: day of year sinds januari
