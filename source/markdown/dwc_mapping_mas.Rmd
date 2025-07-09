@@ -127,8 +127,8 @@ Meestal ontbreken ze in `raw_data`.
 ```{r}
 taxon_core <- taxon_core %>%
   mutate(
-    dwc_type                 = "??",
-    dwc_datasetID            = "??",
+    dwc_type                 = "Event",
+    # dwc_datasetID            = NA, # doi after first publication
     dwc_language             = "en",
     dwc_license              = paste0("http://creativecommons.org/",
                                       "publicdomain/zero/1.0/"),
@@ -138,13 +138,12 @@ taxon_core <- taxon_core %>%
                                       "Forest (INBO)"),
     dwc_accessRights         = "http://www.inbo.be/en/norms-for-data-use",
     dwc_institutionCode      = "INBO",
-    dwc_datasetName          = "??",
     dwc_collectionCode       = "MAS",
     dwc_kingdom              = "Animalia",
     dwc_nomenclaturalCode    = "ICZN",
     dwc_eventType            = "Survey",
-    dwc_samplingProtocol     = "??",
-    dwc_samplingEffort       = "??",
+    dwc_samplingProtocol     = "Point count in 300 m radius",
+    dwc_samplingEffort       = "10 minutes",
     dwc_continent            = "Europe",
     dwc_country              = "Belgium",
     dwc_stateProvince        = "Flanders",
@@ -155,14 +154,16 @@ taxon_core <- taxon_core %>%
 
 **Vragen**
 
+> Beantwoord door Stijn Cooleman
+
 - Wat vul ik in voor volgende termen?
-  - `dwc_type`
-  - `dwc_datasetID`
-  - `dwc_datasetName`
-  - `dwc_samplingProtocol`
-  - `dwc_samplingEffort`
-- Is `dwc_language = "en"` ok?
-- Is `dwc_eventType = "Survey"` ok?
+  - `dwc_type` --> "Event" is geschikt volgens https://dwc.tdwg.org/list/#dc_type
+  - `dwc_datasetID` --> doi van de dataset is hiervoor geschikt, maar pas gekend na eerste publicatie en registratie van de dataset via de GBIF IPT. Dus dit is een waarde die doorgaans pas vanaf de eerste herpublicatie invulbaar is
+  - `dwc_datasetName` --> optioneel dataveld (wordt vaak niet ingevuld, gezien de redundante herhaling van de datasetnaam die al getoond wordt rechtsboven op iedere GBIF occurrence webpage)
+  - `dwc_samplingProtocol` --> "Point count" is een van de beste waarden om hierin te mappen volgens mij (grotendeels obv m'n tellingen op het terrein) voor het MAS-project, in lijn met andere voorbeelden via https://dwc.tdwg.org/list/#dwc_samplingProtocol
+  - `dwc_samplingEffort` --> "10 minutes" is een van de beste waarden om hierin te mappen volgens mij (obv m'n tellingen op het terrein) voor het MAS-project, in lijn met andere voorbeelden via https://dwc.tdwg.org/list/#dwc_samplingEffort
+- Is `dwc_language = "en"` ok? --> ok
+- Is `dwc_eventType = "Survey"` ok? --> ok
 
 ## Ongewijzigde waarden
 
@@ -191,7 +192,17 @@ taxon_core <- taxon_core %>%
 **Vragen**
 
 -  Ok dat `dwc_varbatimBehavior` de Nederlandstalige beschrijving is? De Engelstalige beschrijving wordt in de volgende sectie onder `dwc_behavior` aangemaakt. Of mag de Nederlandse beschrijving dan weg?
+
+> Stijn: ja, idd. als de Engelstalige beschrijvingen voor gedragingen/broedcodes in dwc_behavior gegeven is, dan wordt de Nederlandstalige beschrijving in een verbatim dataveld redundant, althans in GBIF. 
+NB: dwc_behavior is geprefereerd boven dwc_occurrenceRemarks:
+the dwc-mapping of the breeding indicative behaviors or evidences seems to be assigned to two different data fields in the initial GBIF publication of waarnemingen.be bird data:
+*dwc:behavior e.g. singing (https://www.gbif.org/occurrence/2262112345), alarming, transporting feed or faeces (https://www.gbif.org/occurrence/2262151951)
+*dwc:occurrenceRemarks e.g. adult in territory, occupied nest with eggs (https://www.gbif.org/occurrence/2262103881), occupied nest with young
+In my opinion, the latter terms should be consistently mapped to dwc:behavior.
+
 -  Wat is het verschil tussen `dwc_individualCount` en `dwc_organismQuantity`? Voorlopig gebruiken we `organismQuantity` voor aantallen en `organismQuantityType = individuals` wanneer broedcode gelijk aan 0 en `organismQuantityType = breeding pairs` wanneer broedcode > 0. In geval van broedcode > 0 moet `organismQuantity` eigenlijk gelijk zijn aan 1.
+
+> Stijn: perfect, in dit geval, gezien de standaardwijze van data-input via avimap per territorium (niet per individu)
 
 ## Gewijzigde waarden
 
@@ -422,6 +433,10 @@ manual_taxa_df <- tibble(
 manual_taxa_df %>%
   kable()
 ```
+
+> Stijn: dit is idd. een optie. een andere optie is meer gedetailleerd beide wetenschappelijke namen bijkomend samenvoegen in dwc_verbatimIdentification, of eventueel in dwc_scientificName, als 'species aggregate' als dwc_taxonRank kan (zoals in enkele meetnetten.be-datasets)
+er zijn namelijk meer dan deze 2 soorten Microtus muizen mogelijk in Vlaanderen volgens https://waarnemingen.be/search/?q=Microtus
+Bijv.: taxonRank = "species aggregate" voor scientificName = "Myotis mystacinus/brandtii" (2 verschillende, op elkaar gelijkende soorten, o.a. https://waarnemingen.be/species/373/) : https://www.gbif.org/species/180180210/verbatim
 
 We voeren de finale mapping uit om alle kolommen van interesse te bekomen.
 
