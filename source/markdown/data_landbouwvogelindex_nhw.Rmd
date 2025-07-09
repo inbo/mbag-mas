@@ -1,0 +1,530 @@
+---
+title: "Overzicht data voor landbouwvogelindex m.b.t. Europese Natuurherstelwet"
+author: "Ward Langeraert"
+date: "`r Sys.Date()`"
+output:
+  bookdown::html_document2:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../../output/rapporten/markdown/2025") })
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+# set up
+library(knitr)
+opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  out.width = "100%"
+)
+opts_knit$set(root.dir = here::here())
+```
+
+```{r}
+# packages
+library(tidyverse)
+library(here)
+library(zen4R)     # Download from zenodo
+library(INBOtheme)
+library(sf)
+
+theme_set(theme_inbo(transparent = TRUE))
+
+# Conflicts
+conflicted::conflicts_prefer(dplyr::filter)
+conflicted::conflicts_prefer(dplyr::select)
+
+# Paths
+targets_store <- here::here("source", "targets", "data_preparation", "_targets")
+```
+
+# Doel
+## Achtergrond
+
+Voor de Europese Natuurherstelwet (NHW) bekijken we hoe en met welke data de landbouwvogelindex kan worden berekend.
+Om het **MAS-meetnet** extra in de verf te zetten als noodzakelijke (beleids)monitoring, willen we meegeven voor welke soorten data uit **MAS** en **ABV** gebruikt kunnen worden.
+België heeft net zoals de andere lidstaten de verplichting om per biogeografische regio op Belgisch niveau te rapporteren. Maar België is de enige lidstaat die per gewest (Wallonië en Vlaanderen) een (verschillende) lijst van indicatorsoorten heeft:
+
+| Soort              | Lijst Vlaanderen      | Lijst Wallonië      | Monitoring Vlaanderen |
+|--------------------|-----------------------|---------------------|-----------------------|
+| Boerenzwaluw       | x                     | x                   | ABV + MAS             |
+| Geelgors           | x                     | x                   | ABV + MAS             |
+| Gele kwikstaart    | x                     | x                   | ABV + MAS             |
+| Grasmus            | x                     | x                   | ABV + MAS             |
+| Graspieper         | x                     | x                   | MAS ???               |
+| Grauwe gors        |                       | x                   | BBV (WGG)             |
+| Grauwe klauwier    |                       | x                   | BBV                   |
+| Grutto             | x                     |                     | ???                   |
+| Kievit             | x                     | x                   | ABV + MAS             |
+| Kneu               | x                     | x                   | ABV + MAS             |
+| Patrijs            | x                     | x                   | ABV + MAS             |
+| Ringmus            | x                     | x                   | ABV + MAS             |
+| Roek               |                       | x                   | BBV                   |
+| Roodborsttapuit    | x                     | x                   | ABV + MAS             |
+| Scholekster        | x                     |                     | ABV                   |
+| Spreeuw            |                       | x                   | ABV + MAS             |
+| Torenvalk          | x                     | x                   | ABV + MAS             |
+| Veldleeuwerik      | x                     | x                   | ABV + MAS             |
+| Wulp               | x                     |                     | ???                   |
+| Zomertortel        |                       | x                   | ???                   |
+
+Voor een aantal soorten is het **MAS-meetnet** ongetwijfeld beter en preciezer dan **ABV** in landbouwgebied.  
+Om een verderzetting van MAS te beargumenteren, moeten we aantonen dat dit wettelijk noodzakelijk is voor de **NHW-rapportage** en voor de beleidsopvolging.
+
+## Methode
+
+- Voor de soorten uit bovenstaande tabel ga we na hoe vaak ze gezien zijn in MAS (2024) en ABV (laatste volledige cyclus, in landbouwstratum)
+- Alle relevante cijfers worden samengebracht in een tabel (bv. ook totaal aantal telpunten/ km-hokken)
+
+## Data inlezen
+
+```{r}
+indicator_species_nl <- c(
+  "Boerenzwaluw",
+  "Geelgors",
+  "Gele Kwikstaart",
+  "Grasmus",
+  "Graspieper",
+  "Grauwe Gors",
+  "Grauwe Klauwier",
+  "Grutto",
+  "Kievit",
+  "Kneu",
+  "Patrijs",
+  "Ringmus",
+  "Roek",
+  "Roodborsttapuit",
+  "Scholekster",
+  "Spreeuw",
+  "Torenvalk",
+  "Veldleeuwerik",
+  "Wulp",
+  "Zomertortel"
+)
+```
+
+### MAS
+
+Voor MAS filteren we de data van 2024. We selecteren de data van de doelsoorten.
+
+```{r}
+# Load data
+mas_data_clean <- targets::tar_read("mas_data_clean", store = targets_store)
+
+# Filter data by year
+mas_2024_clean <- mas_data_clean %>%
+  filter(jaar == 2024)
+
+# Filter indicator species
+mas_2024_indicator <- mas_2024_clean %>%
+  filter(naam %in% indicator_species_nl) %>%
+  mutate(naam = factor(naam, levels = indicator_species_nl))
+```
+
+We controleren of alle indicatorsoorten aanwezig zijn in deze dataset.
+
+```{r}
+identical(
+  as.vector(sort(unique(mas_2024_indicator[["naam"]]))),
+  sort(indicator_species_nl)
+)
+
+# Which
+setdiff(indicator_species_nl, unique(mas_2024_indicator[["naam"]]))
+```
+
+### ABV
+
+We downloaden de dataset: ABV - Common breeding birds in Flanders, Belgium (post 2016).
+Ze wordt opgeslaan in de folder `data > abv > gbif_download_2025_04_28`.
+
+> GBIF.org (28 April 2025) GBIF Occurrence Download https://doi.org/10.15468/dl.w3cmdg
+
+```{r}
+# Load ABV data
+abv_data_dir <- here("data", "abv")
+abv_data_post2016 <- read_delim(
+  file.path(abv_data_dir, "gbif_download_2025_04_28", "occurrence.txt"),
+  delim = "\t",
+  show_col_types = FALSE
+)
+
+# Remove NA columns
+abv_data_post2016 <- abv_data_post2016[, colSums(is.na(abv_data_post2016)) <
+                                         nrow(abv_data_post2016)]
+```
+
+We downloaden de stratum data van zenodo en voegen ze toe aan de dataset.
+
+```{r}
+# Download data from zenodo if necessary
+file_sampling_framework <- file.path(abv_data_dir, "steekproefkader.csv")
+
+if (file.exists(file_sampling_framework)) {
+  sampling_framework_abv <- read_csv(file_sampling_framework,
+                                     show_col_types = FALSE)
+} else {
+  download_zenodo(
+    doi = "10.5281/zenodo.10103472",
+    path = abv_data_dir,
+    files = list("steekproefkader.csv")
+  )
+
+  sampling_framework_abv <- read_csv(file_sampling_framework,
+                                     show_col_types = FALSE)
+}
+
+# Join with abv data
+abv_data_post2016 <- abv_data_post2016 %>%
+  mutate(UTM = gsub("ABV\\_", "", verbatimLocality)) %>%
+  left_join(sampling_framework_abv, by = join_by(UTM))
+```
+
+We selecteren de data van de laatste 3-jarige cyclus (2022 - 2024).
+We selecteren de data van de doelsoorten en de hokken die tot het `Landbouw` stratum behoren. 
+
+```{r}
+abv_indicator <- abv_data_post2016 %>%
+  filter(
+    year %in% 2022:2024,
+    tolower(vernacularName) %in% tolower(indicator_species_nl),
+    tolower(Stratum) == "landbouw"
+  ) %>%
+  mutate(
+    naam = factor(stringr::str_to_title(vernacularName),
+                  levels = indicator_species_nl)
+  )
+```
+
+We controleren of alle indicatorsoorten aanwezig zijn in deze dataset.
+
+```{r}
+identical(
+  sort(unique(abv_indicator[["naam"]])),
+  sort(indicator_species_nl)
+)
+
+# Which
+setdiff(tolower(indicator_species_nl),
+        tolower(unique(abv_indicator[["naam"]])))
+```
+
+De Grauwe Gors en de Grauwe Klauwier werd niet gezien uitsluitend in de laatste cyclus in het `Landbouw` stratum.
+Werden deze wel in andere jaren en/of strata gezien?
+
+```{r}
+abv_data_post2016 %>%
+  filter(
+    tolower(vernacularName) %in% tolower(c("Grauwe Gors", "Grauwe Klauwier"))
+  ) %>%
+  select(
+    vernacularName, UTM, eventDate, Stratum, individualCount, level3Name,
+    level2Name
+  ) %>%
+  arrange(
+    vernacularName, UTM, eventDate, level3Name, level2Name
+  ) %>%
+  kable()
+```
+
+De Grauwe Gors werd wel gezien in vorige jaren in 'landbouw-hokken'.
+De Grauwe Klauwier werd enkel gezien in 2024 en enkel in het `Heide en duin` stratum.
+
+# Vergelijking van de meetnetten
+
+Het is moeilijk om beide meetnetten te vergelijken omdat de telinspanningen niet hetzelfde zijn en bijgevolg de kans op detectie verschilt.
+
+|    | MAS | ABV |
+|----|-----|-----|
+| lengte telcyclus | 1 cyclus = 1 jaar | 1 cyclus = 3 jaar |
+| aantal telrondes per jaar | 4 telrondes per jaar | 3 telrondes per jaar |
+| aantal telpunten per steekproefeenheid | telpunt = steekproefeenheid | 6 telpunten per km-hok |
+| duur telling | 10' per telpunt | 5' per telpunt |
+| afstand | 300 m | ongelimiteerd |
+
+In de volgende sectie geven we eerst de ruwe aantallen mee.
+In de laatste sectie doen we een poging doen om te corrigeren voor de ongelijke telinspanningen.
+
+Een belangrijk punt waarvoor we niet corrigeren is het verschil in de steekproeftrekking tussen beide meetnetten:
+
+ABV is een aselecte gestratificeerde steekproef waarbij zeldzamere habitats overbemonsterd worden.
+Voor `Landbouw` (het meest algemene stratum) wil dit zeggen dat uit de beschikbare hokken binnen dit stratum op een willekeurige manier een beperkt aantal hokken geselecteerd wordt voor bemonstering. Er is dus geen systematische voorkeur voor bepaalde locaties binnen landbouwgebied; elk hok binnen dit stratum heeft een gelijke kans om geselecteerd te worden (gelijke inclusiekansen).
+
+Bij MAS zijn de inclusiekansen niet gelijk. In elk stratum (landbouwstreek, open of half-open landschap, binnen of buiten SBP) worden telkens 50 telpunten geselecteerd, ongeacht de oppervlakte van het stratum. Dit betekent dat grotere strata relatief minder vertegenwoordigd zijn dan kleinere, wat leidt tot ongelijke inclusiekansen tussen strata. Bovendien wordt de Oostelijke Leemstreek overbemonsterd omwille van de langere telgeschiedenis in die regio. In de Weidestreek wordt daarnaast geen verdere opsplitsing in substrata gemaakt, waardoor ook binnen deze streek de verdeling van de telpunten niet proportioneel is aan oppervlakte of habitattypes.
+
+Met deze ongelijke inclusiekansen moet rekening gehouden worden voor een uitspraak op niveau Vlaanderen. Zo zullen de hogere inclusiekansen voor de Oostelijke leemstreek resulteren in een lager gewicht bij de berekening voor niveau Vlaanderen (cf. Horvitz-Thomson schatter). Stel dat we dit niet doen, dan zou een soort, zoals de Veldleeuwerik, die meer voorkomt in de Oostelijke leemstreek, de schatting voor Vlaanderen naar boven vertekenen. Door er wel mee rekening te houden, bekomen we onvertekende schatters voor een uitspraak op niveau Vlaanderen.
+
+# Ruwe aantallen
+## Aan- afwezigheid
+
+We vergelijken het aantal telpunten en km-hokken van beide datasets.
+We delen ook door het totaal aantal bezochte telpunten (MAS) en het totaal aantal bezochte hokken in `Landbouw` stratum (ABV).
+
+```{r}
+# Number of visited points MAS
+tot_points_mas <- length(unique(mas_data_clean$plotnaam))
+# Count number of points MAS
+mas_telpunten <- mas_2024_indicator %>%
+  st_drop_geometry() %>%
+  summarise(aantal_telpunten_mas = n_distinct(plotnaam),
+            tot_telpunten_mas = tot_points_mas,
+            prop_telpunten_mas = aantal_telpunten_mas / tot_telpunten_mas,
+            .by = naam)
+
+# Number of visited points ABV
+tot_points_abv <-
+  abv_data_post2016 %>%
+  filter(year %in% 2022:2024,
+         tolower(Stratum) == "landbouw") %>%
+  distinct(UTM) %>%
+  nrow()
+# Count number of points ABV
+abv_telpunten <- abv_indicator %>%
+  summarise(aantal_kmhokken_abv = n_distinct(UTM),
+            tot_hokken_abv = tot_points_abv,
+            prop_kmhokken_abv = aantal_kmhokken_abv / tot_hokken_abv,
+            .by = naam)
+
+# Join numbers
+joined_number_points <- full_join(mas_telpunten, abv_telpunten,
+                                  by = join_by(naam)) %>%
+  mutate(tot_hokken_abv = tot_points_abv) %>%
+  replace_na(list(aantal_kmhokken_abv = 0, prop_kmhokken_abv = 0))
+
+joined_number_points %>%
+  select(
+    naam, starts_with("aantal"), starts_with("prop"), starts_with("tot_")
+  ) %>%
+  arrange(desc(aantal_telpunten_mas)) %>%
+  kable()
+```
+
+Alle soorten worden in totaal vaker gezien in MAS. Dit is logisch want het totaal aantal telpunten is hoger dan het aantal hokken in ABV.
+
+> De rode lijn geeft een 1 op 1 relatie aan. Boven de lijn beteken meer in MAS, onder de lijn meer in ABV.
+
+```{r}
+joined_number_points %>%
+  ggplot(aes(x = aantal_kmhokken_abv, y = aantal_telpunten_mas)) +
+  geom_hline(yintercept = 0, colour = "lightgrey", linetype = "dashed") +
+  geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
+  ggrepel::geom_text_repel(aes(label = naam)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick")
+```
+
+Proportioneel, worden de meeste soorten vaker gezien in ABV.
+
+```{r}
+joined_number_points %>%
+  ggplot(aes(x = prop_kmhokken_abv, y = prop_telpunten_mas)) +
+  geom_hline(yintercept = 0, colour = "lightgrey", linetype = "dashed") +
+  geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
+  ggrepel::geom_text_repel(aes(label = naam)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick")
+```
+
+## Aantal individuen
+
+We vergelijken het aantal individuen in van beide datasets.
+We delen ook door het totaal aantal bezochte individuen (MAS) en het totaal aantal bezochte hokken in `Landbouw` stratum (ABV).
+Dit komt dus overeen met het gemiddeld aantal individuen per telpunt/hok per jaar/cyclus.
+
+```{r}
+# Count number of points MAS
+mas_individuals <- mas_2024_indicator %>%
+  st_drop_geometry() %>%
+  summarise(aantal_individuen_mas = sum(aantal),
+            tot_telpunten_mas = tot_points_mas,
+            rel_aantal_mas = aantal_individuen_mas / tot_telpunten_mas,
+            .by = naam)
+
+# Count number of points ABV
+abv_individuals <- abv_indicator %>%
+  summarise(aantal_individuen_abv = sum(individualCount),
+            tot_hokken_abv = tot_points_abv,
+            rel_aantal_abv = aantal_individuen_abv / tot_hokken_abv,
+            .by = naam)
+
+# Join numbers
+joined_number_individuals <- full_join(mas_individuals, abv_individuals,
+                                       by = join_by(naam)) %>%
+  mutate(tot_hokken_abv = tot_points_abv) %>%
+  replace_na(list(aantal_individuen_abv = 0, rel_aantal_abv = 0))
+
+joined_number_individuals %>%
+  select(
+    naam, starts_with("aantal"), starts_with("rel"), starts_with("tot_")
+  ) %>%
+  arrange(desc(aantal_individuen_mas)) %>%
+  kable()
+```
+
+Alle soorten worden in totaal vaker gezien in MAS. Dit is logisch want het totaal aantal telpunten is hoger dan het aantal hokken in ABV.
+
+```{r}
+joined_number_individuals %>%
+  ggplot(aes(x = aantal_individuen_abv, y = aantal_individuen_mas)) +
+  geom_hline(yintercept = 0, colour = "lightgrey", linetype = "dashed") +
+  geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
+  ggrepel::geom_text_repel(aes(label = naam)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick")
+```
+
+Proportioneel, worden de meeste soorten vaker gezien in ABV.
+
+```{r}
+joined_number_individuals %>%
+  ggplot(aes(x = rel_aantal_abv, y = rel_aantal_mas)) +
+  geom_hline(yintercept = 0, colour = "lightgrey", linetype = "dashed") +
+  geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
+  ggrepel::geom_text_repel(aes(label = naam)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick")
+```
+
+# Gecorrigeerde aantallen
+
+We corrigeren nu deze aantallen voor de ongelijke telinspanningen tussen beide meetnetten.
+
+## Aan- afwezigheid
+
+Voor het vergelijken van het aantal telpunten moeten we rekening houden met het feit dat telpunten van MAS 4x per jaar worden bezocht en telpunten van ABV 3x per jaar.
+Dat er 6x geteld wordt per km-hok, maar wel de helft korter dan bij MAS.
+We vermenigvuldigen de aantallen van ABV daarom met $1/6 \times 2 \times 4/3 = 4/9$.
+
+```{r}
+# Count number of points ABV
+abv_telpunten2 <- abv_indicator %>%
+  summarise(aantal_kmhokken_abv = n_distinct(UTM) * (4 / 9),
+            tot_hokken_abv = tot_points_abv,
+            prop_kmhokken_abv = aantal_kmhokken_abv / tot_hokken_abv,
+            .by = naam)
+
+# Join numbers
+joined_number_points_corr <- full_join(mas_telpunten, abv_telpunten2,
+                                       by = join_by(naam)) %>%
+  mutate(tot_hokken_abv = tot_points_abv) %>%
+  replace_na(list(aantal_kmhokken_abv = 0, prop_kmhokken_abv = 0))
+
+joined_number_points_corr %>%
+  select(
+    naam, starts_with("aantal"), starts_with("prop"), starts_with("tot_")
+  ) %>%
+  arrange(desc(aantal_telpunten_mas)) %>%
+  kable()
+```
+
+Alle soorten worden nog steeds vaker gezien in MAS ondanks de correctie. Dit is logisch want het totaal aantal telpunten is hoger dan het aantal hokken in ABV.
+
+```{r}
+joined_number_points_corr %>%
+  ggplot(aes(x = aantal_kmhokken_abv, y = aantal_telpunten_mas)) +
+  geom_hline(yintercept = 0, colour = "lightgrey", linetype = "dashed") +
+  geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
+  ggrepel::geom_text_repel(aes(label = naam)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick")
+```
+
+Proportioneel, worden de meeste soorten na correctie vaker gezien in MAS.
+
+```{r}
+joined_number_points_corr %>%
+  ggplot(aes(x = prop_kmhokken_abv, y = prop_telpunten_mas)) +
+  geom_hline(yintercept = 0, colour = "lightgrey", linetype = "dashed") +
+  geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
+  ggrepel::geom_text_repel(aes(label = naam)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick")
+```
+
+## Aantal individuen
+
+Voor het vergelijken van het aantal individuen moeten we rekening houden met het feit dat telpunten van MAS 4x per jaar worden bezocht en telpunten van ABV 3x per jaar.
+Dat er 6x geteld wordt per km-hok, maar wel de helft korter dan bij MAS.
+We vermenigvuldigen de aantallen van ABV daarom met $1/6 \times 2 \times 4/3 = 4/9$.
+
+We houden geen rekening met het verschil in de afstand tot waar soorten mogen geregistreerd worden omdat 300 m al een grote afstand is.
+
+```{r}
+# Count number of points ABV
+abv_individuals2 <- abv_indicator %>%
+  summarise(aantal_individuen_abv = sum(individualCount) * (4 / 9),
+            tot_hokken_abv = tot_points_abv,
+            rel_aantal_abv = aantal_individuen_abv / tot_hokken_abv,
+            .by = naam)
+
+# Join numbers
+joined_number_individuals_corr <- full_join(mas_individuals, abv_individuals2,
+                                            by = join_by(naam)) %>%
+  mutate(tot_hokken_abv = tot_points_abv) %>%
+  replace_na(list(aantal_individuen_abv = 0, rel_aantal_abv = 0))
+
+joined_number_individuals_corr %>%
+  select(
+    naam, starts_with("aantal"), starts_with("rel"), starts_with("tot_")
+  ) %>%
+  arrange(desc(aantal_individuen_mas)) %>%
+  kable()
+```
+
+Alle soorten worden in totaal vaker gezien in MAS.
+Dit is logisch want het totaal aantal telpunten is hoger dan het aantal hokken in ABV.
+Door de correctie is dit nog sterker dan voordien.
+
+```{r}
+joined_number_individuals_corr %>%
+  ggplot(aes(x = aantal_individuen_abv, y = aantal_individuen_mas)) +
+  geom_hline(yintercept = 0, colour = "lightgrey", linetype = "dashed") +
+  geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
+  ggrepel::geom_text_repel(aes(label = naam)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick")
+```
+
+We verwijderen Spreeuw voor visualisatie:
+
+```{r}
+joined_number_individuals_corr %>%
+  filter(naam != "Spreeuw") %>%
+  ggplot(aes(x = aantal_individuen_abv, y = aantal_individuen_mas)) +
+  geom_hline(yintercept = 0, colour = "lightgrey", linetype = "dashed") +
+  geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
+  ggrepel::geom_text_repel(aes(label = naam), max.overlaps = 20) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick")
+```
+
+Proportioneel is er door de correctie een veel sterkere 1 op 1 relatie tussen aantallen gezien bij MAS en aantallen gezien bij ABV.
+
+```{r}
+joined_number_individuals_corr %>%
+  ggplot(aes(x = rel_aantal_abv, y = rel_aantal_mas)) +
+  geom_hline(yintercept = 0, colour = "lightgrey", linetype = "dashed") +
+  geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
+  ggrepel::geom_text_repel(aes(label = naam)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick")
+```
+
+We verwijderen Spreeuw voor visualisatie:
+
+```{r}
+joined_number_individuals_corr %>%
+  filter(naam != "Spreeuw") %>%
+  ggplot(aes(x = rel_aantal_abv, y = rel_aantal_mas)) +
+  geom_hline(yintercept = 0, colour = "lightgrey", linetype = "dashed") +
+  geom_vline(xintercept = 0, colour = "lightgrey", linetype = "dashed") +
+  ggrepel::geom_text_repel(aes(label = naam), max.overlaps = 20) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, colour = "firebrick")
+```

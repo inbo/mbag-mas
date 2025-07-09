@@ -213,7 +213,7 @@ De som per landbouwstreek is dus 1.
 gewichten_mas_2024 <- bind_rows(
   gewichten_pl,
   gewichten_zn
-  ) %>%
+) %>%
   mutate(landbouwstreek = regio) %>%
   select(landbouwstreek, regio, openheid_klasse, sbp, n, w = prop)
 
@@ -275,7 +275,7 @@ cum_p1 <- cum_aantal_spec_strat %>%
     label = "R1",
     x = ymd(paste(jaar, r1_start, sep = "-")) +
       (ymd(paste(jaar, r1_stop, sep = "-")) -
-        ymd(paste(jaar, r1_start, sep = "-"))) / 2,
+         ymd(paste(jaar, r1_start, sep = "-"))) / 2,
     y = 0,
     vjust = -1
   ) +
@@ -289,7 +289,7 @@ cum_p1 <- cum_aantal_spec_strat %>%
     label = "R2",
     x = ymd(paste(jaar, r2_start, sep = "-")) +
       (ymd(paste(jaar, r2_stop, sep = "-")) -
-        ymd(paste(jaar, r2_start, sep = "-"))) / 2,
+         ymd(paste(jaar, r2_start, sep = "-"))) / 2,
     y = 0,
     vjust = -1
   ) +
@@ -303,7 +303,7 @@ cum_p1 <- cum_aantal_spec_strat %>%
     label = "R3",
     x = ymd(paste(jaar, r3_start, sep = "-")) +
       (ymd(paste(jaar, r3_stop, sep = "-")) -
-        ymd(paste(jaar, r3_start, sep = "-"))) / 2,
+         ymd(paste(jaar, r3_start, sep = "-"))) / 2,
     y = 0,
     vjust = -1
   ) +
@@ -317,7 +317,7 @@ cum_p1 <- cum_aantal_spec_strat %>%
     label = "R4",
     x = ymd(paste(jaar, r4_start, sep = "-")) +
       (ymd(paste(jaar, r4_stop, sep = "-")) -
-        ymd(paste(jaar, r4_start, sep = "-"))) / 2,
+         ymd(paste(jaar, r4_start, sep = "-"))) / 2,
     y = 0,
     vjust = -1
   ) +
@@ -362,7 +362,7 @@ cum_p2 <- cum_aantal_spec_strat %>%
     label = "R1",
     x = ymd(paste(jaar, r1_start, sep = "-")) +
       (ymd(paste(jaar, r1_stop, sep = "-")) -
-        ymd(paste(jaar, r1_start, sep = "-"))) / 2,
+         ymd(paste(jaar, r1_start, sep = "-"))) / 2,
     y = 0,
     vjust = -1
   ) +
@@ -376,7 +376,7 @@ cum_p2 <- cum_aantal_spec_strat %>%
     label = "R2",
     x = ymd(paste(jaar, r2_start, sep = "-")) +
       (ymd(paste(jaar, r2_stop, sep = "-")) -
-        ymd(paste(jaar, r2_start, sep = "-"))) / 2,
+         ymd(paste(jaar, r2_start, sep = "-"))) / 2,
     y = 0,
     vjust = -1
   ) +
@@ -390,7 +390,7 @@ cum_p2 <- cum_aantal_spec_strat %>%
     label = "R3",
     x = ymd(paste(jaar, r3_start, sep = "-")) +
       (ymd(paste(jaar, r3_stop, sep = "-")) -
-        ymd(paste(jaar, r3_start, sep = "-"))) / 2,
+         ymd(paste(jaar, r3_start, sep = "-"))) / 2,
     y = 0,
     vjust = -1
   ) +
@@ -404,7 +404,7 @@ cum_p2 <- cum_aantal_spec_strat %>%
     label = "R4",
     x = ymd(paste(jaar, r4_start, sep = "-")) +
       (ymd(paste(jaar, r4_stop, sep = "-")) -
-        ymd(paste(jaar, r4_start, sep = "-"))) / 2,
+         ymd(paste(jaar, r4_start, sep = "-"))) / 2,
     y = 0,
     vjust = -1
   ) +
@@ -621,8 +621,7 @@ freq_to_plot <- relfreqs_vogels %>%
   mutate(naam = reorder(naam, order_var,
     decreasing = FALSE
   )) %>%
-  filter(as.numeric(naam) > length(unique(naam)) - 20 |
-    naam %in% doelsoorten)
+  filter(as.numeric(naam) > length(unique(naam)) - 20 | naam %in% doelsoorten)
 
 p <- freq_to_plot %>%
   ggplot() +
@@ -717,8 +716,7 @@ relfreq_diff_zn <- relfreqs_vogels %>%
     FUN = "mean",
     decreasing = FALSE
   )) %>%
-  filter(as.numeric(naam) > length(unique(naam)) - 20 |
-    naam %in% doelsoorten)
+  filter(as.numeric(naam) > length(unique(naam)) - 20 | naam %in% doelsoorten)
 
 relfreq_diff_zn %>%
   ggplot() +
@@ -794,8 +792,7 @@ relfreq_diff_lm <- relfreqs_vogels %>%
     FUN = "mean",
     decreasing = FALSE
   )) %>%
-  filter(as.numeric(naam) > length(unique(naam)) - 20 |
-    naam %in% doelsoorten)
+  filter(as.numeric(naam) > length(unique(naam)) - 20 | naam %in% doelsoorten)
 
 relfreq_diff_lm %>%
   ggplot() +
@@ -849,9 +846,11 @@ relfreq_diff_total <- relfreqs_vogels %>%
     FUN = "mean",
     decreasing = FALSE
   )) %>%
-  filter(as.numeric(naam) > length(unique(naam)) - 10 |
-    as.numeric(naam) <= 10 |
-    naam %in% doelsoorten)
+  filter(
+    as.numeric(naam) > length(unique(naam)) - 10 |
+      as.numeric(naam) <= 10 |
+      naam %in% doelsoorten
+  )
 
 p <- relfreq_diff_total %>%
   ggplot() +
@@ -980,8 +979,7 @@ relfreq_ratio_zn <- relfreqs_vogels %>%
             by = join_by(naam)) %>%
   filter(!is.infinite(ratio_zn_lm_mean)) %>%
   mutate(naam = reorder(naam, rang, decreasing = TRUE)) %>%
-  filter(as.numeric(naam) > length(unique(naam)) - 20 |
-    naam %in% doelsoorten)
+  filter(as.numeric(naam) > length(unique(naam)) - 20 | naam %in% doelsoorten)
 
 p <- relfreq_ratio_zn %>%
   ggplot() +
@@ -1056,8 +1054,7 @@ relfreq_ratio_lm <- relfreqs_vogels %>%
   filter(ratio_lm_zn_mean != 0) %>%
   filter(!is.infinite(ratio_lm_zn_mean)) %>%
   mutate(naam = reorder(naam, rang, decreasing = FALSE)) %>%
-  filter(as.numeric(naam) > length(unique(naam)) - 20 |
-    naam %in% doelsoorten)
+  filter(as.numeric(naam) > length(unique(naam)) - 20 | naam %in% doelsoorten)
 
 p <- relfreq_ratio_lm %>%
   ggplot() +
@@ -1275,7 +1272,7 @@ cum_p1 <- cum_aantal_spec_strat %>%
     label = "R1",
     x = ymd(paste(jaar, r1_start, sep = "-")) +
       (ymd(paste(jaar, r1_stop, sep = "-")) -
-        ymd(paste(jaar, r1_start, sep = "-"))) / 2,
+         ymd(paste(jaar, r1_start, sep = "-"))) / 2,
     y = 0,
     vjust = -1
   ) +
@@ -1289,7 +1286,7 @@ cum_p1 <- cum_aantal_spec_strat %>%
     label = "R2",
     x = ymd(paste(jaar, r2_start, sep = "-")) +
       (ymd(paste(jaar, r2_stop, sep = "-")) -
-        ymd(paste(jaar, r2_start, sep = "-"))) / 2,
+         ymd(paste(jaar, r2_start, sep = "-"))) / 2,
     y = 0,
     vjust = -1
   ) +
@@ -1303,7 +1300,7 @@ cum_p1 <- cum_aantal_spec_strat %>%
     label = "R3",
     x = ymd(paste(jaar, r3_start, sep = "-")) +
       (ymd(paste(jaar, r3_stop, sep = "-")) -
-        ymd(paste(jaar, r3_start, sep = "-"))) / 2,
+         ymd(paste(jaar, r3_start, sep = "-"))) / 2,
     y = 0,
     vjust = -1
   ) +
@@ -1317,7 +1314,7 @@ cum_p1 <- cum_aantal_spec_strat %>%
     label = "R4",
     x = ymd(paste(jaar, r4_start, sep = "-")) +
       (ymd(paste(jaar, r4_stop, sep = "-")) -
-        ymd(paste(jaar, r4_start, sep = "-"))) / 2,
+         ymd(paste(jaar, r4_start, sep = "-"))) / 2,
     y = 0,
     vjust = -1
   ) +
@@ -1360,7 +1357,7 @@ cum_p2 <- cum_aantal_spec_strat %>%
     label = "R1",
     x = ymd(paste(jaar, r1_start, sep = "-")) +
       (ymd(paste(jaar, r1_stop, sep = "-")) -
-        ymd(paste(jaar, r1_start, sep = "-"))) / 2,
+         ymd(paste(jaar, r1_start, sep = "-"))) / 2,
     y = 0,
     vjust = -1
   ) +
@@ -1374,7 +1371,7 @@ cum_p2 <- cum_aantal_spec_strat %>%
     label = "R2",
     x = ymd(paste(jaar, r2_start, sep = "-")) +
       (ymd(paste(jaar, r2_stop, sep = "-")) -
-        ymd(paste(jaar, r2_start, sep = "-"))) / 2,
+         ymd(paste(jaar, r2_start, sep = "-"))) / 2,
     y = 0,
     vjust = -1
   ) +
@@ -1388,7 +1385,7 @@ cum_p2 <- cum_aantal_spec_strat %>%
     label = "R3",
     x = ymd(paste(jaar, r3_start, sep = "-")) +
       (ymd(paste(jaar, r3_stop, sep = "-")) -
-        ymd(paste(jaar, r3_start, sep = "-"))) / 2,
+         ymd(paste(jaar, r3_start, sep = "-"))) / 2,
     y = 0,
     vjust = -1
   ) +
@@ -1402,7 +1399,7 @@ cum_p2 <- cum_aantal_spec_strat %>%
     label = "R4",
     x = ymd(paste(jaar, r4_start, sep = "-")) +
       (ymd(paste(jaar, r4_stop, sep = "-")) -
-        ymd(paste(jaar, r4_start, sep = "-"))) / 2,
+         ymd(paste(jaar, r4_start, sep = "-"))) / 2,
     y = 0,
     vjust = -1
   ) +

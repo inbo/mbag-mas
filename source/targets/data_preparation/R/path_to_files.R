@@ -7,7 +7,8 @@ paths_to_counts_sovon <- function(
     file.path(proj_path, "data"),
     pattern = pattern,
     full.names = TRUE,
-    recursive = TRUE)
+    recursive = TRUE
+  )
 
   return(file_paths)
 }

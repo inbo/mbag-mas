@@ -4,7 +4,7 @@ list(
     thin_sample(
       sample = steekproef,
       thin_dist = 600
-      ),
+    ),
     pattern = map(steekproef),
     iteration = "list"
   ),
@@ -17,7 +17,7 @@ list(
       gebied = perimeters_data,
       overlap_prop = 0.5,
       sbp_file = do.call(rbind.data.frame, sbp_akkervogels)
-      ),
+    ),
     pattern = map(steekproef_thinned),
     iteration = "list"
   )
