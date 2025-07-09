@@ -6,7 +6,7 @@ tar_read_sf <- function(name, store) {
   out_df <- do.call(
     what = rbind.data.frame,
     args = c(list_sf, make.row.names = FALSE)
-    )
+  )
 
   return(out_df)
 }

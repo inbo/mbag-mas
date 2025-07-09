@@ -17,8 +17,10 @@ amersfoort_to_lambert72 <- function(sf_object) {
 
   # Transform according to most accurate pipeline
   out_sf <-
-    st_transform(st_geometry(sf_object), "EPSG:31370",
-                 pipeline = chosen_pipeline_definition
+    st_transform(
+      st_geometry(sf_object),
+      "EPSG:31370",
+      pipeline = chosen_pipeline_definition
     ) %>%
     st_sf(st_drop_geometry(sf_object)) %>%
     rename(geometry = ".") %>%
@@ -81,12 +83,16 @@ process_double_counted_data <- function(counts_df) {
 
   counts_df_state_pro <- counts_df %>%
     rename(waarnemer = "waarneme") %>%
-    mutate(status_teller = ifelse(
-      (.data$waarnemer %in% profs) |
-        (.data$waarnemer %in% profs_2022 & .data$jaar >= 2022) |
-        (.data$waarnemer %in% profs_2023 & .data$jaar >= 2023) |
-        (.data$waarnemer %in% profs_2024 & .data$jaar >= 2024),
-      "professioneel", "vrijwilliger"))
+    mutate(
+      status_teller = ifelse(
+        (.data$waarnemer %in% profs) |
+          (.data$waarnemer %in% profs_2022 & .data$jaar >= 2022) |
+          (.data$waarnemer %in% profs_2023 & .data$jaar >= 2023) |
+          (.data$waarnemer %in% profs_2024 & .data$jaar >= 2024),
+        "professioneel",
+        "vrijwilliger"
+      )
+    )
 
   # Identify points counted more than once per period
   doubles_df <- counts_df_state_pro %>%
@@ -102,9 +108,10 @@ process_double_counted_data <- function(counts_df) {
       semi_join(doubles_df, by = c("plotnaam", "jaar", "periode_in_jaar")) %>%
       # Calculate variables to validate count data in case of doubles
       group_by(.data$plotid, .data$jaar, .data$periode_in_jaar) %>%
-      mutate(prof_in_period = any(.data$status_teller == "professioneel"),
-             vol_in_period = any(.data$status_teller == "vrijwilliger"),
-             max_doy = (.data$doy == max(.data$doy))
+      mutate(
+        prof_in_period = any(.data$status_teller == "professioneel"),
+        vol_in_period = any(.data$status_teller == "vrijwilliger"),
+        max_doy = (.data$doy == max(.data$doy))
       ) %>%
       arrange(.data$plotid, .data$jaar, .data$periode_in_jaar, .data$doy,
               .data$waarnemer) %>%
@@ -210,8 +217,9 @@ rbind_all_mas_data <- function(sample_data, extra_data) {
   # Add extra data to sample data
   complete_df <- extra_data %>%
     # Recalculate and columns to comply with protocol data
-    mutate(distance2plot = NA,
-           datum = ymd(paste(.data$jaar, .data$maand, .data$dag, sep = "-"))
+    mutate(
+      distance2plot = NA,
+      datum = ymd(paste(.data$jaar, .data$maand, .data$dag, sep = "-"))
     ) %>%
     rename(waarnemer = "waarneme") %>%
 

@@ -135,7 +135,7 @@ taxon_core <- taxon_core %>%
     dwc_publisher            = paste0("Research Institute for Nature and",
                                       "Forest (INBO)"),
     dwc_rightsHolder         = paste0("Research Institute for Nature and",
-                                        "Forest (INBO)"),
+                                      "Forest (INBO)"),
     dwc_accessRights         = "http://www.inbo.be/en/norms-for-data-use",
     dwc_institutionCode      = "INBO",
     dwc_datasetName          = "??",
@@ -231,10 +231,16 @@ taxon_core <- taxon_core %>%
       .data$dwc_varbatimBehavior == "Paar in broedbiotoop" ~
         "Pair in breeding habitat"
     ),
-  dwc_coordinateUncertaintyInMeters = ifelse(.data$raw_distance2plot < 100,
-                                             10, 0.1 * .data$raw_distance2plot),
-  dwc_organismQuantityType = ifelse(.data$raw_wrntype == "0",
-                                    "individuals", "breeding pairs")
+    dwc_coordinateUncertaintyInMeters = ifelse(
+      .data$raw_distance2plot < 100,
+      10,
+      0.1 * .data$raw_distance2plot
+    ),
+    dwc_organismQuantityType = ifelse(
+      .data$raw_wrntype == "0",
+      "individuals",
+      "breeding pairs"
+    )
   ) %>%
   select(
     -"raw_oid",
@@ -274,7 +280,7 @@ example_specs <- c(
   "Veldmuis",
   "Aardmuis",
   "Veldmuis/Aardmuis"
-  )
+)
 
 example_df <- tibble(
   id = seq_along(example_specs),
@@ -294,7 +300,8 @@ We nemen de default limit (100).
 map_taxa_from_vernacular(
   vernacular_name_df = example_df,
   vernacular_name_col = "dwc_vernacularName",
-  out_cols = c("scientificName", "family", "class"))
+  out_cols = c("scientificName", "family", "class")
+)
 ```
 
 - Eekhoorn is een vlinder
@@ -308,7 +315,8 @@ map_taxa_from_vernacular(
   vernacular_name_df = example_df,
   vernacular_name_col = "dwc_vernacularName",
   out_cols = c("scientificName", "family", "class"),
-  filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"))
+  filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom")
+)
 ```
 
 - Haas wordt niet teruggevonden
@@ -322,7 +330,8 @@ map_taxa_from_vernacular(
   out_cols = c("scientificName", "family", "class"),
   filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
   limit = 1000,
-  increment = 200)
+  increment = 200
+)
 ```
 
 Uiteindelijk vinden we de wetenschappelijke naam voor Haas.
@@ -345,13 +354,15 @@ species_names_mas_list <- species_names_mas %>%
   lapply(select, -group)  # Remove the group column
 
 species_matching_mas_list <- lapply(
-  species_names_mas_list, map_taxa_from_vernacular,
+  species_names_mas_list,
+  map_taxa_from_vernacular,
   vernacular_name_col = "dwc_vernacularName",
   out_cols = c("scientificName", "family", "class"),
   filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
   lang = "nld",
   limit = 1000,
-  increment = 250)
+  increment = 250
+)
 
 species_matching_mas <- do.call(rbind.data.frame, species_matching_mas_list) %>%
   arrange(class, family, scientificName)
@@ -367,9 +378,10 @@ Deze moeten we manueel mappen:
 ```{r}
 # Do manual mapping for difficult taxa
 df_veldmuizen <- rgbif::name_usage("2438591")$data %>%
-  select(all_of(
-    c("scientificName", "phylum", "order", "family", "genus", "authorship",
-      "rank", "key")
+  select(
+    all_of(
+      c("scientificName", "phylum", "order", "family", "genus", "authorship",
+        "rank", "key")
     )
   ) %>%
   rename("speciesKey" = "key")
@@ -383,9 +395,10 @@ df_ratten <- rgbif::name_usage("2439223")$data %>%
   rename("speciesKey" = "key")
 
 df_spitsmuizen <- rgbif::name_usage("5534")$data %>%
-  select(all_of(
-    c("scientificName", "phylum", "order", "family", "authorship",
-      "rank", "key")
+  select(
+    all_of(
+      c("scientificName", "phylum", "order", "family", "authorship",
+        "rank", "key")
     )
   ) %>%
   rename("speciesKey" = "key")
@@ -396,8 +409,8 @@ manual_taxa_df <- tibble(
     "Veldmuis/Aardmuis",
     "rat spec.",
     "spitsmuis spec."
-    )
-  ) %>%
+  )
+) %>%
   bind_cols(
     bind_rows(
       df_veldmuizen,
@@ -415,14 +428,16 @@ We voeren de finale mapping uit om alle kolommen van interesse te bekomen.
 ```{r}
 # Final mapping for all species
 species_matching_mas_list2 <- lapply(
-  species_names_mas_list, map_taxa_from_vernacular,
+  species_names_mas_list,
+  map_taxa_from_vernacular,
   vernacular_name_col = "dwc_vernacularName",
   out_cols = c("scientificName", "phylum", "order", "family", "genus",
                "species", "authorship", "rank", "speciesKey"),
   filter_cols = list(class = "dwc_class", kingdom = "dwc_kingdom"),
   lang = "nld",
   limit = 1000,
-  increment = 250)
+  increment = 250
+)
 
 species_matching_mas2 <- do.call(rbind.data.frame,
                                  species_matching_mas_list2)
@@ -465,8 +480,9 @@ test_wet_names <- species_matching_mas2 %>%
          "authorship") %>%
   mutate(authorship = trimws(authorship)) %>%
   rowwise() %>%
-  mutate(scientificName = gsub(authorship, "", scientificName),
-         dwc_scientificName = trimws(gsub("\\(.*?\\)", "", scientificName))
+  mutate(
+    scientificName = gsub(authorship, "", scientificName),
+    dwc_scientificName = trimws(gsub("\\(.*?\\)", "", scientificName))
   ) %>%
   select(-"authorship", -"scientificName") %>%
   left_join(soorten_wet_mas, by = join_by("dwc_taxonID" == "euring")) %>%
