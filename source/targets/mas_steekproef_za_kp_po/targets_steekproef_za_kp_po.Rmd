@@ -18,12 +18,13 @@ knitr::opts_chunk$set(
   comment = "#>",
   echo = TRUE,
   warning = FALSE,
-  message = FALSE)
+  message = FALSE
+)
 target_dir <- rprojroot::find_root_file(
-    "source", "targets", "mas_steekproef_za_kp_po",
-    criterion = rprojroot::is_git_root)
-knitr::opts_knit$set(
-  root.dir = target_dir)
+  "source", "targets", "mas_steekproef_za_kp_po",
+  criterion = rprojroot::is_git_root
+)
+knitr::opts_knit$set(root.dir = target_dir)
 ```
 
 # Inleiding

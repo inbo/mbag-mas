@@ -96,7 +96,8 @@ mas_data_2024 %>%
   group_by(regio) %>%
   mutate(
     aantal_soorten = n_distinct(naam),
-    aantal_waarnemingen = n()) %>%
+    aantal_waarnemingen = n()
+  ) %>%
   ungroup(regio) %>%
   distinct(regio, aantal_soorten, aantal_waarnemingen) %>%
   arrange(regio) %>%
@@ -186,7 +187,7 @@ cum_aantal_spec %>%
     label = "R1",
     x = ymd(paste(jaar, r1_start, sep = "-")) +
       (ymd(paste(jaar, r1_stop, sep = "-")) -
-        ymd(paste(jaar, r1_start, sep = "-"))) / 2,
+         ymd(paste(jaar, r1_start, sep = "-"))) / 2,
     y = 0,
     vjust = -1
   ) +
@@ -200,7 +201,7 @@ cum_aantal_spec %>%
     label = "R2",
     x = ymd(paste(jaar, r2_start, sep = "-")) +
       (ymd(paste(jaar, r2_stop, sep = "-")) -
-        ymd(paste(jaar, r2_start, sep = "-"))) / 2,
+         ymd(paste(jaar, r2_start, sep = "-"))) / 2,
     y = 0,
     vjust = -1
   ) +
@@ -214,7 +215,7 @@ cum_aantal_spec %>%
     label = "R3",
     x = ymd(paste(jaar, r3_start, sep = "-")) +
       (ymd(paste(jaar, r3_stop, sep = "-")) -
-        ymd(paste(jaar, r3_start, sep = "-"))) / 2,
+         ymd(paste(jaar, r3_start, sep = "-"))) / 2,
     y = 0,
     vjust = -1
   ) +
@@ -228,7 +229,7 @@ cum_aantal_spec %>%
     label = "R4",
     x = ymd(paste(jaar, r4_start, sep = "-")) +
       (ymd(paste(jaar, r4_stop, sep = "-")) -
-        ymd(paste(jaar, r4_start, sep = "-"))) / 2,
+         ymd(paste(jaar, r4_start, sep = "-"))) / 2,
     y = 0,
     vjust = -1
   ) +

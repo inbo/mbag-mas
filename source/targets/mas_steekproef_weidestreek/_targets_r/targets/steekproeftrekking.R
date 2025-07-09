@@ -14,7 +14,7 @@ list(
         pull(prop),
       allocatie_leemstreek = 0,
       ol_strata = c("OL", "HOL")
-      ),
+    ),
     pattern = map(steekproefkader_finaal)
   ),
   tarchetypes::tar_group_by(
@@ -37,7 +37,7 @@ list(
       sample_size = 91,
       sample_size_multiplication = 1,
       balance = c("X", "Y")
-      ),
+    ),
     pattern = map(steekproefkader_per_stratum, allocatie_per_stratum),
     iteration = "list"
   )

@@ -14,7 +14,7 @@ list(
       allocatie_binnen_sbp = 0.5,
       allocatie_leemstreek = 0,
       ol_strata = c("OL", "HOL")
-      ),
+    ),
     pattern = map(steekproefkader_finaal, target_size)
   ),
   tarchetypes::tar_group_by(
@@ -40,7 +40,7 @@ list(
       sampling_frame = steekproefkader_per_stratum,
       sample_size_multiplication = 1,
       balance = c("X", "Y", "area_prop_sb")
-      ),
+    ),
     pattern = map(steekproefkader_per_stratum, allocatie_per_stratum),
     iteration = "list"
   )

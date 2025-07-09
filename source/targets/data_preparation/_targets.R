@@ -28,9 +28,9 @@ conflicted::conflicts_prefer(dplyr::lag)
 # Set directory locations
 target_dir <- rprojroot::find_root_file(
   "source", "targets", "data_preparation",
-  criterion = rprojroot::is_git_root)
-mbag_dir <- rprojroot::find_root_file(
-  criterion = rprojroot::is_git_root)
+  criterion = rprojroot::is_git_root
+)
+mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
 
 # Source custom functions
 lapply(list.files(file.path(target_dir, "R"), full.names = TRUE), source)
@@ -221,7 +221,8 @@ list(
         .data$dwc_taxonID,
         .data$dwc_vernacularName,
         .data$dwc_class,
-        .data$dwc_kingdom) %>%
+        .data$dwc_kingdom
+      ) %>%
       dplyr::arrange(dwc_vernacularName),
     size = 50
   ),

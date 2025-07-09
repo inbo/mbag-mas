@@ -5,24 +5,23 @@ join_with_sample <- function(counts_df, sample) {
 
   # Join with sample
   sample_counts <- inner_join(
-      x = counts_df,
-      y = sample,
-      by =  join_by("plotnaam" == "pointid")
-    )
+    x = counts_df,
+    y = sample,
+    by =  join_by("plotnaam" == "pointid")
+  )
 
   # Select data from correct years
   out_df <- sample_counts %>%
     mutate(keep = case_when(
       .data$regio == "Oostelijke leemstreek" & .data$jaar >= 2022 ~ TRUE,
       (.data$regio == "Westelijke leemstreek" |
-          .data$regio == "Zandleemstreek") & .data$jaar >= 2023 ~ TRUE,
+         .data$regio == "Zandleemstreek") & .data$jaar >= 2023 ~ TRUE,
       (.data$regio == "Polders" |
          .data$regio == "Kempen" |
          .data$regio == "Zandstreek" |
          .data$regio == "Weidestreek") & .data$jaar >= 2024 ~ TRUE,
       .default = FALSE
-      )
-    ) %>%
+    )) %>%
     filter(.data$keep) %>%
     select(-"keep")
 
@@ -94,8 +93,8 @@ calculate_obs_dist <- function(counts_df) {
   obs_to_point_distances <- counts_df %>%
     full_join(sampling_points, by = join_by("plotnaam", "regio")) %>%
     mutate(
-      calc_distance = st_distance(.data$geometry, .data$geometry.point,
-                                  by_element = TRUE
+      calc_distance = st_distance(
+        .data$geometry, .data$geometry.point, by_element = TRUE
       ),
       calc_distance = round(units::drop_units(.data$calc_distance))
     ) %>%
