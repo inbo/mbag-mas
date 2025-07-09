@@ -222,6 +222,34 @@ map_taxa_manual <- function(
   return(out_df)
 }
 
+add_species_aggregates <- function(
+    taxonomy_df,
+    manual_taxon_list,
+    vernacular_name_col = "dwc_vernacularName") {
+  require("dplyr")
+  require("rlang")
+
+  # Get taxa of interest
+  aggregate_taxa_df <- taxonomy_df %>%
+    filter(.data[[vernacular_name_col]] %in% names(manual_taxon_list)) %>%
+    mutate(
+      scientificName = recode(.data[[vernacular_name_col]],
+                              !!!manual_taxon_list)
+    ) %>%
+    mutate(
+      authorship = NA,
+      key = NA,
+      rank = "species aggregate"
+    )
+
+  # Get other taxa
+  other_taxa_df <- taxonomy_df %>%
+    filter(!dwc_vernacularName %in% names(manual_taxon_list))
+
+  # Join datasets
+  return(bind_rows(other_taxa_df, aggregate_taxa_df))
+}
+
 # Finalise DwC data
 finalise_dwc_df <- function(data_df, taxonomy_df) {
   require("dplyr")
