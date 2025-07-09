@@ -375,7 +375,7 @@ steekproef_final %>%
   mutate(
     regio = ifelse(grepl("leemstreek", regio), "Leemstreek", regio),
     stratum = paste(openheid_klasse, sbp, "plan")
-    ) %>%
+  ) %>%
   count(regio, stratum, name = "aantal telpunten") %>%
   group_by(regio) %>%
   mutate("aantal per regio" = sum(`aantal telpunten`)) %>%
