@@ -1,3 +1,10 @@
+```{r}
+#| echo: FALSE
+#| warning: FALSE
+#| message: FALSE
+library(knitr)
+```
+
 # Dataverwerking en statistisch analyseplan {#sec-analyseplan}
 
 In het vorige hoofdstuk werd beschreven hoe het steekproefkader voor het MAS in Vlaanderen werd bepaald en hoe we uiteindelijk een ruimtelijk gespreide, aselecte steekproef bekwamen.
@@ -73,6 +80,9 @@ De publicatie van de data 2018-2024 is gepland voor eind 2024.
 -   (Fig. \@ref(fig:analyse-plan), stap 7)
 -   \textcolor{red}{to do en zie pilootproject}
 
-```{r analyse-plan, out.width = "80%", fig.cap = "Stramien voor verwerking en analyse van MAS-data. Zie tekst voor verdere toelichting."}
+```{r}
+#| label: fig-analyse-plan
+#| fig.cap: "Stramien voor verwerking en analyse van MAS-data. Zie tekst voor verdere toelichting."
+#| out.width: "80%"
 include_graphics(file.path("media", "analyse_plan", "analyse_plan.png"))
 ```
