@@ -244,7 +244,6 @@ list(
         "Barmsijs (Grote of Kleine)" = 5231630, # species
         "Veldmuis/Aardmuis" = 2438591,          # genus
         "Wezel/Hermelijn" = 2433922,            # genus
-        "groene kikker-complex" = 2426629,      # genus
         "rat spec." = 2439223,                  # genus
         "spitsmuis spec." = 5534                # family
       ),
