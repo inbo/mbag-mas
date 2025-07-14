@@ -272,6 +272,8 @@ bafe6a6164dde186f309d1aacbcbff0ccde21735
 
 De toestand van de GitHub repository op het moment van de steekproeftrekking voor de andere landbouwstreken kan geraadpleegd worden in de GitHub repository van het MBAG - MAS project [@github-repo-mas] via de volgende commit hash:
 
+> this does not work in html:
+
 \begin{center}
 6b28c4430e011bf3af9707b8f02a83faa2fc5434
 \end{center}

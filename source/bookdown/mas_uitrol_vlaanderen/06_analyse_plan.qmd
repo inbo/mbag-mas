@@ -82,7 +82,8 @@ De publicatie van de data 2018-2024 is gepland voor eind 2024.
 
 ```{r}
 #| label: fig-analyse-plan
-#| fig.cap: "Stramien voor verwerking en analyse van MAS-data. Zie tekst voor verdere toelichting."
+#| fig.cap: "Stramien voor verwerking en analyse van MAS-data. Zie tekst voor
+#| verdere toelichting."
 #| out.width: "80%"
 include_graphics(file.path("media", "analyse_plan", "analyse_plan.png"))
 ```
