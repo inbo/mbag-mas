@@ -62,7 +62,7 @@ Werkwijze:
 
 **2. Exclusie irrelevante landgebruiken**
 
-In tweede instantie sluiten we een aantal landgebruiken uit op basis van OpenStreetMap data [@openstreetmapcontributors2024] (Tabel @tab-exclusie-landgebruik), Fig.
+In tweede instantie sluiten we een aantal landgebruiken uit op basis van OpenStreetMap data [@openstreetmapcontributors2024] (Tabel @tbl-exclusie-landgebruik), Fig.
 @fig-steekproef-afbakening B).
 Voor de uitbreiding in 2024 werd een recentere versie van de OpenStreetMap data gedownload op 31-01-2024.
 Naast de exclusie van deze landgebruiken, sluiten we ook een zone van 100 m rond autosnelwegen en invoegstroken en afritten van autosnelwegen uit.
@@ -120,7 +120,7 @@ tibble(
 **3. Bepalen geldige plaatsen waar telling kan uitgevoerd worden**
 
 MAS tellingen gebeuren altijd vanaf een openbare weg of pad, er worden in principe nooit (landbouw)percelen betreden.
-We gebruiken daarom een extractie uit OpenStreetMap van alle wegentypes die in aanmerkingen komen (positieve selectie, dus snelwegen en dergelijke worden hier indirect uitgesloten) (Tabel @tab-inclusie-wegen, Fig. @fig-steekproef-afbakening C):
+We gebruiken daarom een extractie uit OpenStreetMap van alle wegentypes die in aanmerkingen komen (positieve selectie, dus snelwegen en dergelijke worden hier indirect uitgesloten) (Tabel @tbl-inclusie-wegen, Fig. @fig-steekproef-afbakening C):
 
 ```{r}
 #| label: tbl-inclusie-wegen
@@ -191,7 +191,7 @@ Dit is geen sterke filtering, maar heeft slechts de intentie om de meest extreme
 #| in de Leemstreek."
 #| out.width: "80%"
 include_graphics(file.path("media", "visibility",
-                           "voorbeeld_zichtbaarheid.pdf"))
+                           "voorbeeld_zichtbaarheid.png"))
 ```
 
 ### Stratificatievariabelen en steekproeftrekking {#sec-mas-stratificatie}
@@ -204,8 +204,7 @@ Maar ook binnen een landbouwstreek willen we verder stratificeren in termen van 
 
 De stratificatie binnen versus buiten SBP zal ons helpen om telpunten te vergelijken waar veel beschermingsmaatregelen genomen zijn versus telpunten met weinig beschermingsmaatregelen.
 We nemen kerngebieden en zoekzones samen als binnen SBP en alles hierbuiten beschouwen we als controle.
-Voor het SBP gebied combineren we meerdere SBP lagen (zie Bijlage \textcolour{red}{sbp-per-soort}): (1) perimeter SBP akkervogels [@jansen2022adviesakkervogels], (2) SBP grauwe kiekendief (oude perimeter van in gebruik van 2018 t/m 2022 [@vandegehuchte2015grauwekiekendief] en nieuwe (door INBO voorgestelde) perimeter [@spanoghe2022grauwekiekendief]), en (3) SBP bruine kiekendief, zomertortel en hamster [@overigeSBPs].
-Deze stratificatie is niet zwart-wit.
+<!-- Voor het SBP gebied combineren we meerdere SBP lagen (zie Bijlage \textcolor{red}{sbp-per-soort}): (1) perimeter SBP akkervogels [@jansen2022adviesakkervogels], (2) SBP grauwe kiekendief (oude perimeter van in gebruik van 2018 t/m 2022 [@vandegehuchte2015grauwekiekendief] en nieuwe (door INBO voorgestelde) perimeter [@spanoghe2022grauwekiekendief]), en (3) SBP bruine kiekendief, zomertortel en hamster [@overigeSBPs]. --> Deze stratificatie is niet zwart-wit.
 Ook binnen SBP gebied zullen er telpunten zijn met weinig beschermingsmaatregelen en het omgekeerde kan ook het geval zijn.
 De stratificatie zorgt er echter voor dat we de kans om van beide situaties voldoende gevallen hebben vergroten.
 In latere analyses hoeven we deze factor (binnen versus buiten SBP) niet per se te gebruiken, we kunnen in de plaats ervan de oppervlakte aan SBP beschermingsmaatregelen binnen een telcirkel modelleren.
@@ -378,11 +377,11 @@ projroot <- rprojroot::find_root(rprojroot::has_file(file))
 steekproef_final <- read_csv(file.path(projroot, file), show_col_types = FALSE)
 ```
 
-In totaal worden `r nrow(steekproef_final)` telpunten geteld in kader van MAS Vlaanderen (Tabel @tab-aantal-telpunten).
+In totaal worden `r nrow(steekproef_final)` telpunten geteld in kader van MAS Vlaanderen (Tabel @tbl-aantal-telpunten).
 Figuur @fig-mas-steekproef-tot toont de verspreiding van deze punten.
 
-```{r aantal-telpunten}
-#| label: tbl-aantal-telpuntent
+```{r}
+#| label: tbl-aantal-telpunten
 #| tbl-cap: "Aantal telpunten MAS Vlaanderen."
 steekproef_final %>%
   mutate(

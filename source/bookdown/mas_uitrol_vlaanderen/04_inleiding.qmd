@@ -1,4 +1,4 @@
-```{r googledrive, include = FALSE}
+```{r googledrive, echo = FALSE, eval=FALSE}
 # Download media from Google Drive
 # authenticatie google drive
 library(googledrive)

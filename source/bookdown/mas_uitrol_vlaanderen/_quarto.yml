@@ -8,7 +8,7 @@ project:
   - '*.qmd'
   - '!LICENSE.md'
   - '!README.md'
-  output-dir: "../../../output/rapporten"
+  output-dir: "../../../output/rapporten/mas_uitrol_vlaanderen"
   post-render: _extensions/inbo/flandersqmd-book/filters/post_render.R
 
 execute:
@@ -78,7 +78,7 @@ flandersqmd:
     email: "koen.devos@inbo.be"
     orcid: "0000-0001-7265-6349"
     affiliation: "Instituut voor Natuur- en Bosonderzoek (INBO)"
-    - name:
+  - name:
       given: "Olivier"
       family: "Dochy"
     email: "olivier.dochy@inbo.be"
@@ -124,7 +124,7 @@ book:
     - text: Aanbevelingen
       file: 03_aanbevelingen.md
     - text: Inleiding
-      file: 04_inleiding.md
+      file: 04_inleiding.qmd
   chapters:
   - index.md
   - 01_samenvatting.md
