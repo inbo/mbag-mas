@@ -8,19 +8,19 @@ library(knitr)
 # Dataverwerking en statistisch analyseplan {#sec-analyseplan}
 
 In het vorige hoofdstuk werd beschreven hoe het steekproefkader voor het MAS in Vlaanderen werd bepaald en hoe we uiteindelijk een ruimtelijk gespreide, aselecte steekproef bekwamen.
-Hier bespreken we het stramien voor verwerking en analyse van de MAS-data vanaf de steekproef (Fig. \@ref(fig:analyse-plan)).
+Hier bespreken we het stramien voor verwerking en analyse van de MAS-data vanaf de steekproef (Fig. @fig-analyse-plan).
 Deze worden uitgevoerd met R [@R] in RStudio [@RStudio] tenzij anders vermeld.
 
 ## Uitvoeren van de tellingen {#sec-stap-1}
 
--   Figuur \@ref(fig:analyse-plan), stap 1
+-   Figuur @fig-analyse-plan, stap 1
 -   De telpunten uit de steekproef worden toebedeeld aan tellers en geteld volgens het MAS-protocol \textcolor{red}{[REF]}.
 -   \textcolor{red}{Waarnemingen worden via de Avimap app ingegeven en komen zo bij Sovon terecht.}
 -   Het export- en downloadproces van deze data van Sovon word beschreven door \textcolor{red}{[REF]}.
 
 ## Data opkuisen en voorbereiden {#sec-stap-2}
 
-Het opkuisen en voorbereiden van de data gebeurt via de **targets** "pipeline tool" R package [@targets-package] (Fig. \@ref(fig:analyse-plan), stap 2).
+Het opkuisen en voorbereiden van de data gebeurt via de **targets** "pipeline tool" R package [@targets-package] (Fig. @fig-analyse-plan, stap 2).
 De ruwe data zoals verkregen na stap 1 is het startpunt.
 Daarna volgen verschillende opeenvolgende stappen:
 
@@ -42,7 +42,7 @@ Na deze verwerkingsstappen hebben we een schone, opgekuiste dataset.
 
 ## Data voorbereiden voor publicatie {#sec-stap-3}
 
-De finale dataset wordt verder in de 'targets pipeline' klaar gemaakt voor publicatie op GBIF (<https://www.gbif.org/>) (Fig. \@ref(fig:analyse-plan), stap 3).
+De finale dataset wordt verder in de 'targets pipeline' klaar gemaakt voor publicatie op GBIF (<https://www.gbif.org/>) (Fig. @fig-analyse-plan, stap 3).
 De publicatie van de data 2018-2024 is gepland voor eind 2024.
 \textcolor{red}{Preparatie van data publicatie gaat voornamelijk over Darwin Core mapping ... .} Het gaat om de volgende stappen:
 
@@ -68,7 +68,7 @@ De publicatie van de data 2018-2024 is gepland voor eind 2024.
 
 ## Verzamelen van verklarende variabelen en datasets samenvoegen {#sec-stap-4}
 
--   (Fig. \@ref(fig:analyse-plan), stappen 4-6)
+-   (Fig. @fig-analyse-plan, stappen 4-6)
 
 -   \textcolor{red}{to do en zie pilootproject}
 
@@ -77,7 +77,7 @@ De publicatie van de data 2018-2024 is gepland voor eind 2024.
 
 ## Statistische analyse {#sec-stap-7}
 
--   (Fig. \@ref(fig:analyse-plan), stap 7)
+-   (Fig. @fig-analyse-plan, stap 7)
 -   \textcolor{red}{to do en zie pilootproject}
 
 ```{r}
