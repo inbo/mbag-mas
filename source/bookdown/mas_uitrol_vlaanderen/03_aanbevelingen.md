@@ -21,25 +21,6 @@ toc: false
 
 \clearpage
 
-<!-- remove this line when you have neither a list of figures and a list of tables -->
-
-<!-- remove this block when you don't want a list of figures -->
-
-\phantomsection
-\addcontentsline{toc}{chapter}{\listfigurename}
-\listoffigures
-\vspace{34pt}
-
-<!-- remove this block when you don't want a list of figures -->
-
-<!-- remove this block when you don't want a list of tables -->
-
-\phantomsection
-\addcontentsline{toc}{chapter}{\listtablename}
-\listoftables
-
-<!-- remove this block when you don't want a list of tables -->
-
 <!-- keep the lines below -->
 :::
 
