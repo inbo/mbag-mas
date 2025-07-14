@@ -1,9 +1,0 @@
-<!-- hier komt de inhoudstafel bij pdf -->
-
-\mainmatter
-
-# Inleiding {#inleiding}
-
--   kadering van dit rapport
--   MBAG
--   uitbreiding t.o.v. het MAS pilootproject
