@@ -216,7 +216,8 @@ Maar ook binnen een landbouwstreek willen we verder stratificeren in termen van 
 
 De stratificatie binnen versus buiten SBP zal ons helpen om telpunten te vergelijken waar veel beschermingsmaatregelen genomen zijn versus telpunten met weinig beschermingsmaatregelen.
 We nemen kerngebieden en zoekzones samen als binnen SBP en alles hierbuiten beschouwen we als controle.
-<!-- Voor het SBP gebied combineren we meerdere SBP lagen (zie Bijlage \textcolor{red}{sbp-per-soort}): (1) perimeter SBP akkervogels [@jansen2022adviesakkervogels], (2) SBP grauwe kiekendief (oude perimeter van in gebruik van 2018 t/m 2022 [@vandegehuchte2015grauwekiekendief] en nieuwe (door INBO voorgestelde) perimeter [@spanoghe2022grauwekiekendief]), en (3) SBP bruine kiekendief, zomertortel en hamster [@overigeSBPs]. --> Deze stratificatie is niet zwart-wit.
+Voor het SBP gebied combineren we meerdere SBP lagen (zie @sec-sbp-per-soort): (1) perimeter SBP akkervogels [@jansen2022adviesakkervogels], (2) SBP grauwe kiekendief (oude perimeter van in gebruik van 2018 t/m 2022 [@vandegehuchte2015grauwekiekendief] en nieuwe (door INBO voorgestelde) perimeter [@spanoghe2022grauwekiekendief]), en (3) SBP bruine kiekendief, zomertortel en hamster [@overigeSBPs].
+Deze stratificatie is niet zwart-wit.
 Ook binnen SBP gebied zullen er telpunten zijn met weinig beschermingsmaatregelen en het omgekeerde kan ook het geval zijn.
 De stratificatie zorgt er echter voor dat we de kans om van beide situaties voldoende gevallen hebben vergroten.
 In latere analyses hoeven we deze factor (binnen versus buiten SBP) niet per se te gebruiken, we kunnen in de plaats ervan de oppervlakte aan SBP beschermingsmaatregelen binnen een telcirkel modelleren.

@@ -136,3 +136,5 @@ book:
   - 07_resultaten.qmd
   - 08_discussie.qmd
   - 09_referenties.md
+  appendices:
+    - kaarten_sbp.qmd

@@ -1,0 +1,7 @@
+# Gebruikte kaarten van soortbeschermingsprogramma's voor stratificatie {#sec-sbp-per-soort}
+
+```{r}
+#| out.width: "100%"
+knitr::include_graphics(file.path("media", "kaartjes",
+                                  "sbp_mbag_per_soort_totaal.png"))
+```
