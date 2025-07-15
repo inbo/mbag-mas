@@ -1,4 +1,4 @@
-# Overzicht tellingen 2023 {#resultaten-2023}
+# Overzicht tellingen 2023 {#sec-resultaten}
 
 -   samenvattende tabellen en beschrijvende statistieken tellingen (zand)leemstreek 2023
 -   ...

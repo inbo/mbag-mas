@@ -1,17 +1,29 @@
-# Een meetnet agrarische soorten in Vlaanderen {#uitrol-vlaanderen}
+```{r}
+#| echo: FALSE
+#| warning: FALSE
+#| message: FALSE
+library(knitr)
+library(dplyr)
+library(readr)
+```
+
+# Een meetnet agrarische soorten in Vlaanderen {#sec-uitrol-vlaanderen}
 
 De opbouw voor MAS Vlaanderen werd al grotendeels besproken in \textcolor{red}{[REF]}.
-Dit meetnet wordt opgebouwd op basis van de verschillende landbouwstreken in Vlaanderen (Fig. \@ref(fig:landbouwstreken)).
+Dit meetnet wordt opgebouwd op basis van de verschillende landbouwstreken in Vlaanderen (@fig-landbouwstreken).
 
-```{r landbouwstreken, out.width = "100%", fig.cap = "Landbouwstreken in Vlaanderen"}
+```{r}
+#| label: fig-landbouwstreken
+#| fig.cap: "Landbouwstreken in Vlaanderen."
+#| out.width: "100%"
 include_graphics(file.path("media", "kaartjes", "landbouwstreken_vl.png"))
 ```
 
-In dit hoofdstuk vatten we eerst samen hoe het meetnet is opgebouwd en de steekproeftrekking werd gedaan (Sectie \@ref(meetnet-ontwerp)).
-Daarna overlopen we welke stappen voor MAS Vlaanderen reeds werden gedaan (Zandleemstreek en Leemstreek) \textcolor{red}{[REF]} en welke uitbreiding er in 2024 gepland is (Polders, Zandstreek, Kempen) (Sectie \@ref(mas-vlaanderen)).
-Ten slotte bespreken we de overige, kleine streken (Duinen, Weidestreek) apart in Sectie \@ref(overige-streken).
+In dit hoofdstuk vatten we eerst samen hoe het meetnet is opgebouwd en de steekproeftrekking werd gedaan (@sec-meetnet-ontwerp).
+Daarna overlopen we welke stappen voor MAS Vlaanderen reeds werden gedaan (Zandleemstreek en Leemstreek) \textcolor{red}{[REF]} en welke uitbreiding er in 2024 gepland is (Polders, Zandstreek, Kempen) (@sec-mas-vlaanderen).
+Ten slotte bespreken we de overige, kleine streken (Duinen, Weidestreek) apart in @sec-overige-streken.
 
-## Ontwerp van de gegevensinzameling {#meetnet-ontwerp}
+## Ontwerp van de gegevensinzameling {#sec-meetnet-ontwerp}
 
 We overlopen volgende stappen:
 
@@ -20,21 +32,21 @@ We overlopen volgende stappen:
 -   Overlap met bestaande telpunten en manuele controle
 -   Verzekering reproduceerbaarheid en traceerbaarheid
 
-### Afbakening steekproefkader {#mas-steekproefkader}
+### Afbakening steekproefkader {#sec-mas-steekproefkader}
 
 Een steekproefkader heeft de bedoeling om de statistische doelpopulatie die we willen onderzoeken zo goed mogelijk te benaderen.
 Een steekproefkader kan bijvoorbeeld een lijst zijn (bv. alle landbouwbedrijven in Vlaanderen) of het kan een ruimtelijke afbakening zijn (bv. de contour van Vlaanderen).
 In het geval van het MAS Vlaanderen maken we een lijst aan van potentiële telpuntlocaties.
 
 Voor de afbakening van het steekproefkader, starten we met een intersectie van de landbouwstreken van België met de contour van Vlaanderen.
-We bekomen dus polygonen voor elke landbouwstreek in Vlaanderen[^02_uitrol_meetnet-1].
+We bekomen dus polygonen voor elke landbouwstreek in Vlaanderen[^05_uitrol_meetnet-1].
 We moeten nu echter het steekproefkader verder verfijnen.
 Dit doen we in zes opeenvolgende stappen.
 De uiteindelijk bekomen lijst van potentiële telpuntlocaties vormt het steekproefkader van het MAS in Vlaanderen.
 
 **1. Selectie open en halfopen landschap**
 
-Binnen deze polygonen selecteren we open en halfopen landschap (Fig. \@ref(fig:steekproef-afbakening)A).
+Binnen deze polygonen selecteren we open en halfopen landschap (@fig-steekproef-afbakening A).
 Om de openheid van het landschap te bepalen, moeten we een operationele definitie maken van hoe open een landschap is.
 We maken hiervoor gebruik van het DSM (digitaal oppervlakte model - DHMV II Vlaanderen) [@DSM] en het DTM (digitaal terrein model) [@DTM] op 5 m resolutie.
 Werkwijze:
@@ -50,15 +62,16 @@ Werkwijze:
 
 **2. Exclusie irrelevante landgebruiken**
 
-In tweede instantie sluiten we een aantal landgebruiken uit op basis van OpenStreetMap data [@openstreetmapcontributors2024] (Tabel \@ref(tab:exclusie-landgebruik), Fig.
-\@ref(fig:steekproef-afbakening)B).
+In tweede instantie sluiten we een aantal landgebruiken uit op basis van OpenStreetMap data [@openstreetmapcontributors2024] (@tbl-exclusie-landgebruik), @fig-steekproef-afbakening B).
 Voor de uitbreiding in 2024 werd een recentere versie van de OpenStreetMap data gedownload op 31-01-2024.
 Naast de exclusie van deze landgebruiken, sluiten we ook een zone van 100 m rond autosnelwegen en invoegstroken en afritten van autosnelwegen uit.
 Dit omdat langs autosnelwegen vaak parallelle paden liggen.
 Dit kan in de steekproef tot gevolg hebben dat er met een hogere waarschijnlijkheid een punt wordt geselecteerd vlak bij een snelweg, omdat er veel van zulke punten zijn.
 De realiteit van het terrein kan een invloed hebben op de waarnemingen (bv. vaak kraaiachtigen en Buizerd langs snelwegen) en vrij zeker ook op de detecteerbaarheid (geluidsoverlast en beperkte zichtbaarheid).
 
-```{r exclusie-landgebruik}
+```{r}
+#| label: tbl-exclusie-landgebruik
+#| tbl-cap: "Exclusie van landgebruiken MAS Vlaanderen."
 tibble(
   landgebruik = c("woongebied",
                   "militair terrein",
@@ -98,20 +111,19 @@ tibble(
     "https://wiki.openstreetmap.org/wiki/Tag:highway%3Dmotorway_link"
   )
 ) %>%
-  kable(caption = paste("Exclusie van landgebruiken MAS Vlaanderen."),
-        booktabs = TRUE) %>%
-  kableExtra::kable_styling(latex_options = c("scale_down", "striped")) %>%
+  kable(booktabs = TRUE) %>%
+  kableExtra::kable_styling(latex_options = "striped", font_size = 7) %>%
   kableExtra::row_spec(0, bold = TRUE)
-
 ```
 
 **3. Bepalen geldige plaatsen waar telling kan uitgevoerd worden**
 
 MAS tellingen gebeuren altijd vanaf een openbare weg of pad, er worden in principe nooit (landbouw)percelen betreden.
-We gebruiken daarom een extractie uit OpenStreetMap van alle wegentypes die in aanmerkingen komen (positieve selectie, dus snelwegen en dergelijke worden hier indirect uitgesloten) (Tabel \@ref(tab:inclusie-wegen), Fig.
-\@ref(fig:steekproef-afbakening)C):
+We gebruiken daarom een extractie uit OpenStreetMap van alle wegentypes die in aanmerkingen komen (positieve selectie, dus snelwegen en dergelijke worden hier indirect uitgesloten) (@tbl-inclusie-wegen, @fig-steekproef-afbakening C):
 
-```{r inclusie-wegen}
+```{r}
+#| label: tbl-inclusie-wegen
+#| tbl-cap: "Selectie routes waarlangs telpunten gelegd kunnen worden."
 tibble(
   wegen = c("veldwegen en boswegen",
             "tertiare wegen",
@@ -130,29 +142,33 @@ tibble(
     "https://wiki.openstreetmap.org/wiki/Tag:highway%3Dunclassified"
   )
 ) %>%
-  kable(caption = paste("Selectie routes waarlangs telpunten gelegd kunnen",
-                        "worden."),
-        booktabs = TRUE) %>%
-  kableExtra::kable_styling(latex_options = c("scale_down", "striped")) %>%
+  kable(booktabs = TRUE) %>%
+  kableExtra::kable_styling(latex_options = "striped", font_size = 8) %>%
   kableExtra::row_spec(0, bold = TRUE)
-
 ```
 
 **4. Omvorming van wegennetwerk tot puntennetwerk**
 
-Vervolgens hebben we dit netwerk van wegen omgevormd tot een puntennetwerk (Fig. \@ref(fig:steekproef-afbakening)D), waarbij elk punt een potentieel telpunt kan zijn:
+Vervolgens hebben we dit netwerk van wegen omgevormd tot een puntennetwerk (@fig-steekproef-afbakening D), waarbij elk punt een potentieel telpunt kan zijn:
 
--   Langs alle paden worden op regelmatige afstanden van 50 m punten gelegd[^02_uitrol_meetnet-2].
+-   Langs alle paden worden op regelmatige afstanden van 50 m punten gelegd[^05_uitrol_meetnet-2].
 -   Daarna worden punten die op minder dan 40 m van elkaar liggen ruimtelijk gegroepeerd (dit gebeurt wanneer verschillende paden elkaar kruisen of op korte afstand parallel aan elkaar liggen) en uit elk van deze clusters wordt één punt overgehouden.
 -   Potentiële telpunten moeten op minstens 300 m van de grens (perimeter) gelegen zijn.
 
-```{=tex}
-\begin{figure}
-  \makebox[\textwidth][c]{\includegraphics[width=1.1\textwidth]{media/steekproefkader_mas/mas_zandleem_afbakening.png}}
-  \caption{Methodiek voor de afbakening van het steekproefkader voor de uitrol van MAS Vlaanderen, gevisualiseerd voor een kleine oppervlakte in de Zandleemstreek (Belgian Lambert 72: xmin = 150000, xmax = 177000, ymin = 160000, ymax = 180000). \textbf{A.} Selectie van open en halfopen landschap binnen de perimeter (rood). \textbf{B.} Exclusie van landgebruiken op basis van OpenStreetMap data (groen). \textbf{C.} Selectie van paden en wegen (blauw). \textbf{D.} Omvorming van wegennetwerk tot puntennetwerk.}
-  \label{fig:steekproef-afbakening}
-\end{figure}
+```{r}
+#| label: fig-steekproef-afbakening
+#| fig.cap: "Methodiek voor de afbakening van het steekproefkader voor de uitrol
+#| van MAS Vlaanderen, gevisualiseerd voor een kleine oppervlakte in de
+#| Zandleemstreek (Belgian Lambert 72: xmin = 150000, xmax = 177000, ymin =
+#| 160000, ymax = 180000). **A.** Selectie van open en halfopen landschap binnen
+#| de perimeter (rood). **B.** Exclusie van landgebruiken op basis van
+#| OpenStreetMap data (groen). **C.** Selectie van paden en wegen (blauw).
+#| **D.** Omvorming van wegennetwerk tot puntennetwerk."
+#| out.width: "100%"
+include_graphics(file.path("media", "steekproefkader_mas",
+                           "mas_zandleem_afbakening.png"))
 ```
+
 **5. Bijkomend exclusiecriterium op basis van landgebruik**
 
 Deze lijst van potentiële telpunten is nog steeds een te ruime set van punten die nog onvoldoende goed overlapt met de eigenlijke doelpopulatie.
@@ -171,35 +187,48 @@ Met deze regel slagen we er in om potentiële telpunten uit te sluiten die bijvo
 
 **6. Bijkomend exclusiecriterium op basis van zichtbaarheid**
 
-Uit het MAS pilootproject \textcolor{red}{[REF]} bleken er na de steekproeftrekking vooral problemen met zichtbaarheid omdat punten nog vielen in bossen, boomgaarden, holle wegen etc. Om de meest extreme gevallen weg te filteren worden punten met een te slechte zichtbaarheid verwijderd. We berekenen zichtbaarheid als de cumulatieve zichtbaarheidsindex (CVVI: cumulative viewshed visibility index) waarbij de waarnemer een bewegingsvrijheid heeft van 25 m rondom het telpunt (Fig. \@ref(fig:zichtbaarheid)). De zichtbaarheidsindex wordt berekend vanaf een set van locaties die 10 m van elkaar liggen in deze zone van bewegingsvrijheid en geeft de proportie aan van zichtbare rastercellen (resolutie 5 m) in de telcirkel met straal 300 m. De cumulatieve zichtbaarheidsindex is dan de proportie die zichtbaar is vanuit minstens één locatie binnen de zone van bewegingsvrijheid. Hierbij wordt gebruik gemaakt van het DSM (digitaal oppervlakte model - DHMV II Vlaanderen) [@DSM] en het DTM (digitaal terrein model) [@DTM] op 5 m resolutie.
+Uit het MAS pilootproject \textcolor{red}{[REF]} bleken er na de steekproeftrekking vooral problemen met zichtbaarheid omdat punten nog vielen in bossen, boomgaarden, holle wegen etc.
+Om de meest extreme gevallen weg te filteren worden punten met een te slechte zichtbaarheid verwijderd.
+We berekenen zichtbaarheid als de cumulatieve zichtbaarheidsindex (CVVI: cumulative viewshed visibility index) waarbij de waarnemer een bewegingsvrijheid heeft van 25 m rondom het telpunt (@fig-zichtbaarheid).
+De zichtbaarheidsindex wordt berekend vanaf een set van locaties die 10 m van elkaar liggen in deze zone van bewegingsvrijheid en geeft de proportie aan van zichtbare rastercellen (resolutie 5 m) in de telcirkel met straal 300 m.
+De cumulatieve zichtbaarheidsindex is dan de proportie die zichtbaar is vanuit minstens één locatie binnen de zone van bewegingsvrijheid.
+Hierbij wordt gebruik gemaakt van het DSM (digitaal oppervlakte model - DHMV II Vlaanderen) [@DSM] en het DTM (digitaal terrein model) [@DTM] op 5 m resolutie.
 De code is op basis van de functie `vvi_from_sf()` in de GVI package v1.1 [@GVI-package].
 We verwijderen telpunten waar de CVVI kleiner is dan 0.10.
 Dit is geen sterke filtering, maar heeft slechts de intentie om de meest extreme gevallen te verwijderen.
 
-```{r zichtbaarheid, out.width = "80%", fig.cap = "Voorbeeld van CVVI berekening o.b.v. DSM en DTM voor een telpunt in de Leemstreek."}
+```{r}
+#| label: fig-zichtbaarheid
+#| fig.cap: "Voorbeeld van CVVI berekening o.b.v. DSM en DTM voor een telpunt
+#| in de Leemstreek."
+#| out.width: "80%"
 include_graphics(file.path("media", "visibility",
-                           "voorbeeld_zichtbaarheid.pdf"))
+                           "voorbeeld_zichtbaarheid.png"))
 ```
 
-### Stratificatievariabelen en steekproeftrekking {#mas-stratificatie}
+### Stratificatievariabelen en steekproeftrekking {#sec-mas-stratificatie}
 
 Bij een steekproefontwerp kan het interessant zijn om te stratificeren.
 Er zijn verschillende redenen waarom we dit zouden willen doen.
 Een eerste is dat we aparte uitspraken willen voor individuele strata.
 Dit is bijvoorbeeld het geval wanneer we denken aan de stratificatie volgens **landbouwstreek** (doelstelling zicht krijgen op regionale verschillen in toestand en trend).
-Maar ook binnen een landbouwstreek willen we verder stratificeren in termen van binnen en buiten **soortbeschermingsplan zones (SBP)** voor akkervogels en in termen van **openheid van het landschap** (Fig. \@ref(fig:stratificatievariabelen)).
+Maar ook binnen een landbouwstreek willen we verder stratificeren in termen van binnen en buiten **soortbeschermingsplan zones (SBP)** voor akkervogels en in termen van **openheid van het landschap** (@fig-stratificatievariabelen).
 
 De stratificatie binnen versus buiten SBP zal ons helpen om telpunten te vergelijken waar veel beschermingsmaatregelen genomen zijn versus telpunten met weinig beschermingsmaatregelen.
 We nemen kerngebieden en zoekzones samen als binnen SBP en alles hierbuiten beschouwen we als controle.
-Voor het SBP gebied combineren we meerdere SBP lagen (zie Bijlage \@ref(sbp-per-soort)): (1) perimeter SBP akkervogels [@jansen2022adviesakkervogels], (2) SBP grauwe kiekendief (oude perimeter van in gebruik van 2018 t/m 2022 [@vandegehuchte2015grauwekiekendief] en nieuwe (door INBO voorgestelde) perimeter [@spanoghe2022grauwekiekendief]), en (3) SBP bruine kiekendief, zomertortel en hamster [@overigeSBPs].
+Voor het SBP gebied combineren we meerdere SBP lagen (zie @sec-sbp-per-soort): (1) perimeter SBP akkervogels [@jansen2022adviesakkervogels], (2) SBP grauwe kiekendief (oude perimeter van in gebruik van 2018 t/m 2022 [@vandegehuchte2015grauwekiekendief] en nieuwe (door INBO voorgestelde) perimeter [@spanoghe2022grauwekiekendief]), en (3) SBP bruine kiekendief, zomertortel en hamster [@overigeSBPs].
 Deze stratificatie is niet zwart-wit.
 Ook binnen SBP gebied zullen er telpunten zijn met weinig beschermingsmaatregelen en het omgekeerde kan ook het geval zijn.
 De stratificatie zorgt er echter voor dat we de kans om van beide situaties voldoende gevallen hebben vergroten.
 In latere analyses hoeven we deze factor (binnen versus buiten SBP) niet per se te gebruiken, we kunnen in de plaats ervan de oppervlakte aan SBP beschermingsmaatregelen binnen een telcirkel modelleren.
 
-De berekening voor openheid van het landschap is dezelfde als uitgelegd in de eerste stap van Sectie \@ref(mas-steekproefkader).
+De berekening voor openheid van het landschap is dezelfde als uitgelegd in de eerste stap van @sec-mas-steekproefkader.
 
-```{r stratificatievariabelen, out.width = "100%", fig.cap = "Verspreiding verschillende strata in Vlaanderen met aanduiding van grenzen van de verschillende landbouwstreken"}
+```{r}
+#| label: fig-stratificatievariabelen
+#| fig.cap: "Verspreiding verschillende strata in Vlaanderen met aanduiding van
+#| grenzen van de verschillende landbouwstreken"
+#| out.width: "100%"
 include_graphics(file.path("media", "kaartjes", "strata_vlaanderen.png"))
 ```
 
@@ -207,7 +236,7 @@ Naast bovenstaande stratificaties, hebben we ook nog het **oppervlakte-aandeel a
 
 In de praktijk werd er een veelvoud van het vooropgestelde aantal telpunten getrokken met behulp van een algoritme voor ruimtelijk gebalanceerde (X-coördinaten, Y-coördinaten en oppervlakte-aandeel aan soortbeschermingsmaatregelen) en gestratificeerde (landbouwstreek, SBP, openheid) steekproeftrekking [@grafström2011].
 De methode liet toe om per stratum zowel ruimtelijk een goede spreiding te hebben van de telpunten als een goede afspiegeling van de verdeling van de oppervlakte-aandelen aan soortbeschermingsmaatregelen in de statistische subpopulatie van het stratum.
-Een ander voordeel van deze methode is dat elk getrokken telpunt een volgnummer krijgt, wat van belang was bij het nagaan van overlap met bestaande telpunten en bij de manuele controle (Sectie \@ref(nabehandeling)).
+Een ander voordeel van deze methode is dat elk getrokken telpunt een volgnummer krijgt, wat van belang was bij het nagaan van overlap met bestaande telpunten en bij de manuele controle (@sec-nabehandeling).
 Indien een punt uitvalt, kan dit vervangen worden door het eerstvolgende uit de reeks dat nog niet toegewezen werd.
 De methode garandeert dat deze nieuwe set ruimtelijk goed gespreid is en een aselecte steekproef is.
 
@@ -216,7 +245,7 @@ Zo zorgen we ervoor dat we ook in zeldzamere strata genoeg data zullen verzamele
 Hier tegenover staat wel dat, indien we uitspraken willen doen op hogere niveaus (bv. landbouwregio), we hiermee moeten rekening houden in de analyses door gewichten toe te kennen proportioneel aan de oppervlakte aan OL en HOL.
 \textcolor{red}{tabel gewichten in bijlage!}
 
-### Nabehandeling en manuele controle {#nabehandeling}
+### Nabehandeling en manuele controle {#sec-nabehandeling}
 
 Ondanks de ruimtelijke spreiding, was omwille van hoge densiteit aan telpunten er soms toch nog overlap tussen telpunten.
 Om te veel overlap van telpunten te voorkomen binnen eenzelfde stratum, is voor elk punt binnen hetzelfde stratum nagegaan of een punt met grotere rangorde op minder dan 600 m afstand ligt.
@@ -230,9 +259,9 @@ Na manuele controle van de punten op bereikbaarheid, zichtbaarheid, overlap met 
 
 Daarna werden punten toebedeeld aan tellers.
 Tellers konden ook punten claimen door dit aan te geven in de Google Maps kaart.
-De precieze verdeling en aantal punten per landbouwstreek word besproken in Sectie \@ref(mas-vlaanderen).
+De precieze verdeling en aantal punten per landbouwstreek word besproken in @sec-mas-vlaanderen.
 
-### Reproduceerbaarheid en traceerbaarheid {#git-mas}
+### Reproduceerbaarheid en traceerbaarheid {#sec-git-mas}
 
 De steekproeftrekking werd gedaan met R [@R] in RStudio [@RStudio] via de **targets** "pipeline tool" package [@targets-package].
 Deze laatste is een computationele workflow die analyses uitvoert op een efficiënte en reproduceerbare manier.
@@ -242,40 +271,46 @@ Dit houdt in dat niet enkel de code zelf, maar ook alle wijzigingen in de code d
 
 De toestand van de GitHub repository op het moment van de steekproeftrekking voor de Leemstreek en de Zandleemstreek kan geraadpleegd worden in de GitHub repository van de MAS pilootstudie [@github-repo-piloot] via de volgende commit hash:
 
-```{=tex}
-\begin{center}
+<!-- spell-check: ignore:start -->
+
+::: text-center
 bafe6a6164dde186f309d1aacbcbff0ccde21735
-\end{center}
-```
+:::
+
+<!-- spell-check: ignore:end -->
+
 De toestand van de GitHub repository op het moment van de steekproeftrekking voor de andere landbouwstreken kan geraadpleegd worden in de GitHub repository van het MBAG - MAS project [@github-repo-mas] via de volgende commit hash:
 
-```{=tex}
-\begin{center}
+<!-- spell-check: ignore:start -->
+
+::: text-center
 6b28c4430e011bf3af9707b8f02a83faa2fc5434
-\end{center}
-```
+:::
+
+<!-- spell-check: ignore:end -->
+
 \textcolor{red}{Centraal beschikbaar stellen via Zenodo (<https://zenodo.org/>): (1) het steekproefkader, (2) de steekproef, (3) de finale steekproef na manuele controle (de punten die effectief werden bezocht in het veld), en (4) de tabel met gewichten per stratum.}
 
 \textcolor{red}{rest van data op zenodo enzo --> DMP?}
 
-## Stand van zaken en uitbreiding MAS {#mas-vlaanderen}
+## Stand van zaken en uitbreiding MAS {#sec-mas-vlaanderen}
 
-### Stand van zaken {#stand-van-zaken}
+### Stand van zaken {#sec-stand-van-zaken}
 
 -   2023: zandleemstreek en leemstreek
     -   korte recap: zie piloot
     -   overzicht beschrijvende statistiek: hoofdstuk 4
 
-### Uitbreiding tot een Vlaams meetnet {#uitbreiding-meetnet}
+### Uitbreiding tot een Vlaams meetnet {#sec-uitbreiding-meetnet}
 
 -   beschrijving van de uitbreiding
 -   2024: kempen, zandstreek, polders
     -   korte beschrijving en figuurtjes
 
-### Overige landbouwstreken {#overige-streken}
+### Overige landbouwstreken {#sec-overige-streken}
 
 Ten slotte blijven nog twee kleine landbouwstreken over: (1) de Duinen en (2) de Weidestreek.
-Deze zijn apart geanalyseerd omdat het niet mogelijk is een voldoende grote steekproef te verkrijgen op eenzelfde wijze als beschreven in Sectie \@ref(meetnet-ontwerp).
+Deze zijn apart geanalyseerd omdat het niet mogelijk is een voldoende grote steekproef te verkrijgen op eenzelfde wijze als beschreven in @sec-meetnet-ontwerp.
 Om toch een voldoende grote steekproef te krijgen per landbouwstreek, kunnen we opteren om een allocatie te doen evenredig aan de oppervlakte van elk stratum.
 Het zal dan niet mogelijk zijn uitspraken te doen over elk stratum apart, maar wel over elke landbouwstreek als geheel en bijgevolg een aanvulling met de andere (grote) landbouwstreken om een uitspraak over Vlaanderen te kunnen doen
 
@@ -285,25 +320,34 @@ De landbouwstreek van de Duinen is een smalle strook langs de kust met een total
 Een 54,3 % hiervan is open en halfopen landschap (resp. 12,9 en 41,4 %).
 Grote delen hiervan bleken echter niet in landbouwgebied te liggen.
 Het gaat vooral om industriegebied, stedelijk gebied en militair gebied.
-In het resterende gebied ligt 51,67 km paden en wegen (Fig. \@ref(fig:afbakening-duinen)).
+In het resterende gebied ligt 51,67 km paden en wegen (@fig-afbakening-duinen).
 
-```{=tex}
-\begin{figure}
-  \makebox[\textwidth][c]{\includegraphics[width=1.1\textwidth]{media/steekproeftrekking/afbakening_duinen_totaal.png}}
-  \caption{Afbakening van het steekproefkader in de landbouwstreek van de Duinen. Selectie van open en halfopen landschap binnen de perimeter (rood). Exclusie van landgebruiken op basis van OpenStreetMap data (groen). Selectie van paden en wegen (blauw). \textbf{A.} Westkant (Belgian Lambert 72: xmin = 21500, xmax = 50000, ymin = 197000, ymax = 217000). \textbf{B.} Oostkant (Belgian Lambert 72: xmin = 50000, xmax = 82000, ymin = 213000, ymax = 230000).}
-  \label{fig:afbakening-duinen}
-\end{figure}
+```{r}
+#| label: fig-afbakening-duinen
+#| fig.cap: "Afbakening van het steekproefkader in de landbouwstreek van de
+#| Duinen. Selectie van open en halfopen landschap binnen de perimeter (rood).
+#| Exclusie van landgebruiken op basis van OpenStreetMap data (groen). Selectie
+#| van paden en wegen (blauw). **A.** Westkant (Belgian Lambert 72: xmin =
+#| 21500, xmax = 50000, ymin = 197000, ymax = 217000). **B.** Oostkant
+#| (Belgian Lambert 72: xmin = 50000, xmax = 82000, ymin = 213000, ymax =
+#| 230000)."
+#| out.width: "100%"
+include_graphics(file.path("media", "steekproeftrekking",
+                           "afbakening_duinen_totaal.png"))
 ```
-Langs deze paden werden punten gelegd die ten slotte werden gefilterd op basis van landgebruik en zichtbaarheid zoals beschreven in \@ref(meetnet-ontwerp).
-In het overgebleven steekproefkader merkten we een sterke spatiale clustering van punten zowel in zijn geheel (enkel punten in regio's Nieuwpoort en Knokke) als binnen eenzelfde stratum (Fig. \@ref(fig:steekproefkader-duinen)).
 
-```{=tex}
-\begin{figure}
-  \makebox[\textwidth][c]{\includegraphics[width=1.1\textwidth]{media/steekproeftrekking/steekproefkader_duinen_totaal.png}}
-  \caption{Steekproefkader in de landbouwstreek van de Duinen. Er zijn enkel potentiële punten rond Nieuwpoort (\textbf{A}) en Knokke (Het Zwin, \textbf{B}).}
-  \label{fig:steekproefkader-duinen}
-\end{figure}
+Langs deze paden werden punten gelegd die ten slotte werden gefilterd op basis van landgebruik en zichtbaarheid zoals beschreven in @sec-meetnet-ontwerp.
+In het overgebleven steekproefkader merkten we een sterke spatiale clustering van punten zowel in zijn geheel (enkel punten in regio's Nieuwpoort en Knokke) als binnen eenzelfde stratum (@fig-steekproefkader-duinen).
+
+```{r}
+#| label: fig-steekproefkader-duinen
+#| fig.cap: "Steekproefkader in de landbouwstreek van de Duinen. Er zijn enkel
+#| potentiële punten rond Nieuwpoort (**A**) en Knokke (Het Zwin, **B**)."
+#| out.width: "100%"
+include_graphics(file.path("media", "steekproeftrekking",
+                           "steekproefkader_duinen_totaal.png"))
 ```
+
 Bijgevolg hebben we in de Duinen een ruimtelijk gebalanceerde steekproef van slechts 13 punten kunnen nemen die niet overlapten binnen eenzelfde stratum.
 De proporties van de strata kwamen bovendien niet meer goed overeen met de allocatieproporties.
 Ruimtelijk gezien kwam de steekproef wel relatief goed overeen met het steekproefkader, hoewel vergelijking moeilijk was door het beperkt aantal punten.
@@ -320,25 +364,30 @@ De Weidestreek heeft een totale oppervlakte van 50,53 km².
 Een 62,9 % hiervan is open en halfopen landschap (resp. 11,0 en 51,9 %).
 Een beperkt aandeel leek niet in landbouwgebied te liggen.
 Het gaat vooral om spoorwegen en stedelijk gebied.
-In het resterende gebied ligt 80,56 km paden en wegen (Fig. \@ref(fig:afbakening-weidestreek)).
+In het resterende gebied ligt 80,56 km paden en wegen (@fig-afbakening-weidestreek).
 
-```{=tex}
-\begin{figure}
-  \makebox[\textwidth][c]{\includegraphics[width=1.1\textwidth]{media/steekproeftrekking/afbakening_weidestreek.png}}
-  \caption{Afbakening van het steekproefkader in de Weidestreek. Selectie van open en halfopen landschap binnen de perimeter (rood). Exclusie van landgebruiken op basis van OpenStreetMap data (groen). Selectie van paden en wegen (blauw).}
-  \label{fig:afbakening-weidestreek}
-\end{figure}
+```{r}
+#| label: fig-afbakening-weidestreek
+#| fig.cap: "Afbakening van het steekproefkader in de Weidestreek. Selectie van
+#| open en halfopen landschap binnen de perimeter (rood). Exclusie van
+#| landgebruiken op basis van OpenStreetMap data (groen). Selectie van paden
+#| en wegen (blauw)."
+#| out.width: "100%"
+include_graphics(file.path("media", "steekproeftrekking",
+                           "afbakening_weidestreek.png"))
 ```
-Langs deze paden werden punten gelegd die ten slotte werden gefilterd op basis van landgebruik en zichtbaarheid zoals beschreven in Sectie \@ref(meetnet-ontwerp).
-In het overgebleven steekproefkader merkten we een sterke spatiale clustering van punten binnen eenzelfde stratum, maar met een relatief goede spreiding van de punten in het volledige gebied (Fig. \@ref(fig:steekproefkader-weidestreek)).
 
-```{=tex}
-\begin{figure}
-  \makebox[\textwidth][c]{\includegraphics[width=1.1\textwidth]{media/steekproeftrekking/steekproefkader_weidestreek.png}}
-  \caption{Steekproefkader in de Weidestreek.}
-  \label{fig:steekproefkader-weidestreek}
-\end{figure}
+Langs deze paden werden punten gelegd die ten slotte werden gefilterd op basis van landgebruik en zichtbaarheid zoals beschreven in @sec-meetnet-ontwerp.
+In het overgebleven steekproefkader merkten we een sterke spatiale clustering van punten binnen eenzelfde stratum, maar met een relatief goede spreiding van de punten in het volledige gebied (@fig-steekproefkader-weidestreek).
+
+```{r}
+#| label: fig-steekproefkader-weidestreek
+#| fig.cap: "Steekproefkader in de Weidestreek."
+#| out.width: "100%"
+include_graphics(file.path("media", "steekproeftrekking",
+                           "steekproefkader_weidestreek.png"))
 ```
+
 Bijgevolg hebben we in de Weidestreek wel een voldoende grote, ruimtelijk gebalanceerde steekproef kunnen nemen waarvan punten niet overlapten binnen eenzelfde stratum.
 De proporties van de strata kwamen relatief goed overeen met de allocatieproporties.
 Ruimtelijk gezien kwam de steekproef ook relatief goed overeen met het steekproefkader.
@@ -347,14 +396,14 @@ De Weidestreek is een aparte regio met een relatief groot oppervlak die gunstig 
 De steekproeftrekking van de Weidestreek kan dus wel een meerwaarde hebben voor MAS Vlaanderen.
 Het aantal telpunten kan groot genoeg zijn om uitspraken te doen op schaal van deze landbouwstreek zelf en de proporties van de strata in de steekproef komen relatief goed overeenkomen met deze in het steekproefkader.
 
-We besluiten in de Weidestreek wel een steekproef te nemen zoals beschreven in Sectie \@ref(meetnet-ontwerp) met het verschil dat we hier een allocatie gebruikten evenredig aan de oppervlakte van elk stratum.
+We besluiten in de Weidestreek wel een steekproef te nemen zoals beschreven in @sec-meetnet-ontwerp met het verschil dat we hier een allocatie gebruikten evenredig aan de oppervlakte van elk stratum.
 
 Via de berekening van Chi-kwadraattoetsingsgrootheid vergeleken we scenario's met verschillende steekproefgroottes en verschillende minimale afstanden tussen telpunten.
 Een lagere toetsingsgrootheid voor een bepaald scenario betekende een betere overeenkomst van de allocatieproporties tussen de steekproef van het scenario en het originele steekproefkader.
 Het beste scenario was een steekproeftrekking van 91 punten om 58 punten over te houden bij een uitdunning van 400 m.
 Dit wil zeggen dat voor elk punt binnen hetzelfde stratum nagegaan werd of een punt met grotere rangorde op minder dan 400 m afstand lag.
 Als dit het geval was, werd het punt met de lagere rangorde weerhouden.
-Voor alle andere landbouwregio's werd een afstand van 600 m gehanteerd zodat er geen overlap is tussen telpunten (zie Sectie \@ref(nabehandeling)).
+Voor alle andere landbouwregio's werd een afstand van 600 m gehanteerd zodat er geen overlap is tussen telpunten (zie @sec-nabehandeling).
 We laten voor de Weidestreek dus wel overlap toe om genoeg telpunten over te houden.
 Na manuele controle behielden we 50 van de 58 punten.
 
@@ -367,10 +416,12 @@ projroot <- rprojroot::find_root(rprojroot::has_file(file))
 steekproef_final <- read_csv(file.path(projroot, file), show_col_types = FALSE)
 ```
 
-In totaal worden `r nrow(steekproef_final)` telpunten geteld in kader van MAS Vlaanderen (Tabel \@ref(tab:aantal-telpunten)).
-Figuur \@ref(fig:mas-steekproef-tot) toont de verspreiding van deze punten.
+In totaal worden `r nrow(steekproef_final)` telpunten geteld in kader van MAS Vlaanderen (@tbl-aantal-telpunten).
+@fig-mas-steekproef-tot toont de verspreiding van deze punten.
 
-```{r aantal-telpunten}
+```{r}
+#| label: tbl-aantal-telpunten
+#| tbl-cap: "Aantal telpunten MAS Vlaanderen."
 steekproef_final %>%
   mutate(
     regio = ifelse(grepl("leemstreek", regio), "Leemstreek", regio),
@@ -381,18 +432,20 @@ steekproef_final %>%
   mutate("aantal per regio" = sum(`aantal telpunten`)) %>%
   ungroup() %>%
   arrange(regio) %>%
-  kable(caption = paste("Aantal telpunten MAS Vlaanderen."),
-        booktabs = TRUE) %>%
-  kableExtra::kable_styling(latex_options = c("scale_down", "striped")) %>%
+  kable(booktabs = TRUE) %>%
+  kableExtra::kable_styling(latex_options = c("striped")) %>%
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
-```{r mas-steekproef-tot, out.width = "100%", fig.cap = "Telpunten MAS Vlaanderen"}
+```{r}
+#| label: fig-mas-steekproef-tot
+#| fig.cap: "Telpunten MAS Vlaanderen."
+#| out.width: "100%"
 include_graphics(file.path("media", "kaartjes", "tot_mas_kaart.png"))
 ```
 
-[^02_uitrol_meetnet-1]: Met uitzondering van de Duinen en de Weidestreek.
-    Deze worden apart besproken in Sectie \@ref(overige-streken).
+[^05_uitrol_meetnet-1]: Met uitzondering van de Duinen en de Weidestreek.
+    Deze worden apart besproken in @sec-overige-streken.
 
-[^02_uitrol_meetnet-2]: Bij de steekproeftrekking wordt een methode gebruikt die zal vermijden dat telpunten en hun telcirkels overlappen.
+[^05_uitrol_meetnet-2]: Bij de steekproeftrekking wordt een methode gebruikt die zal vermijden dat telpunten en hun telcirkels overlappen.
     Het kan in deze fase dus geen kwaad dat potentiële telpunten op een afstand van minder dan 300 m van elkaar gelegen zijn.
