@@ -270,17 +270,15 @@ Dit houdt in dat niet enkel de code zelf, maar ook alle wijzigingen in de code d
 
 De toestand van de GitHub repository op het moment van de steekproeftrekking voor de Leemstreek en de Zandleemstreek kan geraadpleegd worden in de GitHub repository van de MAS pilootstudie [@github-repo-piloot] via de volgende commit hash:
 
-\begin{center}
+::: text-center
 bafe6a6164dde186f309d1aacbcbff0ccde21735
-\end{center}
+:::
 
 De toestand van de GitHub repository op het moment van de steekproeftrekking voor de andere landbouwstreken kan geraadpleegd worden in de GitHub repository van het MBAG - MAS project [@github-repo-mas] via de volgende commit hash:
 
-> this does not work in html:
-
-\begin{center}
+::: text-center
 6b28c4430e011bf3af9707b8f02a83faa2fc5434
-\end{center}
+:::
 
 \textcolor{red}{Centraal beschikbaar stellen via Zenodo (<https://zenodo.org/>): (1) het steekproefkader, (2) de steekproef, (3) de finale steekproef na manuele controle (de punten die effectief werden bezocht in het veld), en (4) de tabel met gewichten per stratum.}
 
@@ -442,4 +440,3 @@ include_graphics(file.path("media", "kaartjes", "tot_mas_kaart.png"))
 
 [^05_uitrol_meetnet-2]: Bij de steekproeftrekking wordt een methode gebruikt die zal vermijden dat telpunten en hun telcirkels overlappen.
     Het kan in deze fase dus geen kwaad dat potentiële telpunten op een afstand van minder dan 300 m van elkaar gelegen zijn.
-
