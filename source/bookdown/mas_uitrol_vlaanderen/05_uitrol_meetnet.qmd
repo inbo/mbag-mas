@@ -112,7 +112,7 @@ tibble(
   )
 ) %>%
   kable(booktabs = TRUE) %>%
-  kableExtra::kable_styling(latex_options = c("scale_down", "striped")) %>%
+  kableExtra::kable_styling(latex_options = "striped", font_size = 8) %>%
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
@@ -143,7 +143,7 @@ tibble(
   )
 ) %>%
   kable(booktabs = TRUE) %>%
-  kableExtra::kable_styling(latex_options = c("scale_down", "striped")) %>%
+  kableExtra::kable_styling(latex_options = "striped", font_size = 9) %>%
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
@@ -448,4 +448,3 @@ include_graphics(file.path("media", "kaartjes", "tot_mas_kaart.png"))
 
 [^05_uitrol_meetnet-2]: Bij de steekproeftrekking wordt een methode gebruikt die zal vermijden dat telpunten en hun telcirkels overlappen.
     Het kan in deze fase dus geen kwaad dat potentiële telpunten op een afstand van minder dan 300 m van elkaar gelegen zijn.
-
