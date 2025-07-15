@@ -112,7 +112,7 @@ tibble(
   )
 ) %>%
   kable(booktabs = TRUE) %>%
-  kableExtra::kable_styling(latex_options = "striped", font_size = 8) %>%
+  kableExtra::kable_styling(latex_options = "striped", font_size = 7) %>%
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
@@ -143,7 +143,7 @@ tibble(
   )
 ) %>%
   kable(booktabs = TRUE) %>%
-  kableExtra::kable_styling(latex_options = "striped", font_size = 9) %>%
+  kableExtra::kable_styling(latex_options = "striped", font_size = 8) %>%
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
@@ -432,7 +432,7 @@ steekproef_final %>%
   ungroup() %>%
   arrange(regio) %>%
   kable(booktabs = TRUE) %>%
-  kableExtra::kable_styling(latex_options = c("scale_down", "striped")) %>%
+  kableExtra::kable_styling(latex_options = c("striped")) %>%
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
