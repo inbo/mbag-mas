@@ -1380,7 +1380,7 @@ mas_data_clean %>%
 Er is inderdaad een aantal keer hogere aantallen dan 1 ingevoerd bij broedcodes 1-5.
 
 ```{r}
-mas_data_clean %>%
+mas_data_full %>%
   st_drop_geometry() %>%
   filter(aantal > 1,
          wrntype > 0) %>%
@@ -1396,7 +1396,7 @@ We kijken per jaar hoe vaak een hoger getal dan **2** is geteld voor broedcodes 
 Het is een probleem elk jaar.
 
 ```{r}
-mas_data_clean %>%
+mas_data_full %>%
   st_drop_geometry() %>%
   filter(aantal > 2,
          wrntype > 0) %>%
@@ -1420,6 +1420,21 @@ mas_data_clean %>%
   arrange(waarnemer, aantal, datum) %>%
   write_csv(file.path(mbag_dir, "output", "data_controle",
                       "hoge_aantallen_broedcodes.csv"))
+```
+
+Manueel passen we alle aantallen voor broedcode > 0 manueel aan naar 1.
+
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  filter(aantal > 1,
+         wrntype > 0) %>%
+  count(wrntype, aantal, name = "aantal keer in dataset") %>%
+  rename(
+    "broedcode" = "wrntype",
+    "aantal vogels" = aantal
+  ) %>%
+  kable()
 ```
 
 # Controle data publicatie

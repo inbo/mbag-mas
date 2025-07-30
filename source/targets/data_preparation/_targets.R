@@ -173,10 +173,11 @@ list(
       args = c(remove_subspecies_names, make.row.names = FALSE)
     )
   ),
-  # Remove unwanted columns
+  # Remove unwanted columns and set count to 1 for breeding code > 0
   tar_target(
     name = mas_data_clean,
-    command = remove_columns(mas_data_full)
+    command = remove_columns(mas_data_full) %>%
+      mutate(aantal = ifelse(wrntype != "0", 1, aantal))
   ),
 
   # 4. Prepare data for publication on GBIF
