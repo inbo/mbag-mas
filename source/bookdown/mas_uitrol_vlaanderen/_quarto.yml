@@ -30,8 +30,8 @@ format:
 flandersqmd:
   entity: INBO
   level: 2
-  title: "Uitrol van een Meetnet Agrarische Soorten in Vlaanderen"
-  subtitle: "Achtergronddocument Meetnet Agrarische Soorten in kader van het Meetnet Biodiversiteit in Agrarisch Gebied (MBAG project)"
+  title: "Uitrol van het Meetnet Agrarische Soorten (MAS) in Vlaanderen"
+  subtitle: "Achtergronddocument bij het MAS in het kader van het Meetnet Biodiversiteit in Agrarisch Gebied (MBAG)"
   shorttitle: mas-uitrol-vlaanderen
   author:
   - name:
