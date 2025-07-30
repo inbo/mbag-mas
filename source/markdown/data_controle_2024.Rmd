@@ -185,11 +185,6 @@ crs_pipeline %>%
   arrange(jaar)
 ```
 
-Ol_2025.4
-
-- nooit geteld (2022-2024)
-- steekproef beslissing: zou ter vervanging zijn van Ol_22546.2
-
 VL0363
 
 - niet geteld in 2022, wel in 2023 en 2024
