@@ -1,22 +1,28 @@
-This folder contains the following data files related to monitoring design and framework.
-See source/markdown/verzameling_steekproefkaders_mbag.Rmd in MBAG MAS repository.
-See src/markdown/general/uitschrijven_steekproefkaders_mbag.Rmd MAS pilot repository.
+README
+======
 
-1. Steekproefkader
-   - Sampling framework
-   - steekproefkader_mbag_piloot.csv from the pilot study
-   - steekproefkader_mbag_mas.csv from MBAG MAS
-2. Gewichten steekproefkader per landbouwregio
-   - Stratum weights of sampling framework
-   - gewichten_XXX.csv where XXX is the agricultural region
-3. Steekproef
-   - Sample
-   - steekproef_mbag_piloot.csv from the pilot study
-   - steekproef_mbag_mas.csv from MBAG MAS
-4. Finale steekproef na manuele controle (punten die effectief zijn geteld)
-   - Final sample after manual checks
-   - steekproefkader_avimap_mbag_piloot.csv from the pilot study
-   - steekproefkader_avimap_mbag_mas.csv from MBAG MAS
+This folder contains data files related to the sampling design and framework for the MAS (Meetnet Agrarische Soorten) monitoring projects. These files are used in both the MAS pilot project and the MBAG MAS project.
 
-MAS pilot repository: https://github.com/inbo/mas-piloot
-MBAG MAS repository: https://github.com/inbo/mbag-mas
+For more information and the scripts used to generate these files, see:
+- source/markdown/verzameling_steekproefkaders_mbag.Rmd in the MBAG MAS repository: https://github.com/inbo/mbag-mas
+- src/markdown/general/uitschrijven_steekproefkaders_mbag.Rmd in the MAS pilot repository: https://github.com/inbo/mas-piloot
+
+Contents
+--------
+
+1. Sampling Framework
+   - steekproefkader_mbag_piloot.csv: sampling frame used in the MAS pilot project
+   - steekproefkader_mbag_mas.csv: sampling frame used in the MBAG MAS project
+
+2. Stratum Weights per Agricultural Region
+   - Files named gewichten_XXX.csv, where XXX refers to the agricultural region
+   - Contains weights for each stratum within the sampling frame
+
+3. Sample
+   - steekproef_mbag_piloot.csv: sample drawn for the MAS pilot project
+   - steekproef_mbag_mas.csv: sample drawn for the MBAG MAS project
+
+4. Final Sample After Manual Validation
+   - Locations that were actually surveyed in the field
+   - steekproefkader_avimap_mbag_piloot.csv: final validated sample for the pilot project
+   - steekproefkader_avimap_mbag_mas.csv: final validated sample for MBAG MAS

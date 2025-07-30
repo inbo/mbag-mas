@@ -172,20 +172,6 @@ crs_pipeline %>%
   arrange(jaar)
 ```
 
-Ol_815.5
-
-- nooit geteld (2022-2024)
-- steekproef beslissing: zou ter vervanging zijn van Ol_11054.15 en Ol_3417.2
-
-> vervangen door VL0322
-
-Ol_5760.2.14
-
-- nooit geteld (2022-2024)
-- steekproef beslissing: zou ter vervanging zijn van Ol_513.1
-
-> vervangen door VL0555
-
 VL0605
 
 - niet geteld in 2022, wel in 2023 en 2024
@@ -198,11 +184,6 @@ crs_pipeline %>%
   distinct(plotnaam, jaar, waarnemer = waarneme) %>%
   arrange(jaar)
 ```
-
-Ol_2025.4
-
-- nooit geteld (2022-2024)
-- steekproef beslissing: zou ter vervanging zijn van Ol_22546.2
 
 VL0363
 
@@ -1399,7 +1380,7 @@ mas_data_clean %>%
 Er is inderdaad een aantal keer hogere aantallen dan 1 ingevoerd bij broedcodes 1-5.
 
 ```{r}
-mas_data_clean %>%
+mas_data_full %>%
   st_drop_geometry() %>%
   filter(aantal > 1,
          wrntype > 0) %>%
@@ -1415,7 +1396,7 @@ We kijken per jaar hoe vaak een hoger getal dan **2** is geteld voor broedcodes 
 Het is een probleem elk jaar.
 
 ```{r}
-mas_data_clean %>%
+mas_data_full %>%
   st_drop_geometry() %>%
   filter(aantal > 2,
          wrntype > 0) %>%
@@ -1439,6 +1420,21 @@ mas_data_clean %>%
   arrange(waarnemer, aantal, datum) %>%
   write_csv(file.path(mbag_dir, "output", "data_controle",
                       "hoge_aantallen_broedcodes.csv"))
+```
+
+Manueel passen we alle aantallen voor broedcode > 0 manueel aan naar 1.
+
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  filter(aantal > 1,
+         wrntype > 0) %>%
+  count(wrntype, aantal, name = "aantal keer in dataset") %>%
+  rename(
+    "broedcode" = "wrntype",
+    "aantal vogels" = aantal
+  ) %>%
+  kable()
 ```
 
 # Controle data publicatie
@@ -1485,15 +1481,32 @@ taxon_data %>%
 ```
 
 Matching ziet er op het eerste zicht goed uit.
-Enkel voor “Veldmuis/Aardmuis”, “rat spec.” en “spitsmuis spec.” niet.
+Enkel voor `r taxon_data$dwc_vernacularName[is.na(taxon_data$scientificName)]` niet.
 Deze moeten we manueel mappen (manual_taxon_mapping).
 
 ```{r}
 manual_taxon_data <- tar_read("manual_taxon_mapping", store = targets_store)
 
 manual_taxon_data %>%
-  filter(is.na(species)) %>%
-  select(dwc_vernacularName, dwc_class, family, scientificName, rank, key) %>%
+  filter(dwc_vernacularName %in%
+           taxon_data$dwc_vernacularName[is.na(taxon_data$scientificName)]) %>%
+  select(dwc_vernacularName, dwc_class, family, genus, species, scientificName,
+         rank, key) %>%
+  arrange(dwc_vernacularName) %>%
+  kable()
+```
+
+Voor sommige soorten kunnen we zgn. "aggregate species" maken.
+
+```{r}
+species_agg_data <- tar_read("map_species_aggregates", store = targets_store)
+
+species_agg_data %>%
+  filter(dwc_vernacularName %in%
+           taxon_data$dwc_vernacularName[is.na(taxon_data$scientificName)]) %>%
+  select(dwc_vernacularName, dwc_class, family, genus, species, scientificName,
+         rank, key) %>%
+  arrange(dwc_vernacularName) %>%
   kable()
 ```
 
@@ -1596,7 +1609,7 @@ empty_col_df <- dwc_mapping_final[
 sort(colnames(empty_col_df))
 ```
 
-> Aanvullen
+> ok
 
 Hoe ziet de dataset er uit?
 
