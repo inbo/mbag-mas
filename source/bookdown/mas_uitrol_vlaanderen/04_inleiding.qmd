@@ -30,6 +30,6 @@ for (file_name in figs$name) {
 }
 ```
 
--   kadering van dit rapport (hfstn 1-2 pilootrapport)
+-   kadering van dit rapport (hoofdstukken 1-2 pilootrapport)
 -   MBAG
 -   uitbreiding t.o.v. het MAS pilootproject
