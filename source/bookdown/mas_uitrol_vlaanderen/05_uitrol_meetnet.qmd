@@ -424,7 +424,7 @@ In totaal worden `r nrow(steekproef_final)` telpunten geteld in kader van MAS Vl
 #| tbl-cap: "Aantal telpunten MAS Vlaanderen."
 steekproef_final %>%
   mutate(
-    regio = ifelse(grepl("leemstreek", regio), "Leemstreek", regio),
+    regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio),
     stratum = paste(openheid_klasse, sbp, "plan")
   ) %>%
   count(regio, stratum, name = "aantal telpunten") %>%
