@@ -172,16 +172,6 @@ crs_pipeline %>%
   arrange(jaar)
 ```
 
-Ol_815.5
-
-- nooit geteld (2022-2024)
-- steekproef beslissing: zou ter vervanging zijn van Ol_11054.15 en Ol_3417.2
-
-Ol_5760.2.14
-
-- nooit geteld (2022-2024)
-- steekproef beslissing: zou ter vervanging zijn van Ol_513.1
-
 VL0605
 
 - niet geteld in 2022, wel in 2023 en 2024
