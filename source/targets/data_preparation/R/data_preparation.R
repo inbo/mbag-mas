@@ -227,7 +227,7 @@ rbind_all_mas_data <- function(sample_data, extra_data) {
     dplyr::filter(!.data$oid %in% sample_oids) %>%
 
     # Only keep birds and mammals
-    dplyr::filter(soortgrp %in% 1:2) %>%
+    dplyr::filter(.data$soortgrp %in% 1:2) %>%
 
     # Adjust subspecies names
     adjust_subspecies_names_nl() %>%
