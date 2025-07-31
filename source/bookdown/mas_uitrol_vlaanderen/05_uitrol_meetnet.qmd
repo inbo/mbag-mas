@@ -1,3 +1,8 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 ```{r}
 #| echo: FALSE
 #| warning: FALSE
@@ -9,7 +14,7 @@ library(readr)
 
 # Een meetnet agrarische soorten in Vlaanderen {#sec-uitrol-vlaanderen}
 
-De opbouw voor MAS Vlaanderen werd al grotendeels besproken in \textcolor{red}{[REF]}.
+De opbouw voor MAS Vlaanderen werd al grotendeels besproken in @langeraert2025pilot.
 Dit meetnet wordt opgebouwd op basis van de verschillende landbouwstreken in Vlaanderen (@fig-landbouwstreken).
 
 ```{r}
@@ -20,7 +25,7 @@ include_graphics(file.path("media", "kaartjes", "landbouwstreken_vl.png"))
 ```
 
 In dit hoofdstuk vatten we eerst samen hoe het meetnet is opgebouwd en de steekproeftrekking werd gedaan (@sec-meetnet-ontwerp).
-Daarna overlopen we welke stappen voor MAS Vlaanderen reeds werden gedaan (Zandleemstreek en Leemstreek) \textcolor{red}{[REF]} en welke uitbreiding er in 2024 gepland is (Polders, Zandstreek, Kempen) (@sec-mas-vlaanderen).
+Daarna overlopen we welke stappen voor MAS Vlaanderen werden gedaan in 2023 (Zandleemstreek en Leemstreek) [@langeraert2025pilot] en 2024 (Polders, Zandstreek, Kempen) (@sec-mas-vlaanderen).
 Ten slotte bespreken we de overige, kleine streken (Duinen, Weidestreek) apart in @sec-overige-streken.
 
 ## Ontwerp van de gegevensinzameling {#sec-meetnet-ontwerp}
