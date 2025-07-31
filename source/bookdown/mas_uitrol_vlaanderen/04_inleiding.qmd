@@ -30,6 +30,16 @@ for (file_name in figs$name) {
 }
 ```
 
--   kadering van dit rapport (hoofdstukken 1-2 pilootrapport)
--   MBAG
--   uitbreiding t.o.v. het MAS pilootproject
+De biodiversiteit in het Vlaamse landbouwgebied staat al decennia zwaar onder druk. Habitatversnippering, intensivering van de landbouw en het verdwijnen van kleinschalige landschapselementen hebben geleid tot een sterke achteruitgang van typische akker- en weidevogels zoals Veldleeuwerik (*Alauda arvensis*), Grauwe gors (*Emberiza calandra*), Kievit (*Vanellus vanellus*), Grutto (*Limosa limosa*) en Patrijs (*Perdix perdix*) [@vermeersch2004]. Tegelijkertijd groeit de maatschappelijke en beleidsmatige nood aan onderbouwde informatie over de toestand van deze soorten en de effectiviteit van genomen beheermaatregelen. Het Vlaamse landbouwbeleid, Europese natuurhersteldoelen en subsidiekaders zoals het GLB en de natuurherstelverordening vragen om robuuste, reproduceerbare en ruimtelijk fijnmazige monitoringgegevens die beleidsrelevante trends detecteren en verklaren [REFs].
+
+Tegen deze achtergrond is er behoefte aan een specifiek en beleidsgericht meetnet voor agrarische fauna, dat meer biedt dan algemene trends. De bestaande meetnetten (ABV, BBV) leveren waardevolle informatie over algemene broedvogeltrends [@onkelinx2025abv], maar zijn onvoldoende fijnmazig of doelgericht om het effect van maatregelen op specifieke soorten in specifieke contexten op te volgen. Ze laten bijvoorbeeld geen evaluatie toe van perceelsgebonden beheerpakketten of van SBP-doelrealisatie op gebiedsniveau.
+
+Om deze leemte op te vullen werd het Meetnet Agrarische Soorten (MAS) opgezet. In 2022–2023 vond een eerste pilootstudie plaats in twee contrasterende regio’s – De Moeren en de Oostelijke leemstreek – als opstap naar een meetnet voor heel Vlaanderen [@langeraert2025pilot]. Het pilootproject bouwde voort op eerdere tellingen sinds 2017, uitgevoerd in het kader van 'Plan Kiekendief' [@vandewaerde2020]. De resultaten van het pilootproject toonden aan dat MAS geschikt is voor zowel toestandmonitoring als effectevaluatie van maatregelen, en dat trends detecteerbaar zijn tot op het niveau van landschapstype en beleidszone. Belangrijke pijlers van het ontwerp zijn een gestratificeerde en ruimtelijk gebalanceerde steekproef, een gestandaardiseerd telprotocol en een combinatie van vrijwilligers en professionals in het veldwerk.
+
+De pilootstudie bracht ook aandachtspunten aan het licht.
+Zo bleek het essentieel om strikt vast te houden aan aselecte plaatsing van telpunten en nauwkeurige afstandsmetingen voor het schatten van detectiekansen.
+De nood aan blijvende opleiding, opvolging en kwaliteitsborging bij vrijwilligerstelling werd bevestigd.<!-- spell-check: ignore -->
+Verder werd duidelijk dat het ontbreken van controlegebieden in oudere datasets het moeilijk maakt om beleidsimpact betrouwbaar te evalueren.
+Deze elementen zijn daarom expliciet geïntegreerd in het ontwerp van het uitgebreid meetnet.
+
+Vanaf 2023 werd het MAS stapsgewijs uitgerold over de volledige Vlaamse landbouwstreken. Deze uitbreiding gebeurt onder de noemer van het Meetnet Biodiversiteit in Agrarisch Gebied (MBAG) [REF]. De huidige publicatie documenteert de uitrol van MAS naar gans Vlaanderen. Daarbij bouwen we voort op de bewezen sterktes van het pilootproject, met als doel om op termijn een wetenschappelijk robuust en beleidsgericht instrument te realiseren dat de opvolging en evaluatie van akkervogelpopulaties in Vlaanderen verankert.

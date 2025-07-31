@@ -8,6 +8,7 @@
 'Nieuw'
 'OK'
 'Opslaan
+'Plan
 'Query
 'Toevoegen'
 'Verbinden'
@@ -33,6 +34,7 @@
 5'
 6x
 Akkervogelgemeenschappen
+Alauda
 Amersfoord
 Avimap
 Avimap-versie
@@ -64,14 +66,17 @@ Depotter
 Duinen/Weidestreek
 DwC
 EPSG
+Emberiza
 Flanders
 GBIF.org
 GL
+GLB
 GPKG-bestanden
 GVI
 Geule
 Gittargets
 HGL
+Habitatversnippering
 Hazegraspolder
 Homotypic
 Horvitz-Thomson
@@ -79,9 +84,11 @@ KC
 KLA
 KLE's
 KML
+Kiekendief'
 LEVS01
 Langeraert
 Latham
+Limosa
 MAS-data
 MAS-meetnet
 MAS-pilootstudie
@@ -104,6 +111,7 @@ Objecten'
 Occurrence
 Ol
 Parus
+Perdix
 Pl
 Poecile
 QGIS
@@ -111,11 +119,13 @@ R1
 R2
 R3
 R4
+REFs
 SB
 SBP
 SBP's
-SBP’s
+SBP-doelrealisatie
 SBPs
+SBP’s
 SOVON
 SQL-query
 Sovon
@@ -134,6 +144,7 @@ VL0432
 VL0587
 VL0590
 VL0605
+Vanellus
 Veldmuis/Aardmuis
 Version
 WFS
@@ -149,7 +160,10 @@ Zn
 accepted
 aeroway
 agro-ecologisch
+akker-
+akkervogelpopulaties
 allocatieproporties
+arvensis
 avimap
 avimapcodes
 beheren'
@@ -158,6 +172,7 @@ biogeografische
 birds
 branching
 breeding
+calandra
 calculate
 canopy
 cf
@@ -204,6 +219,7 @@ landgebruiksamenstelling
 landuse
 layers
 leemstreek.Rmd
+limosa
 ll'en
 longitude
 maken'
@@ -221,7 +237,9 @@ openness
 opgeslaan
 opvalllende
 overlappen'
+perceelsgebonden
 perceelsgrootte
+perdix
 perimeters.gpkg
 periods
 pipeline
@@ -277,11 +295,13 @@ telronde
 telrondes
 tertiare
 thinning
+toestandmonitoring
 toevoegen'
 topographic
 uncut
 union
 v1.1
+vanellus
 verbatim
 verderzetting
 vernacular
@@ -290,6 +310,7 @@ viewpoints'
 viewshed
 visibility
 vlaanderen
+vrijwilligerstelling
 waarneminglocaties
 wikipedia
 within
