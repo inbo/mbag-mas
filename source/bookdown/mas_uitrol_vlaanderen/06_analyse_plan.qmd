@@ -13,74 +13,87 @@ library(knitr)
 
 # Dataverwerking en statistisch analyseplan {#sec-analyseplan}
 
-In het vorige hoofdstuk werd beschreven hoe het steekproefkader voor het MAS in Vlaanderen werd bepaald en hoe we uiteindelijk een ruimtelijk gespreide, aselecte steekproef bekwamen.
-Hier bespreken we het stramien voor verwerking en analyse van de MAS-data vanaf de steekproef (@fig-analyse-plan).
-Deze worden uitgevoerd met R [@R] in RStudio [@RStudio] tenzij anders vermeld.
+In het vorige hoofdstuk beschreven we hoe het steekproefkader voor het MAS-meetnet in Vlaanderen werd opgebouwd, en hoe daaruit een ruimtelijk gespreide, aselecte steekproef werd getrokken. Dit hoofdstuk beschrijft het algemene verwerkings- en analyseplan vanaf de ruwe tellingen tot een gestandaardiseerde dataset, klaar voor statistische analyse en publicatie op GBIF. Alle stappen worden uitgevoerd in R [@R], binnen RStudio [@RStudio], tenzij anders vermeld. De verwerking verloopt via een reproduceerbare workflow opgebouwd met het **targets**-pakket [@targets-package], zie @fig-analyse-plan.
 
 ## Uitvoeren van de tellingen {#sec-stap-1}
 
--   Stap 1 in @fig-analyse-plan
--   De telpunten uit de steekproef worden toebedeeld aan tellers en geteld volgens het MAS-protocol [@teunissen2019]:
-    -   Binnen een straal van 300 meter rond elk telpunt worden waarnemingen geregistreerd met een eenvoudige broedcode, via mobiele invoer in Avimap of eerst op een veldkaart en nadien via invoer op de Sovon-website.
-        -   broedcode 0: individu of groep buiten broedhabitat
-        -   broedcode 1: volwassen individu in broedbiotoop
-        -   broedcode 2: paar in broedbiotoop
-        -   broedcode 3: territoriaal gedrag (zang, balts, dreigen)
-        -   broedcode 4: nest-aanduidend gedrag (alarm, nestbouw, waarschijnlijke broedplaats)
-        -   broedcode 5: nest (met eieren of jongen)
-    -   Elk telpunt wordt vier keer per seizoen geteld. Er moet minstens zeven dagen zitten tussen opeenvolgende tellingen op hetzelfde punt. De tellingen starten bij zonsopgang en mogen maximaal vijf uur daarna doorgaan.
-        -   R1: 1–20 april
-        -   R2: 21 april–10 mei
-        -   R3: 11 mei–10 juni
-        -   R4: 21 juni–15 juli
-    -   Elk telpunt wordt exact tien minuten lang geteld.
--   Het export- en downloadproces van deze data van Sovon word beschreven door [@langeraert2024protocol].
+De eerste stap in @fig-analyse-plan betreft de veldwaarnemingen volgens het MAS-telprotocol [@teunissen2019]. De telpunten uit de steekproef worden toegewezen aan waarnemers, die vier tellingen per seizoen uitvoeren binnen een straal van 300 meter rond elk punt. Observaties worden voorzien van een broedcode, geregistreerd via mobiele invoer in Avimap of met behulp van veldformulieren die nadien worden ingevoerd via de Sovon-website.
 
-## Data opkuisen en voorbereiden {#sec-stap-2}
+De gebruikte broedcodes zijn:
 
-Het opkuisen en voorbereiden van de data gebeurt via de **targets** "pipeline tool" R package [@targets-package] (@fig-analyse-plan, stap 2).
-De ruwe data zoals verkregen na stap 1 zijn het startpunt.
-Daarna volgen verschillende opeenvolgende stappen:
+* **0**: individu of groep buiten broedhabitat
+* **1**: volwassen individu in broedbiotoop
+* **2**: paar in broedbiotoop
+* **3**: territoriaal gedrag (zang, balts, dreigen)
+* **4**: nestindicatief gedrag (alarm, nestbouw, waarschijnlijke broedplaats)
+* **5**: nest (met eieren of jongen)
 
--   Omzetten van Amersfoord naar Lambert coördinaten
--   Filteren van de data
-    -   Enkel telpuntlocaties die behoren tot de steekproef van het MAS
-    -   Enkel tellingen die vallen binnen de telperiodes (zie hoger)
-    -   Enkel waarnemingen binnen de telcirkel radius (max. 300 m van telpunt)
-    -   Enkel waarnemingen van vogels of zoogdieren
--   Preparatie van de data
-    -   Voor (het beperkt aantal) telpunten die twee maal geteld zijn in eenzelfde telperiode, wordt de laatste telling binnen die periode behouden tenzij de eerdere telling door een professionele teller is gebeurt (niet door een vrijwilliger)
-    -   Ondersoorten worden geaggregeerd tot op soortniveau (bv. Witsterblauwborst $\rightarrow$ Blauwborst)
+**Timing van de tellingen:**
 
-Na deze verwerkingsstappen hebben we een schone, opgekuiste dataset.
+* Tellingen vinden plaats tijdens vier vaste perioden per seizoen:
 
-## Data voorbereiden voor publicatie {#sec-stap-3}
+  * R1: 1–20 april
+  * R2: 21 april–10 mei
+  * R3: 11 mei–10 juni
+  * R4: 21 juni–15 juli
+* Elk telpunt wordt per periode één keer geteld, met minstens zeven dagen tussen twee opeenvolgende tellingen.
+* Elke telling duurt exact tien minuten en vindt plaats vanaf zonsopgang tot uiterlijk vijf uur erna.
 
-De finale dataset wordt verder in de 'targets pipeline' klaar gemaakt voor publicatie op GBIF (<https://www.gbif.org/>) (@fig-analyse-plan, stap 3) [zie ook het uitgebreid [Data Management Plan](https://www.vlaanderen.be/inbo/publicaties/dmp-voor-het-meetnet-agrarische-soorten-mas-steekproefkader-en-daar-voorbij), @dmp-mas].
-De publicatie van de data 2018-2024 is gepland voor eind 2025.
-Jaarlijke updates volgen daarna na data controle van het nieuwe teljaar.
-Preparatie van data publicatie gaan voornamelijk over 'Darwin Core mapping' (<https://dwc.tdwg.org/>) en 'taxon matching'.
-Het gaat om de volgende stappen:
+Details over de export en verwerking van de tellingen uit de Sovon-databank zijn te vinden bij [@langeraert2024protocol].
 
--   Dataset preparatie
-    -   We verwijderen kolommen gerelateerd aan de steekproef
--   Ruimtelijke verwerking
-    -   We verwijderen de Amersfoord coördinaten
-    -   We zetten de Lambert coördinaten om naar WGS 84 decimale coördinaten
-    -   We behouden de Lambert coördinaten als verbatim coördinaten
--   Mappen van statische waarden
-    -   Statische waarden worden gebruikt voor Darwin Core-termen die dezelfde waarde nodig hebben voor alle records. Meestal ontbreken ze in de input data
--   Mappen van ongewijzigde waarden
-    -   Ongewijzigde waarden worden gebruikt voor Darwin Core-termen waarvan de inhoud een exacte kopie is van het overeenkomstige veld in de input data
--   Mappen van gewijzigde waarden
-    -   Gewijzigde waarden worden gebruikt voor Darwin Core-termen waarvoor de inhoud in de input data als basis wordt gebruikt, maar deze moet worden gestandaardiseerd
-    -   Dit geldt voor Darwin Core-termen waarvoor we een vocabulaire gebruiken of waar we willen transformeren voor de duidelijkheid of om duidelijke fouten te corrigeren
--   'Taxon matching'
-    -   We matchen de Nederlandstalige soortnamen met de GBIF backbone taxonomy [@gbifsecretariat2024] via de **rgbif** R package [@chamberlain2025]
-    -   Sommige (een beperkt aantal) taxa moeten manueel gematcht worden
--   Nabewerking dataset
-    -   Selectie relevante kolommen
-    -   Sorteren van de kolommen
+## Data opschonen en voorbereiden {#sec-stap-2}
+
+Na het verzamelen van de tellingen wordt de ruwe data geschoond en voorbereid voor analyse (stap 2 in @fig-analyse-plan). Deze verwerkingsstappen verlopen volledig geautomatiseerd via een **targets**-workflow [@targets-package].
+
+1. **Coördinatenconversie**
+
+   * Amersfoort-coördinaten worden omgezet naar het Lambert 72-stelsel.
+
+2. **Filtering van waarnemingen**
+
+   * Enkel tellingen op telpunten die behoren tot de getrokken steekproef.
+   * Enkel waarnemingen binnen de officiële telperiodes.
+   * Enkel soorten binnen de telcirkel (max. 300 m vanaf het telpunt).
+   * Enkel waarnemingen van vogels of zoogdieren.
+
+3. **Selectie en aggregatie**
+
+   * Indien een telpunt meermaals geteld werd in één telperiode, wordt enkel de laatste telling behouden, tenzij een eerdere telling door een professionele teller gebeurde (dus niet door een vrijwilliger).
+   * Ondersoorten worden geaggregeerd tot soortniveau (bv. Witsterblauwborst → Blauwborst).
+
+Het resultaat is een opgeschoonde, analyseklare dataset die consistent is over alle regio’s en jaren.
+
+## Voorbereiding op publicatie {#sec-stap-3}
+
+De finale dataset wordt klaargemaakt voor publicatie op het Global Biodiversity Information Facility (GBIF) via stap 3 in @fig-analyse-plan. De gegevens van 2018–2024 zullen worden gepubliceerd tegen eind 2025, met jaarlijkse updates na kwaliteitscontrole van elk nieuwe teljaar. Publicatie vereist omzetting naar het Darwin Core-formaat ([https://dwc.tdwg.org/](https://dwc.tdwg.org/)), inclusief correcte soortnamen en gestandaardiseerde kolommen.
+
+1. **Voorbereiding dataset**
+
+   * Kolommen met informatie over het steekproefontwerp worden verwijderd.
+
+2. **Ruimtelijke verwerking**
+
+   * Amersfoort-coördinaten worden verwijderd.
+   * Lambert-coördinaten worden omgezet naar WGS84-decimale graden voor publicatie.
+   * De oorspronkelijke Lambert-coördinaten worden behouden als *verbatimCoordinates*.
+
+3. **Mapping naar Darwin Core-termen**
+
+   * **Statische waarden**: toegekend aan velden die bij elk record dezelfde inhoud hebben maar ontbreken in de originele data.
+   * **Ongewijzigde waarden**: rechtstreeks overgenomen uit de inputdataset.
+   * **Gewijzigde waarden**: afgeleid uit de input, maar gestandaardiseerd of aangepast (bv. via vocabularia of correctie van foutieve waarden).
+
+4. **Taxonomische standaardisatie (taxon matching)**
+
+   * Nederlandstalige soortnamen worden automatisch gematcht met de GBIF Backbone Taxonomy [@gbifsecretariat2024] via de **rgbif**-package [@chamberlain2025].
+   * Taxa die niet automatisch herkend worden, worden manueel toegewezen (beperkt aantal).
+
+5. **Finale nabewerking**
+
+   * Selectie van relevante kolommen.
+   * Standaardisatie van kolomvolgorde voor publicatie.
+
+Meer informatie over deze verwerkingsstappen en afspraken rond publicatie is beschikbaar in het Data Management Plan [@dmp-mas].
 
 ## Verzamelen van verklarende variabelen en datasets samenvoegen {#sec-stap-4}
 

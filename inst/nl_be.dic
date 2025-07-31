@@ -23,7 +23,9 @@
 +
 --\
 -bestand
+-package
 -pakket
+-workflow
 ...'
 .gitignore
 10'
@@ -34,15 +36,18 @@
 4x
 5'
 6x
+72-stelsel
 Akkervogelgemeenschappen
 Alauda
 Amersfoord
+Amersfoort-coördinaten
 Avimap
 Avimap-versie
 BBV
 BO's
 BSCX00
 Belgium
+Biodiversity
 Bosonderzoek
 Buteo
 CHM
@@ -54,6 +59,7 @@ Cartuyvels
 Casteleynstraat
 Chi-kwadraattoetsingsgrootheid
 Core
+Core-formaat
 Core-termen
 Cricetus
 Curruca
@@ -70,6 +76,7 @@ Duinen/Weidestreek
 DwC
 EPSG
 Emberiza
+Facility
 Flanders
 GBIF.org
 GL
@@ -79,17 +86,20 @@ GVI
 Geule
 GitHub-repository
 Gittargets
+Global
 HGL
 Habitatversnippering
 Hazegraspolder
 Homotypic
 Horvitz-Thomson
+Information
 KC
 KLA
 KLE's
 KML
 Kiekendief'
 LEVS01
+Lambert-coördinaten
 Langeraert
 Latham
 Limosa
@@ -99,6 +109,7 @@ MAS-pilootstudie
 MAS-protocol
 MAS-punten
 MAS-tellingen
+MAS-telprotocol
 MBAG
 Maaibos
 Maps
@@ -135,6 +146,8 @@ SBP’s
 SOVON
 SQL-query
 Sovon
+Sovon-databank
+Sovon-website
 Stratificatievariabelen
 Streptopelia
 Synonym
@@ -158,6 +171,7 @@ WFS
 WFS-server
 WFS-verbinding
 WGG
+WGS84-decimale
 Westhoekreservaat
 Witsterblauwborst
 X-coördinaten
@@ -171,6 +185,7 @@ agro-ecologisch
 akker-
 akkervogelpopulaties
 allocatieproporties
+analyseklare
 arvensis
 avimap
 avimapcodes
@@ -220,6 +235,7 @@ highway
 indicatorfunctie
 indicatorsoorten
 inner
+inputdataset
 jaar/cyclus
 jachtregelmentering
 km-hok
@@ -242,7 +258,9 @@ mas
 montanus
 multipolygon
 names
+nestindicatief
 niet-kerend
+niet-vrijwilliger
 occurrence
 onvertekende
 open-ruimte-kaart
@@ -274,6 +292,7 @@ renv
 replicaten
 repository
 reserveset
+rgbif
 sampled
 sbp
 size
@@ -297,6 +316,7 @@ telcirkels
 telcyclus
 telgeschiedenis
 telinspanningen
+teljaar
 telperiode
 telperiodes
 telprotocol
@@ -318,9 +338,11 @@ union
 v1.1
 vanellus
 verbatim
+verbatimCoordinates
 verderzetting
 vernacular
 version
+verwerkings-
 viewpoints'
 viewshed
 visibility
