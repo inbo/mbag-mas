@@ -23,6 +23,7 @@
 +
 --\
 -bestand
+-pakket
 ...'
 .gitignore
 10'
@@ -43,6 +44,7 @@ BO's
 BSCX00
 Belgium
 Bosonderzoek
+Buteo
 CHM
 CSV-bestand
 CSV-bestanden
@@ -53,6 +55,7 @@ Casteleynstraat
 Chi-kwadraattoetsingsgrootheid
 Core
 Core-termen
+Cricetus
 Curruca
 DHMV
 DMP
@@ -74,6 +77,7 @@ GLB
 GPKG-bestanden
 GVI
 Geule
+GitHub-repository
 Gittargets
 HGL
 Habitatversnippering
@@ -115,6 +119,7 @@ Perdix
 Pl
 Poecile
 QGIS
+R-packages
 R1
 R2
 R3
@@ -124,12 +129,14 @@ SB
 SBP
 SBP's
 SBP-doelrealisatie
+SBP-gebieden
 SBPs
 SBP’s
 SOVON
 SQL-query
 Sovon
 Stratificatievariabelen
+Streptopelia
 Synonym
 Telcirkels
 Telpunt-
@@ -159,6 +166,7 @@ Zn
 \
 accepted
 aeroway
+aeruginosus
 agro-ecologisch
 akker-
 akkervogelpopulaties
@@ -172,6 +180,7 @@ biogeografische
 birds
 branching
 breeding
+buteo
 calandra
 calculate
 canopy
@@ -179,9 +188,11 @@ cf
 coden
 coding
 commit
+commit-hashes
 confounding
 control
 counts
+cricetus
 crs
 cumulative
 curruca
@@ -210,6 +221,7 @@ indicatorfunctie
 indicatorsoorten
 inner
 jaar/cyclus
+jachtregelmentering
 km-hok
 km-hokken
 kp
@@ -233,6 +245,7 @@ names
 niet-kerend
 occurrence
 onvertekende
+open-ruimte-kaart
 openness
 opgeslaan
 opvalllende
@@ -253,6 +266,7 @@ polygon
 positive
 publicatieklaar
 puntenset
+pygargus
 rastercel
 regex
 remove
@@ -298,6 +312,7 @@ thinning
 toestandmonitoring
 toevoegen'
 topographic
+turtur
 uncut
 union
 v1.1
