@@ -1,3 +1,9 @@
+---
+editor: 
+  markdown: 
+    wrap: sentence
+---
+
 ```{r}
 #| echo: FALSE
 #| warning: FALSE
@@ -13,38 +19,48 @@ Deze worden uitgevoerd met R [@R] in RStudio [@RStudio] tenzij anders vermeld.
 
 ## Uitvoeren van de tellingen {#sec-stap-1}
 
--   Figuur @fig-analyse-plan, stap 1
--   De telpunten uit de steekproef worden toebedeeld aan tellers en geteld volgens het MAS-protocol \textcolor{red}{[REF]}.
--   \textcolor{red}{Waarnemingen worden via de Avimap app ingegeven en komen zo bij Sovon terecht.}
--   Het export- en downloadproces van deze data van Sovon word beschreven door \textcolor{red}{[REF]}.
+-   Stap 1 in @fig-analyse-plan
+-   De telpunten uit de steekproef worden toebedeeld aan tellers en geteld volgens het MAS-protocol [@teunissen2019]:
+    -   Binnen een straal van 300 meter rond elk telpunt worden waarnemingen geregistreerd met een eenvoudige broedcode, via mobiele invoer in Avimap of eerst op een veldkaart en nadien via invoer op de Sovon-website.
+        -   broedcode 0: individu of groep buiten broedhabitat
+        -   broedcode 1: volwassen individu in broedbiotoop
+        -   broedcode 2: paar in broedbiotoop
+        -   broedcode 3: territoriaal gedrag (zang, balts, dreigen)
+        -   broedcode 4: nest-aanduidend gedrag (alarm, nestbouw, waarschijnlijke broedplaats)
+        -   broedcode 5: nest (met eieren of jongen)
+    -   Elk telpunt wordt vier keer per seizoen geteld. Er moet minstens zeven dagen zitten tussen opeenvolgende tellingen op hetzelfde punt. De tellingen starten bij zonsopgang en mogen maximaal vijf uur daarna doorgaan.
+        -   R1: 1–20 april
+        -   R2: 21 april–10 mei
+        -   R3: 11 mei–10 juni
+        -   R4: 21 juni–15 juli
+    -   Elk telpunt wordt exact tien minuten lang geteld.
+-   Het export- en downloadproces van deze data van Sovon word beschreven door [@langeraert2024protocol].
 
 ## Data opkuisen en voorbereiden {#sec-stap-2}
 
 Het opkuisen en voorbereiden van de data gebeurt via de **targets** "pipeline tool" R package [@targets-package] (@fig-analyse-plan, stap 2).
-De ruwe data zoals verkregen na stap 1 is het startpunt.
+De ruwe data zoals verkregen na stap 1 zijn het startpunt.
 Daarna volgen verschillende opeenvolgende stappen:
 
 -   Omzetten van Amersfoord naar Lambert coördinaten
 -   Filteren van de data
     -   Enkel telpuntlocaties die behoren tot de steekproef van het MAS
-    -   Enkel tellingen die vallen binnen de volgende telperiodes
-        -   R1: 1 april - 20 april
-        -   R2: 21 april - 10 mei
-        -   R3: 11 mei - 10 juni
-        -   R4: 21 juni - 15 juli
+    -   Enkel tellingen die vallen binnen de telperiodes (zie hoger)
     -   Enkel waarnemingen binnen de telcirkel radius (max. 300 m van telpunt)
     -   Enkel waarnemingen van vogels of zoogdieren
 -   Preparatie van de data
-    -   Voor (het beperkt aantal) telpunten die twee maal geteld zijn in eenzelfde telperiode, wordt laatste telling binnen die periode behouden tenzij de eerdere telling door een professionele teller is gebeurt (niet door een vrijwilliger)
+    -   Voor (het beperkt aantal) telpunten die twee maal geteld zijn in eenzelfde telperiode, wordt de laatste telling binnen die periode behouden tenzij de eerdere telling door een professionele teller is gebeurt (niet door een vrijwilliger)
     -   Ondersoorten worden geaggregeerd tot op soortniveau (bv. Witsterblauwborst $\rightarrow$ Blauwborst)
 
 Na deze verwerkingsstappen hebben we een schone, opgekuiste dataset.
 
 ## Data voorbereiden voor publicatie {#sec-stap-3}
 
-De finale dataset wordt verder in de 'targets pipeline' klaar gemaakt voor publicatie op GBIF (<https://www.gbif.org/>) (@fig-analyse-plan, stap 3).
-De publicatie van de data 2018-2024 is gepland voor eind 2024.
-\textcolor{red}{Preparatie van data publicatie gaat voornamelijk over Darwin Core mapping ... .} Het gaat om de volgende stappen:
+De finale dataset wordt verder in de 'targets pipeline' klaar gemaakt voor publicatie op GBIF (<https://www.gbif.org/>) (@fig-analyse-plan, stap 3) [zie ook het uitgebreid [Data Management Plan](https://www.vlaanderen.be/inbo/publicaties/dmp-voor-het-meetnet-agrarische-soorten-mas-steekproefkader-en-daar-voorbij), @dmp-mas].
+De publicatie van de data 2018-2024 is gepland voor eind 2025.
+Jaarlijke updates volgen daarna na data controle van het nieuwe teljaar.
+Preparatie van data publicatie gaan voornamelijk over 'Darwin Core mapping' (<https://dwc.tdwg.org/>) en 'taxon matching'.
+Het gaat om de volgende stappen:
 
 -   Dataset preparatie
     -   We verwijderen kolommen gerelateerd aan de steekproef
@@ -59,8 +75,8 @@ De publicatie van de data 2018-2024 is gepland voor eind 2024.
 -   Mappen van gewijzigde waarden
     -   Gewijzigde waarden worden gebruikt voor Darwin Core-termen waarvoor de inhoud in de input data als basis wordt gebruikt, maar deze moet worden gestandaardiseerd
     -   Dit geldt voor Darwin Core-termen waarvoor we een vocabulaire gebruiken of waar we willen transformeren voor de duidelijkheid of om duidelijke fouten te corrigeren
--   Taxon matching
-    -   We matchen de Nederlandstalige soortnamen met de GBIF backbone taxonomy \textcolor{red}{REF}
+-   'Taxon matching'
+    -   We matchen de Nederlandstalige soortnamen met de GBIF backbone taxonomy [@gbifsecretariat2024] via de **rgbif** R package [@chamberlain2025]
     -   Sommige (een beperkt aantal) taxa moeten manueel gematcht worden
 -   Nabewerking dataset
     -   Selectie relevante kolommen
