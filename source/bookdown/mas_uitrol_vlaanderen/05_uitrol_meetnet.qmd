@@ -318,15 +318,13 @@ Tot slot werd ook een uitgebreid [Data Management Plan](https://www.vlaanderen.b
 
 ### Stand van zaken {#sec-stand-van-zaken}
 
--   2023: zandleemstreek en leemstreek
-    -   korte recap: zie piloot
-    -   overzicht beschrijvende statistiek: hoofdstuk 4
+In kader van het MAS pilootproject werd het meetnet uitgerold in de Leemstreek en de Zandleemstreek. Voor de Oostelijke leemstreek werden de punten overgenomen uit het pilootproject. Voor de Westelijke leemstreek en de Zandleemstreek werd een nieuwe steekproef getrokken o.b.v. de geleerde lessen uit de pilootstudie [@langeraert2025pilot, hoofdstuk 5], i.e. de methodiek beschreven in @sec-meetnet-ontwerp.
+Deze punten worden sinds 2023 geteld.
 
 ### Uitbreiding tot een Vlaams meetnet {#sec-uitbreiding-meetnet}
 
--   beschrijving van de uitbreiding
--   2024: kempen, zandstreek, polders
-    -   korte beschrijving en figuurtjes
+In kader van het MBAG project werd het meetnet uitgebreid over de Kempen, Zandstreek en Polders waar sinds 2024 punten worden geteld.
+Een volledig overzicht van het aantal punten per stratum word gegeven in @sec-overzicht-mas.
 
 ### Overige landbouwstreken {#sec-overige-streken}
 
@@ -428,7 +426,7 @@ Voor alle andere landbouwregio's werd een afstand van 600 m gehanteerd zodat er 
 We laten voor de Weidestreek dus wel overlap toe om genoeg telpunten over te houden.
 Na manuele controle behielden we 50 van de 58 punten.
 
-### Overzicht volledige steekproef MAS Vlaanderen
+### Overzicht volledige steekproef MAS Vlaanderen {#sec-overzicht-mas}
 
 ```{r}
 file <- file.path("data/steekproefkaders/steekproef_avimap_mbag_mas.csv")
