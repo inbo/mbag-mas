@@ -72,6 +72,7 @@ Depot2
 Depot3
 Depot5
 Depotter
+Difference
 Duinen/Weidestreek
 DwC
 EPSG
@@ -115,10 +116,12 @@ Maaibos
 Maps
 Matkop
 Meetnetontwerp
+NDVI
 NHW
 NHW-rapportage
 Natuur-
 Natuurherstelwet
+Normalized
 OGC
 OL
 OLA
@@ -165,6 +168,7 @@ VL0587
 VL0590
 VL0605
 Vanellus
+Vegetation
 Veldmuis/Aardmuis
 Version
 WFS
@@ -218,12 +222,14 @@ detecteerbaarheid
 distance
 double
 dynamic
+effects
 enzo
 exclusiecriterium
 exclusiekaart
 exclusielaag
 export-
 final
+fine-scale
 geojson-bestand
 gespecifieerd
 git2rdata
@@ -236,6 +242,7 @@ indicatorfunctie
 indicatorsoorten
 inner
 inputdataset
+jaar-specifieke
 jaar/cyclus
 jachtregelmentering
 km-hok
@@ -250,6 +257,7 @@ leemstreek.Rmd
 limosa
 ll'en
 longitude
+m-radius
 maken'
 manual
 mapping
@@ -262,6 +270,7 @@ nestindicatief
 niet-kerend
 niet-vrijwilliger
 occurrence
+onderzoeksnoden
 onvertekende
 open-ruimte-kaart
 openness
@@ -270,6 +279,7 @@ opvalllende
 overlappen'
 perceelsgebonden
 perceelsgrootte
+perceelsinformatie
 perdix
 perimeters.gpkg
 periods
@@ -295,6 +305,7 @@ reserveset
 rgbif
 sampled
 sbp
+sensing-producten
 size
 soortgrp
 soortnamen/auteurs
@@ -312,11 +323,14 @@ substrata
 synonym
 taxonomy
 telcirkel
+telcirkel-
 telcirkels
 telcyclus
 telgeschiedenis
 telinspanningen
 teljaar
+telleridentiteit
+telomstandigheden
 telperiode
 telperiodes
 telprotocol
@@ -325,6 +339,7 @@ telpunt/hok
 telpunten
 telpunten/
 telpuntlocaties
+telpuntniveau
 telronde
 telrondes
 tertiare
