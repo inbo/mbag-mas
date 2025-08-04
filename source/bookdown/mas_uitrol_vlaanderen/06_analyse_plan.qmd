@@ -103,7 +103,7 @@ De verzameling en verkenning van verklarende variabelen werd eerder toegelicht i
 
 * **Primaire variabelen** zijn direct relevant voor beleidsvragen omtrent de effecten van landbouwmaatregelen op akkerfauna. Deze variabelen staan centraal in de analyse van soortrespons en zijn sterk gekoppeld aan beleidsdoelstellingen.
 * **Secundaire variabelen** zijn ecologisch relevant en dragen bij aan een completer verklarend model, maar zijn minder direct gelinkt aan specifieke beleidshypothesen. Ze geven inzicht in het bredere ecologische kader waarin soorten voorkomen.
-* **Tertiaire variabelen** zijn methodologische of structurele kenmerken van het meetnet. Ze worden gebruikt om te corrigeren voor temporele en ruimtelijke variatie in het protocol (bv. cktelomstandigheden, seizoensinvloeden, telleridentiteit) en worden doorgaans gemodelleerd als random effects.
+* **Tertiaire variabelen** zijn methodologische of structurele kenmerken van het meetnet. Ze worden gebruikt om te corrigeren voor temporele en ruimtelijke variatie in het protocol (bv. seizoensinvloeden, telleridentiteit) en worden doorgaans gemodelleerd als random effects.
 
 Ten opzichte van het pilootproject zijn er enkele belangrijke uitbreidingen voor MAS Vlaanderen:
 
@@ -116,7 +116,7 @@ De selectie, ontwikkeling en verwerking van deze verklarende variabelen ligt nie
 ## Statistische analyse {#sec-stap-7}
 
 - (@fig-analyse-plan, stap 7)
-- zie pilootproject
+- zie pilootproject @langeraert2025pilot
 - distance sampling
   - detectiekans
   - kaarten
