@@ -99,7 +99,7 @@ Meer informatie over deze verwerkingsstappen en afspraken rond publicatie is bes
 
 De stappen 4 tot 6 in @fig-analyse-plan omvatten het verzamelen van verklarende variabelen, het voorbereiden van deze gegevens en het samenvoegen ervan met de waarnemingsdata.
 
-De verzameling en verkenning van verklarende variabelen werd eerder toegelicht in @langeraert2025pilot (paragraaf 4.3). In deze studie werd een hiërarchische indeling gehanteerd:
+De verzameling en verkenning van verklarende variabelen werd eerder toegelicht in @langeraert2025pilot[paragraaf 4.3]. In deze studie werd een hiërarchische indeling gehanteerd:
 
 * **Primaire variabelen** zijn direct relevant voor beleidsvragen omtrent de effecten van landbouwmaatregelen op akkerfauna. Deze variabelen staan centraal in de analyse van soortrespons en zijn sterk gekoppeld aan beleidsdoelstellingen.
 * **Secundaire variabelen** zijn ecologisch relevant en dragen bij aan een completer verklarend model, maar zijn minder direct gelinkt aan specifieke beleidshypothesen. Ze geven inzicht in het bredere ecologische kader waarin soorten voorkomen.
