@@ -115,8 +115,14 @@ De selectie, ontwikkeling en verwerking van deze verklarende variabelen ligt nie
 
 ## Statistische analyse {#sec-stap-7}
 
--   (@fig-analyse-plan, stap 7)
--   \textcolor{red}{to do en zie pilootproject}
+- (@fig-analyse-plan, stap 7)
+- zie pilootproject
+- distance sampling
+  - detectiekans
+  - kaarten
+- correlaties verklarende variabelen
+- trendberekeningen
+- JSDMs
 
 ```{r}
 #| label: fig-analyse-plan
