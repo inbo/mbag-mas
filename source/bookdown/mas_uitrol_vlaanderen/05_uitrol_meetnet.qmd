@@ -1,3 +1,12 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+editor: 
+  markdown: 
+    wrap: sentence
+---
+
 ```{r}
 #| echo: FALSE
 #| warning: FALSE
@@ -9,7 +18,7 @@ library(readr)
 
 # Een meetnet agrarische soorten in Vlaanderen {#sec-uitrol-vlaanderen}
 
-De opbouw voor MAS Vlaanderen werd al grotendeels besproken in \textcolor{red}{[REF]}.
+De opbouw voor MAS Vlaanderen werd al grotendeels besproken in @langeraert2025pilot.
 Dit meetnet wordt opgebouwd op basis van de verschillende landbouwstreken in Vlaanderen (@fig-landbouwstreken).
 
 ```{r}
@@ -20,7 +29,7 @@ include_graphics(file.path("media", "kaartjes", "landbouwstreken_vl.png"))
 ```
 
 In dit hoofdstuk vatten we eerst samen hoe het meetnet is opgebouwd en de steekproeftrekking werd gedaan (@sec-meetnet-ontwerp).
-Daarna overlopen we welke stappen voor MAS Vlaanderen reeds werden gedaan (Zandleemstreek en Leemstreek) \textcolor{red}{[REF]} en welke uitbreiding er in 2024 gepland is (Polders, Zandstreek, Kempen) (@sec-mas-vlaanderen).
+Daarna overlopen we welke stappen voor MAS Vlaanderen werden gedaan in 2023 (Zandleemstreek en Leemstreek) [@langeraert2025pilot] en 2024 (Polders, Zandstreek, Kempen) (@sec-mas-vlaanderen).
 Ten slotte bespreken we de overige, kleine streken (Duinen, Weidestreek) apart in @sec-overige-streken.
 
 ## Ontwerp van de gegevensinzameling {#sec-meetnet-ontwerp}
@@ -35,26 +44,29 @@ We overlopen volgende stappen:
 ### Afbakening steekproefkader {#sec-mas-steekproefkader}
 
 Een steekproefkader heeft de bedoeling om de statistische doelpopulatie die we willen onderzoeken zo goed mogelijk te benaderen.
-Een steekproefkader kan bijvoorbeeld een lijst zijn (bv. alle landbouwbedrijven in Vlaanderen) of het kan een ruimtelijke afbakening zijn (bv. de contour van Vlaanderen).
-In het geval van het MAS Vlaanderen maken we een lijst aan van potentiële telpuntlocaties.
+Een steekproefkader kan bijvoorbeeld een lijst zijn (bv. alle landbouwbedrijven in Vlaanderen) of het kan een ruimtelijke afbakening zijn (bv. de omtrek van Vlaanderen).
+In het geval van het MAS pilootproject maken we een lijst aan van potentiële telpuntlocaties.
 
-Voor de afbakening van het steekproefkader, starten we met een intersectie van de landbouwstreken van België met de contour van Vlaanderen.
-We bekomen dus polygonen voor elke landbouwstreek in Vlaanderen[^05_uitrol_meetnet-1].
+Voor de afbakening van het steekproefkader, starten we met een intersectie van de landbouwstreken van België met de omtrek van Vlaanderen.
+We bekomen dus polygonen voor elke landbouwstreek in Vlaanderen[^05_uitrol_meetnet-1] (@fig-landbouwstreken).
 We moeten nu echter het steekproefkader verder verfijnen.
 Dit doen we in zes opeenvolgende stappen.
 De uiteindelijk bekomen lijst van potentiële telpuntlocaties vormt het steekproefkader van het MAS in Vlaanderen.
+
+[^05_uitrol_meetnet-1]: Met uitzondering van de Duinen en de Weidestreek.
+    Deze worden apart besproken in @sec-overige-streken.
 
 **1. Selectie open en halfopen landschap**
 
 Binnen deze polygonen selecteren we open en halfopen landschap (@fig-steekproef-afbakening A).
 Om de openheid van het landschap te bepalen, moeten we een operationele definitie maken van hoe open een landschap is.
-We maken hiervoor gebruik van het DSM (digitaal oppervlakte model - DHMV II Vlaanderen) [@DSM] en het DTM (digitaal terrein model) [@DTM] op 5 m resolutie.
+We maken hiervoor gebruik van het DSM (digitaal oppervlakte model - DHMV II Vlaanderen, @DSM) en het DTM (digitaal terrein model, @DTM) op 5 m resolutie.
 Werkwijze:
 
--   Berekening "canopy height model" (CHM) door verschil te berekenen tussen DSM en DTM. Dit geeft dan hoogte boven het maaiveld (gebouwen, bodem, struiken ...).
--   Berekening van "positive topographic openness" (dit is een waarde tussen 0 en 2 in radialen) door voor elke rastercel van het CHM in 8 kijkrichtingen na te gaan wat de gemiddelde hoek is t.o.v. het zenit binnen een straal van 300 m. Deze hoek geeft aan hoe open het landschap is. Indien volledig open, is de hoek 90° (of 1.57 radialen).
--   Met dit resultaat de gemiddelde (van de gemiddelde) topografische openheid berekenen in een cirkelvormig landschap rond elke cel met straal 300 m.
--   Deze gemiddelden zijn daarna ingedeeld in vier klassen:
+-   berekening "canopy height model" (CHM) door verschil te berekenen tussen DSM en DTM. Dit geeft dan hoogte boven het maaiveld (gebouwen, bodem, struiken ...).
+-   berekening van "positive topographic openness" (dit is een waarde tussen 0 en 2 in radialen) door voor elke rastercel van het CHM in 8 kijkrichtingen na te gaan wat de gemiddelde hoek is t.o.v. het zenit binnen een straal van 300 m. Deze hoek geeft aan hoe open het landschap is. Indien volledig open is de hoek 90° (of 1.57 radialen).
+-   met dit resultaat de gemiddelde (van de gemiddelde) topografische openheid berekenen in een cirkelvormig landschap rond elke cel met straal 300 m.
+-   deze gemiddelden zijn daarna ingedeeld in vier klassen:
     -   OL: open landschap (\> 86,5°),
     -   HOL: halfopen landschap (77,3° - 86,5°),
     -   HGL: halfgesloten landschap (71,6° - 77,3°)
@@ -62,12 +74,18 @@ Werkwijze:
 
 **2. Exclusie irrelevante landgebruiken**
 
-In tweede instantie sluiten we een aantal landgebruiken uit op basis van OpenStreetMap data [@openstreetmapcontributors2024] (@tbl-exclusie-landgebruik), @fig-steekproef-afbakening B).
-Voor de uitbreiding in 2024 werd een recentere versie van de OpenStreetMap data gedownload op 31-01-2024.
+In tweede instantie sluiten we een aantal landgebruiken uit op basis van OpenStreetMap (OSM) data [@openstreetmapcontributors2024] (@tbl-exclusie-landgebruik), @fig-steekproef-afbakening B).
+OSM is een wereldwijd, open samenwerkingsproject waarin vrijwilligers geografische gegevens verzamelen en beschikbaar stellen.
+Deze vrij toegankelijke databron biedt een zeer gedetailleerde en actuele kaart van de wereld, die continu wordt bijgewerkt door een actieve gemeenschap van gebruikers.
+Hoewel de kwaliteit van OSM over het algemeen hoog is, kunnen er lokaal nog onvolkomenheden voorkomen.
+Zo kan de kaart op bepaalde plaatsen verouderd zijn of kunnen bijdragen van vrijwilligers leiden tot kleine classificatiefouten.
+Dankzij de open en dynamische aard van het project kunnen deze fouten echter relatief snel gesignaleerd en gecorrigeerd worden.
+OSM werd in Vlaanderen bijvoorbeeld gebruikt voor het opstellen van een open-ruimte-kaart voor Patrijs in functie van jachtregelmentering [@onkelinx2022].
+Voor de uitbreiding in 2024 werd een recentere versie van de OSM data gedownload op 31-01-2024.
 Naast de exclusie van deze landgebruiken, sluiten we ook een zone van 100 m rond autosnelwegen en invoegstroken en afritten van autosnelwegen uit.
 Dit omdat langs autosnelwegen vaak parallelle paden liggen.
 Dit kan in de steekproef tot gevolg hebben dat er met een hogere waarschijnlijkheid een punt wordt geselecteerd vlak bij een snelweg, omdat er veel van zulke punten zijn.
-De realiteit van het terrein kan een invloed hebben op de waarnemingen (bv. vaak kraaiachtigen en Buizerd langs snelwegen) en vrij zeker ook op de detecteerbaarheid (geluidsoverlast en beperkte zichtbaarheid).
+De realiteit van het terrein kan een invloed hebben op de waarnemingen (bv. vaak kraaiachtigen en buizerd (*Buteo buteo*) langs snelwegen) en vrij zeker ook op de detecteerbaarheid (geluidsoverlast en beperkte zichtbaarheid).
 
 ```{r}
 #| label: tbl-exclusie-landgebruik
@@ -118,8 +136,8 @@ tibble(
 
 **3. Bepalen geldige plaatsen waar telling kan uitgevoerd worden**
 
-MAS tellingen gebeuren altijd vanaf een openbare weg of pad, er worden in principe nooit (landbouw)percelen betreden.
-We gebruiken daarom een extractie uit OpenStreetMap van alle wegentypes die in aanmerkingen komen (positieve selectie, dus snelwegen en dergelijke worden hier indirect uitgesloten) (@tbl-inclusie-wegen, @fig-steekproef-afbakening C):
+MAS-tellingen gebeuren altijd vanaf een openbare weg of pad, er worden in principe nooit (landbouw)percelen betreden.
+We gebruiken daarom een extractie uit OpenStreetMap van alle wegentypes die in aanmerkingen komen (positieve selectie, dus autosnelwegen en dergelijke worden hier indirect uitgesloten) (@tbl-inclusie-wegen, @fig-steekproef-afbakening C):
 
 ```{r}
 #| label: tbl-inclusie-wegen
@@ -152,8 +170,11 @@ tibble(
 Vervolgens hebben we dit netwerk van wegen omgevormd tot een puntennetwerk (@fig-steekproef-afbakening D), waarbij elk punt een potentieel telpunt kan zijn:
 
 -   Langs alle paden worden op regelmatige afstanden van 50 m punten gelegd[^05_uitrol_meetnet-2].
--   Daarna worden punten die op minder dan 40 m van elkaar liggen ruimtelijk gegroepeerd (dit gebeurt wanneer verschillende paden elkaar kruisen of op korte afstand parallel aan elkaar liggen) en uit elk van deze clusters wordt één punt overgehouden.
--   Potentiële telpunten moeten op minstens 300 m van de grens (perimeter) gelegen zijn.
+-   Daarna worden punten die op minder dan 40 m van elkaar liggen ruimtelijk gegroepeerd (dit gebeurt wanneer verschillende paden elkaar kruisen of op korte afstand parallel aan elkaar liggen) en uit elk van deze clusters wordt één punt overgehouden
+-   Potentiële telpunten moeten op minstens 300 m van de grens (perimeter) gelegen zijn
+
+[^05_uitrol_meetnet-2]: Bij de steekproeftrekking wordt een methode gebruikt die zal vermijden dat telpunten en hun telcirkels overlappen.
+    Het kan in deze fase dus geen kwaad dat potentiële telpunten op een afstand van minder dan 300 m van elkaar gelegen zijn.
 
 ```{r}
 #| label: fig-steekproef-afbakening
@@ -171,7 +192,7 @@ include_graphics(file.path("media", "steekproefkader_mas",
 
 **5. Bijkomend exclusiecriterium op basis van landgebruik**
 
-Deze lijst van potentiële telpunten is nog steeds een te ruime set van punten die nog onvoldoende goed overlapt met de eigenlijke doelpopulatie.
+Deze lijst van potentiële telpunten is nog steeds een te ruime set van punten die nog onvoldoende goed overlapt met onze eigenlijke doelpopulatie.
 Daarom wordt nog een extra exclusiecriterium toegevoegd op basis van de VITO 2019 landgebruikskaart [@poelmans2021].
 Deze landgebruikskaart geeft ons betere informatie om de oppervlaktes aan akker, grasland, bos en struikgewas in een straal van 300 m te bepalen rond elk van de potentiële telpunten op de voorlopige lijst.
 Deze straal komt overeen met de telcirkel uit het MAS telprotocol.
@@ -179,15 +200,15 @@ We zijn enkel geïnteresseerd in potentiële telpunten waar de samenstelling van
 
 <!-- spell-check: ignore:start -->
 
--   Akker + Grasland \> 40 % én Grasland + Bos + Struikgewas + Akker \> 50 %
+-   Akker + Grasland \> 40% én Grasland + Bos + Struikgewas + Akker \> 50%
 
 <!-- spell-check: ignore:end -->
 
-Met deze regel slagen we er in om potentiële telpunten uit te sluiten die bijvoorbeeld te dicht bij bebouwing gelegen zijn.
+Met deze regel slagen we erin om potentiële telpunten uit te sluiten die bijvoorbeeld te dicht bij bebouwing gelegen zijn.
 
 **6. Bijkomend exclusiecriterium op basis van zichtbaarheid**
 
-Uit het MAS pilootproject \textcolor{red}{[REF]} bleken er na de steekproeftrekking vooral problemen met zichtbaarheid omdat punten nog vielen in bossen, boomgaarden, holle wegen etc.
+Uit het MAS pilootproject bleken er na de steekproeftrekking vooral problemen met zichtbaarheid omdat punten nog vielen in bossen, boomgaarden, holle wegen etc. [@langeraert2025pilot].
 Om de meest extreme gevallen weg te filteren worden punten met een te slechte zichtbaarheid verwijderd.
 We berekenen zichtbaarheid als de cumulatieve zichtbaarheidsindex (CVVI: cumulative viewshed visibility index) waarbij de waarnemer een bewegingsvrijheid heeft van 25 m rondom het telpunt (@fig-zichtbaarheid).
 De zichtbaarheidsindex wordt berekend vanaf een set van locaties die 10 m van elkaar liggen in deze zone van bewegingsvrijheid en geeft de proportie aan van zichtbare rastercellen (resolutie 5 m) in de telcirkel met straal 300 m.
@@ -211,12 +232,12 @@ include_graphics(file.path("media", "visibility",
 Bij een steekproefontwerp kan het interessant zijn om te stratificeren.
 Er zijn verschillende redenen waarom we dit zouden willen doen.
 Een eerste is dat we aparte uitspraken willen voor individuele strata.
-Dit is bijvoorbeeld het geval wanneer we denken aan de stratificatie volgens **landbouwstreek** (doelstelling zicht krijgen op regionale verschillen in toestand en trend).
-Maar ook binnen een landbouwstreek willen we verder stratificeren in termen van binnen en buiten **soortbeschermingsplan zones (SBP)** voor akkervogels en in termen van **openheid van het landschap** (@fig-stratificatievariabelen).
+Dit is bijvoorbeeld het geval wanneer we denken aan de stratificatie volgens landbouwstreek (doelstelling zicht krijgen op regionale verschillen in toestand en trend).
+Maar ook binnen een landbouwstreek willen we verder stratificeren in termen van binnen en buiten soortenbeschermingsprogrammagebieden (SBP-gebieden, binnen versus buiten SBP) voor akkervogels en in termen van openheid van het landschap (OL versus HOL) (@fig-stratificatievariabelen).
 
 De stratificatie binnen versus buiten SBP zal ons helpen om telpunten te vergelijken waar veel beschermingsmaatregelen genomen zijn versus telpunten met weinig beschermingsmaatregelen.
 We nemen kerngebieden en zoekzones samen als binnen SBP en alles hierbuiten beschouwen we als controle.
-Voor het SBP gebied combineren we meerdere SBP lagen (zie @sec-sbp-per-soort): (1) perimeter SBP akkervogels [@jansen2022adviesakkervogels], (2) SBP grauwe kiekendief (oude perimeter van in gebruik van 2018 t/m 2022 [@vandegehuchte2015grauwekiekendief] en nieuwe (door INBO voorgestelde) perimeter [@spanoghe2022grauwekiekendief]), en (3) SBP bruine kiekendief, zomertortel en hamster [@overigeSBPs].
+Voor het SBP gebied combineren we meerdere SBP lagen (zie @sec-sbp-per-soort): (1) perimeter SBP akkervogels [@jansen2022adviesakkervogels], (2) SBP grauwe kiekendief (*Circus* *pygargus*) (oude perimeter van in gebruik van 2018 t/m 2022 [@vandegehuchte2015grauwekiekendief] en nieuwe (door INBO voorgestelde) perimeter [@spanoghe2022grauwekiekendief]), en (3) SBP bruine kiekendief (*Circus aeruginosus*), zomertortel (*Streptopelia turtur*) en hamster (*Cricetus cricetus*) [@overigeSBPs].
 Deze stratificatie is niet zwart-wit.
 Ook binnen SBP gebied zullen er telpunten zijn met weinig beschermingsmaatregelen en het omgekeerde kan ook het geval zijn.
 De stratificatie zorgt er echter voor dat we de kans om van beide situaties voldoende gevallen hebben vergroten.
@@ -232,7 +253,7 @@ De berekening voor openheid van het landschap is dezelfde als uitgelegd in de ee
 include_graphics(file.path("media", "kaartjes", "strata_vlaanderen.png"))
 ```
 
-Naast bovenstaande stratificaties, hebben we ook nog het **oppervlakte-aandeel aan soortbeschermingsmaatregelen** berekend (toestand beheerovereenkomsten 2022, bron: VLM), omdat we kunnen verwachten dat die gerelateerd zijn met de relatieve populatiegroottes van de akkervogels en omdat we graag willen leren vanaf welk minimaal oppervlakte-aandeel er positieve effecten te verwachten zijn.
+Naast bovenstaande stratificaties, hebben we tevens nog het oppervlakte-aandeel aan soortbeschermingsmaatregelen berekend (toestand beheerovereenkomsten 2022, bron: VLM), omdat we kunnen verwachten dat die gerelateerd zijn met de relatieve populatiegroottes van de akkervogels en omdat we graag willen leren vanaf welk minimaal oppervlakte‐aandeel er positieve effecten te verwachten zijn.
 
 In de praktijk werd er een veelvoud van het vooropgestelde aantal telpunten getrokken met behulp van een algoritme voor ruimtelijk gebalanceerde (X-coördinaten, Y-coördinaten en oppervlakte-aandeel aan soortbeschermingsmaatregelen) en gestratificeerde (landbouwstreek, SBP, openheid) steekproeftrekking [@grafström2011].
 De methode liet toe om per stratum zowel ruimtelijk een goede spreiding te hebben van de telpunten als een goede afspiegeling van de verdeling van de oppervlakte-aandelen aan soortbeschermingsmaatregelen in de statistische subpopulatie van het stratum.
@@ -243,7 +264,7 @@ De methode garandeert dat deze nieuwe set ruimtelijk goed gespreid is en een ase
 Voor elk stratum in elke landbouwstreek (OL binnen SBP, OL buiten SBP, HOL binnen SBP, HOL buiten SBP) nemen we evenveel punten.
 Zo zorgen we ervoor dat we ook in zeldzamere strata genoeg data zullen verzamelen, waardoor we uitspraken kunnen doen voor elk stratum apart en we onderlinge de strata kunnen vergelijken.
 Hier tegenover staat wel dat, indien we uitspraken willen doen op hogere niveaus (bv. landbouwregio), we hiermee moeten rekening houden in de analyses door gewichten toe te kennen proportioneel aan de oppervlakte aan OL en HOL.
-\textcolor{red}{tabel gewichten in bijlage!}
+De gewichten zijn openlijk beschikbaar gesteld in @langeraert2025samplingfiles (zie ook @sec-git-mas).
 
 ### Nabehandeling en manuele controle {#sec-nabehandeling}
 
@@ -263,49 +284,47 @@ De precieze verdeling en aantal punten per landbouwstreek word besproken in @sec
 
 ### Reproduceerbaarheid en traceerbaarheid {#sec-git-mas}
 
-De steekproeftrekking werd gedaan met R [@R] in RStudio [@RStudio] via de **targets** "pipeline tool" package [@targets-package].
-Deze laatste is een computationele workflow die analyses uitvoert op een efficiënte en reproduceerbare manier.
-Via de **renv** package [@renv-package] werd een reproduceerbare omgeving gecreëerd die bijhield welke versies van R en welke (versies van) verschillende packages werden gebruikt in het project.
-Alle code werd beheerd onder versiecontrole met Git op een online GitHub repository.
-Dit houdt in dat niet enkel de code zelf, maar ook alle wijzigingen in de code doorheen de tijd daar kunnen geraadpleegd worden.
+De steekproeftrekkingen voor het MAS-meetnet zijn volledig reproduceerbaar uitgevoerd met de statistische programmeertaal R [@R] in RStudio [@RStudio]. De volledige analyse werd opgezet als een computationele workflow met behulp van het **targets**-pakket [@targets-package], dat zorgt voor transparante, efficiënte en reproduceerbare uitvoer van alle stappen — van gegevensinvoer tot steekproefselectie.
+Om te garanderen dat alle gebruikte softwareversies exact kunnen worden gereconstrueerd, werd een geïsoleerde projectomgeving opgezet via het **renv**-pakket [@renv-package]. Deze omgeving registreert zowel de gebruikte versie van R zelf als de precieze versies van alle R-packages waarop het project steunt.
 
-De toestand van de GitHub repository op het moment van de steekproeftrekking voor de Leemstreek en de Zandleemstreek kan geraadpleegd worden in de GitHub repository van de MAS pilootstudie [@github-repo-piloot] via de volgende commit hash:
+Alle code werd beheerd met Git en opgeslagen in een publieke GitHub-repository, waardoor elke wijziging in de workflow historisch traceerbaar en controleerbaar is. De exacte toestand van de code op het moment van de steekproeftrekkingen is vastgelegd via unieke commit-hashes:
 
-<!-- spell-check: ignore:start -->
+* Voor de pilootregio’s Leemstreek en Zandleemstreek:
 
 ::: text-center
-bafe6a6164dde186f309d1aacbcbff0ccde21735
+`bafe6a6164dde186f309d1aacbcbff0ccde21735`
 :::
 
-<!-- spell-check: ignore:end -->
+Zie: [@github-repo-piloot].
 
-De toestand van de GitHub repository op het moment van de steekproeftrekking voor de andere landbouwstreken kan geraadpleegd worden in de GitHub repository van het MBAG - MAS project [@github-repo-mas] via de volgende commit hash:
-
-<!-- spell-check: ignore:start -->
+* Voor de uitbreiding naar de overige landbouwstreken (volledige Vlaamse uitrol):
 
 ::: text-center
-6b28c4430e011bf3af9707b8f02a83faa2fc5434
+  `6b28c4430e011bf3af9707b8f02a83faa2fc5434`
 :::
 
-<!-- spell-check: ignore:end -->
+Zie: [@github-repo-mas].
 
-\textcolor{red}{Centraal beschikbaar stellen via Zenodo (<https://zenodo.org/>): (1) het steekproefkader, (2) de steekproef, (3) de finale steekproef na manuele controle (de punten die effectief werden bezocht in het veld), en (4) de tabel met gewichten per stratum.}
+Om volledige transparantie te garanderen zijn ook alle kernbestanden die relevant zijn voor de steekproef publiek beschikbaar via Zenodo \[@langeraert2025samplingfiles]. Het gaat om:
 
-\textcolor{red}{rest van data op zenodo enzo --> DMP?}
+1. Het oorspronkelijke steekproefkader (alle potentiële telpunten),
+2. De getrokken steekproef,
+3. De uiteindelijke steekproef na manuele controle en validatie (de effectief bezochte punten),
+4. De stratumgewichten.
+
+Tot slot werd ook een uitgebreid [Data Management Plan](https://www.vlaanderen.be/inbo/publicaties/dmp-voor-het-meetnet-agrarische-soorten-mas-steekproefkader-en-daar-voorbij) gepubliceerd waarin de afspraken over databeheer, versiecontrole en archivering van het project formeel zijn vastgelegd [@dmp-mas].
 
 ## Stand van zaken en uitbreiding MAS {#sec-mas-vlaanderen}
 
 ### Stand van zaken {#sec-stand-van-zaken}
 
--   2023: zandleemstreek en leemstreek
-    -   korte recap: zie piloot
-    -   overzicht beschrijvende statistiek: hoofdstuk 4
+In kader van het MAS pilootproject werd het meetnet uitgerold in de Leemstreek en de Zandleemstreek. Voor de Oostelijke leemstreek werden de punten overgenomen uit het pilootproject. Voor de Westelijke leemstreek en de Zandleemstreek werd een nieuwe steekproef getrokken o.b.v. de geleerde lessen uit de pilootstudie [@langeraert2025pilot, hoofdstuk 5], i.e. de methodiek beschreven in @sec-meetnet-ontwerp.
+Deze punten worden sinds 2023 geteld.
 
 ### Uitbreiding tot een Vlaams meetnet {#sec-uitbreiding-meetnet}
 
--   beschrijving van de uitbreiding
--   2024: kempen, zandstreek, polders
-    -   korte beschrijving en figuurtjes
+In kader van het MBAG project werd het meetnet uitgebreid over de Kempen, Zandstreek en Polders waar sinds 2024 punten worden geteld.
+Een volledig overzicht van het aantal punten per stratum word gegeven in @sec-overzicht-mas.
 
 ### Overige landbouwstreken {#sec-overige-streken}
 
@@ -407,11 +426,10 @@ Voor alle andere landbouwregio's werd een afstand van 600 m gehanteerd zodat er 
 We laten voor de Weidestreek dus wel overlap toe om genoeg telpunten over te houden.
 Na manuele controle behielden we 50 van de 58 punten.
 
-### Overzicht volledige steekproef MAS Vlaanderen
+### Overzicht volledige steekproef MAS Vlaanderen {#sec-overzicht-mas}
 
 ```{r}
 file <- file.path("data/steekproefkaders/steekproef_avimap_mbag_mas.csv")
-gitroot <- rprojroot::find_root(rprojroot::is_git_root)
 projroot <- rprojroot::find_root(rprojroot::has_file(file))
 steekproef_final <- read_csv(file.path(projroot, file), show_col_types = FALSE)
 ```
@@ -424,7 +442,7 @@ In totaal worden `r nrow(steekproef_final)` telpunten geteld in kader van MAS Vl
 #| tbl-cap: "Aantal telpunten MAS Vlaanderen."
 steekproef_final %>%
   mutate(
-    regio = ifelse(grepl("leemstreek", regio), "Leemstreek", regio),
+    regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio),
     stratum = paste(openheid_klasse, sbp, "plan")
   ) %>%
   count(regio, stratum, name = "aantal telpunten") %>%
@@ -443,9 +461,3 @@ steekproef_final %>%
 #| out.width: "100%"
 include_graphics(file.path("media", "kaartjes", "tot_mas_kaart.png"))
 ```
-
-[^05_uitrol_meetnet-1]: Met uitzondering van de Duinen en de Weidestreek.
-    Deze worden apart besproken in @sec-overige-streken.
-
-[^05_uitrol_meetnet-2]: Bij de steekproeftrekking wordt een methode gebruikt die zal vermijden dat telpunten en hun telcirkels overlappen.
-    Het kan in deze fase dus geen kwaad dat potentiële telpunten op een afstand van minder dan 300 m van elkaar gelegen zijn.
