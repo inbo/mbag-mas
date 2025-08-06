@@ -43,12 +43,15 @@ beta_fit_params <- function(beta_fun, mean, sd, ...) {
 
   # Optimize the parameters using the "L-BFGS-B" method
   # Lower bounds are set to prevent negative or zero shape parameters
-  result <- optim(start, objective, method = "L-BFGS-B", lower = c(0.01, 0.01))
+  result <- tryCatch(
+    optim(start, objective, method = "L-BFGS-B", lower = c(0.01, 0.01)),
+    error = function(e) NULL
+  )
 
-  if (result$convergence != 0) {
-    stop(result$message, call. = FALSE)
+  if (is.null(result) || result$convergence != 0) {
+    # Return NA vector
+    return(NA)
   } else {
-    # Return samples from Beta distribution
     return(beta_fun(shape1 = result$par[1], shape2 = result$par[2], ...))
   }
 }
