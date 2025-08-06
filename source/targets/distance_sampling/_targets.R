@@ -31,6 +31,7 @@ mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
 lapply(list.files(file.path(target_dir, "R"), full.names = TRUE), source)
 source(file.path(mbag_dir, "source", "R", "predatoren_f.R"))
 source(file.path(mbag_dir, "source", "R", "summarize_ds_models2.R"))
+source(file.path(mbag_dir, "source", "R", "beta_fit_params.R"))
 
 # Replace the target list below with your own:
 list(
@@ -113,8 +114,8 @@ list(
   ),
   # Select species of interest
   tar_target(
-    name = species,
-    command = c("Veldleeuwerik", "Houtduif")
+    name = target_species,
+    command = sort(c("Veldleeuwerik", "Houtduif"))
   ),
   # Group by species, year
   tar_group_by(
@@ -122,12 +123,16 @@ list(
     command = mas_data_clean %>%
       sf::st_drop_geometry() %>%
       filter(
-        naam %in% species,
+        naam %in% target_species,
         jaar == 2024, # Change
       ) %>%
       mutate(
         regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio),
         stratum = paste(openheid_klasse, sbp, sep = " - ")
+      ) %>%
+      arrange(
+        naam,
+        jaar
       ),
     naam,
     jaar
@@ -277,10 +282,19 @@ list(
     command = select_models(
       aic_diff = aic_comparison,
       model_list = ds_model_fits,
-      n_models = 1,
       aic_tol = 2
     ),
     pattern = map(aic_comparison, ds_model_fits),
+    iteration = "list"
+  ),
+
+  # Get results
+  tar_target(
+    name = detection_probabilities,
+    command = get_det_probs(
+      model = model_selection
+    ),
+    pattern = map(model_selection),
     iteration = "list"
   )
 )

@@ -74,7 +74,7 @@ parse_breeding_dates <- function(df) {
     select(
       "id" = "Id", "soort" = "Soort", "datum_begin", "datum_eind",
       "datum_begin_oud", "datum_eind_oud", "broedcode",
-      "broedcode_oud" = "bc_oud", "wnm_vereist" = "`Waarnemingen verreist`",
+      "broedcode_oud" = "bc_oud", "wnm_vereist" = "Waarnemingen verreist",
       "Opmerking"
     )
 
