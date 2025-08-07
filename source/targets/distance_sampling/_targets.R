@@ -165,7 +165,14 @@ list(
 
   ## Static branching over species
   tar_map(
-    values = list(species = c("Veldleeuwerik", "Gele Kwikstaart", "Houtduif")),
+    # Choose species of interest
+    values = list(
+      species = c(
+        "Veldleeuwerik",
+        "Gele Kwikstaart",
+        "Geelgors"
+      )
+    ),
 
     ## Prepare species occurrence data
     # Select species and group occurrence data by year
@@ -274,13 +281,13 @@ list(
       command = list(
         "~1",
         "~regio",
-        #"~sbp",
-        "~openheid"
-        #"~regio+sbp",
-        #"~regio+openheid",
-        #"~sbp+openheid",
-        #"~regio+sbp+openheid",
-        #"~sbp*openheid"
+        "~sbp",
+        "~openheid",
+        "~regio+sbp",
+        "~regio+openheid",
+        "~sbp+openheid",
+        "~regio+sbp+openheid",
+        "~sbp*openheid"
       )
     ),
 
