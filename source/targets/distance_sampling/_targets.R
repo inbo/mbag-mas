@@ -324,7 +324,7 @@ list(
     # Select model with lowest AIC, within tolerance with lowest nr. of params
     tar_target(
       name = model_selection,
-      command = select_models(
+      command = select_ds_models(
         aic_diff = aic_comparison,
         model_list = ds_model_fits,
         aic_tol = 2
