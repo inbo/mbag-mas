@@ -117,6 +117,7 @@ list(
       )
   ),
   # Prepare distance sampling tables
+  # Per stratum:
   tar_target(
     name = region_table,
     command = strata_sf %>%
@@ -134,6 +135,22 @@ list(
         Effort = 1 # assume one visit for maxima
       ) %>%
       select(Sample.Label = pointid, Region.Label, Effort)
+  ),
+  # Per region:
+  tar_target(
+    name = region_table_region,
+    command = region_sf %>%
+      st_drop_geometry() %>%
+      select(Region.Label = regio, Area)
+  ),
+  tar_target(
+    name = sample_table_region,
+    command = design %>%
+      distinct(pointid, regio, openheid = openheid_klasse, sbp) %>%
+      mutate(
+        Effort = 1 # assume one visit for maxima
+      ) %>%
+      select(Sample.Label = pointid, Region.Label = regio, Effort)
   ),
 
   # Load occurrence data
@@ -190,6 +207,7 @@ list(
     ),
 
     ## Prepare distance sampling data
+    # Distances
     tar_group_by(
       name = ds_data,
       command = filtered_breeding_date %>%
@@ -206,6 +224,8 @@ list(
         ),
       year
     ),
+    # Observations
+    # Per stratum:
     tar_group_by(
       name = obs_table,
       command = filtered_breeding_date %>%
@@ -226,6 +246,22 @@ list(
                "species" = "naam", "year" = "jaar"),
       year
     ),
+    # Per region:
+    tar_group_by(
+      name = obs_table_region,
+      command = filtered_breeding_date %>%
+        group_by(periode_in_jaar, plotnaam) %>%
+        mutate(n = n()) %>%
+        group_by(plotnaam) %>%
+        slice_max(order_by = n, n = 1) %>%
+        ungroup() %>%
+        select(
+          "object" = "oid", "Region.Label" = "regio",
+          "Sample.Label" = "plotnaam", "year" = "jaar"
+        ),
+      year
+    ),
+    # Conversion to 100 ha
     tar_target(
       name = conversion_factor,
       command = Distance::convert_units("meter", NULL, "Square kilometer")
@@ -247,6 +283,8 @@ list(
         #"~sbp*openheid"
       )
     ),
+
+    ## Per stratum
     # Fit models
     tar_target(
       name = ds_model_fits,
@@ -338,6 +376,58 @@ list(
     tar_target(
       name = densities_stratum,
       command = bind_rows(densities_stratum_list)
+    ),
+
+    ## Per region
+    # Fit models
+    tar_target(
+      name = ds_model_region,
+      command = Distance::ds(
+        data = ds_data,
+        formula = as.formula(model_selection$ddf$ds$aux$ddfobj$scale$formula),
+        key = model_selection$ddf$ds$aux$ddfobj$type,
+        truncation = 300,
+        transect = "point",
+        dht_group = FALSE,
+        convert_units = conversion_factor,
+        region_table = region_table_region,
+        sample_table = sample_table_region,
+        obs_table = obs_table_region
+      ),
+      pattern = map(ds_data, model_selection),
+      iteration = "list"
+    ),
+
+    ## Get distance sampling results
+    # Abundances
+    tar_target(
+      name = abundances_region_list,
+      command = get_individuals_from_ds(
+        ds_model = ds_model_region,
+        measure = "abundance"
+      ) %>%
+        add_categories(ds_model_region, c("species", "year")),
+      pattern = map(ds_model_region),
+      iteration = "list"
+    ),
+    tar_target(
+      name = abundances_region,
+      command = bind_rows(abundances_region_list)
+    ),
+    # Densities
+    tar_target(
+      name = densities_region_list,
+      command = get_individuals_from_ds(
+        ds_model = ds_model_region,
+        measure = "dens"
+      ) %>%
+        add_categories(ds_model_region, c("species", "year")),
+      pattern = map(ds_model_region),
+      iteration = "list"
+    ),
+    tar_target(
+      name = densities_region,
+      command = bind_rows(densities_region_list)
     )
   )
 )
