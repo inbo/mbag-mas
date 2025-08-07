@@ -1,50 +1,112 @@
 name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
-breeding_dates_file|stem|f64e671f865eb9f5|fdfe6e0aac168e21|9584eaa1b6741b26|-427258567|C:/R/git_repositories/projecten/mbag-mas/data/SOVON/Interpretatie_Criteria_Broedvogels_v2.csv|t19383.4347622895s|s12970b|12970|file|local|vector|||0.35|package 'tibble' was built under R version 4.5.1|
-mas_data_clean|stem|256a4f29e2c5c05c|1fae16af2639342b|9584eaa1b6741b26|-1942276229||t20306.5652583129s|s4816652b|4816652|qs|local|vector|||0.12||
+breeding_dates_file|stem|f64e671f865eb9f5|fdfe6e0aac168e21|9584eaa1b6741b26|-427258567|C:/R/git_repositories/projecten/mbag-mas/data/SOVON/Interpretatie_Criteria_Broedvogels_v2.csv|t19383.4347622895s|s12970b|12970|file|local|vector|||0.37|package 'tibble' was built under R version 4.5.1|
+mas_data_clean|stem|256a4f29e2c5c05c|1fae16af2639342b|9584eaa1b6741b26|-1942276229||t20307.4201178374s|s4816652b|4816652|qs|local|vector|||0.13||
+conversion_factor_Veldleeuwerik|stem|dcc68a7c3cada41d|fa06aa83bc8cf957|2c530c1562a7fbd1|1600782282||t20307.4201260125s|s76b|76|qs|local|vector|||0.58||
+formulae_Veldleeuwerik|stem|4bca8a6a64d96dc5|357bb1fc0a27486f|2c530c1562a7fbd1|-1949219533||t20307.4201284418s|s113b|113|qs|local|vector|||0||
 design_file|stem|069461b010b76ad2|933c6e6a3da6495d|9584eaa1b6741b26|504428263|C:/R/git_repositories/projecten/mbag-mas/data/steekproefkaders/steekproef_avimap_mbag_mas.csv|t20299.5991919755s|s112039b|112039|file|local|vector|||0||
+conversion_factor_Gele.Kwikstaart|stem|dcc68a7c3cada41d|fa06aa83bc8cf957|2c530c1562a7fbd1|-332191515||t20307.4201329245s|s76b|76|qs|local|vector|||0||
+conversion_factor_Houtduif|stem|dcc68a7c3cada41d|fa06aa83bc8cf957|2c530c1562a7fbd1|-2138264124||t20307.4201351477s|s76b|76|qs|local|vector|||0.02||
+formulae_Houtduif|stem|4bca8a6a64d96dc5|357bb1fc0a27486f|2c530c1562a7fbd1|689520543||t20307.4201370978s|s113b|113|qs|local|vector|||0||
+formulae_Gele.Kwikstaart|stem|4bca8a6a64d96dc5|357bb1fc0a27486f|2c530c1562a7fbd1|458780074||t20307.4201395527s|s113b|113|qs|local|vector|||0||
 full_sample_file|stem|afdb967a3ff69265|74d92e45dc46df14|9584eaa1b6741b26|1879156069|C:/R/git_repositories/projecten/mbag-mas/data/steekproefkaders/steekproefkader_mbag_mas.gpkg|t20299.5991852576s|s36896768b|36896768|file|local|vector|||0||
-conversion_factor|stem|dcc68a7c3cada41d|fa06aa83bc8cf957|2c530c1562a7fbd1|1052344689||t20306.565269889s|s76b|76|qs|local|vector|||0.56||
-breeding_dates_raw|stem|f44838b8156a87ee|a953442ceb82a616|fced6320a0c5ef66|2108184220||t20306.5652729799s|s4666b|4666|qs|local|vector|||0.11||
-full_sample|stem|4490aba253027383|84340aba7e16c78d|4d87b87b89682fec|-1293352874||t20306.5653038832s|s7338328b|7338328|qs|local|vector|||1.88||
-filtered_breeding_code_13fcc2cf130cf6e2|branch|bff1b1bec9455f5d|e24281bf5f6fae44|c0310456328b81ab|-845669948||t20306.5653120232s|s2415b|2415|qs|local|vector|filtered_breeding_code||0.01||
-filtered_breeding_code_9cd3501747a8e2ab|branch|af4ab91168571e06|e24281bf5f6fae44|c0310456328b81ab|127567804||t20306.5653138938s|s37285b|37285|qs|local|vector|filtered_breeding_code||0||
-filtered_breeding_code_7c7482e03627d324|branch|cdfeba3fd9eb1be4|e24281bf5f6fae44|c0310456328b81ab|676949496||t20306.5653160206s|s125368b|125368|qs|local|vector|filtered_breeding_code||0.02||
-strata_sf|stem|32a2e70f54195f7d|09f23852c05df0e8|a91b6c19c76c2433|86814755||t20306.5655829373s|s24068550b|24068550|qs|local|vector|||22.14||
-flanders_sf|stem|2bd40c05810e6f3e|378fc1c5e034ac6f|a91b6c19c76c2433|-242295248||t20306.5658100862s|s13972429b|13972429|qs|local|vector|||18.83||
-region_sf|stem|c362e45731b56689|9d173b4cec163679|a91b6c19c76c2433|1512254809||t20306.5660413463s|s13978813b|13978813|qs|local|vector|||19.08||
-filtered_breeding_date_2ee32cd71de522ad|branch|79a443fb10412700|e9dcc1e6d66be887|ee9222dcfd872c6d|-1210697843||t20306.5660469713s|s2164b|2164|qs|local|vector|filtered_breeding_date||0.01||
-filtered_breeding_date_ac951266ff54b379|branch|af4ab91168571e06|e9dcc1e6d66be887|651e9a23fafc1aa1|1497934318||t20306.5660495774s|s37285b|37285|qs|local|vector|filtered_breeding_date||0||
-region_table|stem|b74f000d40459ed0|1a2e225362461bcf|59ea28ff14c3e404|-1678251949||t20306.5660557832s|s583b|583|qs|local|vector|||0||
-design|stem|303c7b035d779bca|88a0a3f294fdabe0|ec0a6dbdee297ac7|2098730258||t20306.5710636173s|s30320b|30320|qs|local|vector|||0.1||
-sample_table|stem|3c4495f1fe7de915|6e42057bfc2bc141|ddde6f8215e34a7e|1906958297||t20306.5710652662s|s6812b|6812|qs|local|vector|||0.02||
-species|stem|771f98d0dbf6998c|74b30cab3cce455c|2c530c1562a7fbd1|1875078803||t20306.6222129514s|s100b|100|qs|local|vector|||0.33|package 'tibble' was built under R version 4.5.1|
-filtered_breeding_code_afcf06127b05bfe7|branch|b1d4ce00ee442ecd|e24281bf5f6fae44|c0310456328b81ab|-420557803||t20306.622218535s|s232666b|232666|qs|local|vector|filtered_breeding_code||0.02||
-formulae|stem|4bca8a6a64d96dc5|357bb1fc0a27486f|2c530c1562a7fbd1|644740001||t20306.6228121418s|s113b|113|qs|local|vector|||0.33|package 'tibble' was built under R version 4.5.1|
-breeding_dates|stem|3b8042cfab542be5|0883dfe7611953a9|c39ec732411d9c2a|186666232||t20306.6790946892s|s3433b|3433|qs|local|vector|||0.15||
-filtered_breeding_date_aaff25afc052f91a|branch|e59faa9f366b5b79|e9dcc1e6d66be887|901dfa40d33266d6|1727380916||t20306.6790971981s|s185244b|185244|qs|local|vector|filtered_breeding_date||0.02||
-filtered_breeding_date_2599e8a1da566b29|branch|cdfeba3fd9eb1be4|e9dcc1e6d66be887|d3542747b1b584a1|-749567418||t20306.6790982998s|s125368b|125368|qs|local|vector|filtered_breeding_date||0||
-target_species|stem|944ec22e2547ffcc|88c52f0b11f600a1|2c530c1562a7fbd1|1280782395||t20307.333213547s|s119b|119|qs|local|vector|||0.33|package 'tibble' was built under R version 4.5.1|
-mas_data_grouped|stem|b46598f8db30c6d5|dfbc280afd92a87a|e9f29db71f9233ab|116147169||t20307.3332168361s|s444867b|444867|qs|local|group||mas_data_grouped_348abdb43af1df0a*mas_data_grouped_36c4bcfa6c06cf90*mas_data_grouped_a98299452ec70777|0.03||
-filtered_breeding_code_6c858ed6690255a8|branch|6f4470d1ae78da90|e24281bf5f6fae44|c0310456328b81ab|1547159976||t20307.3332193593s|s101099b|101099|qs|local|vector|filtered_breeding_code||0||
-filtered_breeding_code|pattern|f16fdd28ebd9a6de|e24281bf5f6fae44||-313407051||||101099|qs|local|vector||filtered_breeding_code_6c858ed6690255a8*filtered_breeding_code_afcf06127b05bfe7*filtered_breeding_code_7c7482e03627d324|0||
-filtered_breeding_date_d975361dc22aeaed|branch|33f3b5a3ad317ec5|e9dcc1e6d66be887|47d64ae0f52355f8|202934574||t20307.3332210724s|s86139b|86139|qs|local|vector|filtered_breeding_date||0.01||
-filtered_breeding_date|pattern|bb060710e10c0527|e9dcc1e6d66be887||1815905240||||86139|qs|local|vector||filtered_breeding_date_d975361dc22aeaed*filtered_breeding_date_aaff25afc052f91a*filtered_breeding_date_2599e8a1da566b29|0.01||
-obs_table|stem|5eee80e5c844d3c2|6f83819899940378|54fc8a4b0453c03f|1969293203||t20307.3332236942s|s37178b|37178|qs|local|group|||0.11||
-ds_data|stem|a3ed8e9f98b5883f|ef38be1cf3445bf1|54fc8a4b0453c03f|838355840||t20307.3332251007s|s60411b|60411|qs|local|group||ds_data_c44ca26aee571b06*ds_data_79e681ade174d0ea*ds_data_9884e5b1f01ac8f8|0.01||
-ds_model_fits_bb301e21f8977eac|branch|f76ad9aad2f34ba8|f8eae664965ea728|72fd533a6b9b827f|-2000418933||t20307.3336168292s|s1958888b|1958888|qs|local|list|ds_model_fits||33.62|Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.|
-ds_model_fits_cb9253586d46ab75|branch|d5f820fb9e65bd14|f8eae664965ea728|72fd533a6b9b827f|697281466||t20307.3344362983s|s3233921b|3233921|qs|local|list|ds_model_fits||70.48|Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.|
-ds_model_fits_e6c55513accf9b33|branch|bfd6e126187d13d9|f8eae664965ea728|72fd533a6b9b827f|-477383797||t20307.3354893938s|s2456501b|2456501|qs|local|list|ds_model_fits||90.7|Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.|
-ds_model_fits|pattern|b0326e3b444d14a8|f8eae664965ea728||-2050599742||||7649310|qs|local|list||ds_model_fits_bb301e21f8977eac*ds_model_fits_cb9253586d46ab75*ds_model_fits_e6c55513accf9b33|194.8||
-aic_comparison_b1575146894138e9|branch|a3a87f4edcc74d3f|2413fc31155d6d37|7460c6f13b7f0200|358970837||t20307.3355509157s|s665b|665|qs|local|list|aic_comparison||4.91||
-aic_comparison_7a8df0b6442798f0|branch|218725a1382e02cb|2413fc31155d6d37|ba9c018ace5c283d|-1549203939||t20307.3357393101s|s667b|667|qs|local|list|aic_comparison||16||
-aic_comparison_32001dd3e9a14c02|branch|7908bc3aeb0a346b|2413fc31155d6d37|e204d574b12cfe08|1257158575||t20307.3358525724s|s659b|659|qs|local|list|aic_comparison||9.55||
-aic_comparison|pattern|41f5f474a8276ff8|2413fc31155d6d37||266974425||||1991|qs|local|list||aic_comparison_b1575146894138e9*aic_comparison_7a8df0b6442798f0*aic_comparison_32001dd3e9a14c02|30.46||
-model_selection_ce64258a6312bb05|branch|bc67c5991aa79971|f7e7d4e270962fbf|83085cadd2e4a147|1968283767||t20307.3358565354s|s379323b|379323|qs|local|list|model_selection||0||
-model_selection_fec4c546a5c35305|branch|7caa63d53f746e8c|f7e7d4e270962fbf|4292420f90a6c764|472349497||t20307.335860104s|s587275b|587275|qs|local|list|model_selection||0.01||
-model_selection_3795e6d8cd4e605f|branch|c21f636745d3319c|f7e7d4e270962fbf|39cbdbbf55ccf40f|1900950450||t20307.3358634429s|s469859b|469859|qs|local|list|model_selection||0||
-model_selection|pattern|38e3e5f1df9c3f67|f7e7d4e270962fbf||1656761846||||1436457|qs|local|list||model_selection_ce64258a6312bb05*model_selection_fec4c546a5c35305*model_selection_3795e6d8cd4e605f|0.01||
-detection_probabilities|pattern|bb3b670c6232785e|3f1681f685c9228c||-1402025594||||1373|qs|local|list||detection_probabilities_db91f5e416910f4b*detection_probabilities_6eaf886a61eee69f*detection_probabilities_17a2a79eabb47b66|1.94||
-target_dir|object|11f10b8289c39334
+breeding_dates_raw|stem|f44838b8156a87ee|a953442ceb82a616|fced6320a0c5ef66|2108184220||t20307.4201454304s|s4666b|4666|qs|local|vector|||0.11||
+mas_data_grouped_Houtduif|stem|09e2c11994145fe6|42730bef907672ca|4c98fdd3bc785da5|-656543435||t20307.4201493432s|s386116b|386116|qs|local|group||mas_data_grouped_Houtduif_987574f80bc2b376*mas_data_grouped_Houtduif_36c4bcfa6c06cf90|0.03||
+mas_data_grouped_Veldleeuwerik|stem|e61d72209957d11f|aad975b8810b9eca|4c98fdd3bc785da5|984545473||t20307.4201565728s|s205895b|205895|qs|local|group||mas_data_grouped_Veldleeuwerik_4900a0647d44515e*mas_data_grouped_Veldleeuwerik_a98299452ec70777|0.01||
+mas_data_grouped_Gele.Kwikstaart|stem|fa2c46d34bba2e1c|35ee4d0ac6fc2375|4c98fdd3bc785da5|-401099134||t20307.4201603556s|s144621b|144621|qs|local|group||mas_data_grouped_Gele.Kwikstaart_dd7e07c7362f28ec*mas_data_grouped_Gele.Kwikstaart_348abdb43af1df0a|0.02||
+design|stem|303c7b035d779bca|88a0a3f294fdabe0|ec0a6dbdee297ac7|2098730258||t20307.420162979s|s30320b|30320|qs|local|vector|||0.03||
+full_sample|stem|4490aba253027383|84340aba7e16c78d|4d87b87b89682fec|-1293352874||t20307.4201824696s|s7338328b|7338328|qs|local|vector|||1.39||
+breeding_dates|stem|3b8042cfab542be5|0883dfe7611953a9|c39ec732411d9c2a|186666232||t20307.4201875936s|s3433b|3433|qs|local|vector|||0.17||
+filtered_breeding_code_Houtduif_59bc5d9859cc48dd|branch|2b184e3c03192912|745dda34f938c293|c0310456328b81ab|-773074870||t20307.4201909655s|s111719b|111719|qs|local|vector|filtered_breeding_code_Houtduif||0.01||
+filtered_breeding_code_Houtduif_9dc3bf4b619c5b23|branch|7ff06ec82b5a225e|745dda34f938c293|c0310456328b81ab|2082201663||t20307.4201934887s|s232669b|232669|qs|local|vector|filtered_breeding_code_Houtduif||0.02||
+filtered_breeding_code_Houtduif|pattern|d61e8ae2c27971f9|745dda34f938c293||1294620173||||344388|qs|local|vector||filtered_breeding_code_Houtduif_59bc5d9859cc48dd*filtered_breeding_code_Houtduif_9dc3bf4b619c5b23|0.03||
+filtered_breeding_code_Veldleeuwerik_4862332ece550c3b|branch|0e4c189c23bdb27b|d4beeba13faece3a|c0310456328b81ab|-1722411755||t20307.420196041s|s89143b|89143|qs|local|vector|filtered_breeding_code_Veldleeuwerik||0||
+filtered_breeding_code_Veldleeuwerik_3d1e8952b73a0864|branch|87b9cbbb66d3c504|d4beeba13faece3a|c0310456328b81ab|1623099197||t20307.4201985264s|s125369b|125369|qs|local|vector|filtered_breeding_code_Veldleeuwerik||0.02||
+filtered_breeding_code_Veldleeuwerik|pattern|634388d2b7f44dd1|d4beeba13faece3a||-443910516||||214512|qs|local|vector||filtered_breeding_code_Veldleeuwerik_4862332ece550c3b*filtered_breeding_code_Veldleeuwerik_3d1e8952b73a0864|0.02||
+filtered_breeding_code_Gele.Kwikstaart_3f45908e071fa41d|branch|7e4dd66b38ad1a30|395dd8594077bbc5|c0310456328b81ab|784662456||t20307.4202011715s|s46918b|46918|qs|local|vector|filtered_breeding_code_Gele.Kwikstaart||0||
+filtered_breeding_code_Gele.Kwikstaart_2578ba7880104f65|branch|0a35ba52f365e9bb|395dd8594077bbc5|c0310456328b81ab|497844161||t20307.4202037989s|s101099b|101099|qs|local|vector|filtered_breeding_code_Gele.Kwikstaart||0.02||
+filtered_breeding_code_Gele.Kwikstaart|pattern|a5aaae95ab20cc8d|395dd8594077bbc5||1860948976||||148017|qs|local|vector||filtered_breeding_code_Gele.Kwikstaart_3f45908e071fa41d*filtered_breeding_code_Gele.Kwikstaart_2578ba7880104f65|0.02||
+sample_table|stem|3c4495f1fe7de915|6e42057bfc2bc141|ddde6f8215e34a7e|1906958297||t20307.4202064442s|s6812b|6812|qs|local|vector|||0.01||
+sample_table_region|stem|ea9fccd4103cb119|13f125452549a6b6|ddde6f8215e34a7e|-2054140240||t20307.4202087025s|s6612b|6612|qs|local|vector|||0||
+strata_sf|stem|32a2e70f54195f7d|09f23852c05df0e8|a91b6c19c76c2433|86814755||t20307.4204408365s|s24068550b|24068550|qs|local|vector|||19.56||
+region_sf|stem|c362e45731b56689|9d173b4cec163679|a91b6c19c76c2433|1512254809||t20307.4206526507s|s13978813b|13978813|qs|local|vector|||17.74||
+flanders_sf|stem|2bd40c05810e6f3e|378fc1c5e034ac6f|a91b6c19c76c2433|-242295248||t20307.4208846257s|s13972429b|13972429|qs|local|vector|||19.43||
+filtered_breeding_date_Houtduif_8610c4dc02b2f3e6|branch|3700257b054fc952|ab8973a1869843a1|7fd601461679641c|-1959978151||t20307.4208888069s|s87335b|87335|qs|local|vector|filtered_breeding_date_Houtduif||0.02||
+filtered_breeding_date_Houtduif_a972d11191f9b167|branch|e61c3a14d054b2ca|ab8973a1869843a1|52cdcda35d0a6696|1044313563||t20307.4208912455s|s185246b|185246|qs|local|vector|filtered_breeding_date_Houtduif||0||
+filtered_breeding_date_Houtduif|pattern|b0c69c096a23ed8a|ab8973a1869843a1||1905068639||||272581|qs|local|vector||filtered_breeding_date_Houtduif_8610c4dc02b2f3e6*filtered_breeding_date_Houtduif_a972d11191f9b167|0.02||
+filtered_breeding_date_Veldleeuwerik_bad32a88c6feebd0|branch|0e4c189c23bdb27b|6fea539bdc619170|fb01c1657df34f8c|-1072347917||t20307.4208936755s|s89143b|89143|qs|local|vector|filtered_breeding_date_Veldleeuwerik||0||
+filtered_breeding_date_Veldleeuwerik_16ef4f24d285a3b6|branch|87b9cbbb66d3c504|6fea539bdc619170|3c1865834e79ac54|-1537315366||t20307.4208960597s|s125369b|125369|qs|local|vector|filtered_breeding_date_Veldleeuwerik||0.01||
+filtered_breeding_date_Veldleeuwerik|pattern|a78a9a3ace29bf80|6fea539bdc619170||972760291||||214512|qs|local|vector||filtered_breeding_date_Veldleeuwerik_bad32a88c6feebd0*filtered_breeding_date_Veldleeuwerik_16ef4f24d285a3b6|0.01||
+filtered_breeding_date_Gele.Kwikstaart_164d7ccbc30159b5|branch|7f04bab74bc070ec|610d73f0bf718580|fed6e74c5e5ce936|2079719300||t20307.4208987968s|s41462b|41462|qs|local|vector|filtered_breeding_date_Gele.Kwikstaart||0||
+filtered_breeding_date_Gele.Kwikstaart_ee0b1f41d0780ae8|branch|05ce12d1557fcf33|610d73f0bf718580|dd6a4a234701aaf4|1005238408||t20307.4209009965s|s86138b|86138|qs|local|vector|filtered_breeding_date_Gele.Kwikstaart||0||
+filtered_breeding_date_Gele.Kwikstaart|pattern|df1590432d1c6ab5|610d73f0bf718580||-1012001402||||127600|qs|local|vector||filtered_breeding_date_Gele.Kwikstaart_164d7ccbc30159b5*filtered_breeding_date_Gele.Kwikstaart_ee0b1f41d0780ae8|0||
+region_table|stem|b74f000d40459ed0|1a2e225362461bcf|59ea28ff14c3e404|-1678251949||t20307.4209037544s|s583b|583|qs|local|vector|||0.01||
+region_table_region|stem|9dd644cdfbbeb0ca|93f87859a4515c42|f1f516ac56745e09|529679702||t20307.4209065175s|s309b|309|qs|local|vector|||0||
+ds_data_Houtduif|stem|fffd69dfe023c859|e731e4bda8ba9eb3|9b432efc11c66060|44723110||t20307.42090902s|s42306b|42306|qs|local|group||ds_data_Houtduif_9be41c43de3a3e2b*ds_data_Houtduif_79e681ade174d0ea|0||
+obs_table_Houtduif|stem|296b37eb0a06dfde|0b204cd3c491cebd|9b432efc11c66060|-541803624||t20307.4209125159s|s27721b|27721|qs|local|group|||0.1||
+obs_table_region_Houtduif|stem|ab7462675cccbac0|aa96b35b5af068fa|9b432efc11c66060|-1604367064||t20307.4209161244s|s24853b|24853|qs|local|group|||0.09||
+obs_table_region_Veldleeuwerik|stem|5d9ea4bce2cb2c3b|bd7dae251184cfc0|3696d22d6d00925c|269427727||t20307.4209190702s|s16890b|16890|qs|local|group|||0.07||
+ds_data_Veldleeuwerik|stem|cba2991e37310d8f|f26cc944e8deb66b|3696d22d6d00925c|-814775521||t20307.4209213708s|s34128b|34128|qs|local|group||ds_data_Veldleeuwerik_f3a6af4dcee14c34*ds_data_Veldleeuwerik_9884e5b1f01ac8f8|0.02||
+obs_table_Veldleeuwerik|stem|b5ef8dac3d51e3a4|06f49825a9f41481|3696d22d6d00925c|-1277953620||t20307.420924415s|s18855b|18855|qs|local|group|||0.08||
+ds_data_Gele.Kwikstaart|stem|30a18fd9306ec722|ab4a1444fcb46228|7c36b053be9fb714|-1263551441||t20307.4209289407s|s18746b|18746|qs|local|group||ds_data_Gele.Kwikstaart_e12b92885f7b01d7*ds_data_Gele.Kwikstaart_c44ca26aee571b06|0||
+obs_table_region_Gele.Kwikstaart|stem|707faf74eecb2ecc|2d5cdba6389f215f|7c36b053be9fb714|1143250418||t20307.4209333s|s13275b|13275|qs|local|group|||0.08||
+obs_table_Gele.Kwikstaart|stem|a76ae7bb75ace7a9|bfff905cbff2e8bc|7c36b053be9fb714|-662831188||t20307.420936564s|s15482b|15482|qs|local|group|||0.08||
+ds_model_fits_Houtduif_db32a6502699b642|branch|5fb9cfdb14df68f7|4c1efa69bd6175b8|4260be14b3a8cf1e|-1426659007||t20307.4212324442s|s1747755b|1747755|qs|local|list|ds_model_fits_Houtduif||25.22|Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.|
+ds_model_fits_Houtduif_db29040080ba5057|branch|ea05a718cced2d66|4c1efa69bd6175b8|4260be14b3a8cf1e|-1288013373||t20307.4230559536s|s3410023b|3410023|qs|local|list|ds_model_fits_Houtduif||157.06|Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.|
+ds_model_fits_Houtduif|pattern|8cb41209b8bd4c93|4c1efa69bd6175b8||1393792316||||5157778|qs|local|list||ds_model_fits_Houtduif_db32a6502699b642*ds_model_fits_Houtduif_db29040080ba5057|182.28||
+ds_model_fits_Veldleeuwerik_0425a6137ec251a2|branch|e1df8a658fcf8341|5bbf8ed8b82d4dd1|b30338c388f3cfab|943277394||t20307.4232423898s|s1823988b|1823988|qs|local|list|ds_model_fits_Veldleeuwerik||15.75|Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.|
+ds_model_fits_Veldleeuwerik_9a2b85f2ac273401|branch|32f8910e271c11ba|5bbf8ed8b82d4dd1|b30338c388f3cfab|-1976838650||t20307.4243386311s|s2287123b|2287123|qs|local|list|ds_model_fits_Veldleeuwerik||94.39|Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.|
+ds_model_fits_Veldleeuwerik|pattern|19a7d6ed1323d8fc|5bbf8ed8b82d4dd1||1209981918||||4111111|qs|local|list||ds_model_fits_Veldleeuwerik_0425a6137ec251a2*ds_model_fits_Veldleeuwerik_9a2b85f2ac273401|110.14||
+ds_model_fits_Gele.Kwikstaart_ede15e9f958e284e|branch|c3f6dc7ad9daa129|4b04d2c2d3f9a89d|c67c58eb3cf7e755|2135689411||t20307.4244543137s|s853754b|853754|qs|local|list|ds_model_fits_Gele.Kwikstaart||9.65|Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.|
+ds_model_fits_Gele.Kwikstaart_d597564b7302faca|branch|02bb22872d698854|4b04d2c2d3f9a89d|c67c58eb3cf7e755|1181190180||t20307.4248604784s|s1628924b|1628924|qs|local|list|ds_model_fits_Gele.Kwikstaart||34.73|Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.|
+ds_model_fits_Gele.Kwikstaart|pattern|82a499a67d4157a8|4b04d2c2d3f9a89d||982998077||||2482678|qs|local|list||ds_model_fits_Gele.Kwikstaart_ede15e9f958e284e*ds_model_fits_Gele.Kwikstaart_d597564b7302faca|44.38||
+aic_comparison_Houtduif_3278cd16d42d322c|branch|6ec9d595695afa87|28e191b1ac138ffc|0f92d98f42cc1006|-1092042624||t20307.4249176639s|s663b|663|qs|local|list|aic_comparison_Houtduif||4.5||
+aic_comparison_Houtduif_17f958d4ce16e8be|branch|218725a1382e02cb|28e191b1ac138ffc|8e4cc0c9cfd8091c|1720792520||t20307.4251284415s|s667b|667|qs|local|list|aic_comparison_Houtduif||17.9||
+aic_comparison_Houtduif|pattern|bc99b6c382fe9d1e|28e191b1ac138ffc||202846732||||1330|qs|local|list||aic_comparison_Houtduif_3278cd16d42d322c*aic_comparison_Houtduif_17f958d4ce16e8be|22.4||
+aic_comparison_Veldleeuwerik_a270d0101c72b23b|branch|ad8e6ecb643f1c72|cb78671f2a7217e7|f4714906c61da6a4|-1286046522||t20307.4251819775s|s655b|655|qs|local|list|aic_comparison_Veldleeuwerik||4.38||
+aic_comparison_Veldleeuwerik_d7f6118c453d73dc|branch|736766c2455686a7|cb78671f2a7217e7|e54fbe03a9cad452|1264293976||t20307.4252955496s|s659b|659|qs|local|list|aic_comparison_Veldleeuwerik||9.58||
+aic_comparison_Veldleeuwerik|pattern|5084666ec6af0b49|cb78671f2a7217e7||1329667152||||1314|qs|local|list||aic_comparison_Veldleeuwerik_a270d0101c72b23b*aic_comparison_Veldleeuwerik_d7f6118c453d73dc|13.96||
+aic_comparison_Gele.Kwikstaart_d7cd4bb068e74be9|branch|f2710fdebc3fa0a2|5106a65583010244|0606faa82284da4b|1091312656||t20307.4253135575s|s610b|610|qs|local|list|aic_comparison_Gele.Kwikstaart||1.29||
+aic_comparison_Gele.Kwikstaart_5fbf85d74ce44f5d|branch|a3a87f4edcc74d3f|5106a65583010244|f876903d40dd42c2|-285878724||t20307.4253722491s|s665b|665|qs|local|list|aic_comparison_Gele.Kwikstaart||4.82||
+aic_comparison_Gele.Kwikstaart|pattern|8932d2a5cc3edca6|5106a65583010244||-1805582421||||1275|qs|local|list||aic_comparison_Gele.Kwikstaart_d7cd4bb068e74be9*aic_comparison_Gele.Kwikstaart_5fbf85d74ce44f5d|6.11||
+model_selection_Houtduif_ea3918ceef928599|branch|6cde2466bea79aae|7df455a0b31ffe8c|63461d10609fc4df|-1033693154||t20307.4253755541s|s302186b|302186|qs|local|list|model_selection_Houtduif||0||
+model_selection_Houtduif_4ea46487110d9d5a|branch|9d9eac6eb0b8e752|7df455a0b31ffe8c|09c5fc8c69aed8c2|1910652964||t20307.4253787088s|s596926b|596926|qs|local|list|model_selection_Houtduif||0||
+model_selection_Houtduif|pattern|9df26a930aeb11fa|7df455a0b31ffe8c||-1104952812||||899112|qs|local|list||model_selection_Houtduif_ea3918ceef928599*model_selection_Houtduif_4ea46487110d9d5a|0||
+model_selection_Veldleeuwerik_11db946168dba0c2|branch|80ac1a3b3aa80621|0568cb3b91437f2d|23fd3bb69fa536c0|2143709122||t20307.4253817411s|s283117b|283117|qs|local|list|model_selection_Veldleeuwerik||0||
+model_selection_Veldleeuwerik_36a2d78c0fc3fa39|branch|0d5269f32c5afd75|0568cb3b91437f2d|2c5ae51e58882584|1202864750||t20307.4253847764s|s436329b|436329|qs|local|list|model_selection_Veldleeuwerik||0||
+model_selection_Veldleeuwerik|pattern|0741a17a7b2e117e|0568cb3b91437f2d||-1647522484||||719446|qs|local|list||model_selection_Veldleeuwerik_11db946168dba0c2*model_selection_Veldleeuwerik_36a2d78c0fc3fa39|0||
+model_selection_Gele.Kwikstaart_419e3b5e81744c3c|branch|6ad93da328667e82|51cb810fa110f08f|b7e8e94ccb21fe0e|849170706||t20307.4253876199s|s176974b|176974|qs|local|list|model_selection_Gele.Kwikstaart||0.02||
+model_selection_Gele.Kwikstaart_3f0c5cce479d678e|branch|bccd8cb41e3e4960|51cb810fa110f08f|65b5bb635e6cc697|-1971155620||t20307.4253906056s|s332355b|332355|qs|local|list|model_selection_Gele.Kwikstaart||0.02||
+model_selection_Gele.Kwikstaart|pattern|7d615d8a94848651|51cb810fa110f08f||1884041108||||509329|qs|local|list||model_selection_Gele.Kwikstaart_419e3b5e81744c3c*model_selection_Gele.Kwikstaart_3f0c5cce479d678e|0.04||
+densities_stratum_list_Houtduif_fc09e5d30df66f0e|branch|516661cecfa29553|14d5431421bfe625|82a65ccdc1ee5dff|339113951||t20307.4253949214s|s834b|834|qs|local|list|densities_stratum_list_Houtduif||0.18||
+densities_stratum_list_Houtduif_0d6b83502ba084c1|branch|69c53b2547edcd5f|14d5431421bfe625|50f177d41c7d3e80|1441453861||t20307.4254012155s|s1365b|1365|qs|local|list|densities_stratum_list_Houtduif||0.34||
+densities_stratum_list_Houtduif|pattern|6a9f8ba0d98e61c9|14d5431421bfe625||1879487555||||2199|qs|local|list||densities_stratum_list_Houtduif_fc09e5d30df66f0e*densities_stratum_list_Houtduif_0d6b83502ba084c1|0.52||
+ds_model_region_Houtduif_01321feddbbb03b3|branch|d089983907388ba7|882e67f7f073f112|5d99b1adbd33f39a|1997623705||t20307.4254231815s|s492431b|492431|qs|local|list|ds_model_region_Houtduif||1.65|Unknown or uninitialised column: `distbegin`.|
+ds_model_region_Houtduif_91c30acdef940948|branch|2b1e1afff5fddcd4|882e67f7f073f112|e77d9b730b055122|1244300569||t20307.4254645537s|s933596b|933596|qs|local|list|ds_model_region_Houtduif||3.33|Unknown or uninitialised column: `distbegin`.|
+ds_model_region_Houtduif|pattern|87f37422f0ffbc46|882e67f7f073f112||112415387||||1426027|qs|local|list||ds_model_region_Houtduif_01321feddbbb03b3*ds_model_region_Houtduif_91c30acdef940948|4.98||
+abundances_stratum_list_Houtduif_fc09e5d30df66f0e|branch|ec50c11e1d0be7dc|28f850e0cbeec9ac|82a65ccdc1ee5dff|-794282888||t20307.4254711417s|s832b|832|qs|local|list|abundances_stratum_list_Houtduif||0.25||
+abundances_stratum_list_Houtduif_0d6b83502ba084c1|branch|cc1f6219a8030506|28f850e0cbeec9ac|50f177d41c7d3e80|1636105641||t20307.4254781716s|s1386b|1386|qs|local|list|abundances_stratum_list_Houtduif||0.36||
+abundances_stratum_list_Houtduif|pattern|26760156fa83b00c|28f850e0cbeec9ac||-908945341||||2218|qs|local|list||abundances_stratum_list_Houtduif_fc09e5d30df66f0e*abundances_stratum_list_Houtduif_0d6b83502ba084c1|0.61||
+detection_probabilities_list_Houtduif_fc09e5d30df66f0e|branch|b21aaf3ff5a4b190|73c4a39c38a72e66|8e8bcca89a2993f3|-880885810||t20307.4254838488s|s330b|330|qs|local|list|detection_probabilities_list_Houtduif||0.22||
+detection_probabilities_list_Houtduif_0d6b83502ba084c1|branch|231c3eedc9d70cac|73c4a39c38a72e66|32819c19c2fb79bd|1599274882||t20307.4254921107s|s330b|330|qs|local|list|detection_probabilities_list_Houtduif||0.5||
+detection_probabilities_list_Houtduif|pattern|100886f043045c30|73c4a39c38a72e66||-1335516303||||660|qs|local|list||detection_probabilities_list_Houtduif_fc09e5d30df66f0e*detection_probabilities_list_Houtduif_0d6b83502ba084c1|0.72||
+ds_model_region_Veldleeuwerik_103a5b1712d02690|branch|8258ffb1f409c28d|87aebd1728d3cbc5|a3bd76cdce1b5892|1490743608||t20307.4255347904s|s556163b|556163|qs|local|list|ds_model_region_Veldleeuwerik||3.39|Unknown or uninitialised column: `distbegin`.|
+ds_model_region_Veldleeuwerik_b69d005583c5e320|branch|fc66754133381e04|87aebd1728d3cbc5|83159da494184a21|286456394||t20307.4257279829s|s723929b|723929|qs|local|list|ds_model_region_Veldleeuwerik||16.34|Unknown or uninitialised column: `distbegin`.|
+ds_model_region_Veldleeuwerik|pattern|5e3351ff209175ff|87aebd1728d3cbc5||-542600415||||1280092|qs|local|list||ds_model_region_Veldleeuwerik_103a5b1712d02690*ds_model_region_Veldleeuwerik_b69d005583c5e320|19.73||
+abundances_stratum_list_Veldleeuwerik_14f34fedda421041|branch|688205c7d891eea6|567c1fcf57189481|a99e174f924bd189|-325394639||t20307.4257360258s|s839b|839|qs|local|list|abundances_stratum_list_Veldleeuwerik||0.34||
+abundances_stratum_list_Veldleeuwerik_1bd5101963ff1c05|branch|ad983bed020993c7|567c1fcf57189481|92e3c3be439f0e25|-1225481306||t20307.4257573248s|s1375b|1375|qs|local|list|abundances_stratum_list_Veldleeuwerik||1.61||
+abundances_stratum_list_Veldleeuwerik|pattern|0c5dc2e317e8adfd|567c1fcf57189481||-1160935483||||2214|qs|local|list||abundances_stratum_list_Veldleeuwerik_14f34fedda421041*abundances_stratum_list_Veldleeuwerik_1bd5101963ff1c05|1.95||
+detection_probabilities_list_Veldleeuwerik_14f34fedda421041|branch|bf7ea45eb4dd19d0|2eb01bfc073f46d6|c6fff0fbe8fefd7e|-1207220289||t20307.4257629581s|s334b|334|qs|local|list|detection_probabilities_list_Veldleeuwerik||0.22||
+detection_probabilities_list_Veldleeuwerik_1bd5101963ff1c05|branch|309d01b90a644f51|2eb01bfc073f46d6|22aac888072d669c|408828317||t20307.4257751507s|s512b|512|qs|local|list|detection_probabilities_list_Veldleeuwerik||0.88||
+detection_probabilities_list_Veldleeuwerik|pattern|14699291f5ee2126|2eb01bfc073f46d6||324660445||||846|qs|local|list||detection_probabilities_list_Veldleeuwerik_14f34fedda421041*detection_probabilities_list_Veldleeuwerik_1bd5101963ff1c05|1.1||
+densities_stratum_list_Veldleeuwerik_14f34fedda421041|branch|52d6b28ccedaec10|6ecbf328369385c4|a99e174f924bd189|-1662944154||t20307.4257816482s|s839b|839|qs|local|list|densities_stratum_list_Veldleeuwerik||0.33||
+densities_stratum_list_Veldleeuwerik_1bd5101963ff1c05|branch|a13989640d2efa19|6ecbf328369385c4|92e3c3be439f0e25|2115967277||t20307.4258030581s|s1376b|1376|qs|local|list|densities_stratum_list_Veldleeuwerik||1.64||
+densities_stratum_list_Veldleeuwerik|pattern|d1eeda3025778fd6|6ecbf328369385c4||-1074425525||||2215|qs|local|list||densities_stratum_list_Veldleeuwerik_14f34fedda421041*densities_stratum_list_Veldleeuwerik_1bd5101963ff1c05|1.97||
+abundances_stratum_list_Gele.Kwikstaart_2daf6cfeeb720975|branch|ce977ba7723300bd|8570dd553206e39a|7de02f82f65e0e36|1851524762||t20307.42580764s|s844b|844|qs|local|list|abundances_stratum_list_Gele.Kwikstaart||0.11||
+abundances_stratum_list_Gele.Kwikstaart_1b4431fc0020081d|branch|1e914dfa11311f02|8570dd553206e39a|5d640b284539615e|277169791||t20307.4258219629s|s1398b|1398|qs|local|list|abundances_stratum_list_Gele.Kwikstaart||1.03||
+abundances_stratum_list_Gele.Kwikstaart|pattern|66cb144773161e96|8570dd553206e39a||609194833||||2242|qs|local|list||abundances_stratum_list_Gele.Kwikstaart_2daf6cfeeb720975*abundances_stratum_list_Gele.Kwikstaart_1b4431fc0020081d|1.14||
+ds_model_region_Gele.Kwikstaart_ec15a903611309c7|branch|aab096f4c879736c|0fa78dfa4901d158|bc4fbd1d9cc409ed|1454351248||t20307.4318594865s|s286197b|286197|qs|local|list|ds_model_region_Gele.Kwikstaart||1.22|Unknown or uninitialised column: `distbegin`.|
+ds_model_region_Gele.Kwikstaart_5ab1aee8da8be29c|branch|fbff73b2e06edc5c|0fa78dfa4901d158|af7cac3cd8541d38|-1659964026||t20307.4320061147s|s529330b|529330|qs|local|list|ds_model_region_Gele.Kwikstaart||12.47|Unknown or uninitialised column: `distbegin`.|
+ds_model_region_Gele.Kwikstaart|pattern|3ab3e77e78ffc04c|0fa78dfa4901d158||692293264||||815527|qs|local|list||ds_model_region_Gele.Kwikstaart_ec15a903611309c7*ds_model_region_Gele.Kwikstaart_5ab1aee8da8be29c|13.69||
 beta_fit_params|function|e417335906ced1c3
 filter_breeding_date|function|8d71457443efdbbe
 get_individuals_from_ds|function|a0c19a20ab906316
@@ -52,21 +114,49 @@ select_models|function|89216beacbe9da04
 add_categories|function|ebd1c69e5025248a
 kraaiachtigen_f|function|09aaf12ec67028ec
 roofvogels_f|function|a388160a22cc4fb0
-.Random.seed|object|0b35dc0c5d9a553a
+.Random.seed|object|0846e9a9ae16c4b8
 fit_ds_models|function|45f6547ce4c4a6d2
 summarize_ds_models2|function|b85f129100d9ddf9
 mbag_dir|object|07d3b4b81c7eb6b1
 parse_breeding_dates|function|68606843033dbc6a
-get_det_probs|function|c8a9f6e8d1b0d025
+get_det_probs|function|67ce597172509d09
 predatoren_f|function|e0a123d0ad124cae
-detection_probabilities_db91f5e416910f4b|branch|b3c9a825cca05e7c|4f11ceddc9c188f4|51d817e5aef5a622|1903097503||t20307.3590113427s|s531b|531|qs|local|list|detection_probabilities||0.72||
-detection_probabilities_6eaf886a61eee69f|branch|231c3eedc9d70cac|4f11ceddc9c188f4|c110f4342651c467|1260433||t20307.3590203547s|s330b|330|qs|local|list|detection_probabilities||0.57||
-detection_probabilities_17a2a79eabb47b66|branch|309d01b90a644f51|4f11ceddc9c188f4|7b4256a783359ddb|-1529716847||t20307.3590318406s|s512b|512|qs|local|list|detection_probabilities||0.81||
-abundances_stratum_db91f5e416910f4b|branch|a2babfe5790f31d2|3ce9a749c89eaf67|c910f8e9d991c392|255863957||t20307.3590467427s|s1399b|1399|qs|local|list|abundances_stratum||1.05||
-abundances_stratum_6eaf886a61eee69f|branch|52d8ead83f186486|3ce9a749c89eaf67|9455a12ee24a9c63|1141499329||t20307.3590528244s|s1386b|1386|qs|local|list|abundances_stratum||0.35||
-abundances_stratum_17a2a79eabb47b66|branch|3ab5503c2fe2fff2|3ce9a749c89eaf67|432ff43c85abfb61|-875948756||t20307.3590735251s|s1353b|1353|qs|local|list|abundances_stratum||1.58||
-abundances_stratum|pattern|d3fd9488b410d996|3ce9a749c89eaf67||176573051||||4138|qs|local|list||abundances_stratum_db91f5e416910f4b*abundances_stratum_6eaf886a61eee69f*abundances_stratum_17a2a79eabb47b66|2.98||
-densities_stratum_db91f5e416910f4b|branch|60ec0d6c410e139d|0aece22deabd3842|c910f8e9d991c392|-441887160||t20307.3590886209s|s1398b|1398|qs|local|list|densities_stratum||0.98||
-densities_stratum_6eaf886a61eee69f|branch|6cc3887692c61853|0aece22deabd3842|9455a12ee24a9c63|572382740||t20307.3590947609s|s1386b|1386|qs|local|list|densities_stratum||0.33||
-densities_stratum_17a2a79eabb47b66|branch|77c687b7df9aec39|0aece22deabd3842|432ff43c85abfb61|-797007735||t20307.3591143855s|s1373b|1373|qs|local|list|densities_stratum||1.52||
-densities_stratum|pattern|ee4e739ffc528ea0|0aece22deabd3842||-1818556894||||4157|qs|local|list||densities_stratum_db91f5e416910f4b*densities_stratum_6eaf886a61eee69f*densities_stratum_17a2a79eabb47b66|2.83||
+detection_probabilities_list_Gele.Kwikstaart_2daf6cfeeb720975|branch|09b30f8d668d503b|9d621209654acb54|3173cf6b501f9ca9|66270049||t20307.4321068831s|s265b|265|qs|local|list|detection_probabilities_list_Gele.Kwikstaart||0.07||
+detection_probabilities_list_Gele.Kwikstaart_1b4431fc0020081d|branch|b3c9a825cca05e7c|9d621209654acb54|b0c470d69247b138|456783542||t20307.4321139714s|s531b|531|qs|local|list|detection_probabilities_list_Gele.Kwikstaart||0.46||
+detection_probabilities_list_Gele.Kwikstaart|pattern|b2cbf81e1487eb58|9d621209654acb54||1498847674||||796|qs|local|list||detection_probabilities_list_Gele.Kwikstaart_2daf6cfeeb720975*detection_probabilities_list_Gele.Kwikstaart_1b4431fc0020081d|0.53||
+densities_stratum_list_Gele.Kwikstaart_2daf6cfeeb720975|branch|6a8ca88823db78c7|6da9280f6541cd85|7de02f82f65e0e36|-35510223||t20307.4321168185s|s848b|848|qs|local|list|densities_stratum_list_Gele.Kwikstaart||0.07||
+densities_stratum_list_Gele.Kwikstaart_1b4431fc0020081d|branch|e0106d57ac4af0c0|6da9280f6541cd85|5d640b284539615e|-679402083||t20307.4321289411s|s1394b|1394|qs|local|list|densities_stratum_list_Gele.Kwikstaart||0.87||
+densities_stratum_list_Gele.Kwikstaart|pattern|7d1f52d81e4c42d4|6da9280f6541cd85||2133152444||||2242|qs|local|list||densities_stratum_list_Gele.Kwikstaart_2daf6cfeeb720975*densities_stratum_list_Gele.Kwikstaart_1b4431fc0020081d|0.94||
+densities_stratum_Houtduif|stem|874010c3eb736797|25809604122bef2f|4f58eae58a743f41|420425478||t20307.432130997s|s1775b|1775|qs|local|vector|||0||
+densities_region_list_Houtduif_886907deef6228ed|branch|d3e72bcb72bf41a4|542a5474b0561ae7|d7288d7f94199d67|134319383||t20307.4321351589s|s503b|503|qs|local|list|densities_region_list_Houtduif||0.15||
+densities_region_list_Houtduif_43561c553c973fe4|branch|994909cfd4991432|542a5474b0561ae7|2092d599f4daae61|-1369419982||t20307.4321407733s|s684b|684|qs|local|list|densities_region_list_Houtduif||0.31||
+densities_region_list_Houtduif|pattern|93eb6725e2782341|542a5474b0561ae7||-911629799||||1187|qs|local|list||densities_region_list_Houtduif_886907deef6228ed*densities_region_list_Houtduif_43561c553c973fe4|0.46||
+abundances_region_list_Houtduif_886907deef6228ed|branch|c3727b90b6ce768a|6b3f5d550fcd8030|d7288d7f94199d67|1064726206||t20307.4321448054s|s503b|503|qs|local|list|abundances_region_list_Houtduif||0.16||
+abundances_region_list_Houtduif_43561c553c973fe4|branch|f02189bb7c01e70b|6b3f5d550fcd8030|2092d599f4daae61|-988388713||t20307.4321501985s|s685b|685|qs|local|list|abundances_region_list_Houtduif||0.3||
+abundances_region_list_Houtduif|pattern|e81cd71a76a3fc87|6b3f5d550fcd8030||2004823047||||1188|qs|local|list||abundances_region_list_Houtduif_886907deef6228ed*abundances_region_list_Houtduif_43561c553c973fe4|0.46||
+abundances_stratum_Houtduif|stem|8de0a537ff382d54|aa4171310deeb07a|218837f79de5a759|-1639382366||t20307.4321522006s|s1778b|1778|qs|local|vector|||0||
+detection_probabilities_Houtduif|stem|68d0d57b8b89b5bd|5b171a7efddf4ee7|a9bd3bae3877c4d8|-1702712346||t20307.4321541388s|s410b|410|qs|local|vector|||0||
+abundances_region_list_Veldleeuwerik_e351b7e2f72f12b6|branch|ef73d0ec504719b7|6cc68d19bfdd14d7|4635eeef9f82f38b|-82085176||t20307.4321598078s|s513b|513|qs|local|list|abundances_region_list_Veldleeuwerik||0.29||
+abundances_region_list_Veldleeuwerik_eb0abd46fc42e1ef|branch|0a405c97c215ab86|6cc68d19bfdd14d7|df89c9ed541f2b8e|1042259084||t20307.4321783393s|s693b|693|qs|local|list|abundances_region_list_Veldleeuwerik||1.42||
+abundances_region_list_Veldleeuwerik|pattern|081cbe6582e91673|6cc68d19bfdd14d7||1101308587||||1206|qs|local|list||abundances_region_list_Veldleeuwerik_e351b7e2f72f12b6*abundances_region_list_Veldleeuwerik_eb0abd46fc42e1ef|1.71||
+densities_region_list_Veldleeuwerik_e351b7e2f72f12b6|branch|a3c5d2211cbf674c|11b5dd29c2a802bf|4635eeef9f82f38b|836020992||t20307.4321838259s|s515b|515|qs|local|list|densities_region_list_Veldleeuwerik||0.27||
+densities_region_list_Veldleeuwerik_eb0abd46fc42e1ef|branch|030eac0d96df8603|11b5dd29c2a802bf|df89c9ed541f2b8e|-1475336203||t20307.4322024094s|s693b|693|qs|local|list|densities_region_list_Veldleeuwerik||1.46||
+densities_region_list_Veldleeuwerik|pattern|71106b449d466e77|11b5dd29c2a802bf||-458047990||||1208|qs|local|list||densities_region_list_Veldleeuwerik_e351b7e2f72f12b6*densities_region_list_Veldleeuwerik_eb0abd46fc42e1ef|1.73||
+abundances_stratum_Veldleeuwerik|stem|4e131356b7d63eb4|a9481da3c88c27d2|851053acde07a838|-1905761563||t20307.4322043392s|s1770b|1770|qs|local|vector|||0||
+detection_probabilities_Veldleeuwerik|stem|e1fe60a1fc96177c|b75197e06db7ec95|b6b5c22a40947d34|-1439693186||t20307.4322061162s|s614b|614|qs|local|vector|||0||
+densities_stratum_Veldleeuwerik|stem|23188217e236f269|66e1aa9cf43cd7eb|cb5c4a269fb97e74|1752114962||t20307.432207806s|s1778b|1778|qs|local|vector|||0||
+abundances_stratum_Gele.Kwikstaart|stem|e7164bf76e18455b|b56d3796c2b6ad90|b1b1dabe2c12edfb|-625293602||t20307.4322095703s|s1793b|1793|qs|local|vector|||0||
+abundances_region_list_Gele.Kwikstaart_5f9e366799c8c742|branch|9183d36283d27809|5702d534a37e5de1|1cb823eac52c2f1f|1320133599||t20307.4322125172s|s517b|517|qs|local|list|abundances_region_list_Gele.Kwikstaart||0.06||
+abundances_region_list_Gele.Kwikstaart_9db7614fff6d67a2|branch|e49158bf3d1ef1b9|5702d534a37e5de1|cee33d3407f0f8ab|-480365314||t20307.4322246298s|s698b|698|qs|local|list|abundances_region_list_Gele.Kwikstaart||0.88||
+abundances_region_list_Gele.Kwikstaart|pattern|75b5a9b5c8fdae70|5702d534a37e5de1||1406234505||||1215|qs|local|list||abundances_region_list_Gele.Kwikstaart_5f9e366799c8c742*abundances_region_list_Gele.Kwikstaart_9db7614fff6d67a2|0.94||
+densities_region_list_Gele.Kwikstaart_5f9e366799c8c742|branch|a3aeee62279a67ef|5973088abc19a8bb|1cb823eac52c2f1f|1832075532||t20307.4322275802s|s518b|518|qs|local|list|densities_region_list_Gele.Kwikstaart||0.05||
+densities_region_list_Gele.Kwikstaart_9db7614fff6d67a2|branch|f2561fed8fc3bd6b|5973088abc19a8bb|cee33d3407f0f8ab|-1337458727||t20307.432239509s|s698b|698|qs|local|list|densities_region_list_Gele.Kwikstaart||0.86||
+densities_region_list_Gele.Kwikstaart|pattern|a9fcadf8ca03a8ea|5973088abc19a8bb||-1677130342||||1216|qs|local|list||densities_region_list_Gele.Kwikstaart_5f9e366799c8c742*densities_region_list_Gele.Kwikstaart_9db7614fff6d67a2|0.91||
+detection_probabilities_Gele.Kwikstaart|stem|6e8e358a9c3af191|619510415a9e38af|5960a7288e913598|898870467||t20307.4322413725s|s559b|559|qs|local|vector|||0||
+densities_stratum_Gele.Kwikstaart|stem|a593b96a4b17cab0|ac747426419fc3cf|4a2e0b40a82b7f9f|-1639811226||t20307.4322436526s|s1787b|1787|qs|local|vector|||0||
+densities_region_Houtduif|stem|4dcb0ae3b336ab95|83c356a9e7e6a9a3|5fbf509822800f3b|-809176349||t20307.4322455393s|s852b|852|qs|local|vector|||0||
+abundances_region_Houtduif|stem|2f586537598f338c|ed1a5d36450b4f2f|0ee49bdd66519558|-1260305097||t20307.432247449s|s857b|857|qs|local|vector|||0||
+abundances_region_Veldleeuwerik|stem|fdbffb4c1be2c7bf|5a3ee3e28bba0f56|23ac52a1a0072806|326846617||t20307.4322491505s|s867b|867|qs|local|vector|||0||
+densities_region_Veldleeuwerik|stem|dff1979a5b4ac215|e0fbd42fe89599fa|4624f18550ce66d7|226080618||t20307.4322509373s|s869b|869|qs|local|vector|||0||
+abundances_region_Gele.Kwikstaart|stem|4ce2a7c6bf83f908|61adc32861de2a70|ee17dba4a654ab77|577444343||t20307.4322525557s|s866b|866|qs|local|vector|||0||
+densities_region_Gele.Kwikstaart|stem|923230e53e3636bc|64402e7d8c9c40ee|2213828514000db5|-680999822||t20307.4322544021s|s867b|867|qs|local|vector|||0||
