@@ -115,7 +115,7 @@ list(
   # Select species of interest
   tar_target(
     name = target_species,
-    command = sort(c("Veldleeuwerik", "Houtduif"))
+    command = c("Veldleeuwerik", "Houtduif")
   ),
   # Group by species, year
   tar_group_by(
@@ -129,10 +129,6 @@ list(
       mutate(
         regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio),
         stratum = paste(openheid_klasse, sbp, sep = " - ")
-      ) %>%
-      arrange(
-        naam,
-        jaar
       ),
     naam,
     jaar
@@ -170,10 +166,6 @@ list(
         sbp,
         regio,
         stratum
-      ) %>%
-      arrange(
-        species,
-        year
       ),
     species,
     year
@@ -226,11 +218,7 @@ list(
         )
       ) %>%
       select("object" = "oid", "Region.Label", "Sample.Label" = "plotnaam",
-             "species" = "naam", "year" = "jaar") %>%
-      arrange(
-        "species",
-        "year"
-      ),
+             "species" = "naam", "year" = "jaar"),
     species,
     year
   ),
@@ -259,6 +247,7 @@ list(
     command = fit_ds_models(
       data = ds_data,
       formulas = formulae,
+      # Distance::ds arguments:
       keys = c("hn", "hr"),
       truncation = 300,
       transect = "point",
@@ -273,7 +262,8 @@ list(
   ),
   tar_target(
     name = aic_comparison,
-    command = summarize_ds_models2(ds_model_fits, output = "plain"),
+    command = summarize_ds_models2(ds_model_fits, output = "plain") %>%
+      add_categories(ds_model_fits[[1]], c("species", "year")),
     pattern = map(ds_model_fits),
     iteration = "list"
   ),
@@ -291,9 +281,8 @@ list(
   # Get results
   tar_target(
     name = detection_probabilities,
-    command = get_det_probs(
-      model = model_selection
-    ),
+    command = get_det_probs(model = model_selection) %>%
+      add_categories(model_selection, c("species", "year")),
     pattern = map(model_selection),
     iteration = "list"
   )

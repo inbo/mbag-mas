@@ -18,38 +18,40 @@ region_table|stem|b74f000d40459ed0|1a2e225362461bcf|59ea28ff14c3e404|-1678251949
 design|stem|303c7b035d779bca|88a0a3f294fdabe0|ec0a6dbdee297ac7|2098730258||t20306.5710636173s|s30320b|30320|qs|local|vector|||0.1||
 sample_table|stem|3c4495f1fe7de915|6e42057bfc2bc141|ddde6f8215e34a7e|1906958297||t20306.5710652662s|s6812b|6812|qs|local|vector|||0.02||
 species|stem|771f98d0dbf6998c|74b30cab3cce455c|2c530c1562a7fbd1|1875078803||t20306.6222129514s|s100b|100|qs|local|vector|||0.33|package 'tibble' was built under R version 4.5.1|
-mas_data_grouped|stem|a88eca92a4243eaa|4009c9fffb72b216|e9c57454c0f3c133|116147169||t20306.6222162314s|s371572b|371572|qs|local|group||mas_data_grouped_36c4bcfa6c06cf90*mas_data_grouped_a98299452ec70777|0.02||
 filtered_breeding_code_afcf06127b05bfe7|branch|b1d4ce00ee442ecd|e24281bf5f6fae44|c0310456328b81ab|-420557803||t20306.622218535s|s232666b|232666|qs|local|vector|filtered_breeding_code||0.02||
 filtered_breeding_code|pattern|532dfd40bc9071b0|e24281bf5f6fae44||-313407051||||232666|qs|local|vector||filtered_breeding_code_afcf06127b05bfe7*filtered_breeding_code_7c7482e03627d324|0.02||
 filtered_breeding_date|pattern|8221f99b66b0cf1d|e9dcc1e6d66be887||1815905240||||185244|qs|local|vector||filtered_breeding_date_aaff25afc052f91a*filtered_breeding_date_2599e8a1da566b29|0.04||
 obs_table|stem|9b2cc3430b86a043|67b9482fa0161c52|1c08783de6096ba9|1969293203||t20306.6222230996s|s32027b|32027|qs|local|group|||0.13||
-ds_data|stem|ea625576bafbc6f3|9c646650849480b6|ce9c9291c38f15f8|838355840||t20306.6222245696s|s48660b|48660|qs|local|group||ds_data_79e681ade174d0ea*ds_data_9884e5b1f01ac8f8|0||
 formulae|stem|4bca8a6a64d96dc5|357bb1fc0a27486f|2c530c1562a7fbd1|644740001||t20306.6228121418s|s113b|113|qs|local|vector|||0.33|package 'tibble' was built under R version 4.5.1|
 ds_model_fits_cb9253586d46ab75|branch|02fddb2d123e6e0d|f8eae664965ea728|61a6d83eb484fbc4|697281466||t20306.6235725419s|s3403133b|3403133|qs|local|list|ds_model_fits||65.38|Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.|
 ds_model_fits_e6c55513accf9b33|branch|c16c636c1dd8e5b8|f8eae664965ea728|61a6d83eb484fbc4|-477383797||t20306.6245550034s|s2631640b|2631640|qs|local|list|ds_model_fits||84.64|Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.. Unknown or uninitialised column: `distbegin`.|
 ds_model_fits|pattern|6ce9928dc8efaecc|f8eae664965ea728||-2050599742||||6034773|qs|local|list||ds_model_fits_cb9253586d46ab75*ds_model_fits_e6c55513accf9b33|150.02||
-aic_comparison_7a8df0b6442798f0|branch|b4c5829dd8f45096|800efb2c7153c3f0|a8cbbe0b766a1877|-1549203939||t20306.6349951907s|s620b|620|qs|local|list|aic_comparison||15.75||
-aic_comparison_32001dd3e9a14c02|branch|92d083f53d472d0d|800efb2c7153c3f0|8461c8db617d9fc5|1257158575||t20306.6351090647s|s614b|614|qs|local|list|aic_comparison||9.61||
-aic_comparison|pattern|ad114ab3da50fc6c|800efb2c7153c3f0||266974425||||1234|qs|local|list||aic_comparison_7a8df0b6442798f0*aic_comparison_32001dd3e9a14c02|25.36||
 breeding_dates|stem|3b8042cfab542be5|0883dfe7611953a9|c39ec732411d9c2a|186666232||t20306.6790946892s|s3433b|3433|qs|local|vector|||0.15||
 filtered_breeding_date_aaff25afc052f91a|branch|e59faa9f366b5b79|e9dcc1e6d66be887|901dfa40d33266d6|1727380916||t20306.6790971981s|s185244b|185244|qs|local|vector|filtered_breeding_date||0.02||
 filtered_breeding_date_2599e8a1da566b29|branch|cdfeba3fd9eb1be4|e9dcc1e6d66be887|d3542747b1b584a1|-749567418||t20306.6790982998s|s125368b|125368|qs|local|vector|filtered_breeding_date||0||
-model_selection_fec4c546a5c35305|branch|9a62cf67df3262cc|f7e7d4e270962fbf|d3687fe8a89ef659|472349497||t20306.679111934s|s644043b|644043|qs|local|list|model_selection||0.01||
-model_selection_3795e6d8cd4e605f|branch|35c3d02d4dd2e197|f7e7d4e270962fbf|45f5428ffec98ed2|1900950450||t20306.6791145151s|s454649b|454649|qs|local|list|model_selection||0.02||
 model_selection|pattern|5a71e8e4366ea05f|f7e7d4e270962fbf||1656761846||||1098692|qs|local|list||model_selection_fec4c546a5c35305*model_selection_3795e6d8cd4e605f|0.03||
 target_dir|object|11f10b8289c39334
 beta_fit_params|function|e417335906ced1c3
 filter_breeding_date|function|8d71457443efdbbe
 select_models|function|89216beacbe9da04
+add_categories|function|ebd1c69e5025248a
 kraaiachtigen_f|function|09aaf12ec67028ec
 roofvogels_f|function|a388160a22cc4fb0
-.Random.seed|object|0153e6108e8b7c85
+.Random.seed|object|82ad93ce3a784f2f
 fit_ds_models|function|45f6547ce4c4a6d2
 summarize_ds_models2|function|b85f129100d9ddf9
 mbag_dir|object|07d3b4b81c7eb6b1
 parse_breeding_dates|function|68606843033dbc6a
-get_det_probs|function|33de1aecec2d11e2
+get_det_probs|function|8d7892d190cb7a50
 predatoren_f|function|e0a123d0ad124cae
-detection_probabilities_6eaf886a61eee69f|branch|e25555860a60a9c1|057bd058092d2406|48c1bef3608175b6|1260433||t20306.6929990168s|s417b|417|qs|local|list|detection_probabilities||0.38||
-detection_probabilities_17a2a79eabb47b66|branch|6b1b734bacc915eb|057bd058092d2406|6e61a2a268924c56|-1529716847||t20306.6930100083s|s588b|588|qs|local|list|detection_probabilities||0.76||
-detection_probabilities|pattern|cc49d9e68b2bf8f3|057bd058092d2406||-1402025594||||1005|qs|local|list||detection_probabilities_6eaf886a61eee69f*detection_probabilities_17a2a79eabb47b66|1.14||
+target_species|stem|fbe5add8c14c04e4|c11a3e1cf5c3f927|2c530c1562a7fbd1|1280782395||t20307.3259312825s|s105b|105|qs|local|vector|||0.35|package 'tibble' was built under R version 4.5.1|
+mas_data_grouped|stem|a2b891389ad04c89|585aeea37ebe3e4c|c4726c734ec521a6|116147169||t20307.3259343605s|s378302b|378302|qs|local|group||mas_data_grouped_36c4bcfa6c06cf90*mas_data_grouped_a98299452ec70777|0.03||
+ds_data|stem|ea625576bafbc6f3|9c646650849480b6|1c08783de6096ba9|838355840||t20307.3259371095s|s48660b|48660|qs|local|group||ds_data_79e681ade174d0ea*ds_data_9884e5b1f01ac8f8|0.01||
+aic_comparison_7a8df0b6442798f0|branch|218725a1382e02cb|2413fc31155d6d37|4457943c0c8ddd47|-1549203939||t20307.3261308963s|s667b|667|qs|local|list|aic_comparison||16.06||
+aic_comparison_32001dd3e9a14c02|branch|7908bc3aeb0a346b|2413fc31155d6d37|92425cab1bcc6b1c|1257158575||t20307.326242114s|s659b|659|qs|local|list|aic_comparison||9.37||
+aic_comparison|pattern|90ac19b1b55bd05f|2413fc31155d6d37||266974425||||1326|qs|local|list||aic_comparison_7a8df0b6442798f0*aic_comparison_32001dd3e9a14c02|25.43||
+model_selection_fec4c546a5c35305|branch|9a62cf67df3262cc|f7e7d4e270962fbf|82520cccea093ea3|472349497||t20307.3262456624s|s644043b|644043|qs|local|list|model_selection||0.01||
+model_selection_3795e6d8cd4e605f|branch|35c3d02d4dd2e197|f7e7d4e270962fbf|92624dfba31f1cd6|1900950450||t20307.3262484842s|s454649b|454649|qs|local|list|model_selection||0.01||
+detection_probabilities_6eaf886a61eee69f|branch|231c3eedc9d70cac|3f1681f685c9228c|3d43b97e1496cc7b|1260433||t20307.3262551514s|s330b|330|qs|local|list|detection_probabilities||0.39||
+detection_probabilities_17a2a79eabb47b66|branch|309d01b90a644f51|3f1681f685c9228c|835988e9806edab5|-1529716847||t20307.3262662845s|s512b|512|qs|local|list|detection_probabilities||0.78||
+detection_probabilities|pattern|69595d87c84a5521|3f1681f685c9228c||-1402025594||||842|qs|local|list||detection_probabilities_6eaf886a61eee69f*detection_probabilities_17a2a79eabb47b66|1.17||
