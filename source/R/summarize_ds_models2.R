@@ -24,6 +24,8 @@ summarize_ds_models2 <- function(..., sort="AIC", output="latex",
                              as.character(match.call(expand.dots=FALSE)))
     } else {
       models <- unlist(list(...), recursive = FALSE)
+      # remove NAs
+      models <- models[!is.na(models)]
       # get the model names
       model_names <- names(models)
       if (is.null(model_names)) {
