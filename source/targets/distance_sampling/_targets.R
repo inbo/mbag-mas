@@ -158,7 +158,7 @@ list(
         sf::st_drop_geometry() %>%
         filter(
           naam %in% species,
-          jaar == 2024, # Change
+          jaar >= 2023, # Change
         ) %>%
         mutate(
           regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio),
@@ -291,15 +291,19 @@ list(
     ## Get distance sampling results
     # Detection probabilities
     tar_target(
-      name = detection_probabilities,
+      name = detection_probabilities_list,
       command = get_det_probs(ds_model = model_selection) %>%
         add_categories(model_selection, c("species", "year")),
       pattern = map(model_selection),
       iteration = "list"
     ),
+    tar_target(
+      name = detection_probabilities,
+      command = bind_rows(detection_probabilities_list)
+    ),
     # Abundances
     tar_target(
-      name = abundances_stratum,
+      name = abundances_stratum_list,
       command = get_individuals_from_ds(
         ds_model = model_selection,
         measure = "abundance"
@@ -312,9 +316,13 @@ list(
       pattern = map(model_selection),
       iteration = "list"
     ),
+    tar_target(
+      name = abundances_stratum,
+      command = bind_rows(abundances_stratum_list)
+    ),
     # Densities
     tar_target(
-      name = densities_stratum,
+      name = densities_stratum_list,
       command = get_individuals_from_ds(
         ds_model = model_selection,
         measure = "dens"
@@ -326,6 +334,10 @@ list(
         add_categories(model_selection, c("species", "year")),
       pattern = map(model_selection),
       iteration = "list"
+    ),
+    tar_target(
+      name = densities_stratum,
+      command = bind_rows(densities_stratum_list)
     )
   )
 )
