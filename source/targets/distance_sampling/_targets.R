@@ -115,7 +115,7 @@ list(
   # Select species of interest
   tar_target(
     name = target_species,
-    command = c("Veldleeuwerik", "Houtduif")
+    command = c("Veldleeuwerik", "Houtduif", "Gele Kwikstaart")
   ),
   # Group by species, year
   tar_group_by(
@@ -281,7 +281,35 @@ list(
   # Get results
   tar_target(
     name = detection_probabilities,
-    command = get_det_probs(model = model_selection) %>%
+    command = get_det_probs(ds_model = model_selection) %>%
+      add_categories(model_selection, c("species", "year")),
+    pattern = map(model_selection),
+    iteration = "list"
+  ),
+  tar_target(
+    name = abundances_stratum,
+    command = get_individuals_from_ds(
+      ds_model = model_selection,
+      measure = "abundance"
+    ) %>%
+      filter(
+        !grepl("^Weidestreek", Label),
+        Label != "Total"
+      ) %>%
+      add_categories(model_selection, c("species", "year")),
+    pattern = map(model_selection),
+    iteration = "list"
+  ),
+  tar_target(
+    name = densities_stratum,
+    command = get_individuals_from_ds(
+      ds_model = model_selection,
+      measure = "dens"
+    ) %>%
+      filter(
+        !grepl("^Weidestreek", Label),
+        Label != "Total"
+      ) %>%
       add_categories(model_selection, c("species", "year")),
     pattern = map(model_selection),
     iteration = "list"
