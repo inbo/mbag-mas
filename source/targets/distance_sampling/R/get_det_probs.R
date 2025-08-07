@@ -28,5 +28,6 @@ get_det_probs <- function(model) {
         sd = .data$se_p,
         p = 0.975
       )
-    )
+    ) %>%
+    ungroup()
 }
