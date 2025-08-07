@@ -52,10 +52,13 @@ source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
 
 # Goal
 
-# Methods
+# Density estimation
+## Methods
 
-# Veldleeuwerik
-## Model selection
+## Veldleeuwerik
+### Data exploration
+
+### Model selection
 
 ```{r}
 tar_read_ds("aic_comparison", "Veldleeuwerik", 2024) %>%
@@ -63,7 +66,7 @@ tar_read_ds("aic_comparison", "Veldleeuwerik", 2024) %>%
   kable()
 ```
 
-## Model fit
+### Model fit
 
 ```{r}
 final_model <- tar_read_ds("model_selection", "Veldleeuwerik", 2024)
@@ -88,4 +91,20 @@ The detection curve(s) look like this:
 plot_detection_curve(final_model) # add design matrix, ask chat gpt
 ```
 
-## Results
+### Results
+
+# Spatial prediction
+## Methods
+
+## Veldleeuwerik
+### Select response distribution
+
+### Select spatial spline
+#### Isotropy
+
+
+#### Basis dimension
+
+### Model fit
+
+### Predictions
