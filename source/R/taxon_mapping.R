@@ -14,7 +14,7 @@ find_df_name <- function(df_list, search_value, lang = NA) {
 
   # Check how many times the value is present in each dataframe
   contains_value <- purrr::map(df_list, function(df) {
-    if (is.na(lang)) {
+    if (is.na(lang) | !"language" %in% names(df)) {
       vernacular_names <- df %>%
         pull(.data$vernacularName)
     } else {
