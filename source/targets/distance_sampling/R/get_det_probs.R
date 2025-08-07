@@ -13,7 +13,6 @@ get_det_probs <- function(ds_model) {
   ) %>%
     select(all_of(var_names), "estimate_p", "se_p") %>%
     distinct() %>%
-    arrange(var_names) %>%
     rowwise() %>%
     mutate(
       ll_beta = beta_fit_params( # nolint: object_usage_linter
