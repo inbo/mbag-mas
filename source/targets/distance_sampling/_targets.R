@@ -21,14 +21,10 @@ tar_option_set(
 )
 
 # Set directory locations
-target_dir <- rprojroot::find_root_file(
-  "source", "targets", "distance_sampling",
-  criterion = rprojroot::is_git_root
-)
 mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
 
 # Source custom functions
-lapply(list.files(file.path(target_dir, "R"), full.names = TRUE), source)
+tar_source()
 source(file.path(mbag_dir, "source", "R", "predatoren_f.R"))
 source(file.path(mbag_dir, "source", "R", "summarize_ds_models2.R"))
 source(file.path(mbag_dir, "source", "R", "beta_fit_params.R"))
@@ -152,7 +148,7 @@ list(
 
   ## Static branching over species
   tar_map(
-    values = list(species = c(c("Veldleeuwerik", "Houtduif"))),
+    values = list(species = c("Veldleeuwerik", "Gele Kwikstaart", "Houtduif")),
 
     ## Prepare species occurrence data
     # Select species and group occurrence data by year
