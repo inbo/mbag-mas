@@ -61,20 +61,29 @@ source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
 ### Model selection
 
 ```{r}
+final_model <- tar_read_ds("model_selection", "Veldleeuwerik", 2024,
+                           store = targets_store)
+f <- final_model$ddf$ds$aux$ddfobj$scale$formula
+key <- ifelse(
+  final_model$ddf$ds$aux$ddfobj$type == "hn",
+  "half-normal",
+  "hazard-rate"
+)
+```
+
+We select the model with `r key` key function and scale parameter formula `r f`.
+
+```{r}
 tar_read_ds("aic_comparison", "Veldleeuwerik", 2024,
             store = targets_store) %>%
   select(-species, -year) %>%
+  filter(`Delta AIC` <= 10) %>% # only show low AIC models
   kable()
 ```
 
 ### Model fit
 
-```{r}
-final_model <- tar_read_ds("model_selection", "Veldleeuwerik", 2024,
-                           store = targets_store)
-```
-
-We look at the overal fit of the best model.
+We look at the fit of the best model.
 
 ```{r}
 par(mfrow = c(1, 2))
@@ -94,6 +103,91 @@ plot_detection_curve(final_model) # add design matrix, ask chat gpt
 ```
 
 ### Results
+
+Detection probabilities.
+
+```{r}
+tar_read_ds("detection_probabilities", "Veldleeuwerik",
+            store = targets_store) %>%
+  filter(year == 2024) %>%
+  select(-species, -year) %>%
+  drop_na() %>%
+  relocate("estimate_p", "se_p", "ll_beta", "ul_beta", .after = last_col()) %>%
+  kable()
+```
+
+#### Stratum
+
+Abundances.
+
+```{r}
+y <- 2024
+tar_read_ds("abundances_stratum", "Veldleeuwerik",
+            store = targets_store) %>%
+  filter(
+    if (y == 2023) {
+      year == y & grepl("^Zandleem|^Leem", Label)
+    } else {
+      year == y
+    }
+  ) %>%
+  select(-species, -year) %>%
+  rename("stratum" = "Label", "estimate" = "Estimate") %>%
+  kable()
+```
+
+Densities.
+
+```{r}
+tar_read_ds("densities_stratum", "Veldleeuwerik",
+            store = targets_store) %>%
+  filter(
+    if (y == 2023) {
+      year == y & grepl("^Zandleem|^Leem", Label)
+    } else {
+      year == y
+    }
+  ) %>%
+  select(-species, -year) %>%
+  rename("stratum" = "Label", "estimate" = "Estimate") %>%
+  kable()
+```
+
+#### Region
+
+Abundances.
+
+```{r}
+tar_read_ds("abundances_region", "Veldleeuwerik",
+            store = targets_store) %>%
+  filter(
+    if (y == 2023) {
+      year == y & grepl("^Zandleem|^Leem", Label)
+    } else {
+      year == y
+    }
+  ) %>%
+  select(-species, -year) %>%
+  rename("region" = "Label", "estimate" = "Estimate") %>%
+  kable()
+```
+
+Densities.
+
+```{r}
+tar_read_ds("densities_region", "Veldleeuwerik",
+            store = targets_store) %>%
+  filter(
+    if (y == 2023) {
+      year == y & grepl("^Zandleem|^Leem", Label)
+    } else {
+      year == y
+    }
+  ) %>%
+  select(-species, -year) %>%
+  rename("region" = "Label", "estimate" = "Estimate") %>%
+  kable()
+```
 
 # Spatial prediction
 ## Methods

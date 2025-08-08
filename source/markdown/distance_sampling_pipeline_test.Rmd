@@ -93,7 +93,5 @@ for (sp in species_list) {
 }
 ```
 
-### Results
-
 # Spatial prediction
 ## Methods
