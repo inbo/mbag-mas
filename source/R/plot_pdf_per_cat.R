@@ -1,5 +1,8 @@
 plot_pdf_per_cat <- function(ds_model) {
+  require("Distance")
+  # Get formula
   f <- ds_model$ddf$ds$aux$ddfobj$scale$formula
+
   if (f == "~regio") {
     par(mfrow = c(1, 2))
 
@@ -85,13 +88,12 @@ plot_pdf_per_cat <- function(ds_model) {
       for (k in seq_along(unique(ds_model$ddf$data$regio))) {
         reg <- sort(unique(ds_model$ddf$data$regio))[k]
 
-        if (!(j == "HOL" & reg == "De Moeren")) {
-          plot(ds_model, pdf = TRUE, showpoints = FALSE,
-               subset = regio == reg & openheid == j,
-               main = paste(reg, j, sep = "- "), pl.col = alpha(cols[i], 0.5))
-          add.df.covar.line(ds_model, lwd = 3, lty = 1, col = cols[i],
-                            data = data.frame(regio = reg, openheid = j), pdf = TRUE)
-        }}
+        plot(ds_model, pdf = TRUE, showpoints = FALSE,
+             subset = regio == reg & openheid == j,
+             main = paste(reg, j, sep = "- "), pl.col = alpha(cols[i], 0.5))
+        add.df.covar.line(ds_model, lwd = 3, lty = 1, col = cols[i],
+                          data = data.frame(regio = reg, openheid = j), pdf = TRUE)
+        }
     }
 
     par(mfrow = c(1, 1))
@@ -118,7 +120,7 @@ plot_pdf_per_cat <- function(ds_model) {
 
     par(mfrow = c(1, 1))
   }
-  if (f == "~regio + sbp + openheid") {
+  if (f %in% c("~regio + sbp + openheid", "regio+sbp*openheid")) {
     par(mfrow = c(1, 2))
 
     cols <- c("blue", "darkgreen")
@@ -132,15 +134,33 @@ plot_pdf_per_cat <- function(ds_model) {
         for (k in seq_along(unique(ds_model$ddf$data$regio))) {
           reg <- sort(unique(ds_model$ddf$data$regio))[k]
 
-          if (!(o == "HOL" & reg == "De Moeren")) {
-            plot(ds_model, pdf = TRUE, showpoints = FALSE,
-                 subset = regio == reg & sbp == j & openheid == o,
-                 main = paste(reg, j, o, sep = "- "), pl.col = alpha(cols[h], 0.5))
-            add.df.covar.line(ds_model, lwd = 3, lty = 1, col = cols[h],
-                              data = data.frame(regio = reg, sbp = j, openheid = o), pdf = TRUE)
-          }}
+          plot(ds_model, pdf = TRUE, showpoints = FALSE,
+               subset = regio == reg & sbp == j & openheid == o,
+               main = paste(reg, j, o, sep = "- "),
+               pl.col = alpha(cols[h], 0.5))
+          add.df.covar.line(ds_model, lwd = 3, lty = 1, col = cols[h],
+                            data = data.frame(regio = reg, sbp = j,
+                                              openheid = o),
+                            pdf = TRUE)
+          }
       }
     }
+    par(mfrow = c(1, 1))
+  }
+  if (f == "~stratum") {
+    par(mfrow = c(1, 2))
+
+    cols <- c("blue", "darkgreen")
+    for (s in seq_along(unique(ds_model$ddf$data$stratum))) {
+      strat <- sort(unique(ds_model$ddf$data$sbp))[s]
+
+      plot(ds_model, pdf = TRUE, showpoints = FALSE,
+           subset = stratum == strat,
+           main = strat, pl.col = alpha(cols[s %% 2 + 1], 0.5))
+      add.df.covar.line(ds_model, lwd = 3, lty = 1, col = cols[s %% 2 + 1],
+                        data = data.frame(stratum = strat), pdf = TRUE)
+    }
+
     par(mfrow = c(1, 1))
   }
 }
