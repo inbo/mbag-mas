@@ -2,8 +2,8 @@ tar_read_ds <- function(
   name,
   species = NULL,
   year = NULL,
-  store = targets_store,
-  start_year = 2023
+  start_year = 2023,
+  ...
 ) {
   # Specify name
   if (!is.null(species)) {
@@ -22,7 +22,7 @@ tar_read_ds <- function(
   target <- targets::tar_read_raw(
     name = name,
     branches = branches,
-    store = targets_store
+    ...
   )
 
   if (length(year) == 1) return(target[[1]])
