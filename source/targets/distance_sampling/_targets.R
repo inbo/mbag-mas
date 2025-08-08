@@ -165,7 +165,21 @@ list(
 
   ## Static branching over species
   tar_map(
-    values = list(species = c("Veldleeuwerik", "Gele Kwikstaart", "Houtduif")),
+    # Choose species of interest
+    values = list(
+      species = c(
+        "Veldleeuwerik",
+        "Gele Kwikstaart",
+        "Geelgors",
+        "Kievit",
+        "Grasmus",
+        "Witte Kwikstaart",
+        "Ringmus",
+        "Kwartel",
+        "Kneu",
+        "Torenvalk"
+      )
+    ),
 
     ## Prepare species occurrence data
     # Select species and group occurrence data by year
@@ -175,11 +189,15 @@ list(
         sf::st_drop_geometry() %>%
         filter(
           naam %in% species,
-          jaar >= 2023, # Change
+          jaar >= 2023,
         ) %>%
         mutate(
           regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio),
-          stratum = paste(openheid_klasse, sbp, sep = " - ")
+          stratum = ifelse(
+            regio == "Weidestreek",
+            "Weidestreek",
+            paste(regio, openheid_klasse, sbp, sep = " - ")
+          )
         ),
       jaar
     ),
@@ -274,13 +292,15 @@ list(
       command = list(
         "~1",
         "~regio",
-        #"~sbp",
-        "~openheid"
-        #"~regio+sbp",
-        #"~regio+openheid",
-        #"~sbp+openheid",
-        #"~regio+sbp+openheid",
-        #"~sbp*openheid"
+        "~sbp",
+        "~openheid",
+        "~regio+sbp",
+        "~regio+openheid",
+        "~sbp+openheid",
+        "~sbp*openheid",
+        "~regio+sbp+openheid",
+        "regio+sbp*openheid",
+        "stratum" # same as triple interaction except 'Weidestreek' is separate
       )
     ),
 
@@ -317,7 +337,7 @@ list(
     # Select model with lowest AIC, within tolerance with lowest nr. of params
     tar_target(
       name = model_selection,
-      command = select_models(
+      command = select_ds_models(
         aic_diff = aic_comparison,
         model_list = ds_model_fits,
         aic_tol = 2
