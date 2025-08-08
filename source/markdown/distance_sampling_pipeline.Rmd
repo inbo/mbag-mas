@@ -61,7 +61,8 @@ source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
 ### Model selection
 
 ```{r}
-tar_read_ds("aic_comparison", "Veldleeuwerik", 2024) %>%
+tar_read_ds("aic_comparison", "Veldleeuwerik", 2024,
+            store = targets_store) %>%
   select(-species, -year) %>%
   kable()
 ```
@@ -69,7 +70,8 @@ tar_read_ds("aic_comparison", "Veldleeuwerik", 2024) %>%
 ### Model fit
 
 ```{r}
-final_model <- tar_read_ds("model_selection", "Veldleeuwerik", 2024)
+final_model <- tar_read_ds("model_selection", "Veldleeuwerik", 2024,
+                           store = targets_store)
 ```
 
 We look at the overal fit of the best model.
@@ -81,7 +83,7 @@ plot(final_model, pdf = TRUE, showpoints = TRUE)
 par(mfrow = c(1, 1))
 ```
 
-```{r}
+```r
 plot_pdf_per_cat(final_model)
 ```
 
