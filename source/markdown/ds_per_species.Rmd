@@ -1,0 +1,59 @@
+
+```{r}
+# packages
+library(tidyverse)
+library(targets)
+library(Distance)
+
+library(INBOtheme)
+theme_set(theme_inbo(transparent = TRUE))
+
+# Conflicts
+conflicted::conflicts_prefer(dplyr::filter)
+conflicted::conflicts_prefer(dplyr::select)
+
+# Paths
+mbag_dir <- here::here()
+targets_store <- file.path(mbag_dir, "source", "targets", "distance_sampling",
+                           "_targets")
+
+# Source functions
+source(file.path(mbag_dir, "source", "R", "tar_read_ds.R"))
+source(file.path(mbag_dir, "source", "R", "plot_pdf_per_cat.R"))
+source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
+```
+
+## `r params$species` - `r params$year`
+### Data exploration
+
+### Model selection
+
+
+```{r}
+tar_read_ds("aic_comparison", params$species, params$year,
+            store = targets_store) %>%
+  select(-species, -year) %>%
+  kable()
+```
+
+### Model fit
+
+```{r}
+final_model <- tar_read_ds("model_selection", params$species, params$year,
+                           store = targets_store)
+```
+
+We look at the overal fit of the best model.
+
+```{r}
+par(mfrow = c(1, 2))
+gof_ds(final_model)
+plot(final_model, pdf = TRUE, showpoints = TRUE)
+par(mfrow = c(1, 1))
+```
+
+The detection curve(s) look like this:
+
+```{r}
+plot_detection_curve(final_model) # add design matrix, ask chat gpt
+```
