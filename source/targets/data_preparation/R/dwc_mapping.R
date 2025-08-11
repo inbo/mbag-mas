@@ -200,7 +200,8 @@ map_taxa_manual <- function(
       select(all_of(cols_to_get))
   })
   mapped_taxa_df <- do.call(bind_rows, mapped_taxa_list) %>%
-    mutate(!!vernacular_name_col := names(manual_taxon_list))
+    mutate(!!vernacular_name_col := names(manual_taxon_list),
+           across(everything(), trimws))
 
 
   # Add taxon info difficult names
@@ -213,7 +214,9 @@ map_taxa_manual <- function(
     mutate(
       across(
         all_of(setdiff(colnames(mapped_taxa_df), vernacular_name_col)),
-        ~ coalesce(.x, get(paste0(cur_column(), ".df2"))),
+        ~ ifelse(!is.na(get(paste0(cur_column(), ".df2"))),
+                 get(paste0(cur_column(), ".df2")),
+                 .x),
         .names = "{.col}"
       )
     ) %>%

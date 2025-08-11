@@ -189,7 +189,8 @@ list(
     command = do.call(
       what = rbind.data.frame,
       args = c(crs_pipeline, make.row.names = FALSE)
-    )
+    ) %>%
+      filter(jaar <= 2024)
   ),
   # Add non-MAS data to MAS data for GBIF publication
   # Column is_mas_sample indicates whether the observation is part of the
@@ -197,7 +198,8 @@ list(
   tar_target(
     name = complete_data_gbif_raw,
     command = rbind_all_mas_data(
-      sample_data = mas_data_clean,
+      sample_data = mas_data_clean %>%
+        filter(jaar <= 2024),
       extra_data = complete_data_crs
     )
   ),
@@ -241,6 +243,7 @@ list(
     command = map_taxa_manual(
       taxonomy_df = taxon_mapping,
       manual_taxon_list = list(
+        "Krakeend" = 9362027,                   # species
         "Huismuis (zoogdier)" = 7429082,        # species
         "Barmsijs (Grote of Kleine)" = 5231630, # species
         "Veldmuis/Aardmuis" = 2438591,          # genus
