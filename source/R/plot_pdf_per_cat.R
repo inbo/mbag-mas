@@ -1,6 +1,6 @@
 # nolint start
 plot_pdf_per_cat <- function(ds_model) {# nolint: cyclocomp_linter.
-  require("mrds")
+  require("Distance")
 
   # Get formula
   f <- ds_model$ddf$ds$aux$ddfobj$scale$formula
