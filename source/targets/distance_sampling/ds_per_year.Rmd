@@ -59,7 +59,20 @@ par(mfrow = c(1, 1))
 The detection curve(s) look like this:
 
 ```{r}
-plot_detection_curve(final_model) # add design matrix, ask chat gpt
+plot_detection_curve(
+  final_model,
+  show_data = TRUE,
+  plot_average_fit = TRUE,
+  plot_covariate_fit = TRUE
+) +
+  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 100, by = 0.25)) +
+  labs(x = "Distance (m)", y = "Detection probability") +
+  theme_minimal() +
+  theme(
+    legend.background = element_rect(fill = "white", color = "darkgrey"),
+    legend.margin = margin(6, 6, 6, 6),
+    legend.position = "bottom"
+  )
 ```
 
 #### Results
