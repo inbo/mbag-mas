@@ -1,0 +1,38 @@
+
+```{r}
+# packages
+library(tidyverse)
+library(targets)
+library(Distance)
+
+library(INBOtheme)
+theme_set(theme_inbo(transparent = TRUE))
+
+# Conflicts
+conflicted::conflicts_prefer(dplyr::filter)
+conflicted::conflicts_prefer(dplyr::select)
+
+# Paths
+mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
+
+# Source functions
+source(file.path(mbag_dir, "source", "R", "tar_read_ds.R"))
+source(file.path(mbag_dir, "source", "R", "plot_pdf_per_cat.R"))
+source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
+```
+
+## `r params$species`
+
+```{r, results='asis'}
+for (y in params$years) {
+  params$year <- y
+
+  out <- capture.output({
+    child <- knitr::knit_child(
+      file.path(here::here(), "ds_per_year.Rmd"),
+      envir = knit_global()
+    )
+  })
+  cat(child, sep = "\n")
+}
+```

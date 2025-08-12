@@ -13,9 +13,7 @@ conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::select)
 
 # Paths
-mbag_dir <- here::here()
-targets_store <- file.path(mbag_dir, "source", "targets", "distance_sampling",
-                           "_targets")
+mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
 
 # Source functions
 source(file.path(mbag_dir, "source", "R", "tar_read_ds.R"))
@@ -23,14 +21,13 @@ source(file.path(mbag_dir, "source", "R", "plot_pdf_per_cat.R"))
 source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
 ```
 
-## `r params$species` - `r params$year`
-### Data exploration
+### `r params$year`
+#### Data exploration
 
-### Model selection
+#### Model selection
 
 ```{r}
-final_model <- tar_read_ds("model_selection", params$species, params$year,
-                           store = targets_store)
+final_model <- tar_read_ds("model_selection", params$species, params$year)
 f <- final_model$ddf$ds$aux$ddfobj$scale$formula
 key <- ifelse(
   final_model$ddf$ds$aux$ddfobj$type == "hn",
@@ -42,14 +39,13 @@ key <- ifelse(
 We select the model with `r key` key function and scale parameter formula `r f`.
 
 ```{r}
-tar_read_ds("aic_comparison", params$species, params$year,
-            store = targets_store) %>%
+tar_read_ds("aic_comparison", params$species, params$year) %>%
   select(-species, -year) %>%
   filter(`Delta AIC` <= 10) %>% # only show low AIC models
   kable()
 ```
 
-### Model fit
+#### Model fit
 
 We look at the fit of the selected model.
 
@@ -66,13 +62,12 @@ The detection curve(s) look like this:
 plot_detection_curve(final_model) # add design matrix, ask chat gpt
 ```
 
-### Results
+#### Results
 
 Detection probabilities.
 
 ```{r}
-tar_read_ds("detection_probabilities", params$species,
-            store = targets_store) %>%
+tar_read_ds("detection_probabilities", params$species) %>%
   filter(year == params$year) %>%
   select(-species, -year) %>%
   drop_na() %>%
@@ -80,13 +75,12 @@ tar_read_ds("detection_probabilities", params$species,
   kable()
 ```
 
-#### Stratum
+###### Stratum
 
 Abundances.
 
 ```{r}
-abundances_stratum <- tar_read_ds("abundances_stratum", params$species,
-                                  store = targets_store)
+abundances_stratum <- tar_read_ds("abundances_stratum", params$species)
 abundances_stratum %>%
   filter(
     if (params$year == 2023) {
@@ -103,8 +97,7 @@ abundances_stratum %>%
 Densities.
 
 ```{r}
-densities_stratum <- tar_read_ds("densities_stratum", params$species,
-                                 store = targets_store)
+densities_stratum <- tar_read_ds("densities_stratum", params$species)
 densities_stratum %>%
   filter(
     if (params$year == 2023) {
@@ -118,13 +111,12 @@ densities_stratum %>%
   kable()
 ```
 
-#### Region
+###### Region
 
 Abundances.
 
 ```{r}
-abundances_region <- tar_read_ds("abundances_region", params$species,
-                                 store = targets_store)
+abundances_region <- tar_read_ds("abundances_region", params$species)
 abundances_region %>%
   filter(
     if (params$year == 2023) {
@@ -141,8 +133,7 @@ abundances_region %>%
 Densities.
 
 ```{r}
-densities_region <- tar_read_ds("densities_region", params$species,
-                                store = targets_store)
+densities_region <- tar_read_ds("densities_region", params$species)
 densities_region %>%
   filter(
     if (params$year == 2023) {

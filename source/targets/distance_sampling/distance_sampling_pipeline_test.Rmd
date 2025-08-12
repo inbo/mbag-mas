@@ -8,8 +8,6 @@ output:
     toc: true
     toc_float: true
     toc_collapsed: true
-knit: (function(inputFile, encoding) {
-  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../../output/rapporten/markdown/algemeen") })
 editor_options: 
   chunk_output_type: console
 ---
@@ -40,7 +38,7 @@ conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::select)
 
 # Paths
-mbag_dir <- here::here()
+mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
 targets_store <- file.path(mbag_dir, "source", "targets", "distance_sampling",
                            "_targets")
 
@@ -61,8 +59,7 @@ source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
 ### Model selection
 
 ```{r}
-final_model <- tar_read_ds("model_selection", "Veldleeuwerik", 2024,
-                           store = targets_store)
+final_model <- tar_read_ds("model_selection", "Veldleeuwerik", 2024)
 f <- final_model$ddf$ds$aux$ddfobj$scale$formula
 key <- ifelse(
   final_model$ddf$ds$aux$ddfobj$type == "hn",
@@ -74,8 +71,7 @@ key <- ifelse(
 We select the model with `r key` key function and scale parameter formula `r f`.
 
 ```{r}
-tar_read_ds("aic_comparison", "Veldleeuwerik", 2024,
-            store = targets_store) %>%
+tar_read_ds("aic_comparison", "Veldleeuwerik", 2024) %>%
   select(-species, -year) %>%
   filter(`Delta AIC` <= 10) %>% # only show low AIC models
   kable()
@@ -107,8 +103,7 @@ plot_detection_curve(final_model) # add design matrix, ask chat gpt
 Detection probabilities.
 
 ```{r}
-tar_read_ds("detection_probabilities", "Veldleeuwerik",
-            store = targets_store) %>%
+tar_read_ds("detection_probabilities", "Veldleeuwerik") %>%
   filter(year == 2024) %>%
   select(-species, -year) %>%
   drop_na() %>%
@@ -122,8 +117,7 @@ Abundances.
 
 ```{r}
 y <- 2024
-tar_read_ds("abundances_stratum", "Veldleeuwerik",
-            store = targets_store) %>%
+tar_read_ds("abundances_stratum", "Veldleeuwerik") %>%
   filter(
     if (y == 2023) {
       year == y & grepl("^Zandleem|^Leem", Label)
@@ -139,8 +133,7 @@ tar_read_ds("abundances_stratum", "Veldleeuwerik",
 Densities.
 
 ```{r}
-tar_read_ds("densities_stratum", "Veldleeuwerik",
-            store = targets_store) %>%
+tar_read_ds("densities_stratum", "Veldleeuwerik") %>%
   filter(
     if (y == 2023) {
       year == y & grepl("^Zandleem|^Leem", Label)
@@ -158,8 +151,7 @@ tar_read_ds("densities_stratum", "Veldleeuwerik",
 Abundances.
 
 ```{r}
-tar_read_ds("abundances_region", "Veldleeuwerik",
-            store = targets_store) %>%
+tar_read_ds("abundances_region", "Veldleeuwerik") %>%
   filter(
     if (y == 2023) {
       year == y & grepl("^Zandleem|^Leem", Label)
@@ -175,8 +167,7 @@ tar_read_ds("abundances_region", "Veldleeuwerik",
 Densities.
 
 ```{r}
-tar_read_ds("densities_region", "Veldleeuwerik",
-            store = targets_store) %>%
+tar_read_ds("densities_region", "Veldleeuwerik") %>%
   filter(
     if (y == 2023) {
       year == y & grepl("^Zandleem|^Leem", Label)
