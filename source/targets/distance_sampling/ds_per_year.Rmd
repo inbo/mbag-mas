@@ -1,7 +1,7 @@
 ### `r params$year`
-#### Data exploration
+#### Data exploratie
 
-#### Model selection
+#### Model selectie
 
 ```{r}
 final_model <- tar_read_ds("model_selection", params$species, params$year)
@@ -52,7 +52,7 @@ plot_detection_curve(
   )
 ```
 
-#### Results
+#### Resultaten
 
 Detection probabilities.
 
@@ -65,7 +65,7 @@ tar_read_ds("detection_probabilities", params$species) %>%
   kable()
 ```
 
-###### Stratum
+**Stratum  niveau**
 
 Abundances.
 
@@ -118,7 +118,7 @@ densities_stratum %>%
   facet_wrap(~regio, ncol = 2, scales = "free")
 ```
 
-###### Region
+**Regio  niveau**
 
 Abundances.
 

@@ -37,7 +37,7 @@ for (y in params$years) {
 }
 ```
 
-### Densities over the years
+### Densiteiten over de jaren
 
 ```{r}
 densities_stratum_target <- tar_read_ds("densities_stratum", params$species)

@@ -48,15 +48,15 @@ source(file.path(mbag_dir, "source", "R", "plot_pdf_per_cat.R"))
 source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
 ```
 
-# Goal
+# Doel
 
-# Density estimation
-## Methods
+# Densiteitsschattingen
+## Methoden
 
 ## Veldleeuwerik
-### Data exploration
+### Data exploratie
 
-### Model selection
+### Model selectie
 
 ```{r}
 final_model <- tar_read_ds("model_selection", "Veldleeuwerik", 2024)
@@ -111,7 +111,7 @@ plot_detection_curve(
   )
 ```
 
-### Results
+### Resultaten
 
 ```{r}
 y <- 2024
@@ -204,7 +204,7 @@ densities_stratum_target %>%
   facet_wrap(~regio, ncol = 2, scales = "free")
 ```
 
-#### Region
+#### Regio
 
 Abundances.
 
@@ -272,18 +272,18 @@ densities_region_target %>%
   facet_wrap(~region, ncol = 2, scales = "free")
 ```
 
-# Spatial prediction
-## Methods
+# Spatiale predicties
+## Methoden
 
 ## Veldleeuwerik
-### Select response distribution
+### Selecteer responsdistributie
 
-### Select spatial spline
-#### Isotropy
+### Selecteer spatiale spline
+#### Isotropie
 
 
-#### Basis dimension
+#### Basisdimentie
 
 ### Model fit
 
-### Predictions
+### Predicties

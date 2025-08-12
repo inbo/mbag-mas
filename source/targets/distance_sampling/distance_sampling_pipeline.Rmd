@@ -71,5 +71,18 @@ for (sp in species_list) {
 }
 ```
 
-# Spatiale predictie
+# Spatiale predicties
 ## Methoden
+
+## Veldleeuwerik
+### Selecteer responsdistributie
+
+### Selecteer spatiale spline
+#### Isotropie
+
+
+#### Basisdimentie
+
+### Model fit
+
+### Predicties
