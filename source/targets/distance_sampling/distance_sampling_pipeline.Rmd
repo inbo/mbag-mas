@@ -32,19 +32,26 @@ library(targets)
 
 # Doel
 
+Bijlage V natuurherstelverordening Vlaanderen. Boerenzwaluw broed niet tijdens MAS tellingen. Grutto wilt niet fitten.
+
 ```{r}
 species_list <- sort(
   c(
-    "Veldleeuwerik",
-    "Gele Kwikstaart",
+    #"Boerenzwaluw",
     "Geelgors",
-    "Kievit",
+    "Gele Kwikstaart",
     "Grasmus",
-    "Witte Kwikstaart",
-    "Ringmus",
-    "Kwartel",
+    "Graspieper",
+    #"Grutto",
+    "Kievit",
     "Kneu",
-    "Torenvalk"
+    "Patrijs",
+    "Ringmus",
+    "Roodborsttapuit",
+    "Scholekster",
+    "Torenvalk",
+    "Veldleeuwerik",
+    "Wulp"
   )
 )
 

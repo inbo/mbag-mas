@@ -168,16 +168,25 @@ list(
     # Choose species of interest
     values = list(
       species = c(
-        "Veldleeuwerik",
-        "Gele Kwikstaart",
+        # Bijlage V natuurherstelverordening Vlaanderen
+        # "Boerenzwaluw",
         "Geelgors",
-        "Kievit",
+        "Gele Kwikstaart",
         "Grasmus",
-        "Witte Kwikstaart",
-        "Ringmus",
-        "Kwartel",
+        "Graspieper",
+        #"Grutto",
+        "Kievit",
         "Kneu",
-        "Torenvalk"
+        "Patrijs",
+        "Ringmus",
+        "Roodborsttapuit",
+        "Scholekster",
+        "Torenvalk",
+        "Veldleeuwerik",
+        "Wulp",
+        # MAS Vlaanderen
+        "Kwartel",
+        "Witte Kwikstaart"
       )
     ),
 
