@@ -186,8 +186,7 @@ Over the years:
 ```{r}
 densities_stratum_target %>%
   filter(
-    year == 2023 & grepl("^Zandleem|^Leem", Label) |
-    year != 2023
+    year == 2023 & grepl("^Zandleem|^Leem", Label) | year != 2023
   ) %>%
   rename("stratum" = "Label", "estimate" = "Estimate") %>%
   filter(stratum != "Total") %>%
@@ -257,8 +256,7 @@ Over the years:
 ```{r}
 densities_region_target %>%
   filter(
-    year == 2023 & grepl("^Zandleem|^Leem", Label) |
-    year != 2023
+    year == 2023 & grepl("^Zandleem|^Leem", Label) | year != 2023
   ) %>%
   rename("region" = "Label", "estimate" = "Estimate") %>%
   filter(region != "Total") %>%
