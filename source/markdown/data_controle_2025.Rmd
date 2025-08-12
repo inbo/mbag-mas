@@ -888,9 +888,6 @@ mas_data_full %>%
   kable()
 ```
 
-Het ziet er naar uit dat we 3 punten verloren zijn in de Oostelijke leemstreek.
-Deze zijn besproken in sectie \@ref(steekproef).
-
 # Controle finale dataset
 
 Nadat we de pipeline hebben doorlopen bekomen we de finale dataset.
