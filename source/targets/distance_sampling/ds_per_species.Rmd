@@ -36,3 +36,46 @@ for (y in params$years) {
   cat(child, sep = "\n")
 }
 ```
+
+### Densities over the years
+
+```{r}
+densities_stratum_target <- tar_read_ds("densities_stratum", params$species)
+densities_stratum_target %>%
+  filter(
+    year == 2023 & grepl("^Zandleem|^Leem", Label) |
+    year != 2023
+  ) %>%
+  rename("stratum" = "Label", "estimate" = "Estimate") %>%
+  filter(stratum != "Total") %>%
+  separate(stratum, into = c("regio", "openheid", "sbp"), sep = " - ") %>%
+  mutate(stratum = paste(openheid, sbp, sep = " - ")) %>%
+  ggplot(aes(x = year, y = estimate, colour = stratum)) +
+  geom_point(position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = lcl, ymax = ucl),
+    width = 0.2,
+    position = position_dodge(width = 0.5)
+  ) +
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(y = "breeding pairs / 100 ha", x = "") +
+  facet_wrap(~regio, ncol = 2, scales = "free")
+```
+
+```{r}
+densities_region_target <- tar_read_ds("densities_region", params$species)
+densities_region_target %>%
+  filter(
+    year == 2023 & grepl("^Zandleem|^Leem", Label) |
+    year != 2023
+  ) %>%
+  rename("region" = "Label", "estimate" = "Estimate") %>%
+  filter(region != "Total") %>%
+  ggplot(aes(x = year, y = estimate)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = lcl, ymax = ucl),
+    width = 0.2,
+  ) +
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(y = "breeding pairs / 100 ha", x = "") +
+  facet_wrap(~region, ncol = 2, scales = "free")
+```

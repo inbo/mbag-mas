@@ -30,7 +30,7 @@ opts_knit$set(root.dir = here::here())
 library(targets)
 ```
 
-# Goal
+# Doel
 
 ```{r}
 species_list <- sort(
@@ -52,8 +52,8 @@ mas_data_clean <- tar_read("mas_data_clean")
 year_list <- 2023:max(mas_data_clean$jaar)
 ```
 
-# Density estimation
-## Methods
+# Densiteitsschattingen
+## Methoden
 
 ```{r, results='asis'}
 for (sp in species_list) {
@@ -71,5 +71,5 @@ for (sp in species_list) {
 }
 ```
 
-# Spatial prediction
-## Methods
+# Spatiale predictie
+## Methoden

@@ -1,26 +1,3 @@
-
-```{r}
-# packages
-library(tidyverse)
-library(targets)
-library(Distance)
-
-library(INBOtheme)
-theme_set(theme_inbo(transparent = TRUE))
-
-# Conflicts
-conflicted::conflicts_prefer(dplyr::filter)
-conflicted::conflicts_prefer(dplyr::select)
-
-# Paths
-mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
-
-# Source functions
-source(file.path(mbag_dir, "source", "R", "tar_read_ds.R"))
-source(file.path(mbag_dir, "source", "R", "plot_pdf_per_cat.R"))
-source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
-```
-
 ### `r params$year`
 #### Data exploration
 
@@ -93,8 +70,8 @@ tar_read_ds("detection_probabilities", params$species) %>%
 Abundances.
 
 ```{r}
-abundances_stratum <- tar_read_ds("abundances_stratum", params$species)
-abundances_stratum %>%
+abundances_stratum_target <- tar_read_ds("abundances_stratum", params$species)
+abundances_stratum <- abundances_stratum_target %>%
   filter(
     if (params$year == 2023) {
       year == params$year & grepl("^Zandleem|^Leem", Label)
@@ -103,15 +80,16 @@ abundances_stratum %>%
     }
   ) %>%
   select(-species, -year) %>%
-  rename("stratum" = "Label", "estimate" = "Estimate") %>%
+  rename("stratum" = "Label", "estimate" = "Estimate")
+abundances_stratum %>%
   kable()
 ```
 
 Densities.
 
 ```{r}
-densities_stratum <- tar_read_ds("densities_stratum", params$species)
-densities_stratum %>%
+densities_stratum_target <- tar_read_ds("densities_stratum", params$species)
+densities_stratum <- densities_stratum_target %>%
   filter(
     if (params$year == 2023) {
       year == params$year & grepl("^Zandleem|^Leem", Label)
@@ -120,8 +98,24 @@ densities_stratum %>%
     }
   ) %>%
   select(-species, -year) %>%
-  rename("stratum" = "Label", "estimate" = "Estimate") %>%
+  rename("stratum" = "Label", "estimate" = "Estimate")
+densities_stratum %>%
   kable()
+```
+
+```{r}
+densities_stratum %>%
+  separate(stratum, into = c("regio", "openheid", "sbp"), sep = " - ") %>%
+  mutate(stratum = paste(openheid, sbp, sep = " - ")) %>%
+  ggplot(aes(x = openheid, y = estimate, colour = sbp)) +
+  geom_point(position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = lcl, ymax = ucl),
+    width = 0.2,
+    position = position_dodge(width = 0.5)
+  ) +
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(y = "breeding pairs / 100 ha", x = "") +
+  facet_wrap(~regio, ncol = 2, scales = "free")
 ```
 
 ###### Region
@@ -129,8 +123,8 @@ densities_stratum %>%
 Abundances.
 
 ```{r}
-abundances_region <- tar_read_ds("abundances_region", params$species)
-abundances_region %>%
+abundances_region_target <- tar_read_ds("abundances_region", params$species)
+abundances_region <- abundances_region_target %>%
   filter(
     if (params$year == 2023) {
       year == params$year & grepl("^Zandleem|^Leem", Label)
@@ -139,15 +133,16 @@ abundances_region %>%
     }
   ) %>%
   select(-species, -year) %>%
-  rename("region" = "Label", "estimate" = "Estimate") %>%
+  rename("region" = "Label", "estimate" = "Estimate")
+abundances_region %>%
   kable()
 ```
 
 Densities.
 
 ```{r}
-densities_region <- tar_read_ds("densities_region", params$species)
-densities_region %>%
+densities_region_target <- tar_read_ds("densities_region", params$species)
+densities_region <- densities_region_target %>%
   filter(
     if (params$year == 2023) {
       year == params$year & grepl("^Zandleem|^Leem", Label)
@@ -156,6 +151,17 @@ densities_region %>%
     }
   ) %>%
   select(-species, -year) %>%
-  rename("region" = "Label", "estimate" = "Estimate") %>%
+  rename("region" = "Label", "estimate" = "Estimate")
+densities_region %>%
   kable()
+```
+
+```{r}
+densities_region %>%
+  filter(region != "Total") %>%
+  ggplot(aes(x = region, y = estimate)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = lcl, ymax = ucl), width = 0.2, linewidth = 1) +
+  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 100, 2)) +
+  labs(y = "breeding pairs / 100 ha", x = "")
 ```

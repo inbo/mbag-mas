@@ -113,11 +113,15 @@ plot_detection_curve(
 
 ### Results
 
+```{r}
+y <- 2024
+```
+
 Detection probabilities.
 
 ```{r}
 tar_read_ds("detection_probabilities", "Veldleeuwerik") %>%
-  filter(year == 2024) %>%
+  filter(year == y) %>%
   select(-species, -year) %>%
   drop_na() %>%
   relocate("estimate_p", "se_p", "ll_beta", "ul_beta", .after = last_col()) %>%
@@ -129,8 +133,8 @@ tar_read_ds("detection_probabilities", "Veldleeuwerik") %>%
 Abundances.
 
 ```{r}
-y <- 2024
-tar_read_ds("abundances_stratum", "Veldleeuwerik") %>%
+abundances_stratum_target <- tar_read_ds("abundances_stratum", "Veldleeuwerik")
+abundances_stratum <- abundances_stratum_target %>%
   filter(
     if (y == 2023) {
       year == y & grepl("^Zandleem|^Leem", Label)
@@ -139,14 +143,16 @@ tar_read_ds("abundances_stratum", "Veldleeuwerik") %>%
     }
   ) %>%
   select(-species, -year) %>%
-  rename("stratum" = "Label", "estimate" = "Estimate") %>%
+  rename("stratum" = "Label", "estimate" = "Estimate")
+abundances_stratum %>%
   kable()
 ```
 
 Densities.
 
 ```{r}
-tar_read_ds("densities_stratum", "Veldleeuwerik") %>%
+densities_stratum_target <- tar_read_ds("densities_stratum", "Veldleeuwerik")
+densities_stratum <- densities_stratum_target %>%
   filter(
     if (y == 2023) {
       year == y & grepl("^Zandleem|^Leem", Label)
@@ -155,8 +161,47 @@ tar_read_ds("densities_stratum", "Veldleeuwerik") %>%
     }
   ) %>%
   select(-species, -year) %>%
-  rename("stratum" = "Label", "estimate" = "Estimate") %>%
+  rename("stratum" = "Label", "estimate" = "Estimate")
+densities_stratum %>%
   kable()
+```
+
+```{r}
+densities_stratum %>%
+  separate(stratum, into = c("regio", "openheid", "sbp"), sep = " - ") %>%
+  mutate(stratum = paste(openheid, sbp, sep = " - ")) %>%
+  ggplot(aes(x = openheid, y = estimate, colour = sbp)) +
+  geom_point(position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = lcl, ymax = ucl),
+    width = 0.2,
+    position = position_dodge(width = 0.5)
+  ) +
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(y = "breeding pairs / 100 ha", x = "") +
+  facet_wrap(~regio, ncol = 2, scales = "free")
+```
+
+Over the years:
+
+```{r}
+densities_stratum_target %>%
+  filter(
+    year == 2023 & grepl("^Zandleem|^Leem", Label) |
+    year != 2023
+  ) %>%
+  rename("stratum" = "Label", "estimate" = "Estimate") %>%
+  filter(stratum != "Total") %>%
+  separate(stratum, into = c("regio", "openheid", "sbp"), sep = " - ") %>%
+  mutate(stratum = paste(openheid, sbp, sep = " - ")) %>%
+  ggplot(aes(x = year, y = estimate, colour = stratum)) +
+  geom_point(position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = lcl, ymax = ucl),
+    width = 0.2,
+    position = position_dodge(width = 0.5)
+  ) +
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(y = "breeding pairs / 100 ha", x = "") +
+  facet_wrap(~regio, ncol = 2, scales = "free")
 ```
 
 #### Region
@@ -164,7 +209,8 @@ tar_read_ds("densities_stratum", "Veldleeuwerik") %>%
 Abundances.
 
 ```{r}
-tar_read_ds("abundances_region", "Veldleeuwerik") %>%
+abundances_region_target <- tar_read_ds("abundances_region", "Veldleeuwerik")
+abundances_region <- abundances_region_target %>%
   filter(
     if (y == 2023) {
       year == y & grepl("^Zandleem|^Leem", Label)
@@ -173,14 +219,16 @@ tar_read_ds("abundances_region", "Veldleeuwerik") %>%
     }
   ) %>%
   select(-species, -year) %>%
-  rename("region" = "Label", "estimate" = "Estimate") %>%
+  rename("region" = "Label", "estimate" = "Estimate")
+abundances_region %>%
   kable()
 ```
 
 Densities.
 
 ```{r}
-tar_read_ds("densities_region", "Veldleeuwerik") %>%
+densities_region_target <- tar_read_ds("densities_region", "Veldleeuwerik")
+densities_region <- densities_region_target %>%
   filter(
     if (y == 2023) {
       year == y & grepl("^Zandleem|^Leem", Label)
@@ -189,8 +237,39 @@ tar_read_ds("densities_region", "Veldleeuwerik") %>%
     }
   ) %>%
   select(-species, -year) %>%
-  rename("region" = "Label", "estimate" = "Estimate") %>%
+  rename("region" = "Label", "estimate" = "Estimate")
+densities_region %>%
   kable()
+```
+
+```{r}
+densities_region %>%
+  filter(region != "Total") %>%
+  ggplot(aes(x = region, y = estimate)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = lcl, ymax = ucl), width = 0.2, linewidth = 1) +
+  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 100, 2)) +
+  labs(y = "breeding pairs / 100 ha", x = "")
+```
+
+Over the years:
+
+```{r}
+densities_region_target %>%
+  filter(
+    year == 2023 & grepl("^Zandleem|^Leem", Label) |
+    year != 2023
+  ) %>%
+  rename("region" = "Label", "estimate" = "Estimate") %>%
+  filter(region != "Total") %>%
+  ggplot(aes(x = year, y = estimate)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = lcl, ymax = ucl),
+    width = 0.2,
+  ) +
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(y = "breeding pairs / 100 ha", x = "") +
+  facet_wrap(~region, ncol = 2, scales = "free")
 ```
 
 # Spatial prediction
