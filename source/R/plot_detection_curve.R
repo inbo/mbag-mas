@@ -8,11 +8,11 @@
 #' the log link using the parameters and the covariate design matrix.
 #' From mrds:::scalevalue
 #'
-#' \code{keyfct.hz} calculates the detection probability according to a
+#' \code{keyfct_hz} calculates the detection probability according to a
 #' hazard rate model.
 #' From mrds:::keyfct.hz
 #'
-#' \code{keyfct.hn} calculates the detection probability according to a
+#' \code{keyfct_hn} calculates the detection probability according to a
 #' half normal model.
 #' From mrds:::keyfct.hn
 #'
@@ -21,19 +21,19 @@
 #' dsmodel. In a multicovariate model, a design matrix and labels can be passed
 #' to create detection functions for each category
 #'
-#' scalevalue(key.scale, z)
+#' scalevalue(key_scale, z)
 #'
-#' keyfct.hn(distance, key.scale)
+#' keyfct_hn(distance, key_scale)
 #'
-#' keyfct.hz(distance, key.scale, key.shape)
+#' keyfct_hz(distance, key_scale, key_shape)
 #'
 #' plot_detection_curve(dist_model, design_mat = NULL, labels = NULL,
 #'                      n_breaks, plot_average_fit = TRUE)
 #'
 #' @param distance  vector of distances
 #' @param z design matrix for scale function
-#' @param key.scale vector of scale values
-#' @param key.shape vector of shape values
+#' @param key_scale vector of scale values
+#' @param key_shape vector of shape values
 #' @param dist_model dsmodel
 #' @param design_mat design matrix for plot function
 #' @param labels vector of strings used for labeling the plotting categories
@@ -45,7 +45,7 @@
 #'
 #' @return
 #' For \code{scalevalue}, vector of the scale parameters
-#' For \code{keyfct.*}, vector of key function evaluations
+#' For \code{keyfct_*}, vector of key function evaluations
 #' For \code{plot_detection_curve}, ggplot object
 #'
 #' @examples
@@ -58,26 +58,32 @@
 #'                      plot_average_fit = FALSE)
 
 
-scalevalue <- function(key.scale, z) {
-  return(exp(as.matrix(z) %*% key.scale))
+scalevalue <- function(key_scale, z) {
+  return(exp(as.matrix(z) %*% key_scale))
 }
 
 
-keyfct.hz <- function(distance, key.scale, key_shape) {
-  return(1 - exp(-(distance/key.scale)^(-key_shape)))
+keyfct_hz <- function(distance, key_scale, key_shape) {
+  return(1 - exp(-(distance / key_scale)^(-key_shape)))
 }
 
 
-keyfct.hn <- function(distance, key.scale) {
-  return(exp( -(( distance / (sqrt(2) * key.scale) )^2) ))
+keyfct_hn <- function(distance, key_scale) {
+  return(exp(-((distance / (sqrt(2) * key_scale))^2)))
 }
 
-
-plot_detection_curve <- function(dist_model, design_mat = NULL, labels = NULL,
-                                 n_breaks = NULL, plot_average_fit = TRUE,
-                                 show_data = TRUE) {
-  require(mrds)
-  require(tidyverse)
+plot_detection_curve <- function(# nolint: cyclocomp_linter.
+  dist_model,
+  design_mat = NULL,
+  labels = NULL,
+  n_breaks = NULL,
+  plot_average_fit = TRUE,
+  show_data = TRUE
+) {
+  require("mrds")
+  require("dplyr")
+  require("tidyr")
+  require("ggplot2")
 
   if (!dist_model$ddf$meta.data$point) {
     stop(paste0("Function only works for point transects!"), call. = FALSE)
@@ -92,7 +98,7 @@ plot_detection_curve <- function(dist_model, design_mat = NULL, labels = NULL,
   # Calculate detection curves for different covariate combinations
   #####
 
-  if (!dist_model$ddf$ds$aux$ddfobj$intercept.only & !is.null(design_mat)) {
+  if (!dist_model$ddf$ds$aux$ddfobj$intercept.only && !is.null(design_mat)) {
 
     # Make sure the design matrix is a dataframe
     design_mat <- design_mat %>%
@@ -120,13 +126,13 @@ plot_detection_curve <- function(dist_model, design_mat = NULL, labels = NULL,
                                   design_mat) %>%
         as.data.frame() %>%
         mutate(cat = labels) %>%
-        slice(rep(1:n(), each = 100)) %>%
+        slice(rep(seq_len(n()), each = 100)) %>%
         group_by(cat) %>%
         group_split()
 
       # Calculate detection probability values
       y_vals <- lapply(scaled_values, function(x) {
-        keyfct.hz(distances, x[, 1], key_shape_hr)
+        keyfct_hz(distances, x[, 1], key_shape_hr)
       })
 
       # Combine in dataframe
@@ -135,7 +141,7 @@ plot_detection_curve <- function(dist_model, design_mat = NULL, labels = NULL,
         `colnames<-`(sort(labels)) %>%
         pivot_longer(col = everything(), names_to = "Legende",
                      values_to = "y_val") %>%
-        arrange(Legende, desc(y_val)) %>%
+        arrange(.data$Legende, desc(.data$y_val)) %>%
         mutate(dist = rep(distances, length(labels)))
 
     } else if (key == "hn") {
@@ -144,13 +150,13 @@ plot_detection_curve <- function(dist_model, design_mat = NULL, labels = NULL,
                                   design_mat) %>%
         as.data.frame() %>%
         mutate(cat = labels) %>%
-        slice(rep(1:n(), each = 100)) %>%
+        slice(rep(seq_len(n()), each = 100)) %>%
         group_by(cat) %>%
         group_split()
 
       # Calculate detection probability values
       y_vals <- lapply(scaled_values, function(x) {
-        keyfct.hn(distances, x[, 1])
+        keyfct_hn(distances, x[, 1])
       })
 
       # Combine in dataframe
@@ -159,7 +165,7 @@ plot_detection_curve <- function(dist_model, design_mat = NULL, labels = NULL,
         `colnames<-`(sort(labels)) %>%
         pivot_longer(col = everything(), names_to = "Legende",
                      values_to = "y_val") %>%
-        arrange(Legende, desc(y_val)) %>%
+        arrange(.data$Legende, desc(.data$y_val)) %>%
         mutate(dist = rep(distances, length(labels)))
 
     } else {
@@ -172,13 +178,13 @@ plot_detection_curve <- function(dist_model, design_mat = NULL, labels = NULL,
   # Re-create the histogram
   #####
 
-  # Detection probability for each fitted value & Nhat estimate
+  # Detection probability for each fitted value & nhat estimate
   selected <- rep(TRUE, nrow(dist_model$ddf$ds$aux$ddfobj$xmat))
   if (length(dist_model$ddf$fitted) == 1) {
     pdot <- rep(dist_model$ddf$fitted, sum(as.numeric(selected)))
   } else {
     pdot <- dist_model$ddf$fitted[selected]
-    Nhat <- sum(1 / pdot)
+    nhat <- sum(1 / pdot)
   }
 
   # Create a dummy histogram
@@ -197,16 +203,18 @@ plot_detection_curve <- function(dist_model, design_mat = NULL, labels = NULL,
   }
 
   breaks <- seq(0, trunc, trunc / n_breaks)
-  dummy_hist <- hist(dist_data[dist_data$distance <= trunc,]$distance,
+  dummy_hist <- hist(dist_data[dist_data$distance <= trunc, ]$distance,
                      breaks = breaks, plot = FALSE)
 
   # Calculate expected counts for each distance (point transect only)
   nc <- length(breaks) - 1
-  expected.counts <- -apply(matrix(c(breaks[2:(nc + 1)]^2, breaks[1:nc]^2),
-    ncol = 2, nrow = nc), 1, diff) * (Nhat / breaks[nc + 1]^2)
+  expected_counts <- -apply(
+    matrix(c(breaks[2:(nc + 1)]^2, breaks[1:nc]^2), ncol = 2, nrow = nc),
+    1, diff
+  ) * (nhat / breaks[nc + 1]^2)
 
   # Re-scale the counts
-  dummy_hist$counts <- dummy_hist$counts / expected.counts
+  dummy_hist$counts <- dummy_hist$counts / expected_counts
 
   #####
   # Calculate the fitted average detection probability
@@ -222,9 +230,9 @@ plot_detection_curve <- function(dist_model, design_mat = NULL, labels = NULL,
     xgrid <- c(xgrid, x)
     newdat$distance <- rep(x, nrow(newdat))
 
-    detfct.values <- detfct(newdat$distance, ddfobj, select = selected,
+    detfct_values <- detfct(newdat$distance, ddfobj, select = selected,
                             width = trunc)
-    linevalues <- c(linevalues, sum(detfct.values/pdot)/sum(1/pdot))
+    linevalues <- c(linevalues, sum(detfct_values / pdot) / sum(1 / pdot))
   }
 
   df_gemiddelde <- data.frame(dist = distances, lineval = linevalues)
@@ -238,16 +246,17 @@ plot_detection_curve <- function(dist_model, design_mat = NULL, labels = NULL,
   hist_df <- data.frame(mids = dummy_hist$mids, counts = dummy_hist$counts)
 
   # Plot with covariates and design matrix
-  if (!dist_model$ddf$ds$aux$ddfobj$intercept.only & !is.null(design_mat)) {
-  # Plot with average fitting line
+  if (!dist_model$ddf$ds$aux$ddfobj$intercept.only && !is.null(design_mat)) {
+    # Plot with average fitting line
     if (plot_average_fit) {
       out <- ggplot(hist_df) +
-        geom_bar(aes(x = mids, y = counts), stat = "identity",
+        geom_bar(aes(x = .data$mids, y = .data$counts), stat = "identity",
                  width = trunc / n_breaks, fill = "white", color = "black") +
-        geom_line(data = df_y_val, aes(x = dist, y = y_val, colour = Legende),
+        geom_line(data = df_y_val,
+                  aes(x = .data$dist, y = .data$y_val, colour = .data$Legende),
                   linewidth = 1) +
-        geom_line(data = df_gemiddelde, aes(x = dist, y = lineval), linewidth = 1,
-                  linetype = "dashed") +
+        geom_line(data = df_gemiddelde, aes(x = .data$dist, y = .data$lineval),
+                  linewidth = 1, linetype = "dashed") +
         scale_y_continuous(limits = c(0, NA),
                            breaks = seq(0, 100, by = 0.25)) +
         labs(x = "Afstand (m)", y = "Detectiekans") +
@@ -256,12 +265,13 @@ plot_detection_curve <- function(dist_model, design_mat = NULL, labels = NULL,
               legend.background = element_rect(fill = "white",
                                                color = "darkgrey"),
               legend.margin = margin(6, 6, 6, 6))
-    # Plot without average fitting line
+      # Plot without average fitting line
     } else {
       out <- ggplot(hist_df) +
-        geom_bar(aes(x = mids, y = counts), stat = "identity",
+        geom_bar(aes(x = .data$mids, y = .data$counts), stat = "identity",
                  width = trunc / n_breaks, fill = "white", color = "black") +
-        geom_line(data = df_y_val, aes(x = dist, y = y_val, colour = Legende),
+        geom_line(data = df_y_val,
+                  aes(x = .data$dist, y = .data$y_val, colour = .data$Legende),
                   linewidth = 1) +
         scale_y_continuous(limits = c(0, NA),
                            breaks = seq(0, 100, by = 0.25)) +
@@ -273,26 +283,27 @@ plot_detection_curve <- function(dist_model, design_mat = NULL, labels = NULL,
               legend.margin = margin(6, 6, 6, 6))
     }
 
-  # Plot without covariates/design matrix
+    # Plot without covariates/design matrix
   } else {
-  # Plot average fit
+    # Plot average fit
     if (plot_average_fit) {
       out <- ggplot(hist_df) +
-        geom_bar(aes(x = mids, y = counts), stat = "identity",
+        geom_bar(aes(x = .data$mids, y = .data$counts), stat = "identity",
                  width = trunc / n_breaks, fill = "white", color = "black") +
-        geom_line(data = df_gemiddelde, aes(x = dist, y = lineval), linewidth = 1,
-                  linetype = "dashed") +
+        geom_line(data = df_gemiddelde, aes(x = .data$dist, y = .data$lineval),
+                  linewidth = 1, linetype = "dashed") +
         scale_y_continuous(limits = c(0, NA),
                            breaks = seq(0, 100, by = 0.25)) +
         labs(x = "Afstand (m)", y = "Detectiekans") +
         theme(legend.position = c(1, 1),
               legend.justification = c(1, 1),
-              legend.background = element_rect(fill = "white", color = "darkgrey"),
+              legend.background = element_rect(fill = "white",
+                                               color = "darkgrey"),
               legend.margin = margin(6, 6, 6, 6))
-    # Plot bar graph
+      # Plot bar graph
     } else {
       out <- ggplot(hist_df) +
-        geom_bar(aes(x = mids, y = counts), stat = "identity",
+        geom_bar(aes(x = .data$mids, y = .data$counts), stat = "identity",
                  width = trunc / n_breaks, fill = "white", color = "black") +
         scale_y_continuous(limits = c(0, NA),
                            breaks = seq(0, 100, by = 0.25)) +
@@ -306,7 +317,9 @@ plot_detection_curve <- function(dist_model, design_mat = NULL, labels = NULL,
   }
 
   if (show_data) {
-    distance_data <- data.frame(dist = sort(unique(dist_model$ddf$data$distance)))
+    distance_data <- data.frame(
+      dist = sort(unique(dist_model$ddf$data$distance))
+    )
     out <- out +
       geom_point(data = distance_data, aes(x = dist,
                                            y = rep(0, nrow(distance_data))),

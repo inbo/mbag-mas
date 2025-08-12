@@ -142,7 +142,7 @@ Densities.
 
 ```{r}
 densities_region <- tar_read_ds("densities_region", params$species,
-            store = targets_store)
+                                store = targets_store)
 densities_region %>%
   filter(
     if (params$year == 2023) {

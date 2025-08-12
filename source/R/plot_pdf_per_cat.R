@@ -1,5 +1,7 @@
-plot_pdf_per_cat <- function(ds_model) {
-  require("Distance")
+# nolint start
+plot_pdf_per_cat <- function(ds_model) {# nolint: cyclocomp_linter.
+  require("mrds")
+
   # Get formula
   f <- ds_model$ddf$ds$aux$ddfobj$scale$formula
 
@@ -8,15 +10,17 @@ plot_pdf_per_cat <- function(ds_model) {
 
     plot(ds_model, pdf = TRUE, showpoints = FALSE,
          subset = regio == "De Moeren",
-         main = "De Moeren", pl.col = alpha("blue", 0.5))
+         main = "De Moeren", pl.col = scales::alpha("blue", 0.5))
     add.df.covar.line(ds_model, lwd = 3, lty = 1, col = "blue",
                       data = data.frame(regio = "De Moeren"), pdf = TRUE)
 
     plot(ds_model, pdf = TRUE, showpoints = FALSE,
          subset = regio == "Oostelijke leemstreek",
-         main = "Oostelijke leemstreek", pl.col = alpha("darkgreen", 0.5))
+         main = "Oostelijke leemstreek",
+         pl.col = scales::alpha("darkgreen", 0.5))
     add.df.covar.line(ds_model, lwd = 3, lty = 1, col = "darkgreen",
-                      data = data.frame(regio = "Oostelijke leemstreek"), pdf = TRUE)
+                      data = data.frame(regio = "Oostelijke leemstreek"),
+                      pdf = TRUE)
 
     par(mfrow = c(1, 1))
   }
@@ -25,13 +29,13 @@ plot_pdf_per_cat <- function(ds_model) {
 
     plot(ds_model, pdf = TRUE, showpoints = FALSE,
          subset = sbp == "binnen",
-         main = "binnen", pl.col = alpha("blue", 0.5))
+         main = "binnen", pl.col = scales::alpha("blue", 0.5))
     add.df.covar.line(ds_model, lwd = 3, lty = 1, col = "blue",
                       data = data.frame(sbp = "binnen"), pdf = TRUE)
 
     plot(ds_model, pdf = TRUE, showpoints = FALSE,
          subset = sbp == "buiten",
-         main = "buiten", pl.col = alpha("darkgreen", 0.5))
+         main = "buiten", pl.col = scales::alpha("darkgreen", 0.5))
     add.df.covar.line(ds_model, lwd = 3, lty = 1, col = "darkgreen",
                       data = data.frame(sbp = "buiten"), pdf = TRUE)
 
@@ -42,13 +46,13 @@ plot_pdf_per_cat <- function(ds_model) {
 
     plot(ds_model, pdf = TRUE, showpoints = FALSE,
          subset = openheid == "OL",
-         main = "OL", pl.col = alpha("blue", 0.5))
+         main = "OL", pl.col = scales::alpha("blue", 0.5))
     add.df.covar.line(ds_model, lwd = 3, lty = 1, col = "blue",
                       data = data.frame(openheid = "OL"), pdf = TRUE)
 
     plot(ds_model, pdf = TRUE, showpoints = FALSE,
          subset = openheid == "HOL",
-         main = "HOL", pl.col = alpha("darkgreen", 0.5))
+         main = "HOL", pl.col = scales::alpha("darkgreen", 0.5))
     add.df.covar.line(ds_model, lwd = 3, lty = 1, col = "darkgreen",
                       data = data.frame(openheid = "HOL"), pdf = TRUE)
 
@@ -68,9 +72,11 @@ plot_pdf_per_cat <- function(ds_model) {
 
         plot(ds_model, pdf = TRUE, showpoints = FALSE,
              subset = regio == reg & sbp == j,
-             main = paste(reg, j, sep = "- "), pl.col = alpha(cols[i], 0.5))
+             main = paste(reg, j, sep = "- "),
+             pl.col = scales::alpha(cols[i], 0.5))
         add.df.covar.line(ds_model, lwd = 3, lty = 1, col = cols[i],
-                          data = data.frame(regio = reg, sbp = j), pdf = TRUE)
+                          data = data.frame(regio = reg, sbp = j),
+                          pdf = TRUE)
       }
     }
 
@@ -90,10 +96,12 @@ plot_pdf_per_cat <- function(ds_model) {
 
         plot(ds_model, pdf = TRUE, showpoints = FALSE,
              subset = regio == reg & openheid == j,
-             main = paste(reg, j, sep = "- "), pl.col = alpha(cols[i], 0.5))
+             main = paste(reg, j, sep = "- "),
+             pl.col = scales::alpha(cols[i], 0.5))
         add.df.covar.line(ds_model, lwd = 3, lty = 1, col = cols[i],
-                          data = data.frame(regio = reg, openheid = j), pdf = TRUE)
-        }
+                          data = data.frame(regio = reg, openheid = j),
+                          pdf = TRUE)
+      }
     }
 
     par(mfrow = c(1, 1))
@@ -112,9 +120,11 @@ plot_pdf_per_cat <- function(ds_model) {
 
         plot(ds_model, pdf = TRUE, showpoints = FALSE,
              subset = sbp == reg & openheid == j,
-             main = paste(reg, j, sep = "- "), pl.col = alpha(cols[i], 0.5))
+             main = paste(reg, j, sep = "- "),
+             pl.col = scales::alpha(cols[i], 0.5))
         add.df.covar.line(ds_model, lwd = 3, lty = 1, col = cols[i],
-                          data = data.frame(sbp = reg, openheid = j), pdf = TRUE)
+                          data = data.frame(sbp = reg, openheid = j),
+                          pdf = TRUE)
       }
     }
 
@@ -137,12 +147,12 @@ plot_pdf_per_cat <- function(ds_model) {
           plot(ds_model, pdf = TRUE, showpoints = FALSE,
                subset = regio == reg & sbp == j & openheid == o,
                main = paste(reg, j, o, sep = "- "),
-               pl.col = alpha(cols[h], 0.5))
+               pl.col = scales::alpha(cols[h], 0.5))
           add.df.covar.line(ds_model, lwd = 3, lty = 1, col = cols[h],
                             data = data.frame(regio = reg, sbp = j,
                                               openheid = o),
                             pdf = TRUE)
-          }
+        }
       }
     }
     par(mfrow = c(1, 1))
@@ -156,7 +166,7 @@ plot_pdf_per_cat <- function(ds_model) {
 
       plot(ds_model, pdf = TRUE, showpoints = FALSE,
            subset = stratum == strat,
-           main = strat, pl.col = alpha(cols[s %% 2 + 1], 0.5))
+           main = strat, pl.col = scales::alpha(cols[s %% 2 + 1], 0.5))
       add.df.covar.line(ds_model, lwd = 3, lty = 1, col = cols[s %% 2 + 1],
                         data = data.frame(stratum = strat), pdf = TRUE)
     }
@@ -164,3 +174,4 @@ plot_pdf_per_cat <- function(ds_model) {
     par(mfrow = c(1, 1))
   }
 }
+# nolint end
