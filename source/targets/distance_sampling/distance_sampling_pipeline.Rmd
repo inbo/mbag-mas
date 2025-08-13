@@ -158,7 +158,7 @@ tar_read("breeding_dates") %>%
 **4.** Gebruik van aantallen
 
 Voor het fitten van de detectiecurve en dus de berekening van de detectiekans gebruiken we alle observaties.
-Voor het berekenen van de abundanties (en dus ook de densteiten) gebruiken we enkel de maxima per telpunt over de overgebleven telperiodes heen.
+Voor het berekenen van de abundanties (en dus ook de densiteiten) gebruiken we enkel de maxima per telpunt over de overgebleven telperiodes heen.
 
 ### Model specificatie
 
@@ -303,7 +303,7 @@ Om onzekerheid mee te nemen, gebruiken we **posterior simulatie**:
 2. Simuleer modelparameters uit een multivariate normale verdeling (`MASS::mvrnorm()`), of gebruik `gratia::posterior_samples()` voor gemak.
 3. Voorspel voor alle gridpunten en alle perioden met elke gesimuleerde parameterreeks.
 4. Neem **per simulatie** het maximum over perioden → zo krijg je een posteriorverdeling van de maxima.
-5. Samenvatten: gemiddelde, mediaan, credible intervals.
+5. Samenvatten: gemiddelde, mediaan, betrouwbaarheidsintervallen.
 
 **Detectiecorrectie:**
 We simuleren de detectiekansen uit 'distance sampling' als bètaverdelingen en delen per simulatie de voorspelde maxima door de gesimuleerde detectiekansen.
