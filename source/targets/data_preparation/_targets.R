@@ -180,6 +180,21 @@ list(
       mutate(aantal = ifelse(wrntype != "0", 1, aantal))
   ),
 
+  # Write out distance sampling dataset
+  tar_target(
+    name = distance_data_vlaanderen,
+    command = mas_data_clean %>%
+      st_drop_geometry() %>%
+      select("oid", "plotnaam", "x_plot" = "x_coord", "y_plot" = "y_coord",
+             "x_occ" = "x_lambert", "y_occ" = "y_lambert", "crs",
+             "naam", "aantal", "wrntype", "jaar", "periode_in_jaar",
+             "regio", "openheid_klasse", "sbp", "distance2plot") %>%
+      create_output_csv(
+        file = "distance_data_vlaanderen",
+        path = file.path(mbag_dir, "output", "datasets")
+      )
+  ),
+
   # 4. Prepare data for publication on GBIF
 
   # Stop branching over years, bind all data together
