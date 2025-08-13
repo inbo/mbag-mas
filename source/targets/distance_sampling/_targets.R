@@ -141,13 +141,14 @@ list(
   ),
 
   # Load occurrence data
+  tar_file(
+    name = distance_data_file,
+    command = file.path(mbag_dir, "output", "datasets",
+                        "distance_data_vlaanderen.csv")
+  ),
   tar_target(
-    name = mas_data_clean,
-    command = tar_read(
-      "mas_data_clean",
-      store = file.path(mbag_dir, "source", "targets", "data_preparation",
-                        "_targets")
-    )
+    name = distance_data,
+    command = read_csv(distance_data_file, show_col_types = FALSE)
   ),
 
   ## Static branching over species
@@ -180,9 +181,8 @@ list(
     ## Prepare species occurrence data
     # Select species and group occurrence data by year
     tar_group_by(
-      name = mas_data_grouped,
-      command = mas_data_clean %>%
-        sf::st_drop_geometry() %>%
+      name = distance_data_grouped,
+      command = distance_data %>%
         filter(
           naam %in% species,
           jaar >= 2023,
@@ -202,12 +202,12 @@ list(
     # all for predators and mammals
     tar_target(
       name = filtered_breeding_code,
-      command = mas_data_grouped %>%
+      command = distance_data_grouped %>%
         filter(
           (wrntype > 0 & !(naam %in% c("Haas", roofvogels_f()))) |
             naam %in% c("Haas", roofvogels_f())
         ),
-      pattern = map(mas_data_grouped)
+      pattern = map(distance_data_grouped)
     ),
     # Filter within breeding dates
     tar_target(
