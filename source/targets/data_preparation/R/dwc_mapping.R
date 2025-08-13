@@ -41,7 +41,7 @@ static_mapping <- function(data_df) {
   out_df <- data_df %>%
     mutate(
       dwc_type                 = "Event",
-      dwc_datasetID            = NA,
+      # dwc_datasetID            = NA, # doi after first publication
       dwc_language             = "en",
       dwc_license              = paste0("http://creativecommons.org/",
                                         "publicdomain/zero/1.0/"),
@@ -51,12 +51,11 @@ static_mapping <- function(data_df) {
                                         "Forest (INBO)"),
       dwc_accessRights         = "http://www.inbo.be/en/norms-for-data-use",
       dwc_institutionCode      = "INBO",
-      dwc_datasetName          = NA,
       dwc_collectionCode       = "MAS",
       dwc_kingdom              = "Animalia",
       dwc_nomenclaturalCode    = "ICZN",
       dwc_eventType            = "Survey",
-      dwc_samplingProtocol     = "Point count",
+      dwc_samplingProtocol     = "Point count in 300 m radius",
       dwc_samplingEffort       = "10 minutes",
       dwc_continent            = "Europe",
       dwc_country              = "Belgium",
@@ -201,7 +200,8 @@ map_taxa_manual <- function(
       select(all_of(cols_to_get))
   })
   mapped_taxa_df <- do.call(bind_rows, mapped_taxa_list) %>%
-    mutate(!!vernacular_name_col := names(manual_taxon_list))
+    mutate(!!vernacular_name_col := names(manual_taxon_list),
+           across(everything(), trimws))
 
 
   # Add taxon info difficult names
@@ -214,13 +214,43 @@ map_taxa_manual <- function(
     mutate(
       across(
         all_of(setdiff(colnames(mapped_taxa_df), vernacular_name_col)),
-        ~ coalesce(.x, get(paste0(cur_column(), ".df2"))),
+        ~ ifelse(!is.na(get(paste0(cur_column(), ".df2"))),
+                 get(paste0(cur_column(), ".df2")),
+                 .x),
         .names = "{.col}"
       )
     ) %>%
     select(-ends_with(".df2"))
 
   return(out_df)
+}
+
+add_species_aggregates <- function(
+    taxonomy_df,
+    manual_taxon_list,
+    vernacular_name_col = "dwc_vernacularName") {
+  require("dplyr")
+  require("rlang")
+
+  # Get taxa of interest
+  aggregate_taxa_df <- taxonomy_df %>%
+    filter(.data[[vernacular_name_col]] %in% names(manual_taxon_list)) %>%
+    mutate(
+      scientificName = recode(.data[[vernacular_name_col]],
+                              !!!manual_taxon_list)
+    ) %>%
+    mutate(
+      authorship = NA,
+      key = NA,
+      rank = "species aggregate"
+    )
+
+  # Get other taxa
+  other_taxa_df <- taxonomy_df %>%
+    filter(!.data[[vernacular_name_col]] %in% names(manual_taxon_list))
+
+  # Join datasets
+  return(bind_rows(other_taxa_df, aggregate_taxa_df))
 }
 
 # Finalise DwC data
@@ -251,7 +281,8 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
   # Select and sort columns
   col_order <- c(
     "type", "language", "license", "publisher", "rightsHolder", "accessRights",
-    "datasetID", "collectionCode", "institutionCode", "datasetName",
+    # "datasetID",
+    "collectionCode", "institutionCode",
     "basisOfRecord", "eventType", "eventID", "is_mas_sample",
     "occurrenceID", "recordedBy", "organismQuantity",
     "organismQuantityType", "occurrenceStatus", "behavior", "varbatimBehavior",

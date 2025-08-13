@@ -152,7 +152,8 @@ adjust_subspecies_names_nl <- function(counts_df) {
     mutate(
       naam = case_when(
         tolower(naam) %in% tolower(c("gele kwikstaart (spec)",
-                                     "engelse kwikstaart"))
+                                     "engelse kwikstaart",
+                                     "Noordse Kwikstaart"))
         ~ "Gele Kwikstaart",
         tolower(naam) %in% tolower(c("witte kwikstaart (spec)",
                                      "Rouwkwikstaart"))
@@ -225,6 +226,9 @@ rbind_all_mas_data <- function(sample_data, extra_data) {
 
     # Only keep data not already in MAS sample
     dplyr::filter(!.data$oid %in% sample_oids) %>%
+
+    # Only keep birds and mammals
+    dplyr::filter(.data$soortgrp %in% 1:2) %>%
 
     # Adjust subspecies names
     adjust_subspecies_names_nl() %>%
