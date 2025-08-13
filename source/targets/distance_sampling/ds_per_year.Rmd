@@ -13,7 +13,7 @@ key <- ifelse(
 )
 ```
 
-We select the model with `r key` key function and scale parameter formula `r f`.
+We selecteren het model met de `r key` sleutelfunctie en formule `r f`.
 
 ```{r}
 tar_read_ds("aic_comparison", params$species, params$year) %>%
@@ -24,7 +24,7 @@ tar_read_ds("aic_comparison", params$species, params$year) %>%
 
 #### Model fit
 
-We look at the fit of the selected model.
+We kijken naar de model fit van het finale model.
 
 ```{r}
 par(mfrow = c(1, 2))
@@ -33,7 +33,8 @@ plot(final_model, pdf = TRUE, showpoints = TRUE)
 par(mfrow = c(1, 1))
 ```
 
-The detection curve(s) look like this:
+The detectiecurve(s) ziet/zien er uit als volgt.
+De stippellijn duidt de gemiddelde detectiecurve aan.
 
 ```{r}
 plot_detection_curve(
@@ -54,7 +55,7 @@ plot_detection_curve(
 
 #### Resultaten
 
-Detection probabilities.
+Detectiekansen:
 
 ```{r}
 tar_read_ds("detection_probabilities", params$species) %>%
@@ -65,9 +66,9 @@ tar_read_ds("detection_probabilities", params$species) %>%
   kable()
 ```
 
-**Stratum  niveau**
+**Stratumniveau**
 
-Abundances.
+Abundanties:
 
 ```{r}
 abundances_stratum_target <- tar_read_ds("abundances_stratum", params$species)
@@ -85,7 +86,7 @@ abundances_stratum %>%
   kable()
 ```
 
-Densities.
+Densiteiten:
 
 ```{r}
 densities_stratum_target <- tar_read_ds("densities_stratum", params$species)
@@ -118,9 +119,9 @@ densities_stratum %>%
   facet_wrap(~regio, ncol = 2, scales = "free")
 ```
 
-**Regio  niveau**
+**Regioniveau**
 
-Abundances.
+Abundanties:
 
 ```{r}
 abundances_region_target <- tar_read_ds("abundances_region", params$species)
@@ -138,7 +139,7 @@ abundances_region %>%
   kable()
 ```
 
-Densities.
+Densiteiten:
 
 ```{r}
 densities_region_target <- tar_read_ds("densities_region", params$species)

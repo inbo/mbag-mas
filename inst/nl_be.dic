@@ -13,6 +13,9 @@
 'Verbinden'
 'WFS
 'augmented
+'distance
+'half-normal'
+'hazard-rate'
 'landbouw-hokken'
 'ms
 'naam'
@@ -93,6 +96,7 @@ Hazegraspolder
 Hedley
 Homotypic
 Horvitz-Thomson
+Isotropie
 KC
 KLA
 KLE's
@@ -138,12 +142,13 @@ R4
 SB
 SBP
 SBP's
-SBP’s
 SBPs
+SBP’s
 SOVON
 SQL-query
 Sovon
 Spatiale
+Stratum-
 Synonym
 Telcirkels
 Telpunt-
@@ -179,6 +184,7 @@ allocatieproporties
 and
 avimap
 avimapcodes
+bètaverdeling
 beheren'
 beleids
 biogeografische
@@ -317,6 +323,7 @@ repository
 reserveset
 sampelen
 sampled
+sampling'
 sbp
 size
 smooth
@@ -328,6 +335,7 @@ sovon
 spatiaal
 spatiale
 spec
+spline
 splines
 statistical
 ste
@@ -335,6 +343,8 @@ steekproefkader-niveau
 stratificatievariabelen
 stratum-model
 stratum-niveau
+stratum/regio
+stratumdata
 stratumoppervlakte
 subspecies
 substrata
