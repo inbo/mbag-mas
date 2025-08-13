@@ -68,7 +68,7 @@ key <- ifelse(
 )
 ```
 
-We select the model with `r key` key function and scale parameter formula `r f`.
+We selecteren het model met de `r key` sleutelfunctie en formule `r f`.
 
 ```{r}
 tar_read_ds("aic_comparison", "Veldleeuwerik", 2024) %>%
@@ -79,7 +79,7 @@ tar_read_ds("aic_comparison", "Veldleeuwerik", 2024) %>%
 
 ### Model fit
 
-We look at the fit of the best model.
+We kijken naar de model fit van het finale model.
 
 ```{r}
 par(mfrow = c(1, 2))
@@ -92,7 +92,7 @@ par(mfrow = c(1, 1))
 plot_pdf_per_cat(final_model)
 ```
 
-The detection curve(s) look like this:
+The detectiecurve(s) zien er uit als volgt. De stippellijn duidt de gemiddelde detectiecurve aan.
 
 ```{r}
 plot_detection_curve(
@@ -117,7 +117,7 @@ plot_detection_curve(
 y <- 2024
 ```
 
-Detection probabilities.
+Detectiekansen:
 
 ```{r}
 tar_read_ds("detection_probabilities", "Veldleeuwerik") %>%
@@ -130,7 +130,7 @@ tar_read_ds("detection_probabilities", "Veldleeuwerik") %>%
 
 #### Stratum
 
-Abundances.
+Abundanties:
 
 ```{r}
 abundances_stratum_target <- tar_read_ds("abundances_stratum", "Veldleeuwerik")
@@ -148,7 +148,7 @@ abundances_stratum %>%
   kable()
 ```
 
-Densities.
+Densiteiten:
 
 ```{r}
 densities_stratum_target <- tar_read_ds("densities_stratum", "Veldleeuwerik")
@@ -181,7 +181,7 @@ densities_stratum %>%
   facet_wrap(~regio, ncol = 2, scales = "free")
 ```
 
-Over the years:
+Densiteiten over de jaren heen:
 
 ```{r}
 densities_stratum_target %>%
@@ -205,7 +205,7 @@ densities_stratum_target %>%
 
 #### Regio
 
-Abundances.
+Abundanties:
 
 ```{r}
 abundances_region_target <- tar_read_ds("abundances_region", "Veldleeuwerik")
@@ -223,7 +223,7 @@ abundances_region %>%
   kable()
 ```
 
-Densities.
+Densiteiten:
 
 ```{r}
 densities_region_target <- tar_read_ds("densities_region", "Veldleeuwerik")
@@ -251,7 +251,7 @@ densities_region %>%
   labs(y = "breeding pairs / 100 ha", x = "")
 ```
 
-Over the years:
+Densiteiten over de jaren heen:
 
 ```{r}
 densities_region_target %>%
@@ -279,8 +279,7 @@ densities_region_target %>%
 ### Selecteer spatiale spline
 #### Isotropie
 
-
-#### Basisdimentie
+#### Basisdimensie
 
 ### Model fit
 
