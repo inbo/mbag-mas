@@ -74,19 +74,6 @@ list(
       mutate(Area = as.numeric(st_area(geom)) / 1e6) %>%
       select(regio, Area, everything())
   ),
-  # Calculate area for Flanders
-  tar_target(
-    name = flanders_sf,
-    command = full_sample %>%
-      st_buffer(dist = 300) %>%
-      summarise(geom = st_union(geom)) %>%
-      ungroup() %>%
-      mutate(
-        regio = "Flanders",
-        Area = as.numeric(st_area(geom)) / 1e6
-      ) %>%
-      select(regio, Area, everything())
-  ),
   # Calculate area per stratum
   tar_target(
     name = strata_sf,
@@ -168,16 +155,25 @@ list(
     # Choose species of interest
     values = list(
       species = c(
-        "Veldleeuwerik",
-        "Gele Kwikstaart",
+        # Bijlage V natuurherstelverordening Vlaanderen
+        # "Boerenzwaluw",
         "Geelgors",
-        "Kievit",
+        "Gele Kwikstaart",
         "Grasmus",
-        "Witte Kwikstaart",
-        "Ringmus",
-        "Kwartel",
+        "Graspieper",
+        #"Grutto",
+        "Kievit",
         "Kneu",
-        "Torenvalk"
+        "Patrijs",
+        "Ringmus",
+        "Roodborsttapuit",
+        "Scholekster",
+        "Torenvalk",
+        "Veldleeuwerik",
+        "Wulp",
+        # MAS Vlaanderen
+        "Kwartel",
+        "Witte Kwikstaart"
       )
     ),
 
