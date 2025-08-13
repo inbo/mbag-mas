@@ -76,13 +76,13 @@ species_list_total <- sort(
   )
 )
 
-mas_data_clean <- tar_read("mas_data_clean")
-year_list <- 2023:max(mas_data_clean$jaar)
+distance_data <- tar_read("distance_data")
+year_list <- 2023:max(distance_data$jaar)
 ```
 
 We selecteren de soorten uit bijlage V van natuurherstelverordening voor Vlaanderen.
 Het gaat om `r species_list_total`.
-Boerenzwaluw broedt niet tijdens MAS tellingen (gedeeltelijke overlap met R4).
+Boerenzwaluw broedt niet tijdens MAS tellingen (slechts gedeeltelijke overlap met R4).
 Voor Grutto kunnen we momenteel geen model fitten, dit lossen we later op.
 Deze twee soorten worden (voorlopig) niet opgenomen in dit rapport.
 
