@@ -152,7 +152,8 @@ adjust_subspecies_names_nl <- function(counts_df) {
     mutate(
       naam = case_when(
         tolower(naam) %in% tolower(c("gele kwikstaart (spec)",
-                                     "engelse kwikstaart"))
+                                     "engelse kwikstaart",
+                                     "Noordse Kwikstaart"))
         ~ "Gele Kwikstaart",
         tolower(naam) %in% tolower(c("witte kwikstaart (spec)",
                                      "Rouwkwikstaart"))
