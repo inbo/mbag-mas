@@ -139,24 +139,25 @@ region_sf %>%
   theme(legend.position = "bottom")
 ```
 
-**2** Filter van broedcodes
+**2.** Filter van broedcodes
 
 We behouden enkel broedcodes > 0.
 
-**3** Filter van broedperiodes
+**3.** Filter van broedperiodes
 
 We behouden enkel data van telperiodes die volledig binnen broedperiodes van de soorten vallen.
 
 ```{r}
 tar_read("breeding_dates") %>%
-  filter(soort %in% species_list)
+  filter(soort %in% species_list) %>%
+  kable()
 ```
 
 > Waarom dubbels per soort? Navragen voor correct bestand.
 
 ### Model specificatie
 
-**1** Model per soort per jaar
+**1.** Model per soort per jaar
 
 We fitten aparte modellen per soort per jaar.
 De resultaten kunnen achteraf samengevoegd worden in tabellen of figuren.
@@ -199,7 +200,7 @@ Hier wordt geen geautomatiseerde selectie op toegepast.
 ### Resultaten
 
 We rapporteren de berekende detectiekansen met hun onzekerheid.
-We rapporteren 95 % betrouwbaarheidsintervallen ervan uitgaande dat deze een [bètaverdeling](https://nl.wikipedia.org/wiki/B%C3%A8taverdeling) volgen (op basis van gemiddelde en standaard deviatie).
+We rapporteren 95 % betrouwbaarheidsintervallen ervan uitgaande dat deze een [bètaverdeling](https://nl.wikipedia.org/wiki/B%C3%A8taverdeling) volgen (op basis van gemiddelde en standaarderror).
 
 We rapporteren de berekende abundanties en densiteiten met 95 % betrouwbaarheidsintervallen per soort per jaar en dit per stratum, regio en voor heel Vlaanderen.
 
