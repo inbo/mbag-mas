@@ -271,15 +271,13 @@ densities_region_target %>%
 ```
 
 # Spatiale predicties
-## Methoden
-
-## Veldleeuwerik
+## Veldleeuwerik - 2023
 ### Selecteer responsdistributie
 
 ### Selecteer spatiale spline
 #### Isotropie
 
-#### Basisdimensie
+#### Maximum aantal basisdimensies
 
 ### Model fit
 

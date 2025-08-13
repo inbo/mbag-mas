@@ -236,7 +236,7 @@ Dit doen we op een parallelle manier zoals de densiteitsschattingen: per soort p
 
 We fitten het volgende type model:
 
-```r
+```
 count ~ stratum + period + s(x, y) + s(site, bs = "re")
 ```
 
