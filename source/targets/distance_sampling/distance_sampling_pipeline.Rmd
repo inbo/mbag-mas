@@ -200,7 +200,7 @@ Hier wordt geen geautomatiseerde selectie op toegepast.
 ### Resultaten
 
 We rapporteren de berekende detectiekansen met hun onzekerheid.
-We rapporteren 95 % betrouwbaarheidsintervallen ervan uitgaande dat deze een [bètaverdeling](https://nl.wikipedia.org/wiki/B%C3%A8taverdeling) volgen (op basis van gemiddelde en standaarderror).
+We rapporteren 95 % betrouwbaarheidsintervallen ervan uitgaande dat deze een [bètaverdeling](https://nl.wikipedia.org/wiki/B%C3%A8taverdeling) volgen (op basis van gemiddelde en standaardfout).
 
 We rapporteren de berekende abundanties en densiteiten met 95 % betrouwbaarheidsintervallen per soort per jaar en dit per stratum, regio en voor heel Vlaanderen.
 
@@ -223,7 +223,6 @@ for (sp in species_list) {
 # Spatiale predicties
 ## Methoden
 
-## Veldleeuwerik
 ### Selecteer responsdistributie
 
 ### Selecteer spatiale spline

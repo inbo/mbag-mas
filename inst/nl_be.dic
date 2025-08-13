@@ -149,6 +149,7 @@ SQL-query
 Sovon
 Spatiale
 Stratum-
+Stratumniveau
 Synonym
 Telcirkels
 Telpunt-
@@ -184,7 +185,6 @@ allocatieproporties
 and
 avimap
 avimapcodes
-bètaverdeling
 beheren'
 beleids
 biogeografische
@@ -197,6 +197,7 @@ branching
 breeding
 brms
 bru
+bètaverdeling
 calculate
 canopy
 cf
@@ -392,3 +393,4 @@ y-coördinaten
 year
 za
 zenodo
+ziet/zien
