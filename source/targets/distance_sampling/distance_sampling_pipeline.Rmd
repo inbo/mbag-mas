@@ -229,14 +229,82 @@ for (sp in species_list) {
 ## Methoden
 
 We stellen hier een workflow op voor het maken van verspreidingskaartjes.
+We maken gebruik van *generalized additive models* (GAMs) die we kunnen fitten met de **mgcv**-package.
+Dit doen we op een parallelle manier zoals de densiteitsschattingen: per soort per jaar.
 
-### Selecteer responsdistributie
+### Model specificatie
 
-### Selecteer spatiale spline
-#### Isotropie
+We fitten het volgende type model:
 
-#### Basisdimensie
+```r
+count ~ stratum + period + s(x, y) + s(site, bs = "re")
+```
 
-### Model fit
+* `count` is het aantal individuen gezien op een bepaald telpunt in een bepaalde telperiode.
+* `stratum` is een categorische variabele voor elk stratum (combinatie van binnen of buiten SBP, HOL of OL, regio). De Weidestreek is een apart stratum en wordt niet opgesplitst in SBP of openheid.
+* `period` is een effect voor telperiode.
+* `s(x, y)` is een flexibele spline voor X- en Y-coördinaten van het telpunt (zie verder).
+* `s(site, bs = "re")` is een random intercept voor elk telpunt.
 
-### Predicties
+### Selectie van responsdistributie
+
+We testen eerst een eenvoudiger model met vier verschillende responsdistributies:
+
+1. Poisson
+2. Zero-inflated Poisson
+3. Negatief-binomiaal
+4. Zero-inflated Negatief-binomiaal
+
+We selecteren de best passende distributie op basis van **AIC**, maar we controleren altijd de residuen met bv. **DHARMa** om over- of onderdispersie en zero-inflatie te detecteren.
+AIC alleen kan namelijk misleidend zijn als de residu-structuur slecht is.
+
+Bij zero-inflated modellen in **mgcv** gebruiken we `family = ziplss()` of `family = nb()` in combinatie met een extra lineair predictiegedeelte voor de zero-inflatie.
+
+### Selectie van spatiale spline
+
+| `bs=`           | Naam                         | Best voor                                                          | Opmerkingen                                 |
+| --------------- | ---------------------------- | ------------------------------------------------------------------ | ------------------------------------------- |
+| `"tp"`          | Thin Plate Regression Spline | **Standaardkeuze**, goed voor algemeen gebruik                     | Automatisch isotroop, past goed bij Lambert |
+| `"ts"`          | Thin Plate Shrinkage         | Als `"tp"`, maar kan ruimtelijk effect volledig wegshrinken        | Nuttig als ruimtelijk effect optioneel is   |
+| `"te"` / `"ti"` | Tensor product smooth        | Als anisotropie mogelijk is of als x/y sterk verschillen in schaal | Bij Lambert meestal niet strikt nodig       |
+| `"soap"`        | Soap film smoother           | Complexe of kustlijnen met grenzen                                 | Vereist boundary polygon                    |
+
+**Beste opties voor Vlaanderen (Lambert72):**
+
+* `s(x, y, bs = "tp")` – robuust, eenvoudig en snel.
+* `te(x, y)` – als anisotropie waarschijnlijk is (bv. sterkere gradiënten oost-west dan noord-zuid).
+
+**Testen op anisotropie:**
+Fit zowel `"tp"` als `"te"` en vergelijk met AIC of likelihood ratio test. Als `"te"` beter scoort, wijst dat op anisotropie.
+
+### Keuze van maximum aantal basisdimensies (`k`)
+
+* `k` bepaalt het **maximum** aan modelcomplexiteit voor de spline, maar de effectieve gladheid wordt bepaald door penalizatie (REML/GCV).
+* Startwaarden:
+
+| Datasetgrootte | `k` (isotroop)        | `k` (tensor, per as) |
+| -------------- | --------------------- | -------------------- |
+| < 500          | 30–50                 | 20–30                |
+| 1.000 – 10.000 | 50–150                | 30–75                |
+| > 10.000       | 100–250 (voorzichtig) | 50–125               |
+
+* Controleer altijd met `gam.check()`:
+
+  * **OK**: `k-index` > 1 en `p` > 0.05
+  * **Niet OK**: `k-index` < 1 en `p` < 0.05 → verhoog `k`.
+  * Stop verhogen als `edf` duidelijk < `k` en runtime acceptabel blijft.
+
+### Predicties en onzekerheid
+
+We maken predicties voor het steekproefkader in de 4 telperiodes.
+Om onzekerheid mee te nemen, gebruiken we **posterior simulatie**:
+
+1. Haal de covariantiematrix van de schattingen op (`vcov(gam_model)`).
+2. Simuleer modelparameters uit een multivariate normale verdeling (`MASS::mvrnorm()`), of gebruik `gratia::posterior_samples()` voor gemak.
+3. Voorspel voor alle gridpunten en alle perioden met elke gesimuleerde parameterreeks.
+4. Neem **per simulatie** het maximum over perioden → zo krijg je een posteriorverdeling van de maxima.
+5. Samenvatten: gemiddelde, mediaan, credible intervals.
+
+**Detectiecorrectie:**
+We simuleren de detectiekansen uit 'distance sampling' als bètaverdelingen en delen per simulatie de voorspelde maxima door de gesimuleerde detectiekansen.
+Zo krijg je een ruimtelijk voorspelde waarde die vergelijkbaar is met de densiteitsschattingen van 'distance sampling'.
