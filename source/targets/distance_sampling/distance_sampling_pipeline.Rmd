@@ -155,6 +155,11 @@ tar_read("breeding_dates") %>%
 
 > Waarom dubbels per soort? Navragen voor correct bestand.
 
+**4.** Gebruik van aantallen
+
+Voor het fitten van de detectiecurve en dus de berekening van de detectiekans gebruiken we alle observaties.
+Voor het berekenen van de abundanties (en dus ook de densteiten) gebruiken we enkel de maxima per telpunt over de overgebleven telperiodes heen.
+
 ### Model specificatie
 
 **1.** Model per soort per jaar
@@ -222,6 +227,8 @@ for (sp in species_list) {
 
 # Spatiale predicties
 ## Methoden
+
+We stellen hier een workflow op voor het maken van verspreidingskaartjes.
 
 ### Selecteer responsdistributie
 
