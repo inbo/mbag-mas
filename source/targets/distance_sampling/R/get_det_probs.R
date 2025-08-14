@@ -1,4 +1,8 @@
 get_det_probs <- function(ds_model) {
+  require("dplyr")
+  require("Distance")
+  require("rlang")
+
   # Get predicted values
   preds <- predict(ds_model, se.fit = TRUE)
 

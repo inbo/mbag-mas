@@ -74,19 +74,6 @@ list(
       mutate(Area = as.numeric(st_area(geom)) / 1e6) %>%
       select(regio, Area, everything())
   ),
-  # Calculate area for Flanders
-  tar_target(
-    name = flanders_sf,
-    command = full_sample %>%
-      st_buffer(dist = 300) %>%
-      summarise(geom = st_union(geom)) %>%
-      ungroup() %>%
-      mutate(
-        regio = "Flanders",
-        Area = as.numeric(st_area(geom)) / 1e6
-      ) %>%
-      select(regio, Area, everything())
-  ),
   # Calculate area per stratum
   tar_target(
     name = strata_sf,
@@ -124,7 +111,8 @@ list(
       st_drop_geometry() %>%
       mutate(stratum = paste(openheid, sbp, sep = " - ")) %>%
       mutate(Region.Label = paste(regio, openheid, sbp, sep = " - ")) %>%
-      select(Region.Label, Area)
+      select(Region.Label, Area) %>%
+      filter(!grepl("^Weidestreek", Region.Label))
   ),
   tar_target(
     name = sample_table,
@@ -134,7 +122,8 @@ list(
         Region.Label = paste(regio, openheid, sbp, sep = " - "),
         Effort = 1 # assume one visit for maxima
       ) %>%
-      select(Sample.Label = pointid, Region.Label, Effort)
+      select(Sample.Label = pointid, Region.Label, Effort) %>%
+      filter(!grepl("^Weidestreek", Region.Label))
   ),
   # Per region:
   tar_target(
@@ -154,32 +143,65 @@ list(
   ),
 
   # Load occurrence data
+  tar_file(
+    name = distance_data_file,
+    command = file.path(mbag_dir, "output", "datasets",
+                        "distance_data_vlaanderen.csv")
+  ),
   tar_target(
-    name = mas_data_clean,
-    command = tar_read(
-      "mas_data_clean",
-      store = file.path(mbag_dir, "source", "targets", "data_preparation",
-                        "_targets")
-    )
+    name = distance_data,
+    command = read_csv(distance_data_file, show_col_types = FALSE)
+  ),
+
+  # Conversion to 100 ha
+  tar_target(
+    name = conversion_factor,
+    command = Distance::convert_units("meter", NULL, "Square kilometer")
   ),
 
   ## Static branching over species
   tar_map(
-    values = list(species = c("Veldleeuwerik", "Gele Kwikstaart", "Houtduif")),
+    # Choose species of interest
+    values = list(
+      species = c(
+        # Bijlage V natuurherstelverordening Vlaanderen
+        # "Boerenzwaluw",
+        "Geelgors",
+        "Gele Kwikstaart",
+        "Grasmus",
+        "Graspieper",
+        #"Grutto",
+        "Kievit",
+        "Kneu",
+        "Patrijs",
+        "Ringmus",
+        "Roodborsttapuit",
+        "Scholekster",
+        "Torenvalk",
+        "Veldleeuwerik",
+        "Wulp",
+        # MAS Vlaanderen
+        "Kwartel",
+        "Witte Kwikstaart"
+      )
+    ),
 
     ## Prepare species occurrence data
     # Select species and group occurrence data by year
     tar_group_by(
-      name = mas_data_grouped,
-      command = mas_data_clean %>%
-        sf::st_drop_geometry() %>%
+      name = distance_data_grouped,
+      command = distance_data %>%
         filter(
           naam %in% species,
-          jaar >= 2023, # Change
+          jaar >= 2023,
         ) %>%
         mutate(
           regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio),
-          stratum = paste(openheid_klasse, sbp, sep = " - ")
+          stratum = ifelse(
+            regio == "Weidestreek",
+            "Weidestreek",
+            paste(regio, openheid_klasse, sbp, sep = " - ")
+          )
         ),
       jaar
     ),
@@ -188,12 +210,12 @@ list(
     # all for predators and mammals
     tar_target(
       name = filtered_breeding_code,
-      command = mas_data_grouped %>%
+      command = distance_data_grouped %>%
         filter(
           (wrntype > 0 & !(naam %in% c("Haas", roofvogels_f()))) |
             naam %in% c("Haas", roofvogels_f())
         ),
-      pattern = map(mas_data_grouped)
+      pattern = map(distance_data_grouped)
     ),
     # Filter within breeding dates
     tar_target(
@@ -230,9 +252,10 @@ list(
       name = obs_table,
       command = filtered_breeding_date %>%
         group_by(periode_in_jaar, plotnaam) %>%
-        mutate(n = n()) %>%
+        mutate(n = sum(aantal)) %>%
         group_by(plotnaam) %>%
         slice_max(order_by = n, n = 1) %>%
+        slice_max(order_by = periode_in_jaar, n = 1) %>% # To avoid ties
         ungroup() %>%
         mutate(
           Region.Label = paste(
@@ -243,7 +266,8 @@ list(
           )
         ) %>%
         select("object" = "oid", "Region.Label", "Sample.Label" = "plotnaam",
-               "species" = "naam", "year" = "jaar"),
+               "species" = "naam", "year" = "jaar") %>%
+        filter(!grepl("^Weidestreek", Region.Label)),
       year
     ),
     # Per region:
@@ -251,20 +275,16 @@ list(
       name = obs_table_region,
       command = filtered_breeding_date %>%
         group_by(periode_in_jaar, plotnaam) %>%
-        mutate(n = n()) %>%
+        mutate(n = sum(aantal)) %>%
         group_by(plotnaam) %>%
         slice_max(order_by = n, n = 1) %>%
+        slice_max(order_by = periode_in_jaar, n = 1) %>% # To avoid ties
         ungroup() %>%
         select(
           "object" = "oid", "Region.Label" = "regio",
           "Sample.Label" = "plotnaam", "year" = "jaar"
         ),
       year
-    ),
-    # Conversion to 100 ha
-    tar_target(
-      name = conversion_factor,
-      command = Distance::convert_units("meter", NULL, "Square kilometer")
     ),
 
     ## Model specification
@@ -274,13 +294,15 @@ list(
       command = list(
         "~1",
         "~regio",
-        #"~sbp",
-        "~openheid"
-        #"~regio+sbp",
-        #"~regio+openheid",
-        #"~sbp+openheid",
-        #"~regio+sbp+openheid",
-        #"~sbp*openheid"
+        "~sbp",
+        "~openheid",
+        "~regio+sbp",
+        "~regio+openheid",
+        "~sbp+openheid",
+        "~sbp*openheid",
+        "~regio+sbp+openheid",
+        "regio+sbp*openheid",
+        "stratum" # same as triple interaction except 'Weidestreek' is separate
       )
     ),
 
@@ -291,12 +313,13 @@ list(
       command = fit_ds_models(
         data = ds_data,
         formulas = formulae,
-        # Distance::ds arguments:
         keys = c("hn", "hr"),
+        # Distance::ds arguments:
         truncation = 300,
         transect = "point",
         dht_group = FALSE,
         convert_units = conversion_factor,
+        # Exclude Weidestreek from stratum analysis
         region_table = region_table,
         sample_table = sample_table,
         obs_table = obs_table
@@ -317,7 +340,7 @@ list(
     # Select model with lowest AIC, within tolerance with lowest nr. of params
     tar_target(
       name = model_selection,
-      command = select_models(
+      command = select_ds_models(
         aic_diff = aic_comparison,
         model_list = ds_model_fits,
         aic_tol = 2
@@ -347,7 +370,6 @@ list(
         measure = "abundance"
       ) %>%
         filter(
-          !grepl("^Weidestreek", Label),
           Label != "Total"
         ) %>%
         add_categories(model_selection, c("species", "year")),
@@ -366,7 +388,6 @@ list(
         measure = "dens"
       ) %>%
         filter(
-          !grepl("^Weidestreek", Label),
           Label != "Total"
         ) %>%
         add_categories(model_selection, c("species", "year")),
