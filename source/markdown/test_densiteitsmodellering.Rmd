@@ -416,9 +416,10 @@ sample_table <- design %>%
 # Waarnemingen per plots en strata
 obs_table <- veldleeuwerik_2024_df %>%
   group_by(periode_in_jaar, plotnaam) %>%
-  mutate(n = n()) %>%
+  mutate(n = sum(aantal)) %>%
   group_by(plotnaam) %>%
   slice_max(order_by = n, n = 1) %>%
+  slice_max(order_by = periode_in_jaar, n = 1) %>% # To avoid ties
   ungroup() %>%
   mutate(Region.Label = paste(regio,
     openheid = openheid_klasse, sbp,
@@ -718,9 +719,10 @@ sample_table2 <- design %>%
 # Observations per plots en regions
 obs_table2 <- veldleeuwerik_2024_df %>%
   group_by(periode_in_jaar, plotnaam) %>%
-  mutate(n = n()) %>%
+  mutate(n = sum(aantal)) %>%
   group_by(plotnaam) %>%
   slice_max(order_by = n, n = 1) %>%
+  slice_max(order_by = periode_in_jaar, n = 1) %>% # To avoid ties
   ungroup() %>%
   select(object = oid, Region.Label = regio, Sample.Label = plotnaam)
 
