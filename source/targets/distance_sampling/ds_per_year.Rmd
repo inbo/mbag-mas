@@ -19,7 +19,7 @@ We selecteren het model met de `r key` sleutelfunctie en formule `r f`.
 tar_read_ds("aic_comparison", params$species, params$year) %>%
   select(-species, -year) %>%
   filter(`Delta AIC` <= 10) %>% # only show low AIC models
-  kable()
+  kable(digits = 3)
 ```
 
 #### Model fit
@@ -63,7 +63,7 @@ tar_read_ds("detection_probabilities", params$species) %>%
   select(-species, -year) %>%
   drop_na() %>%
   relocate("estimate_p", "se_p", "ll_beta", "ul_beta", .after = last_col()) %>%
-  kable()
+  kable(digits = 3)
 ```
 
 **Stratumniveau**
@@ -83,7 +83,7 @@ abundances_stratum <- abundances_stratum_target %>%
   select(-species, -year) %>%
   rename("stratum" = "Label", "estimate" = "Estimate")
 abundances_stratum %>%
-  kable()
+  kable(digits = 3)
 ```
 
 Densiteiten:
@@ -101,7 +101,7 @@ densities_stratum <- densities_stratum_target %>%
   select(-species, -year) %>%
   rename("stratum" = "Label", "estimate" = "Estimate")
 densities_stratum %>%
-  kable()
+  kable(digits = 3)
 ```
 
 ```{r}
@@ -136,7 +136,7 @@ abundances_region <- abundances_region_target %>%
   select(-species, -year) %>%
   rename("region" = "Label", "estimate" = "Estimate")
 abundances_region %>%
-  kable()
+  kable(digits = 3)
 ```
 
 Densiteiten:
@@ -154,7 +154,7 @@ densities_region <- densities_region_target %>%
   select(-species, -year) %>%
   rename("region" = "Label", "estimate" = "Estimate")
 densities_region %>%
-  kable()
+  kable(digits = 3)
 ```
 
 ```{r}
