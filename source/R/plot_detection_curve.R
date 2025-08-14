@@ -103,7 +103,7 @@ plot_detection_curve <- function(# nolint: cyclocomp_linter.
     rownames(mm) <- apply(dist_data[vars], 1, paste, collapse = " - ")
 
     design_mat <- distinct(as_tibble(mm, rownames = "rownames")) %>%
-      column_to_rownames("rownames") %>%
+      tibble::column_to_rownames("rownames") %>%
       as.data.frame()
 
     labels <- rownames(design_mat)
