@@ -255,7 +255,8 @@ tibble(
 
 ```{r}
 detection_probabilities <- tar_read_ds("detection_probabilities",
-                                       params$species) %>%
+                                       params$species)
+detection_probabilities %>%
   filter(year == params$year) %>%
   select(-species, -year) %>%
   select(where(function(x) !any(is.na(x)))) %>% # Remove NA columns
