@@ -240,7 +240,7 @@ Detectiekansen:
 tar_read_ds("detection_probabilities", params$species) %>%
   filter(year == params$year) %>%
   select(-species, -year) %>%
-  drop_na() %>%
+  select(where(function(x) !any(is.na(x)))) %>% # Remove NA columns
   relocate("estimate_p", "se_p", "ll_beta", "ul_beta", .after = last_col()) %>%
   kable(digits = 3)
 ```
