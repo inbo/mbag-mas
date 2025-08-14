@@ -81,7 +81,8 @@ filtered_distance_df %>%
   ggplot(aes(x = periode_in_jaar, fill = factor(wrntype))) +
   geom_bar() +
   facet_wrap(~regio, scales = "free") +
-  labs(x = "Telperiode", y = "Aantal broedparen", fill = "Broedcode", title = params$year)
+  labs(x = "Telperiode", y = "Aantal broedparen", fill = "Broedcode",
+       title = params$year)
 ```
 
 We kijken naar het aantal broedparen per stratum.
@@ -93,7 +94,8 @@ filtered_distance_df %>%
   ggplot(aes(x = periode_in_jaar, fill = strat)) +
   geom_bar() +
   facet_wrap(~regio, scales = "free") +
-  labs(x = "Telperiode", y = "Aantal broedparen", fill = "Stratum", title = params$year)
+  labs(x = "Telperiode", y = "Aantal broedparen", fill = "Stratum",
+       title = params$year)
 ```
 
 We kijken naar de verdeling van de afstanden.
@@ -105,14 +107,15 @@ filtered_distance_df %>%
   ggplot(aes(x = distance2plot, fill = strat)) +
   geom_histogram() +
   facet_wrap(~regio, scales = "free") +
-  labs(x = "Afstand (m)", y = "Aantal broedparen", fill = "Stratum", title = params$year)
+  labs(x = "Afstand (m)", y = "Aantal broedparen", fill = "Stratum",
+       title = params$year)
 ```
 
 We selecteren het maximum aantal individuen per telpunt.
 
 ```{r}
 obs_table <- tar_read_ds("obs_table", params$species) %>%
-           filter(year == params$year)
+  filter(year == params$year)
 sample_table <- tar_read_ds("sample_table")
 
 # Get maxima observations from filtered dataset
@@ -133,7 +136,9 @@ zeroes_df <- sample_table %>%
       year == params$year
     }
   ) %>%
-  select("plotnaam" = "Sample.Label", "jaar" = "year", "stratum" = "Region.Label") %>%
+  select(
+    "plotnaam" = "Sample.Label", "jaar" = "year", "stratum" = "Region.Label"
+  ) %>%
   anti_join(maxima_presences, by = join_by(plotnaam, jaar, stratum)) %>%
   separate(stratum, into = c("regio", "openheid_klasse", "sbp")) %>%
   mutate(
@@ -237,10 +242,10 @@ De totale schatting voor Vlaanderen:
 
 ```{r}
 tibble(
-    jaar = params$year,
-    regio = "Total",
-    abundantie = sum(nc_regio$abundantie)
-  ) %>%
+  jaar = params$year,
+  regio = "Total",
+  abundantie = sum(nc_regio$abundantie)
+) %>%
   mutate(densiteit = abundantie / sum(area_table_region$area)) %>%
   filter(regio == "Total") %>%
   kable(digits = 3)
@@ -249,7 +254,8 @@ tibble(
 > We controleren even of dit hetzelfde is als verderop (met detectiekans):
 
 ```{r}
-detection_probabilities <- tar_read_ds("detection_probabilities", params$species) %>%
+detection_probabilities <- tar_read_ds("detection_probabilities",
+                                       params$species) %>%
   filter(year == params$year) %>%
   select(-species, -year) %>%
   select(where(function(x) !any(is.na(x)))) %>% # Remove NA columns
@@ -309,10 +315,10 @@ De totale schatting voor Vlaanderen:
 
 ```{r}
 tibble(
-    jaar = params$year,
-    regio = "Total",
-    abundantie = sum(nc_regio$abundantie)
-  ) %>%
+  jaar = params$year,
+  regio = "Total",
+  abundantie = sum(nc_regio$abundantie)
+) %>%
   mutate(densiteit = abundantie / sum(area_table_region$area)) %>%
   filter(regio == "Total") %>%
   kable(digits = 3)
