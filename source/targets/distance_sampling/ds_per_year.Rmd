@@ -1,6 +1,185 @@
 ### `r params$year`
 #### Data exploratie
 
+We selecteren de gefilterde data broedcode > 0 en binnen broedseizoen.
+
+```{r}
+filtered_distance_df <- tar_read_ds("filtered_breeding_date", params$species)
+```
+
+We kijken naar het aantal broedparen per regio per broedcode.
+
+```{r}
+filtered_distance_df %>%
+  filter(jaar == params$year) %>%
+  ggplot(aes(x = periode_in_jaar, fill = factor(wrntype))) +
+  geom_bar() +
+  facet_wrap(~regio, scales = "free") +
+  labs(x = "Telperiode", y = "Aantal broedparen", fill = "Broedcode", title = params$year)
+```
+
+We kijken naar het aantal broedparen per stratum.
+
+```{r}
+filtered_distance_df %>%
+  filter(jaar == params$year) %>%
+  mutate(strat = paste(openheid_klasse, sbp, sep = " - ")) %>%
+  ggplot(aes(x = periode_in_jaar, fill = strat)) +
+  geom_bar() +
+  facet_wrap(~regio, scales = "free") +
+  labs(x = "Telperiode", y = "Aantal broedparen", fill = "Stratum", title = params$year)
+```
+
+We kijken naar de verdeling van de afstanden.
+
+```{r}
+filtered_distance_df %>%
+  filter(jaar == params$year) %>%
+  mutate(strat = paste(openheid_klasse, sbp, sep = " - ")) %>%
+  ggplot(aes(x = distance2plot, fill = strat)) +
+  geom_histogram() +
+  facet_wrap(~regio, scales = "free") +
+  labs(x = "Afstand (m)", y = "Aantal broedparen", fill = "Stratum", title = params$year)
+```
+
+We selecteren het maximum aantal individuen per telpunt.
+
+```{r}
+obs_table <- tar_read_ds("obs_table", params$species) %>%
+           filter(year == params$year)
+sample_table <- tar_read_ds("sample_table")
+
+# Get maxima observations from filtered dataset
+maxima_presences <- filtered_distance_df  %>%
+  filter(jaar == params$year) %>%
+  filter(oid %in% obs_table$object) %>%
+  group_by(plotnaam, jaar, regio, openheid_klasse, sbp, stratum) %>%
+  summarise(aantal = sum(aantal), .groups = "drop")
+
+# Add zeroes
+zeroes_df <- sample_table %>%
+  select("Sample.Label", "Region.Label") %>%
+  mutate(year = params$year) %>%
+  filter(
+    if (params$year == 2023) {
+      year == params$year & grepl("^Zandleem|^Leem", Region.Label)
+    } else {
+      year == params$year
+    }
+  ) %>%
+  select("plotnaam" = "Sample.Label", "jaar" = "year", "stratum" = "Region.Label") %>%
+  anti_join(maxima_presences, by = join_by(plotnaam, jaar, stratum)) %>%
+  separate(stratum, into = c("regio", "openheid_klasse", "sbp")) %>%
+  mutate(
+    aantal = 0,
+    stratum = ifelse(
+      regio == "Weidestreek",
+      "Weidestreek",
+      paste(regio, openheid_klasse, sbp, sep = " - ")
+    )
+  )
+
+# Bind presences and zeroes
+maxima_df <- maxima_presences %>%
+  bind_rows(zeroes_df)
+```
+
+We kijken naar de maxima per stratum.
+
+```{r}
+maxima_df %>%
+  ggplot(aes(x = openheid_klasse, y = aantal, colour = sbp)) +
+  geom_boxplot() +
+  labs(x = "", y = "Aantal broedparen per telpunt\n(maximum over telperiodes)",
+       title = params$year) +
+  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 100, by = 2)) +
+  facet_wrap(~regio, ncol = 2, scales = "free")
+```
+
+We berekenen de abundanties en densiteiten zoals bij distance sampling, zonder detectiekans in rekening te brengen.
+
+```{r}
+# Visited surface area
+a_df <- maxima_df %>%
+  group_by(jaar, regio, openheid_klasse, sbp) %>%
+  summarise(np = n_distinct(plotnaam),
+            sample_area = (300 * 300 * pi * np) / 10^6,
+            .groups = "drop") %>%
+  rename("openheid" = "openheid_klasse")
+
+# Counted breeding pairs
+nc_df <- maxima_df %>%
+  group_by(jaar, regio, openheid_klasse, sbp) %>%
+  summarise(nc = sum(aantal), .groups = "drop") %>%
+  rename("openheid" = "openheid_klasse")
+
+# Total surface area
+area_table_stratum <- tar_read("region_table")
+area_table_stratum <- area_table_stratum %>%
+  separate(Region.Label, into = c("regio", "openheid", "sbp"),
+           sep = " - ") %>%
+  rename("area" = "Area")
+area_table_region <- tar_read("region_table_region")
+area_table_region <- area_table_region %>%
+  rename("regio" = "Region.Label", "area" = "Area")
+```
+
+**Stratumniveau**
+
+We berekenen per stratum.
+
+```{r}
+nc_df %>%
+  left_join(a_df, by = join_by(jaar, regio, openheid, sbp)) %>%
+  left_join(area_table_stratum, by = join_by(regio, openheid, sbp)) %>%
+  rowwise() %>%
+  mutate(
+    abundantie = (area / sample_area) * nc,
+    densiteit = nc / sample_area
+  ) %>%
+  arrange(jaar, regio, openheid, sbp) %>%
+  select(jaar, regio, openheid, sbp, abundantie, densiteit) %>%
+  kable(digits = 3)
+```
+
+**Regioniveau**
+
+We bekijken dit ook per regio.
+
+```{r}
+nc_regio <- nc_df %>%
+  left_join(a_df, by = join_by(jaar, regio, openheid, sbp)) %>%
+  group_by(jaar, regio) %>%
+  summarise(
+    nc = sum(nc),
+    sample_area = sum(sample_area),
+    .groups = "drop"
+  ) %>%
+  left_join(area_table_region, by = join_by(regio)) %>%
+  mutate(
+    abundantie = (area / sample_area) * nc,
+    densiteit = nc / sample_area
+  ) %>%
+  arrange(jaar, regio) %>%
+  select(jaar, regio, abundantie, densiteit)
+
+nc_regio %>%
+  kable(digits = 3)
+```
+
+De totale schatting voor Vlaanderen:
+
+```{r}
+tibble(
+    jaar = params$year,
+    regio = "Total",
+    abundantie = sum(nc_regio$abundantie)
+  ) %>%
+  mutate(densiteit = abundantie / sum(area_table_region$area)) %>%
+  filter(regio == "Total") %>%
+  kable(digits = 3)
+```
+
 #### Model selectie
 
 ```{r}

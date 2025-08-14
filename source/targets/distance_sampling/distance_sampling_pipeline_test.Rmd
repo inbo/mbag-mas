@@ -69,8 +69,6 @@ params$year <- 2024
 
 We selecteren de gefilterde data broedcode > 0 en binnen broedseizoen.
 
-> herhaal broedseizoen voor deze soort
-
 ```{r}
 filtered_distance_df <- tar_read_ds("filtered_breeding_date", params$species)
 ```
@@ -130,7 +128,7 @@ zeroes_df <- sample_table %>%
   mutate(year = params$year) %>%
   filter(
     if (params$year == 2023) {
-      year == params$year & grepl("^Zandleem|^Leem", Label)
+      year == params$year & grepl("^Zandleem|^Leem", Region.Label)
     } else {
       year == params$year
     }
@@ -172,27 +170,23 @@ a_df <- maxima_df %>%
   group_by(jaar, regio, openheid_klasse, sbp) %>%
   summarise(np = n_distinct(plotnaam),
             sample_area = (300 * 300 * pi * np) / 10^6,
-            .groups = "drop")
+            .groups = "drop") %>%
+  rename("openheid" = "openheid_klasse")
 
 # Counted breeding pairs
 nc_df <- maxima_df %>%
   group_by(jaar, regio, openheid_klasse, sbp) %>%
-  summarise(nc = sum(aantal), .groups = "drop")
+  summarise(nc = sum(aantal), .groups = "drop") %>%
+  rename("openheid" = "openheid_klasse")
 
 # Total surface area
 area_table_stratum <- tar_read("region_table")
 area_table_stratum <- area_table_stratum %>%
-  separate(Region.Label, into = c("regio", "openheid_klasse", "sbp"),
+  separate(Region.Label, into = c("regio", "openheid", "sbp"),
            sep = " - ") %>%
   rename("area" = "Area")
 area_table_region <- tar_read("region_table_region")
 area_table_region <- area_table_region %>%
-  bind_rows(
-    tibble(
-      Region.Label = "Total",
-      Area = sum(area_table_region$Area)
-    )
-  ) %>%
   rename("regio" = "Region.Label", "area" = "Area")
 ```
 
@@ -202,16 +196,16 @@ We berekenen per stratum.
 
 ```{r}
 nc_df %>%
-  left_join(a_df, by = join_by(jaar, regio, openheid_klasse, sbp)) %>%
-  left_join(area_table_stratum, by = join_by(regio, openheid_klasse, sbp)) %>%
+  left_join(a_df, by = join_by(jaar, regio, openheid, sbp)) %>%
+  left_join(area_table_stratum, by = join_by(regio, openheid, sbp)) %>%
   rowwise() %>%
   mutate(
     abundantie = (area / sample_area) * nc,
     densiteit = nc / sample_area
   ) %>%
-  arrange(jaar, regio, openheid_klasse, sbp) %>%
-  select(jaar, regio, openheid = openheid_klasse, sbp, abundantie, densiteit) %>%
-  kable(digits = 2)
+  arrange(jaar, regio, openheid, sbp) %>%
+  select(jaar, regio, openheid, sbp, abundantie, densiteit) %>%
+  kable(digits = 3)
 ```
 
 **Regioniveau**
@@ -219,26 +213,84 @@ nc_df %>%
 We bekijken dit ook per regio.
 
 ```{r}
-nc_temp <- nc_df %>%
-  left_join(a_df, by = join_by(jaar, regio, openheid_klasse, sbp)) %>%
+nc_regio <- nc_df %>%
+  left_join(a_df, by = join_by(jaar, regio, openheid, sbp)) %>%
   group_by(jaar, regio) %>%
   summarise(
     nc = sum(nc),
     sample_area = sum(sample_area),
     .groups = "drop"
-  )
+  ) %>%
+  left_join(area_table_region, by = join_by(regio)) %>%
+  mutate(
+    abundantie = (area / sample_area) * nc,
+    densiteit = nc / sample_area
+  ) %>%
+  arrange(jaar, regio) %>%
+  select(jaar, regio, abundantie, densiteit)
 
-# Create dataframe for totals
-total_df <- nc_temp %>%
-  group_by(jaar) %>%
-  summarise(nc = sum(nc),
-            sample_area = sum(sample_area),
-            .groups = "drop") %>%
-  mutate(regio = "Total") %>%
-  filter(jaar != 2023)
+nc_regio %>%
+  kable(digits = 3)
+```
 
-nc_regio <- nc_temp %>%
-  bind_rows(total_df) %>%
+De totale schatting voor Vlaanderen:
+
+```{r}
+tibble(
+    jaar = params$year,
+    regio = "Total",
+    abundantie = sum(nc_regio$abundantie)
+  ) %>%
+  mutate(densiteit = abundantie / sum(area_table_region$area)) %>%
+  filter(regio == "Total") %>%
+  kable(digits = 3)
+```
+
+> We controleren even of dit hetzelfde is als verderop (met detectiekans):
+
+```{r}
+detection_probabilities <- tar_read_ds("detection_probabilities", params$species) %>%
+  filter(year == params$year) %>%
+  select(-species, -year) %>%
+  drop_na() %>%
+  relocate("estimate_p", "se_p", "ll_beta", "ul_beta", .after = last_col())
+```
+
+**Stratumniveau**
+
+We berekenen per stratum.
+
+```{r, message=FALSE}
+nc_df %>%
+  left_join(detection_probabilities) %>%
+  mutate(nc = nc / estimate_p) %>%
+  left_join(a_df, by = join_by(jaar, regio, openheid, sbp)) %>%
+  left_join(area_table_stratum, by = join_by(regio, openheid, sbp)) %>%
+  rowwise() %>%
+  mutate(
+    abundantie = (area / sample_area) * nc,
+    densiteit = nc / sample_area
+  ) %>%
+  arrange(jaar, regio, openheid, sbp) %>%
+  select(jaar, regio, openheid, sbp, abundantie, densiteit) %>%
+  kable(digits = 3)
+```
+
+**Regioniveau**
+
+We bekijken dit ook per regio.
+
+```{r}
+nc_regio <- nc_df %>%
+  left_join(detection_probabilities) %>%
+  mutate(nc = nc / estimate_p) %>%
+  left_join(a_df, by = join_by(jaar, regio, openheid, sbp)) %>%
+  group_by(jaar, regio) %>%
+  summarise(
+    nc = sum(nc),
+    sample_area = sum(sample_area),
+    .groups = "drop"
+  ) %>%
   left_join(area_table_region, by = join_by(regio)) %>%
   mutate(
     abundantie = (area / sample_area) * nc,
@@ -249,27 +301,23 @@ nc_regio <- nc_temp %>%
 
 nc_regio %>%
   filter(regio != "Total") %>%
-  kable(digits = 2)
+  kable(digits = 3)
 ```
 
 De totale schatting voor Vlaanderen:
 
 ```{r}
-nc_regio %>%
+tibble(
+    jaar = params$year,
+    regio = "Total",
+    abundantie = sum(nc_regio$abundantie)
+  ) %>%
+  mutate(densiteit = abundantie / sum(area_table_region$area)) %>%
   filter(regio == "Total") %>%
-  kable(digits = 2)
+  kable(digits = 3)
 ```
 
-We controleren even of dit hetzelfde is als verderop:
-
-```{r}
-tar_read_ds("detection_probabilities", params$species) %>%
-  filter(year == params$year) %>%
-  select(-species, -year) %>%
-  drop_na() %>%
-  relocate("estimate_p", "se_p", "ll_beta", "ul_beta", .after = last_col())
-```
-
+> Deze zijn exact hetzelfde als de schattingen op basis van Distance package. Zier verder.
 
 ### Model selectie
 
@@ -289,7 +337,7 @@ We selecteren het model met de `r key` sleutelfunctie en formule `r f`.
 tar_read_ds("aic_comparison", params$species, 2024) %>%
   select(-species, -year) %>%
   filter(`Delta AIC` <= 10) %>% # only show low AIC models
-  kable()
+  kable(digits = 3)
 ```
 
 ### Model fit
@@ -336,7 +384,7 @@ tar_read_ds("detection_probabilities", params$species) %>%
   select(-species, -year) %>%
   drop_na() %>%
   relocate("estimate_p", "se_p", "ll_beta", "ul_beta", .after = last_col()) %>%
-  kable()
+  kable(digits = 3)
 ```
 
 #### Stratum
@@ -356,7 +404,7 @@ abundances_stratum <- abundances_stratum_target %>%
   select(-species, -year) %>%
   rename("stratum" = "Label", "estimate" = "Estimate")
 abundances_stratum %>%
-  kable()
+  kable(digits = 3)
 ```
 
 Densiteiten:
@@ -374,7 +422,7 @@ densities_stratum <- densities_stratum_target %>%
   select(-species, -year) %>%
   rename("stratum" = "Label", "estimate" = "Estimate")
 densities_stratum %>%
-  kable()
+  kable(digits = 3)
 ```
 
 ```{r}
@@ -431,7 +479,7 @@ abundances_region <- abundances_region_target %>%
   select(-species, -year) %>%
   rename("region" = "Label", "estimate" = "Estimate")
 abundances_region %>%
-  kable()
+  kable(digits = 3)
 ```
 
 Densiteiten:
@@ -449,7 +497,7 @@ densities_region <- densities_region_target %>%
   select(-species, -year) %>%
   rename("region" = "Label", "estimate" = "Estimate")
 densities_region %>%
-  kable()
+  kable(digits = 3)
 ```
 
 ```{r}
