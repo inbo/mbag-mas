@@ -1,0 +1,310 @@
+---
+title: "Distance sampling targets pipeline"
+author: "Ward Langeraert"
+date: "`r Sys.Date()`"
+output:
+  bookdown::html_document2:
+    code_folding: hide
+    toc_depth: 4
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+# set up
+library(knitr)
+opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  out.width = "100%"
+)
+opts_knit$set(root.dir = here::here())
+```
+
+
+```{r}
+# packages
+library(tidyverse)
+library(targets)
+library(sf)
+library(Distance)
+
+library(INBOtheme)
+theme_set(theme_inbo(transparent = TRUE))
+
+# Conflicts
+conflicted::conflicts_prefer(dplyr::filter)
+conflicted::conflicts_prefer(dplyr::select)
+
+# Paths
+mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
+
+# Source functions
+source(file.path(mbag_dir, "source", "R", "tar_read_ds.R"))
+source(file.path(mbag_dir, "source", "R", "plot_pdf_per_cat.R"))
+source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
+```
+
+# Doel
+
+We berekenen de densiteit van akkervogels in Vlaanderen per stratum en landbouwregio door rekening te houden met de detectiekans.
+Dit doen we via 'distance sampling'.
+Ten slotte bouwen we een voorspellend spatiaal model om een verspreidingskaart te maken.
+
+```{r}
+species_list_total <- sort(
+  c(
+    "Boerenzwaluw",
+    "Geelgors",
+    "Gele Kwikstaart",
+    "Grasmus",
+    "Graspieper",
+    "Grutto",
+    "Kievit",
+    "Kneu",
+    "Patrijs",
+    "Ringmus",
+    "Roodborsttapuit",
+    "Scholekster",
+    "Torenvalk",
+    "Veldleeuwerik",
+    "Wulp"
+  )
+)
+
+distance_data <- tar_read("distance_data")
+year_list <- 2023:max(distance_data$jaar)
+```
+
+We selecteren de soorten uit bijlage V van natuurherstelverordening voor Vlaanderen.
+Het gaat om `r species_list_total`.
+Boerenzwaluw broedt niet tijdens MAS tellingen (slechts gedeeltelijke overlap met R4).
+Voor Grutto kunnen we momenteel geen model fitten, dit lossen we later op.
+Deze twee soorten worden (voorlopig) niet opgenomen in dit rapport.
+
+```{r}
+species_list <- species_list_total[
+  !species_list_total %in% c("Boerenzwaluw", "Grutto")
+]
+```
+
+# Densiteitsschattingen
+## Methoden
+
+Voor het berekenen van abundanties en densiteiten maken we gebruik van 'distance sampling'.
+Het statistische kader werd uitgebreid besproken in het rapport van het pilootproject (**voeg link toe**) en wordt hier niet herhaald.
+In het kort komt het er op neer dat de detectiekans wordt berekend op basis van de afstanden waarop individuen werden gezien.
+De detectiekans kan afhankelijk zijn van categorische variabelen (bv. openheid landschap, regio).
+De detectiekans word dan gebruikt om geziene aantallen te corrigeren (bv. 2 individuen met een detectiekans van 0.5 wordt een schatting van 2 / 0.5 = 4 individuen).
+De geschatte abundanties worden dan geëxtrapoleerd het steekproefkader door rekening te houden met de oppervlaktes van de bezochte telcirkels en het steekproefkader (per stratum en per landbouwregio en voor heel Vlaanderen).
+In deze paragraaf overlopen we de belangrijkste stappen aan van het analyseproces.
+
+### Data preparatie
+
+**1.** Voorbereiden gebiedslagen voor extrapolatie
+
+We willen schattingen per stratum (binnen en buiten SBP, OL en HOL) en per landbouwregio en over heel Vlaanderen.
+De strata kunnen overlappen binnen een regio. Daardoor hebben we twee lagen die van belang zijn.
+
+Per stratum:
+
+```{r}
+tar_read("strata_sf") %>%
+  st_drop_geometry() %>%
+  rename("oppervlakte (km²)" = "Area") %>%
+  kable(digits = 3)
+```
+
+Per regio:
+
+```{r}
+region_sf <- tar_read("region_sf")
+region_sf %>%
+  st_drop_geometry() %>%
+  mutate(`totale oppervlakte (km²)` = sum(Area)) %>%
+  rename("oppervlakte (km²)" = "Area") %>%
+  kable(digits = 3)
+```
+
+```{r, message=FALSE}
+# Visualisation
+region_sf %>%
+  ggplot() +
+  geom_sf(aes(fill = regio)) +
+  labs(fill = "") +
+  theme(legend.position = "bottom")
+```
+
+**2.** Filter van broedcodes
+
+We behouden enkel broedcodes > 0.
+
+**3.** Filter van broedperiodes
+
+We behouden enkel data van telperiodes die volledig binnen broedperiodes van de soorten vallen.
+
+```{r}
+tar_read("breeding_dates") %>%
+  filter(soort %in% species_list) %>%
+  kable()
+```
+
+> Waarom dubbels per soort? Navragen voor correct bestand.
+
+**4.** Gebruik van aantallen
+
+Voor het fitten van de detectiecurve en dus de berekening van de detectiekans gebruiken we alle observaties.
+Voor het berekenen van de abundanties (en dus ook de densiteiten) gebruiken we enkel de maxima per telpunt over de overgebleven telperiodes heen.
+
+### Model specificatie
+
+**1.** Model per soort per jaar
+
+We fitten aparte modellen per soort per jaar.
+De resultaten kunnen achteraf samengevoegd worden in tabellen of figuren.
+
+**2.** Specificatie densiteitscurve
+
+Voor de densiteitscurve onderzoeken we de fit van zowel de 'half-normal' als 'hazard-rate' sleutelfuncties.
+
+We onderzoeken de afhankelijk van de detectiekans van verschillende variabelen op basis van de volgende formules voor de schaalparameter.
+
+```{r}
+tar_read_ds("formulae", species = "Veldleeuwerik")
+```
+
+Stratum is hetzelfde als de drievoudige interactie `regio*sbp*openheid`, behalve dat Weidestreek een apart stratum is en niet wordt opgesplitst volgens SBP of openheidsklasse.
+
+> In de toekomst moeten we onderzoeken hoe we per soort specifieke formules kunnen gebruiken op basis van aantal data per stratum. Nu worden voor elke soort alle formules geprobeerd op basis van alle data, maar deze aanpak zouden we nog verder kunnen verfijnen.
+
+**3.** Stratum- en regiomodellen
+
+We fitten eerst alle combinaties van sleutelfuncties en formules op de stratumdata.
+Via model selectie (zie volgende paragraaf) wordt het optimale model geselecteerd voor de detectiecurve.
+
+We gebruiken dit finale model dan vervolgens voor de regiodata.
+Hier moeten we dus maar 1 model fitten omdat de detectiekans hetzelfde is, maar de extrapolatie is anders omdat we hier geïnteresseerd zijn in schattingen op regioniveau.
+Uit dit model wordt ook het totaal op Vlaams niveau gehaald.
+
+### Model selectie en model fit
+
+**1.** Model selectie
+
+We vergelijken de AIC waardes tussen de verschillende modellen.
+We selecteren het model met de laagste AIC waarde tenzij er een model is die minder op minder dan 2 verschilt in AIC en een lager aantal parameters heeft.
+
+**2.** Model fit
+
+We bekijken achteraf model fit van het finale model.
+Hier wordt geen geautomatiseerde selectie op toegepast.
+
+### Resultaten
+
+We rapporteren de berekende detectiekansen met hun onzekerheid.
+We rapporteren 95 % betrouwbaarheidsintervallen ervan uitgaande dat deze een [bètaverdeling](https://nl.wikipedia.org/wiki/B%C3%A8taverdeling) volgen (op basis van gemiddelde en standaardfout).
+
+We rapporteren de berekende abundanties en densiteiten met 95 % betrouwbaarheidsintervallen per soort per jaar en dit per stratum, regio en voor heel Vlaanderen.
+
+```{r, results='asis'}
+for (sp in species_list) {
+  params <- list(
+    species = sp,
+    years = year_list
+  )
+  out <- capture.output({
+    child <- knitr::knit_child(
+      file.path(here::here(), "ds_per_species.Rmd"),
+      envir = knit_global()
+    )
+  })
+  cat(child, sep = "\n")
+}
+```
+
+# Spatiale predicties
+## Methoden
+
+We stellen hier een workflow op voor het maken van verspreidingskaartjes.
+We maken gebruik van *generalized additive models* (GAMs) die we kunnen fitten met de **mgcv**-package.
+Dit doen we op een parallelle manier zoals de densiteitsschattingen: per soort per jaar.
+
+### Model specificatie
+
+We fitten het volgende type model:
+
+```
+count ~ stratum + period + s(x, y) + s(site, bs = "re")
+```
+
+* `count` is het aantal individuen gezien op een bepaald telpunt in een bepaalde telperiode.
+* `stratum` is een categorische variabele voor elk stratum (combinatie van binnen of buiten SBP, HOL of OL, regio). De Weidestreek is een apart stratum en wordt niet opgesplitst in SBP of openheid.
+* `period` is een effect voor telperiode.
+* `s(x, y)` is een flexibele spline voor X- en Y-coördinaten van het telpunt (zie verder).
+* `s(site, bs = "re")` is een random intercept voor elk telpunt.
+
+### Selectie van responsdistributie
+
+We testen eerst een eenvoudiger model met vier verschillende responsdistributies:
+
+1. Poisson
+2. Zero-inflated Poisson
+3. Negatief-binomiaal
+4. Zero-inflated Negatief-binomiaal
+
+We selecteren de best passende distributie op basis van **AIC**, maar we controleren altijd de residuen met bv. **DHARMa** om over- of onderdispersie en zero-inflatie te detecteren.
+AIC alleen kan namelijk misleidend zijn als de residu-structuur slecht is.
+
+Bij zero-inflated modellen in **mgcv** gebruiken we `family = ziplss()` of `family = nb()` in combinatie met een extra lineair predictiegedeelte voor de zero-inflatie.
+
+### Selectie van spatiale spline
+
+| `bs=`           | Naam                         | Best voor                                                          | Opmerkingen                                 |
+| --------------- | ---------------------------- | ------------------------------------------------------------------ | ------------------------------------------- |
+| `"tp"`          | Thin Plate Regression Spline | **Standaardkeuze**, goed voor algemeen gebruik                     | Automatisch isotroop, past goed bij Lambert |
+| `"ts"`          | Thin Plate Shrinkage         | Als `"tp"`, maar kan ruimtelijk effect volledig wegshrinken        | Nuttig als ruimtelijk effect optioneel is   |
+| `"te"` / `"ti"` | Tensor product smooth        | Als anisotropie mogelijk is of als x/y sterk verschillen in schaal | Bij Lambert meestal niet strikt nodig       |
+| `"soap"`        | Soap film smoother           | Complexe of kustlijnen met grenzen                                 | Vereist boundary polygon                    |
+
+**Beste opties voor Vlaanderen (Lambert72):**
+
+* `s(x, y, bs = "tp")` – robuust, eenvoudig en snel.
+* `te(x, y)` – als anisotropie waarschijnlijk is (bv. sterkere gradiënten oost-west dan noord-zuid).
+
+**Testen op anisotropie:**
+Fit zowel `"tp"` als `"te"` en vergelijk met AIC of likelihood ratio test. Als `"te"` beter scoort, wijst dat op anisotropie.
+
+### Keuze van maximum aantal basisdimensies (`k`)
+
+* `k` bepaalt het **maximum** aan modelcomplexiteit voor de spline, maar de effectieve gladheid wordt bepaald door penalizatie (REML/GCV).
+* Startwaarden:
+
+| Datasetgrootte | `k` (isotroop)        | `k` (tensor, per as) |
+| -------------- | --------------------- | -------------------- |
+| < 500          | 30–50                 | 20–30                |
+| 1.000 – 10.000 | 50–150                | 30–75                |
+| > 10.000       | 100–250 (voorzichtig) | 50–125               |
+
+* Controleer altijd met `gam.check()`:
+
+  * **OK**: `k-index` > 1 en `p` > 0.05
+  * **Niet OK**: `k-index` < 1 en `p` < 0.05 → verhoog `k`.
+  * Stop verhogen als `edf` duidelijk < `k` en runtime acceptabel blijft.
+
+### Predicties en onzekerheid
+
+We maken predicties voor het steekproefkader in de 4 telperiodes.
+Om onzekerheid mee te nemen, gebruiken we **posterior simulatie**:
+
+1. Haal de covariantiematrix van de schattingen op (`vcov(gam_model)`).
+2. Simuleer modelparameters uit een multivariate normale verdeling (`MASS::mvrnorm()`), of gebruik `gratia::posterior_samples()` voor gemak.
+3. Voorspel voor alle gridpunten en alle perioden met elke gesimuleerde parameterreeks.
+4. Neem **per simulatie** het maximum over perioden → zo krijg je een posteriorverdeling van de maxima.
+5. Samenvatten: gemiddelde, mediaan, betrouwbaarheidsintervallen.
+
+**Detectiecorrectie:**
+We simuleren de detectiekansen uit 'distance sampling' als bètaverdelingen en delen per simulatie de voorspelde maxima door de gesimuleerde detectiekansen.
+Zo krijg je een ruimtelijk voorspelde waarde die vergelijkbaar is met de densiteitsschattingen van 'distance sampling'.
