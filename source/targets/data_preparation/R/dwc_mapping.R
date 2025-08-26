@@ -85,9 +85,8 @@ unchanged_mapping <- function(data_df) {
       "dwc_organismQuantity"   = "raw_aantal",
       "dwc_locationID"         = "raw_plotnaam",
       "dwc_verbatimBehavior"   = "raw_wrntype_omschrijving",
-      "dwc_occurrenceRemarks"  = "raw_opmerk",
-      "dwc_taxonID"            = "raw_soortnr",
-      "dwc_is_mas_sample"      = "raw_is_mas_sample"
+      "dwc_occurrenceRemarks"  = "raw_is_mas_sample",
+      "dwc_taxonID"            = "raw_soortnr"
     ) %>%
     mutate(
       dwc_identifiedBy = .data$dwc_recordedBy
