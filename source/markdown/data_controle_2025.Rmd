@@ -166,7 +166,27 @@ select_time_periods %>%
   kable()
 ```
 
-> Wat is er gebeurt bij de andere?
+> Wat is er gebeurt?
+
+<!-- spell-check: ignore:start -->
+
+- Ol_18064.5: 
+- Zn_56194.1.1:
+- Km_21406.3:
+- Km_21470.1.4:
+- Ol_1585.1:
+- Ol_1686.1:
+- Ol_6671.7: 
+- Pl_8493.1.5: werd niet geteld in eerste ronde wegens miscommunicatie (zie mail Simon)
+- VL0273:
+- VL0584:
+- VL0587:
+- VL0590:
+- Zn_30461.7: wel 4x geteld, maar 2x in R2
+- Zn_56164.18:
+- Zn_8668.9:
+
+<!-- spell-check: ignore:end -->
 
 ## Herbereken afstand tot telpunt (calculate_obs_distance)
 
@@ -207,7 +227,7 @@ outlying_distances <- distances_og %>%
 outlying_distances
 ```
 
-Ja, maar dit is o peen zeer grote afstand.
+Ja, maar dit is op een zeer grote afstand.
 Die zullen in het volgende hoofdstuk bekeken worden.
 
 ## Selecteer data binnen telcirkel radius (select_within_radius)
@@ -511,6 +531,21 @@ leaflet_map
 ```
 
 > Wat moet hiermee gebeuren?
+
+<!-- spell-check: ignore:start -->
+
+- Zn_103891.3, R3
+  - Simon D.: Ik zie dat de vrijwilliger dit telpunt zowel op 17 mei als op 23 mei geteld heeft. Op 17/05 verliep de telling correct, op 23/05 bevinden de meeste waarnemingen zich op het verkeerde telpunt, namelijk Zn_18968.2.3. Dat telpunt werd wel 4x correct geteld. Daarom stel ik voor om de telling van 23/05 definitief te verwijderen.
+- Zn_102166.5, R3
+  - Simon D.: Dit telpunt lijkt correct te zijn geteld, maar ook waarnemingen van telpunt Zn_30850.2 zijn hier ingevoerd. Gelukkig heeft de vrijwilliger Zn_30850.2 wel 4x geteld. Daarom stel ik voor om de waarnemingen buiten de telcirkel van Zn_102166.5 te verwijderen.
+- Km_35571.6, R3
+  - Lijkt op 2 plaatsen geteld te zijn?
+- Pl_14232.4, R4
+  - Simon D.: Er zijn ook waarnemingen van telpunt Pl_25350.30 bij  Pl_14232.4 ingevoerd. Ik stel voor om de waarnemingen buiten de telcirkel van Pl_14232.4 te verwijderen.
+- Zn_90455.1, R4
+  - Simon D.: De extra waarnemingen bevinden zich op het telpunt Zn_44403.4, dat gelukkig 4x geteld werd. Blijkbaar heeft de waarnemer op dit telpunt een nieuwe telling toegevoegd i.p.v. ze te wijzigen om een soort toe te voegen. Ik stel voor om de waarnemingen buiten de telcirkel van Zn_90455.1  te verwijderen.
+
+<!-- spell-check: ignore:end -->
 
 ## Selecteer soortengroepen (select_species_groups)
 
