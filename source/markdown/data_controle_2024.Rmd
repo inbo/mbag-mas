@@ -1617,7 +1617,7 @@ sort(colnames(darwincore_mapping)[
   - `raw_plotid`: we gebruiken eigenlijk altijd plotnaam
   - `raw_projectid`: is dit INBO of SOVON gerelateerd?
 
-> Laatste 2 lijken ons alvast niet relevant.
+> niet relevant
 
 Welke kolommen moet nog aangevuld worden?
 
@@ -1641,12 +1641,10 @@ glimpse(dwc_mapping_final)
 
 Overige opmerkingen en vragen:
 
-- Ok dat `varbatimBehavior` de Nederlandstalige beschrijving is? De Engelstalige beschrijving staat onder `behavior`. Of mag de Nederlandse beschrijving weg?
 - We kunnen ook afwezigheden toevoegen (`occurrenceStatus = "absent"` en `organismQuantity = 0`) aangezien alle vogels worden genoteerd op het moment van tellen vanaf dat telpunt. Hoe doen we dit?
   - We kijken per jaar naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten per jaar. *Voordeel:* geen verandering als er data van een nieuw jaar bijkomt. *Nadeel:* niet volledig aangezien deze lijst niet volledig is.
   - We kijken over de hele dataset naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten. *Voordeel:* steeds meer volledige lijst van soorten. *Nadeel:* dataset zal elk jaar veranderen.
   - Afwezigheden toevoegen o.b.v. externe lijst?
   - ...
-- Buiten MBAG - MAS, publiceren we ook de overige MAS data van de Sovon export. Is de kolomnaam `is_mas_sample` ok?
 
 > Zouden afwezigheden correct zijn? Er is geen streeplijst gebruikt, dus eerder niet.
