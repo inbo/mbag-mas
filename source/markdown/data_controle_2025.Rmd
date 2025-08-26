@@ -153,57 +153,6 @@ obs_per_year %>%
   kable()
 ```
 
-**Zandleemstreek**
-
-```{r}
-# Which occurrences fall outside periods?
-oid_zlm <- select_sampled_points %>%
-  st_drop_geometry() %>%
-  filter(regio == "Zandleemstreek") %>%
-  pull(oid)
-
-oid_zlm_filtered <- select_time_periods %>%
-  st_drop_geometry() %>%
-  filter(regio == "Zandleemstreek") %>%
-  pull(oid)
-
-oid_zlm_diff <- setdiff(oid_zlm, oid_zlm_filtered)
-
-# Count number of observations per location and date
-obs_per_date_zlm <- select_sampled_points %>%
-  st_drop_geometry() %>%
-  filter(regio == "Zandleemstreek",
-         oid %in% oid_zlm_diff) %>%
-  mutate(datum = ymd(paste(jaar, maand, dag, sep = "-"))) %>%
-  count(plotnaam, datum, name = "n_obs") %>%
-  arrange(plotnaam, datum)
-
-obs_per_date_zlm %>%
-  kable()
-```
-
-Deze punten zijn geteld vlak na telronde 4.
-Worden deze punten wel ook nog geteld in de correcte periodes?
-
-```{r}
-# How many times are these locations counted in valid periods?
-obs_per_period_zlm <- select_time_periods %>%
-  st_drop_geometry() %>%
-  filter(regio == "Zandleemstreek",
-         plotnaam %in% unique(obs_per_date_zlm$plotnaam)) %>%
-  count(plotnaam, periode_in_jaar, naam = "n_obs") %>%
-  group_by(plotnaam) %>%
-  mutate(n_periodes = n_distinct(periode_in_jaar)) %>%
-  ungroup()
-
-obs_per_period_zlm %>%
-  kable()
-```
-
-Neen, deze locaties zijn niet in telperiode 4 geteld.
-
-> Behouden we deze data?
-
 Zijn alle telpunten in elke telperiode geteld?
 
 ```{r}
@@ -217,7 +166,7 @@ select_time_periods %>%
   kable()
 ```
 
-> Van twee telpunten weten we dat ze vlak na R4 zijn geteld. Wat is er gebeurt bij de andere?
+> Wat is er gebeurt bij de andere?
 
 ## Herbereken afstand tot telpunt (calculate_obs_distance)
 
