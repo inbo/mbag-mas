@@ -109,6 +109,11 @@ list(
       area = 300 * 300 * pi
     )
   ),
+  # Get centroids
+  tar_target(
+    name = flanders_hexgrid_centroids,
+    command = st_centroid(flanders_hexgrid)
+  ),
   # Add variables to grid
   # Openness:
   tarchetypes::tar_file(
@@ -119,7 +124,7 @@ list(
     name = grid_with_openheid,
     command = add_openheid_landschap_to_frame(
       path = openheid_landschap_file,
-      punten_sf = st_centroid(flanders_hexgrid),
+      punten_sf = flanders_hexgrid_centroids,
       gebied = flanders_sf,
       cutlevels = c(1.25, 1.35, 1.51),
       class_labels = c("GL", "HGL", "HOL", "OL")
@@ -159,7 +164,9 @@ list(
       cbind(st_drop_geometry(grid_with_sbp)) %>%
       mutate(
         sbp = ifelse(is_sbp, "binnen", "buiten"),
-        id = row_number(),
+        plotnaam = row_number(),
+        x_plot = st_coordinates(flanders_hexgrid_centroids)[, "X"],
+        y_plot = st_coordinates(flanders_hexgrid_centroids)[, "Y"],
         stratum = ifelse(
           regio == "Weidestreek",
           "Weidestreek",
@@ -167,7 +174,9 @@ list(
         )
       ) %>%
       filter(openheid_klasse %in% c("OL", "HOL")) %>%
-      select(id, regio, openheid_klasse, sbp, stratum, geometry)
+      select(
+        plotnaam, regio, openheid_klasse, sbp, stratum, x_plot, y_plot, geometry
+      )
   ),
 
   ## Prepare design for distance sampling
