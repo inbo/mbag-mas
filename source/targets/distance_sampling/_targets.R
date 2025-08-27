@@ -10,6 +10,8 @@ library(dplyr)
 library(readr)
 library(sf)
 
+conflicted::conflicts_prefer(dplyr::filter)
+
 # Set target options
 tar_option_set(
   packages = c("tidyverse",
@@ -28,6 +30,7 @@ tar_source()
 source(file.path(mbag_dir, "source", "R", "predatoren_f.R"))
 source(file.path(mbag_dir, "source", "R", "summarize_ds_models2.R"))
 source(file.path(mbag_dir, "source", "R", "beta_fit_params.R"))
+source(file.path(mbag_dir, "source", "R", "berekening_hulpvariabelen.R"))
 
 # Replace the target list below with your own:
 list(
@@ -102,9 +105,69 @@ list(
   tar_target(
     name = flanders_hexgrid,
     command = make_hex_grid(
-      flanders_sf,
+      region_sf,
       area = 300 * 300 * pi
     )
+  ),
+  # Add variables to grid
+  # Openness:
+  tarchetypes::tar_file(
+    name = openheid_landschap_file,
+    command = path_to_openheid_landschap()
+  ),
+  tar_target(
+    name = grid_with_openheid,
+    command = add_openheid_landschap_to_frame(
+      path = openheid_landschap_file,
+      punten_sf = st_centroid(flanders_hexgrid),
+      gebied = flanders_sf,
+      cutlevels = c(1.25, 1.35, 1.51),
+      class_labels = c("GL", "HGL", "HOL", "OL")
+    )
+  ),
+  # SBP:
+  tarchetypes::tar_file(
+    sbp_akkervogels_file,
+    path_to_sbp_akkervogels(file = "akkervogelgebieden2022.shp")
+  ),
+  tarchetypes::tar_file(
+    sbp_overige_file,
+    path_to_sbp_akkervogels(file = "sbp_overige_soorten.shp")
+  ),
+  tar_target(
+    name = sbp_total,
+    command = read_sbp_akkervogels(
+      path = sbp_akkervogels_file,
+      gebied = flanders_sf %>%
+        mutate(Naam = "Vlaanderen"),
+      path_extra_soorten = sbp_overige_file,
+      extra_soorten = c("hamster", "bruine kiekendief", "zomertortel",
+                        "grauwe kiekendief")
+    )
+  ),
+  tar_target(
+    name = grid_with_sbp,
+    command = add_stratum_sbp(
+      punten_sf = grid_with_openheid,
+      sbp = sbp_total
+    )
+  ),
+  # Create final grid file:
+  tar_target(
+    name = prediction_hexgrid,
+    command = flanders_hexgrid %>%
+      cbind(st_drop_geometry(grid_with_sbp)) %>%
+      mutate(
+        sbp = ifelse(is_sbp, "binnen", "buiten"),
+        id = row_number(),
+        stratum = ifelse(
+          regio == "Weidestreek",
+          "Weidestreek",
+          paste(regio, openheid_klasse, sbp, sep = " - ")
+        )
+      ) %>%
+      filter(openheid_klasse %in% c("OL", "HOL")) %>%
+      select(id, regio, openheid_klasse, sbp, stratum, geometry)
   ),
 
   ## Prepare design for distance sampling
