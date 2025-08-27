@@ -390,7 +390,7 @@ Detectiekansen:
 tar_read_ds("detection_probabilities", params$species) %>%
   filter(year == params$year) %>%
   select(-species, -year) %>%
-  drop_na() %>%
+  select(where(function(x) !any(is.na(x)))) %>% # Remove NA columns
   relocate("estimate_p", "se_p", "ll_beta", "ul_beta", .after = last_col()) %>%
   kable(digits = 3)
 ```
@@ -650,6 +650,63 @@ AIC(m1, m_te)
 ### Predicties
 
 ```{r}
-predict(m1
+prediction_hexgrid_total <- tar_read("prediction_hexgrid")[[1]]
+prediction_hexgrid <- prediction_hexgrid_total %>%
+  filter(stratum %in% unique(count_data_2023$stratum)) %>%
+  expand_grid(periode_in_jaar = paste0("R", 1:4)) %>%
+  st_as_sf()
+
+mapview::mapview(distinct(prediction_hexgrid, stratum, geometry),
+                 zcol = "stratum",
+                 layer = "stratum")
 ```
 
+
+```{r}
+preds <- predict(m1, newdata = prediction_hexgrid, type = "response")
+```
+
+```{r}
+detection_probabilities <- tar_read_ds("detection_probabilities",
+                                       params$species)
+detprob_2023 <- detection_probabilities %>%
+  filter(year == params$year) %>%
+  select(where(function(x) !any(is.na(x)))) %>%
+  rename(openheid_klasse = openheid)
+```
+
+
+```{r}
+pred_dens <- cbind(prediction_hexgrid, preds) %>%
+  group_by(plotnaam, regio, openheid_klasse, sbp, stratum, geometry) %>%
+  summarise(pred = max(preds), .groups = "drop") %>%
+  left_join(detprob_2023) %>%
+  mutate(
+    cirkelopp = pi * 300^2,
+    ha_100 = 10^6,
+    offset = (estimate_p * cirkelopp) / ha_100,
+    pred_abu = pred / estimate_p,
+    pred_dens = pred / offset
+  )
+```
+
+```{r}
+ggplot(pred_dens) +
+  geom_sf(aes(fill = pred_dens), colour = alpha("white", 0)) +
+  scale_fill_gradientn(colours = rainbow(5), limits = c(0, NA)) +
+  coord_sf(crs = 31370) +
+  labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha") +
+  theme(legend.position = "bottom")
+```
+
+checks:
+
+```{r}
+pred_dens %>%
+  st_drop_geometry() %>%
+  group_by(stratum) %>%
+  summarise(
+    total_abundance = sum(pred_abu),
+    total_density = sum(pred_dens) / n()
+  )
+```
