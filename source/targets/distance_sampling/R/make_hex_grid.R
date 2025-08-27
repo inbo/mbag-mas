@@ -23,5 +23,11 @@ make_hex_grid <- function(x, area = 300 * 300 * pi) {
   # keep only hexagons with centroids inside
   grid <- grid[inside_idx, ]
 
-  return(grid)
+  # extract attributes from x
+  attributes <- st_join(centroids, x, join = st_intersects)
+  attributes_df <- st_drop_geometry(attributes[inside_idx, ])
+
+  out_grid <- cbind(grid, attributes_df)
+
+  return(out_grid)
 }
