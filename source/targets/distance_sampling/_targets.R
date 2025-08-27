@@ -176,7 +176,8 @@ list(
       filter(openheid_klasse %in% c("OL", "HOL")) %>%
       select(
         plotnaam, regio, openheid_klasse, sbp, stratum, x_plot, y_plot, geometry
-      )
+      ) %>%
+      list()
   ),
 
   ## Prepare design for distance sampling
