@@ -127,6 +127,7 @@ add_openheid_landschap_to_frame <- function(
     gebied,
     cutlevels = c(1.25, 1.35, 1.51),
     class_labels = c("GL", "HGL", "HOL", "OL")) {
+  require("terra")
 
   openheid <- rast(path)
   openheid <- crop(openheid, gebied)
@@ -183,7 +184,7 @@ read_sbp_others <- function(
       st_union() %>%
       st_buffer(dist = 20) %>%
       st_simplify(dTolerance = 10) %>%
-      st_remove_holes() %>%
+      nngeo::st_remove_holes() %>%
       st_as_sf() %>%
       mutate(Naam = gebied$Naam) %>%
       rename(geometry = x)
@@ -198,6 +199,7 @@ read_sbp_akkervogels <- function(
     gebied,
     path_extra_soorten = NULL,
     extra_soorten = NULL) {
+  require("dplyr")
 
   if (gebied$Naam == "De Moeren") {
     sbp_akkervogels <- st_read(path) %>%
@@ -215,7 +217,7 @@ read_sbp_akkervogels <- function(
       st_union() %>%
       st_buffer(dist = 20) %>%
       st_simplify(dTolerance = 10) %>%
-      st_remove_holes() %>%
+      nngeo::st_remove_holes() %>%
       st_as_sf() %>%
       mutate(Naam = gebied$Naam) %>%
       rename(geometry = x)
