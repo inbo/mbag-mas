@@ -60,6 +60,20 @@ list(
     name = full_sample,
     command = st_read(full_sample_file)
   ),
+  # Calculate area per stratum
+  tar_target(
+    name = strata_sf,
+    command = full_sample %>%
+      mutate(
+        regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
+      ) %>%
+      st_buffer(dist = 300) %>%
+      group_by(regio, "openheid" = openheid_klasse, sbp) %>%
+      summarise(geom = st_union(geom)) %>%
+      ungroup() %>%
+      mutate(Area = as.numeric(st_area(geom)) / 1e6) %>%
+      select(regio, openheid, sbp, Area, everything())
+  ),
   # Calculate area per region
   tar_target(
     name = region_sf,
@@ -74,19 +88,13 @@ list(
       mutate(Area = as.numeric(st_area(geom)) / 1e6) %>%
       select(regio, Area, everything())
   ),
-  # Calculate area per stratum
+  # Create sampling area object for Flanders
   tar_target(
-    name = strata_sf,
+    name = flanders_sf,
     command = full_sample %>%
-      mutate(
-        regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
-      ) %>%
       st_buffer(dist = 300) %>%
-      group_by(regio, "openheid" = openheid_klasse, sbp) %>%
       summarise(geom = st_union(geom)) %>%
-      ungroup() %>%
-      mutate(Area = as.numeric(st_area(geom)) / 1e6) %>%
-      select(regio, openheid, sbp, Area, everything())
+      ungroup()
   ),
 
   ## Prepare design for distance sampling
