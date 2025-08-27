@@ -598,22 +598,58 @@ zeroes_2023 <- design %>%
   )
 
 # Bind datasets together
-count_data_2023 <- bind_rows(presences_2023, zeroes_2023)
+count_data_2023 <- bind_rows(presences_2023, zeroes_2023) %>%
+  mutate(plotnaam = factor(plotnaam))
+```
+
+```{r}
+count_data_2023 %>%
+  count(count, stratum) %>%
+  ggplot(aes(x = count, y = n)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~stratum, ncol = 2, scales = "free")
 ```
 
 ### Selecteer responsdistributie
 
 ```{r}
 library(mgcv)
-
 ```
 
+Poisson:
+
+```{r}
+# Thin plate regression spline (isotropic)
+m1 <- gam(count ~ stratum + periode_in_jaar + s(x_plot, y_plot, bs = "tp") +
+            s(plotnaam, bs = "re"),
+          data = count_data_2023, family = poisson())
+
+gam.check(m1)
+```
 
 ### Selecteer spatiale spline
-#### Isotropie
+#### Anisotropie
+
+```{r}
+# Tensor product smooth (anisotropic)
+m_te <- gam(count ~ stratum + periode_in_jaar + te(x_plot, y_plot) +
+            s(plotnaam, bs = "re"),
+          data = count_data_2023, family = poisson())
+
+gam.check(m_te)
+```
+
+```{r}
+AIC(m1, m_te)
+```
 
 #### Maximum aantal basisdimensies
 
 ### Model fit
 
 ### Predicties
+
+```{r}
+predict(m1
+```
+
