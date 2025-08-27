@@ -539,7 +539,75 @@ densities_region_target %>%
 
 # Spatiale predicties
 ## Veldleeuwerik - 2023
+
+```{r}
+params$year <- 2023
+```
+
+We bereiden de data voor.
+
+> We houden er nu geen rekening mee dat een plot soms niet bezocht is, we zetten het aantal gewoon op 0! Dat is niet ok!
+
+```{r}
+# Presences
+presences_2023 <- filtered_distance_df %>%
+  filter(jaar == params$year) %>%
+  group_by(
+    plotnaam, x_plot, y_plot, periode_in_jaar, regio, openheid_klasse, sbp,
+    stratum
+  ) %>%
+  summarise(count = sum(aantal), .groups = "drop") %>%
+  select(
+   count, plotnaam, periode_in_jaar, regio, openheid_klasse, sbp, stratum,
+   x_plot, y_plot
+  )
+
+# Add zeroes
+design <- tar_read("design")
+zeroes_2023 <- design %>%
+  mutate(year = params$year) %>%
+  filter(
+    if (params$year == 2023) {
+      year == params$year & grepl("^Zandleem|^Leem", regio)
+    } else {
+      year == params$year
+    }
+  ) %>%
+  select(
+    "plotnaam" = "pointid", "regio", "openheid_klasse", "sbp",
+    "x_plot" = "x_coord", "y_plot" = "y_coord"
+  ) %>%
+  expand_grid(periode_in_jaar = paste0("R", 1:4)) %>%
+  anti_join(
+    presences_2023,
+    by = join_by(
+      plotnaam, regio, openheid_klasse, sbp, x_plot, y_plot, periode_in_jaar
+    )
+  ) %>%
+  mutate(
+    count = 0,
+    stratum = ifelse(
+      regio == "Weidestreek",
+      "Weidestreek",
+      paste(regio, openheid_klasse, sbp, sep = " - ")
+    )
+  ) %>%
+  select(
+   count, plotnaam, periode_in_jaar, regio, openheid_klasse, sbp, stratum,
+   x_plot, y_plot
+  )
+
+# Bind datasets together
+count_data_2023 <- bind_rows(presences_2023, zeroes_2023)
+```
+
 ### Selecteer responsdistributie
+
+```{r}
+library(mgcv)
+
+```
+
 
 ### Selecteer spatiale spline
 #### Isotropie
