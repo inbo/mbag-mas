@@ -97,6 +97,16 @@ list(
       ungroup()
   ),
 
+  ## Create prediction grid for spatial analysis
+  # Create hexagonal grid over sampling area
+  tar_target(
+    name = flanders_hexgrid,
+    command = make_hex_grid(
+      flanders_sf,
+      area = 300 * 300 * pi
+    )
+  ),
+
   ## Prepare design for distance sampling
   # Read design
   tar_file(
