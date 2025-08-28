@@ -27,6 +27,7 @@ opts_knit$set(root.dir = here::here())
 ```{r}
 # packages
 library(tidyverse)
+library(sf)
 library(targets)
 library(Distance)
 
