@@ -9,6 +9,7 @@ library(tarchetypes)
 library(dplyr)
 library(readr)
 library(sf)
+library(glmmTMB)
 
 conflicted::conflicts_prefer(dplyr::filter)
 
@@ -106,7 +107,8 @@ list(
     name = flanders_hexgrid,
     command = make_hex_grid(
       region_sf,
-      area = 300 * 300 * pi
+      area = 300 * 300 * pi,
+      square = TRUE
     )
   ),
   # Get centroids
@@ -540,6 +542,38 @@ list(
     tar_target(
       name = densities_region,
       command = bind_rows(densities_region_list)
+    ),
+
+
+    ## Prediction maps
+    # Prepare dataset
+    tar_group_by( # presences
+      name = presence_data,
+      command = get_presences(filtered_breeding_date) %>%
+        filter(jaar > 2023),
+      jaar
+    ),
+    tar_target( # absences
+      name = absence_data,
+      command = get_absences(presence_data, design),
+      pattern = map(presence_data)
+    ),
+    tar_target(
+      name = gam_data,
+      command = bind_rows(presence_data, absence_data) %>%
+        mutate(plotnaam = factor(plotnaam))
+    ),
+
+    tar_target(
+      name = model_fit,
+      command = glmmTMB(
+        count ~ stratum + periode_in_jaar + s(x_plot, y_plot, bs = "tp") +
+          (1|plotnaam),
+        data = gam_data,
+        family = poisson()
+      ),
+      pattern = map(gam_data),
+      iteration = "list"
     )
   )
 )

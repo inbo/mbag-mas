@@ -1,4 +1,4 @@
-make_hex_grid <- function(x, area = 300 * 300 * pi) {
+make_hex_grid <- function(x, area = 300 * 300 * pi, square = FALSE) {
   require("sf")
 
   # target_area can be numeric (m^2) or units
@@ -10,7 +10,7 @@ make_hex_grid <- function(x, area = 300 * 300 * pi) {
   grid <- st_make_grid(
     x,
     cellsize = target_area,
-    square = FALSE
+    square = square
   )
   grid <- st_sf(geometry = grid)
 
