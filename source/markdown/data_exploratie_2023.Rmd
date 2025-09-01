@@ -92,6 +92,8 @@ We bekijken eerst enkele cijfers per stratum.
 # Calculate number of plots, observations and species per stratum
 summary_vogels_2023 <- mas_2023_vogels %>%
   st_drop_geometry() %>%
+  mutate(regio = ifelse(grepl("\\sleemstreek$", regio),
+                        "Leemstreek", regio)) %>%
   group_by(regio, jaar) %>%
   mutate(aantal_soorten_regiojaar = n_distinct(naam)) %>%
   group_by(regio, jaar, openheid_klasse, sbp) %>%
@@ -119,6 +121,8 @@ De meeste telpunten werden in alle telperiodes aangedaan.
 # Number of plots counted in each period
 p <- mas_2023_vogels %>%
   st_drop_geometry() %>%
+  mutate(regio = ifelse(grepl("\\sleemstreek$", regio),
+                        "Leemstreek", regio)) %>%
   group_by(regio, jaar, periode_in_jaar) %>%
   summarise(
     aantal_telpunten = n_distinct(plotnaam),
@@ -139,7 +143,7 @@ save_figure(p, here(media_folder, "tellingen_vogels_2023"), devices,
 p
 ```
 
-Enkel in de Oostelijke leemstreek is er een telpunt waarvan we data van 1 periode hebben en 2 waarvan we data van 3 periodes hebben.
+Vijf telpunten werden in 3 telperiodes geteld in plaats van 4.
 
 ```{r}
 # Count number of counting periods
@@ -154,22 +158,13 @@ mas_2023_vogels %>%
   kable()
 ```
 
-VL0194 werd in principe 3x geteld maar deze had verschillende waarnemingen verder dan 300 meter.
-Dit telpunt wordt weggelaten voor verdere analyses.
-Ol_2214.11 werd niet in telperiode 4 geteld.
-VL0209 werd niet in telperiode 4 geteld.
-
-> moet opgelost zijn na data controle!
-
-```{r}
-mas_2023_vogels <- mas_2023_vogels %>%
-  filter(plotnaam != "VL0194")
-```
-
 We kijken naar het aantal soorten.
 
 ```{r}
 p <- mas_2023_vogels %>%
+  st_drop_geometry() %>%
+  mutate(regio = ifelse(grepl("\\sleemstreek$", regio),
+                        "Leemstreek", regio)) %>%
   group_by(regio, jaar, periode_in_jaar, plotnaam) %>%
   summarise(n = n_distinct(naam), .groups = "drop") %>%
   ggplot(aes(x = periode_in_jaar, y = n, fill = regio)) +
@@ -189,11 +184,13 @@ We kijken ook naar het aantal waarnemingen.
 ```{r}
 # Number of observations counted in each period
 p <- mas_2023_vogels %>%
+  st_drop_geometry() %>%
+  mutate(regio = ifelse(grepl("\\sleemstreek$", regio),
+                        "Leemstreek", regio)) %>%
   count(regio, jaar, periode_in_jaar, plotnaam) %>%
-  ggplot(aes(x = periode_in_jaar, y = n)) +
+  ggplot(aes(x = periode_in_jaar, y = n, fill = regio)) +
   geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
   geom_boxplot() +
-  facet_wrap(~regio) +
   labs(x = "Telperiode", y = "Aantal waarnemingen per telpunt")
 
 save_figure(p, here(media_folder, "waarnemingen_vogels_2023"), devices,

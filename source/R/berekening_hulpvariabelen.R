@@ -118,6 +118,8 @@ calc_lbg <- function(path,
 
 path_to_openheid_landschap <- function(
     file = "openness300m_chm_res25_c300_mean_vlaanderen.tif") {
+  mbag_dir <- rprojroot::find_root_file(
+    criterion = rprojroot::is_git_root)
   file.path(mbag_dir, "data", "dem", file)
 }
 
@@ -165,6 +167,8 @@ add_openheid_landschap_to_frame <- function(
 
 
 path_to_sbp_akkervogels <- function(file = "akkervogelgebieden.shp") {
+  mbag_dir <- rprojroot::find_root_file(
+    criterion = rprojroot::is_git_root)
   file.path(mbag_dir, "data", "bo_vlm", file)
 }
 

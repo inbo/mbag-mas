@@ -1,5 +1,7 @@
 # nolint start
 path_to_existing <- function(file) {
+  mbag_dir <- rprojroot::find_root_file(
+    criterion = rprojroot::is_git_root)
   file.path(mbag_dir, "data", "SOVON", file)
 }
 

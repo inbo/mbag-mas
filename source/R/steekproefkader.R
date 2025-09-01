@@ -11,6 +11,8 @@ st_crs.SpatRaster <- function(x, ...) {
 
 
 path_to_perimeters <- function(file = "piloot_perimeters.gpkg") {
+  mbag_dir <- rprojroot::find_root_file(
+    criterion = rprojroot::is_git_root)
   file.path(mbag_dir, "data", "processed", file)
 }
 
@@ -20,12 +22,16 @@ path_to_osm_download <- function() {
 }
 
 path_to_lum <- function(jaar = 2019) {
+  mbag_dir <- rprojroot::find_root_file(
+    criterion = rprojroot::is_git_root)
   file.path(mbag_dir, "data", "landgebruik", "vito",
             paste0("lu_landgebruik_vlaa_", jaar, "_v2.tif")
             )
 }
 
 path_to_legend_lum <- function() {
+  mbag_dir <- rprojroot::find_root_file(
+    criterion = rprojroot::is_git_root)
   file.path(mbag_dir, "data", "landgebruik", "legende_landgebruik.csv")
 }
 
