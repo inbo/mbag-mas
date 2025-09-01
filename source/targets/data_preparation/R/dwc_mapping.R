@@ -85,8 +85,7 @@ unchanged_mapping <- function(data_df) {
       "dwc_organismQuantity"   = "raw_aantal",
       "dwc_locationID"         = "raw_plotnaam",
       "dwc_verbatimBehavior"   = "raw_wrntype_omschrijving",
-      "dwc_occurrenceRemarks"  = "raw_is_mas_sample",
-      "dwc_taxonID"            = "raw_soortnr"
+      "dwc_occurrenceRemarks"  = "raw_is_mas_sample"
     ) %>%
     mutate(
       dwc_identifiedBy = .data$dwc_recordedBy
@@ -115,6 +114,11 @@ modified_mapping <- function(data_df) {
         "MBAG", "MAS", .data$dwc_eventDate, .data$dwc_locationID, sep = ":"
       ),
       dwc_class = ifelse(.data$raw_soortgrp == 2, "Aves", "Mammalia"),
+      dwc_taxonID = paste(
+        "euring",
+        formatC(.data$raw_soortnr, width = 5, format = "d", flag = "0"),
+        sep = ":"
+      ),
       dwc_occurrenceStatus = ifelse(.data$dwc_organismQuantity > 0,
                                     "Present", "Absent"),
       dwc_behavior = case_when(
