@@ -134,7 +134,9 @@ book:
   - 05_uitrol_meetnet.qmd
   - 06_analyse_plan.qmd
   - 07_resultaten.qmd
-  - 08_discussie.qmd
-  - 09_referenties.md
+  - 08_remote_sensing.qmd
+  - 09_densiteitsschattingen.qmd
+  - 10_discussie.qmd
+  - 11_referenties.md
   appendices:
     - kaarten_sbp.qmd
