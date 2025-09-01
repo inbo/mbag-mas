@@ -133,7 +133,7 @@ book:
   - 04_inleiding.qmd
   - 05_uitrol_meetnet.qmd
   - 06_analyse_plan.qmd
-  - 07_resultaten.qmd
+  - 07_verkennende_resultaten.qmd
   - 08_remote_sensing.qmd
   - 09_densiteitsschattingen.qmd
   - 10_discussie.qmd
