@@ -181,6 +181,13 @@ list(
       ) %>%
       list()
   ),
+  tar_target(
+    name = prediction_hexgrid_period,
+    command = prediction_hexgrid[[1]] %>%
+      expand_grid(periode_in_jaar = paste0("R", 1:4)) %>%
+      st_as_sf() %>%
+      list()
+  ),
 
   ## Prepare design for distance sampling
   # Read design
@@ -558,21 +565,35 @@ list(
       command = get_absences(presence_data, design),
       pattern = map(presence_data)
     ),
-    tar_target(
+    tar_group_by(
       name = gam_data,
       command = bind_rows(presence_data, absence_data) %>%
-        mutate(plotnaam = factor(plotnaam))
+        mutate(plotnaam = factor(plotnaam)),
+      jaar
     ),
 
+    # Fit models
     tar_target(
       name = model_fit,
-      command = glmmTMB(
+      command = list(glmmTMB(
         count ~ stratum + periode_in_jaar + s(x_plot, y_plot, bs = "tp") +
           (1|plotnaam),
         data = gam_data,
         family = poisson()
+      )),
+      pattern = map(gam_data)
+    ),
+
+    # Make predictions
+    tar_target(
+      name = model_pred,
+      command = predict(
+        model_fit[[1]],
+        newdata = prediction_hexgrid_period[[1]] %>%
+          mutate(plotnaam = NA),
+        type = "response"
       ),
-      pattern = map(gam_data),
+      pattern = map(model_fit),
       iteration = "list"
     )
   )

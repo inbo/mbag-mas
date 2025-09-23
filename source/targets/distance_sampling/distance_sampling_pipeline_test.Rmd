@@ -542,7 +542,8 @@ densities_region_target %>%
 ## Veldleeuwerik - 2023
 
 ```{r}
-params$year <- 2023
+params$year <- 2024
+params$species <- "Roodborsttapuit"
 ```
 
 We bereiden de data voor.
@@ -550,6 +551,7 @@ We bereiden de data voor.
 > We houden er nu geen rekening mee dat een plot soms niet bezocht is, we zetten het aantal gewoon op 0! Dat is niet ok!
 
 ```{r}
+filtered_distance_df <- tar_read_ds("filtered_breeding_date", params$species)
 # Presences
 presences_2023 <- filtered_distance_df %>%
   filter(jaar == params$year) %>%
@@ -624,9 +626,86 @@ Poisson:
 m1 <- gam(count ~ stratum + periode_in_jaar + s(x_plot, y_plot, bs = "tp") +
             s(plotnaam, bs = "re"),
           data = count_data_2023, family = poisson())
-
-gam.check(m1)
 ```
+
+```{r}
+par(mfrow = c(2, 2))
+gam.check(m1)
+par(mfrow = c(1, 1))
+
+vis.gam(m1)
+```
+
+```{r}
+library(DHARMa)
+```
+
+
+```{r}
+sim_out <- simulateResiduals(m1, plot = TRUE, n = 1000)
+sim_out
+simulationOutput2 <- recalculateResiduals(sim_out, group = count_data_2023$plotnaam)
+plot(simulationOutput2, quantreg = FALSE)
+
+testOutliers(sim_out, type = "boot")
+```
+
+```{r}
+rsd <- residuals(m1, type = "deviance")
+gam_res <- gam(rsd ~ s(x_plot, y_plot, bs = "tp") - 1,
+          data = count_data_2023, select = TRUE)
+gam_res
+```
+
+
+```{r}
+m2 <- gam(count ~ stratum + periode_in_jaar + s(x_plot, y_plot, bs = "tp") +
+            s(plotnaam, bs = "re"),
+          data = count_data_2023, family = ziP())
+simulateResiduals(m2, plot = TRUE, n = 1000)
+```
+
+```{r}
+library(glmmTMB)
+fit_glmmTMB <- glmmTMB(
+  count ~ stratum + periode_in_jaar + s(x_plot, y_plot, bs = "tp") + (1|plotnaam),
+  data = count_data_2023,
+  family = poisson()
+)
+
+performance::check_model(fit_glmmTMB)
+performance::check_overdispersion(fit_glmmTMB)
+performance::check_zeroinflation(fit_glmmTMB)
+
+performance::check_model(fit_glmmTMB, check = "pp_check")
+performance::check_model(fit_glmmTMB, check = "qq")
+
+performance::check_predictions(fit_glmmTMB, check_range = TRUE)
+```
+
+
+
+```{r}
+library(brms)
+# MCMC parameters
+nchains <- 3           # number of chains
+niter <- 2500          # number of iterations (incl. burn-in)
+burnin <- 500          # number of initial samples to discard (burn-in)
+nparallel <- nchains   # number of cores used for parallel computing
+thinning <- 2          # thinning
+
+test <- brm(
+  formula = count ~ stratum + periode_in_jaar + s(x_plot, y_plot, bs = "tp") +
+    (1 | plotnaam),
+  data = count_data_2023,
+  family = poisson(),
+  chains = nchains,
+  warmup = burnin,
+  iter = niter,
+  cores = nparallel,
+  thin = thinning)
+```
+
 
 ### Selecteer spatiale spline
 #### Anisotropie
@@ -636,13 +715,31 @@ gam.check(m1)
 m_te <- gam(count ~ stratum + periode_in_jaar + te(x_plot, y_plot) +
             s(plotnaam, bs = "re"),
           data = count_data_2023, family = poisson())
+```
 
+
+```{r}
+par(mfrow = c(2, 2))
 gam.check(m_te)
+par(mfrow = c(1, 1))
 ```
 
 ```{r}
 AIC(m1, m_te)
 ```
+
+```{r}
+m_gp <- gam(count ~ stratum + periode_in_jaar + s(x_plot, y_plot, bs = "gp", m = 3) +
+            s(plotnaam, bs = "re"),
+          data = count_data_2023, family = poisson())
+```
+
+```{r}
+par(mfrow = c(2, 2))
+gam.check(m_gp)
+par(mfrow = c(1, 1))
+```
+
 
 #### Maximum aantal basisdimensies
 
@@ -664,7 +761,7 @@ mapview::mapview(distinct(prediction_hexgrid, stratum, geometry),
 
 
 ```{r}
-preds <- predict(m1, newdata = prediction_hexgrid, type = "response")
+preds <- predict(fit_glmmTMB, newdata = prediction_hexgrid %>% mutate(plotnaam = NA), type = "response")
 ```
 
 ```{r}
@@ -672,8 +769,11 @@ detection_probabilities <- tar_read_ds("detection_probabilities",
                                        params$species)
 detprob_2023 <- detection_probabilities %>%
   filter(year == params$year) %>%
-  select(where(function(x) !any(is.na(x)))) %>%
-  rename(openheid_klasse = openheid)
+  select(where(function(x) !any(is.na(x))))
+if ("openheid" %in% colnames(detprob_2023)) {
+  detprob_2023 <- detprob_2023 %>%
+    rename(openheid_klasse = openheid)
+}
 ```
 
 
@@ -700,12 +800,44 @@ ggplot(pred_dens) +
   theme(legend.position = "bottom")
 ```
 
+```{r}
+pred_dens %>%
+  mutate(x = st_coordinates(st_centroid(geometry))[, 1],
+         y = st_coordinates(st_centroid(geometry))[, 2]) %>%
+  ggplot() +
+  geom_raster(aes(x = x, y = y, fill = pred_dens), colour = alpha("white", 0),
+              interpolate = TRUE) +
+  scale_fill_gradientn(colours = rainbow(5), limits = c(0, NA)) +
+  coord_sf(crs = 31370) +
+  labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha") +
+  theme(legend.position = "bottom")
+```
+
+
+```{r}
+ggplot(pred_dens) +
+  geom_sf(aes(fill = pred_dens), colour = alpha("white", 0)) +
+  scale_fill_gradientn(
+      colours = c("#FF0000", "black", "#0066FF", "#CC00FF"),
+      values = scales::rescale(
+          c(min(pred_dens$pred_dens, na.rm = TRUE),
+            mean(pred_dens$pred_dens, na.rm = TRUE),
+            mean(pred_dens$pred_dens, na.rm = TRUE) + 0.2*diff(range(pred_dens$pred_dens, na.rm = TRUE)),
+            max(pred_dens$pred_dens, na.rm = TRUE)
+            ),
+      )
+  ) +
+  coord_sf(crs = 31370) +
+  labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha") +
+  theme(legend.position = "bottom")
+```
+
 checks:
 
 ```{r}
 pred_dens %>%
   st_drop_geometry() %>%
-  group_by(stratum) %>%
+  group_by(regio) %>%
   summarise(
     total_abundance = sum(pred_abu),
     total_density = sum(pred_dens) / n()
