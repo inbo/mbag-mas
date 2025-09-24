@@ -172,19 +172,13 @@ select_time_periods %>%
 
 - Ol_18064.5: 
 - Zn_56194.1.1:
-- Km_21406.3:
 - Km_21470.1.4:
 - Ol_1585.1:
-- Ol_1686.1:
 - Ol_6671.7: 
 - Pl_8493.1.5: werd niet geteld in eerste ronde wegens miscommunicatie (zie mail Simon)
 - VL0273:
 - VL0584:
-- VL0587:
-- VL0590:
-- Zn_30461.7: wel 4x geteld, maar 2x in R2
-- Zn_56164.18:
-- Zn_8668.9:
+- Zn_8668.9: nagevraagd bij freelancer, per ongeluk 3x geteld
 
 <!-- spell-check: ignore:end -->
 
@@ -407,20 +401,9 @@ leaflet_map <- leaflet_map %>%
 leaflet_map
 ```
 
-Bij de meeste punten lijkt dit ok, maar we zien een paar probleempunten:
+Dit lijkt ok bij alle punten.
 
-- Zn_103891.3, R3
-  - Lijkt op 2 plaatsen geteld te zijn?
-- Zn_102166.5, R3
-  - Lijkt op 2 plaatsen geteld te zijn?
-- Km_35571.6, R3
-  - Lijkt op 2 plaatsen geteld te zijn?
-- Pl_14232.4, R4
-  - Lijkt op 2 plaatsen geteld te zijn?
-- Zn_90455.1, R4
-  - Extra waarnemingen op andere locatie?
-
-```{r}
+```{r, echo=TRUE, eval=FALSE}
 # Problem points
 problem_points <- c("Zn_103891.3", "Zn_102166.5", "Km_35571.6", "Pl_14232.4",
                     "Zn_90455.1")
@@ -530,23 +513,6 @@ leaflet_map <- leaflet_map %>%
 leaflet_map
 ```
 
-> Wat moet hiermee gebeuren?
-
-<!-- spell-check: ignore:start -->
-
-- Zn_103891.3, R3
-  - Simon D.: Ik zie dat de vrijwilliger dit telpunt zowel op 17 mei als op 23 mei geteld heeft. Op 17/05 verliep de telling correct, op 23/05 bevinden de meeste waarnemingen zich op het verkeerde telpunt, namelijk Zn_18968.2.3. Dat telpunt werd wel 4x correct geteld. Daarom stel ik voor om de telling van 23/05 definitief te verwijderen.
-- Zn_102166.5, R3
-  - Simon D.: Dit telpunt lijkt correct te zijn geteld, maar ook waarnemingen van telpunt Zn_30850.2 zijn hier ingevoerd. Gelukkig heeft de vrijwilliger Zn_30850.2 wel 4x geteld. Daarom stel ik voor om de waarnemingen buiten de telcirkel van Zn_102166.5 te verwijderen.
-- Km_35571.6, R3
-  - Lijkt op 2 plaatsen geteld te zijn?
-- Pl_14232.4, R4
-  - Simon D.: Er zijn ook waarnemingen van telpunt Pl_25350.30 bij  Pl_14232.4 ingevoerd. Ik stel voor om de waarnemingen buiten de telcirkel van Pl_14232.4 te verwijderen.
-- Zn_90455.1, R4
-  - Simon D.: De extra waarnemingen bevinden zich op het telpunt Zn_44403.4, dat gelukkig 4x geteld werd. Blijkbaar heeft de waarnemer op dit telpunt een nieuwe telling toegevoegd i.p.v. ze te wijzigen om een soort toe te voegen. Ik stel voor om de waarnemingen buiten de telcirkel van Zn_90455.1  te verwijderen.
-
-<!-- spell-check: ignore:end -->
-
 ## Selecteer soortengroepen (select_species_groups)
 
 Vervolgens selecteren we de data van vogels (soortgrp 2) en zoogdieren (soortgrp 1).
@@ -615,19 +581,29 @@ profs_2024 <- c("KLMS02", # professional after 2024
                 "ETBX00",
                 "LHNN03",
                 "SDST00")
+profs_2025 <- c("EVNK05", # professional after 2025
+                "JDWE00",
+                "KHSL00",
+                "DDMR00",
+                "KJNS02",
+                "LBLH00",
+                "NDUH00",
+                "WVNE02")
 
 data.frame(
   professional = c(
     profs,
     profs_2022,
     profs_2023,
-    profs_2024
+    profs_2024,
+    profs_2025
   ),
   sinds = c(
     rep("vanaf start", length(profs)),
     rep("vanaf 2022", length(profs_2022)),
     rep("vanaf 2023", length(profs_2023)),
-    rep("vanaf 2024", length(profs_2024))
+    rep("vanaf 2024", length(profs_2024)),
+    rep("vanaf 2025", length(profs_2025))
   )
 ) %>%
   kable()
@@ -935,9 +911,19 @@ Deze lijst moet gecontroleerd worden op vreemde namen die mogelijks fout zijn.
 ```{r}
 mas_data_clean %>%
   st_drop_geometry() %>%
-  count(naam, name =  "aantal waarnemingen") %>%
+  count(naam, name = "aantal waarnemingen") %>%
   arrange(naam) %>%
   kable()
+```
+
+We schrijven de data voor Glanskop, Kuifleeuwerik en Roodkopklauwier weg.
+
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  filter(naam %in% c("Glanskop", "Kuifleeuwerik", "Roodkopklauwier")) %>%
+  write_csv(file.path(mbag_dir, "output", "data_controle",
+                      "vreemde_soorten_mastellingen_2025.csv"))
 ```
 
 ## Broedcodes
@@ -994,10 +980,11 @@ mas_data_full %>%
 We schrijven de data met broedcodes > 0 met een hoger aantal dan 1 weg.
 
 ```{r}
-mas_data_clean %>%
+mas_data_full %>%
   st_drop_geometry() %>%
   filter(aantal > 1,
          wrntype > 0) %>%
+  select(-"broedcode") %>%
   rename("broedcode" = "wrntype") %>%
   select(
     "oid", "plotnaam", "x_lambert", "y_lambert", "datum",
@@ -1011,7 +998,7 @@ mas_data_clean %>%
 Manueel passen we alle aantallen voor broedcode > 0 manueel aan naar 1.
 
 ```{r}
-mas_data_clean %>%
+mas_data_full %>%
   st_drop_geometry() %>%
   filter(aantal > 1,
          wrntype > 0) %>%

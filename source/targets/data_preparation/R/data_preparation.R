@@ -80,6 +80,14 @@ process_double_counted_data <- function(counts_df) {
                   "ETBX00",
                   "LHNN03",
                   "SDST00")
+  profs_2025 <- c("EVNK05", # professional after 2025
+                  "JDWE00",
+                  "KHSL00",
+                  "DDMR00",
+                  "KJNS02",
+                  "LBLH00",
+                  "NDUH00",
+                  "WVNE02")
 
   counts_df_state_pro <- counts_df %>%
     rename(waarnemer = "waarneme") %>%
@@ -88,7 +96,8 @@ process_double_counted_data <- function(counts_df) {
         (.data$waarnemer %in% profs) |
           (.data$waarnemer %in% profs_2022 & .data$jaar >= 2022) |
           (.data$waarnemer %in% profs_2023 & .data$jaar >= 2023) |
-          (.data$waarnemer %in% profs_2024 & .data$jaar >= 2024),
+          (.data$waarnemer %in% profs_2024 & .data$jaar >= 2024) |
+          (.data$waarnemer %in% profs_2025 & .data$jaar >= 2025),
         "professioneel",
         "vrijwilliger"
       )
