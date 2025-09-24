@@ -270,7 +270,7 @@ list(
         "Gele Kwikstaart",
         "Grasmus",
         "Graspieper",
-        #"Grutto",
+        "Grutto",
         "Kievit",
         "Kneu",
         "Patrijs",
@@ -433,7 +433,8 @@ list(
     tar_target(
       name = aic_comparison,
       command = summarize_ds_models2(ds_model_fits, output = "plain") %>%
-        add_categories(ds_model_fits[[1]], c("species", "year")),
+        add_categories(ds_model_fits[!is.na(ds_model_fits)][[1]],
+                       c("species", "year")),
       pattern = map(ds_model_fits),
       iteration = "list"
     ),
