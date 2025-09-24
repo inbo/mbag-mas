@@ -9,6 +9,7 @@ project:
   - '!LICENSE.md'
   - '!README.md'
   output-dir: "../../../output/rapporten/mas_uitrol_vlaanderen"
+  pre-render: render_children.R
   post-render: _extensions/inbo/flandersqmd-book/filters/post_render.R
 
 execute:
