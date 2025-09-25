@@ -44,7 +44,7 @@ Voor het fitten van de detectiecurve (en dus het schatten van de detectiekans) g
 * **Detectiefunctie**: half-normal en hazard-rate sleutelfuncties, afhankelijk van covariaten.
 * **Modelselectie**: AIC-vergelijking, keuze eenvoudigste model indien ΔAIC < 2.
 * **Goodness-of-fit**: Q–Q plot, Cramér–von Mises test, eventueel groeperen afstanden.
-* **Berekening abundantie/densiteit**: formules voor $\hat{N}\_C$, $\hat{N}$, densiteit, en $\hat{P}\_a$.
+* **Berekening abundantie/densiteit**: formules voor $\hat{N}_C$, $\hat{N}$, densiteit, en $\hat{P}_a$.
 * **Onzekerheid**: berekening betrouwbaarheidsintervallen (Distance package, lognormaal, Satterthwaite).
 
 ---
@@ -92,4 +92,6 @@ Modelselectie gebeurde op basis van AIC: bij vergelijkbare modellen (ΔAIC < 2) 
 
 ## Resultaten
 
-
+> ⚠️ **Let op:** de inhoud onder `## Resultaten` wordt automatisch
+> gegenereerd tijdens het renderen via `render_children.R`.
+> Pas dit deel niet manueel aan.
