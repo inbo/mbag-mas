@@ -561,8 +561,8 @@ presences_2023 <- filtered_distance_df %>%
   ) %>%
   summarise(count = sum(aantal), .groups = "drop") %>%
   select(
-   count, plotnaam, periode_in_jaar, regio, openheid_klasse, sbp, stratum,
-   x_plot, y_plot
+    count, plotnaam, periode_in_jaar, regio, openheid_klasse, sbp, stratum,
+    x_plot, y_plot
   )
 
 # Add zeroes
@@ -596,8 +596,8 @@ zeroes_2023 <- design %>%
     )
   ) %>%
   select(
-   count, plotnaam, periode_in_jaar, regio, openheid_klasse, sbp, stratum,
-   x_plot, y_plot
+    count, plotnaam, periode_in_jaar, regio, openheid_klasse, sbp, stratum,
+    x_plot, y_plot
   )
 
 # Bind datasets together
@@ -644,16 +644,22 @@ library(DHARMa)
 ```{r}
 sim_out <- simulateResiduals(m1, plot = TRUE, n = 1000)
 sim_out
-simulationOutput2 <- recalculateResiduals(sim_out, group = count_data_2023$plotnaam)
-plot(simulationOutput2, quantreg = FALSE)
+simulation_out2 <- recalculateResiduals(
+  sim_out,
+  group = count_data_2023$plotnaam
+)
+plot(simulation_out2, quantreg = FALSE)
 
 testOutliers(sim_out, type = "boot")
 ```
 
 ```{r}
 rsd <- residuals(m1, type = "deviance")
-gam_res <- gam(rsd ~ s(x_plot, y_plot, bs = "tp") - 1,
-          data = count_data_2023, select = TRUE)
+gam_res <- gam(
+  rsd ~ s(x_plot, y_plot, bs = "tp") - 1,
+  data = count_data_2023,
+  select = TRUE
+)
 gam_res
 ```
 
@@ -667,20 +673,21 @@ simulateResiduals(m2, plot = TRUE, n = 1000)
 
 ```{r}
 library(glmmTMB)
-fit_glmmTMB <- glmmTMB(
-  count ~ stratum + periode_in_jaar + s(x_plot, y_plot, bs = "tp") + (1|plotnaam),
+fit_glmmtmb <- glmmTMB(
+  count ~ stratum + periode_in_jaar + s(x_plot, y_plot, bs = "tp") +
+    (1 | plotnaam),
   data = count_data_2023,
   family = poisson()
 )
 
-performance::check_model(fit_glmmTMB)
-performance::check_overdispersion(fit_glmmTMB)
-performance::check_zeroinflation(fit_glmmTMB)
+performance::check_model(fit_glmmtmb)
+performance::check_overdispersion(fit_glmmtmb)
+performance::check_zeroinflation(fit_glmmtmb)
 
-performance::check_model(fit_glmmTMB, check = "pp_check")
-performance::check_model(fit_glmmTMB, check = "qq")
+performance::check_model(fit_glmmtmb, check = "pp_check")
+performance::check_model(fit_glmmtmb, check = "qq")
 
-performance::check_predictions(fit_glmmTMB, check_range = TRUE)
+performance::check_predictions(fit_glmmtmb, check_range = TRUE)
 ```
 
 
@@ -703,7 +710,8 @@ test <- brm(
   warmup = burnin,
   iter = niter,
   cores = nparallel,
-  thin = thinning)
+  thin = thinning
+)
 ```
 
 
@@ -712,9 +720,12 @@ test <- brm(
 
 ```{r}
 # Tensor product smooth (anisotropic)
-m_te <- gam(count ~ stratum + periode_in_jaar + te(x_plot, y_plot) +
-            s(plotnaam, bs = "re"),
-          data = count_data_2023, family = poisson())
+m_te <- gam(
+  count ~ stratum + periode_in_jaar + te(x_plot, y_plot) +
+    s(plotnaam, bs = "re"),
+  data = count_data_2023,
+  family = poisson()
+)
 ```
 
 
@@ -729,9 +740,12 @@ AIC(m1, m_te)
 ```
 
 ```{r}
-m_gp <- gam(count ~ stratum + periode_in_jaar + s(x_plot, y_plot, bs = "gp", m = 3) +
-            s(plotnaam, bs = "re"),
-          data = count_data_2023, family = poisson())
+m_gp <- gam(
+  count ~ stratum + periode_in_jaar + s(x_plot, y_plot, bs = "gp", m = 3) +
+    s(plotnaam, bs = "re"),
+  data = count_data_2023,
+  family = poisson()
+)
 ```
 
 ```{r}
@@ -761,7 +775,12 @@ mapview::mapview(distinct(prediction_hexgrid, stratum, geometry),
 
 
 ```{r}
-preds <- predict(fit_glmmTMB, newdata = prediction_hexgrid %>% mutate(plotnaam = NA), type = "response")
+preds <- predict(
+  fit_glmmtmb,
+  newdata = prediction_hexgrid %>%
+    mutate(plotnaam = NA),
+  type = "response"
+)
 ```
 
 ```{r}
@@ -818,14 +837,15 @@ pred_dens %>%
 ggplot(pred_dens) +
   geom_sf(aes(fill = pred_dens), colour = alpha("white", 0)) +
   scale_fill_gradientn(
-      colours = c("#FF0000", "black", "#0066FF", "#CC00FF"),
-      values = scales::rescale(
-          c(min(pred_dens$pred_dens, na.rm = TRUE),
-            mean(pred_dens$pred_dens, na.rm = TRUE),
-            mean(pred_dens$pred_dens, na.rm = TRUE) + 0.2*diff(range(pred_dens$pred_dens, na.rm = TRUE)),
-            max(pred_dens$pred_dens, na.rm = TRUE)
-            ),
-      )
+    colours = c("#FF0000", "black", "#0066FF", "#CC00FF"),
+    values = scales::rescale(
+      c(min(pred_dens$pred_dens, na.rm = TRUE),
+        mean(pred_dens$pred_dens, na.rm = TRUE),
+        mean(pred_dens$pred_dens, na.rm = TRUE) +
+          0.2 * diff(range(pred_dens$pred_dens, na.rm = TRUE)),
+        max(pred_dens$pred_dens, na.rm = TRUE)
+      ),
+    )
   ) +
   coord_sf(crs = 31370) +
   labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha") +

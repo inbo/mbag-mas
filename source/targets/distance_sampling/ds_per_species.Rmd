@@ -69,56 +69,62 @@ De modellen zijn nog niet goed, maar ik wou al snel iets tonen.
 Het toont het geschatte aantal individuen per telcirkel gedeeld door detectiekans.
 Het maximum wordt genomen per telperiode.
 
+<!-- spell-check: ignore:start -->
+
 $$
 Y_{aantal}/p_{detectie} \sim Poisson(\lambda)
 $$
+<!-- spell-check: ignore:end -->
 
 met
 
+<!-- spell-check: ignore:start -->
 $$
 \ln(\lambda) = X_{stratum} + X_{telperiode} + s(x_{coord}, y_{coord}) + (1|plotnaam)
 $$
+<!-- spell-check: ignore:end -->
+
 ```{r, message=FALSE}
 prediction_hexgrid <- tar_read("prediction_hexgrid_period")[[1]]
 out_list <- vector(mode = "list", length = sum(params$years > 2023))
 for (i in seq_along(params$years[params$years > 2023])) {
   y <- params$years[params$years > 2023][i]
-  
-    # Detection probs
-    detection_probabilities <- tar_read_ds("detection_probabilities",
-                                           params$species)
-    detprob_df <- detection_probabilities %>%
-      filter(year == y) %>%
-      select(where(function(x) !any(is.na(x))))
-    if ("openheid" %in% colnames(detprob_df)) {
-      detprob_df <- detprob_df %>%
-        rename(openheid_klasse = openheid)
-    }
-    
-    # Predictions
-    preds <- tar_read_ds("model_pred", params$species, year = y,
-                         start_year = 2024)
-    
-    pred_dens <- cbind(prediction_hexgrid, preds) %>%
-      group_by(plotnaam, regio, openheid_klasse, sbp, stratum, geometry) %>%
-      summarise(pred = max(preds), .groups = "drop")
-    if (nrow(detprob_df) == 1) {
-      pred_dens$estimate_p <- detprob_df$estimate_p
-      pred_dens <- pred_dens %>%
-        mutate(
+
+  # Detection probs
+  detection_probabilities <- tar_read_ds("detection_probabilities",
+                                         params$species)
+  detprob_df <- detection_probabilities %>%
+    filter(year == y) %>%
+    select(where(function(x) !any(is.na(x))))
+  if ("openheid" %in% colnames(detprob_df)) {
+    detprob_df <- detprob_df %>%
+      rename(openheid_klasse = openheid)
+  }
+
+  # Predictions
+  preds <- tar_read_ds("model_pred", params$species, year = y,
+                       start_year = 2024)
+
+  pred_dens <- cbind(prediction_hexgrid, preds) %>%
+    group_by(plotnaam, regio, openheid_klasse, sbp, stratum, geometry) %>%
+    summarise(pred = max(preds), .groups = "drop")
+  if (nrow(detprob_df) == 1) {
+    pred_dens$estimate_p <- detprob_df$estimate_p
+    pred_dens <- pred_dens %>%
+      mutate(
         pred_abu = pred / estimate_p,
         jaar = y
       )
-    } else {
-      pred_dens <- pred_dens %>% 
-        left_join(detprob_df) %>%
-        mutate(
-          pred_abu = pred / estimate_p,
-          jaar = y
-        )
-    }
+  } else {
+    pred_dens <- pred_dens %>%
+      left_join(detprob_df) %>%
+      mutate(
+        pred_abu = pred / estimate_p,
+        jaar = y
+      )
+  }
 
-    out_list[[i]] <- pred_dens
+  out_list[[i]] <- pred_dens
 }
 ```
 

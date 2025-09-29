@@ -578,7 +578,7 @@ list(
       name = model_fit,
       command = list(glmmTMB(
         count ~ stratum + periode_in_jaar + s(x_plot, y_plot, bs = "tp") +
-          (1|plotnaam),
+          (1 | plotnaam),
         data = gam_data,
         family = poisson()
       )),
