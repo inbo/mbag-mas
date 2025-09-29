@@ -1,7 +1,24 @@
 library(knitr)
 
 # Globals
-species <- c("Veldleeuwerik", "Gele Kwikstaart", "Kievit", "Roodborsttapuit")
+species <- sort(
+  c(
+    "Geelgors",
+    "Gele Kwikstaart",
+    "Grasmus",
+    "Graspieper",
+    "Grutto",
+    "Kievit",
+    "Kneu",
+    "Patrijs",
+    "Ringmus",
+    "Roodborsttapuit",
+    "Scholekster",
+    "Torenvalk",
+    "Veldleeuwerik",
+    "Wulp"
+  )
+)
 main_qmd <- "09_densiteitsschattingen.qmd"
 
 # -------------------------------
