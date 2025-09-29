@@ -1,5 +1,57 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 ### {{species}}
 
 ```{r}
-print("{{species}}")
+#| include: FALSE
+# set up
+library(knitr)
+opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+```{r}
+# packages
+library(tidyverse)
+library(targets)
+library(sf)
+library(Distance)
+
+library(INBOtheme)
+theme_set(theme_inbo(transparent = TRUE))
+
+# Conflicts
+conflicted::conflicts_prefer(dplyr::filter)
+conflicted::conflicts_prefer(dplyr::select)
+
+# Paths
+mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
+store <- file.path(mbag_dir,
+                   "source", "targets", "distance_sampling", "_targets")
+
+# Source functions
+source(file.path(mbag_dir, "source", "R", "tar_read_ds.R"))
+source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
+```
+
+```{r}
+# To make it easier
+params <- NULL
+params$species <- "{{species}}"
+params$species <- "Veldleeuwerik"
+```
+
+```{r}
+tar_read_ds("detection_probabilities", params$species , store = store) %>%
+  select(-species) %>%
+  replace(is.na(.), "-") %>%
+  relocate("estimate_p", "se_p", "ll_beta", "ul_beta", .after = last_col()) %>%
+  select("year", everything()) %>%
+  kable(digits = 3)
 ```
