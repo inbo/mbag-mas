@@ -30,6 +30,9 @@ lines_new <- c(
 # Overwrite the file
 writeLines(lines_new, main_qmd)
 
+# Remove folder
+spec_dir <- "spec_files"
+unlink(file.path(spec_dir), recursive = TRUE)
 
 # Flanders qmd post render
 flandersqmd::post_render()
