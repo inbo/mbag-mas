@@ -18,6 +18,8 @@ library(tidyverse)
 library(targets)
 library(sf)
 library(Distance)
+library(patchwork)
+library(kableExtra)
 
 library(INBOtheme)
 theme_set(theme_inbo(transparent = TRUE))
@@ -41,7 +43,7 @@ source("summarise_detection_patterns.R")
 # To make it easier
 params <- NULL
 params$species <- "{{species}}"
-#params$species <- "Veldleeuwerik"
+params$species <- "Veldleeuwerik"
 ```
 
 ```{r}
@@ -54,6 +56,7 @@ detprob_cap <- paste0("Geschatte detectiekansen ", params$species, ".")
 ```
 
 De detectiekansen voor `r params$species` (*{{sci_name}}*) zijn weergegeven in @tbl-detprob-{{label}}.
+@fig-detprob-{{label}} visualiseert de detectiecurve(s) per jaar. 
 `r summarise_detection_patterns(det_prob_df, threshold = 0.05)`
 
 ```{r}
@@ -71,7 +74,151 @@ det_prob_df %>%
   select("jaar" = "year", any_of(c("regio", "openheid", "sbp")),
          "detectiekans (95 % interval)" = "detectiekans",
          "standaardfout" = "se_p") %>%
-  kable(digits = 3)
+  kable(booktabs = TRUE) %>%
+  kableExtra::kable_styling(latex_options = "striped") %>%
+  kableExtra::row_spec(0, bold = TRUE) %>%
+  kableExtra::collapse_rows(1)
+```
+
+```{r}
+#| label: fig-detprob-{{label}}
+#| fig-cap: "Detectiecurves {{species}}. De stippellijn geeft de gemiddelde
+#|   detectiecurve aan."
+#| fig-width: 8
+#| fig-height: 12
+#| fig.align: "center"
+# ---------------------------
+# Step 0: Load models and extract formulas/keys
+# ---------------------------
+
+# Read the final models from the targets store for the specified species
+final_models <- tar_read_ds("model_selection", params$species, store = store)
+
+# Assign names to the models corresponding to years
+names(final_models) <- 2023:2025
+
+# Extract the detection function formula from each model
+forms <- lapply(final_models, function(model) {
+  model$ddf$ds$aux$ddfobj$scale$formula
+})
+
+# Determine the key function type (half-normal vs hazard-rate) for each model
+keys <- lapply(final_models, function(model) {
+  ifelse(
+    model$ddf$ds$aux$ddfobj$type == "hn",
+    "half-normal",
+    "hazard-rate"
+  )
+})
+
+# ---------------------------
+# Step 1: Create detection curve plots for each year
+# ---------------------------
+
+# Initialize an empty list to store the plots
+plots <- vector(mode = "list", length = length(final_models))
+
+# Loop over each model/year
+for (i in seq_along(final_models)) {
+  year <- as.character(names(final_models[i]))  # Current year
+  ds_model <- final_models[[year]]             # Current detection model
+  f <- forms[[year]]                           # Current formula
+  key <- keys[[year]]                          # Current key function type
+
+  # Generate the detection curve plot
+  p <- plot_detection_curve(
+    ds_model,
+    show_data = TRUE,            # Show observed data points
+    plot_average_fit = TRUE,     # Show average fit line
+    plot_covariate_fit = TRUE    # Show covariate-specific fit lines
+  ) +
+    scale_y_continuous(limits = c(0, NA), breaks = seq(0, 100, by = 0.25)) +
+    labs(
+      x = "Afstand (m)",
+      y = "Detectiekans",
+      colour = "",  # Remove legend title
+      title = paste0(year, ": ", key, " sleutelfunctie (", f, ")")  # Plot title
+    ) +
+    theme_minimal() +  # Clean minimal theme
+    theme(
+      legend.background = element_rect(fill = "white", color = "darkgrey"),
+      legend.margin = margin(6, 6, 6, 6),
+      legend.position = "bottom"
+    )
+
+  # Store the plot in the list
+  plots[[i]] <- p
+}
+
+# Assign names to the plots for easy reference
+names(plots) <- names(final_models)
+
+# ---------------------------
+# Step 2: Identify legend variables for each plot
+# ---------------------------
+
+# For each model, extract all variables that determine legend groups
+legend_vars <- lapply(final_models, function(ds_model) {
+  # Variables in the formula
+  vars <- all.vars(as.formula(ds_model$ddf$ds$aux$ddfobj$scale$formula))
+  # Unique combinations of covariates
+  sort(unique(apply(ds_model$ddf$data[vars], 1, paste, collapse = " - ")))
+})
+
+# ---------------------------
+# Step 3: Group only consecutive plots with identical legend variables
+# ---------------------------
+
+group_list <- list()  # List to store groups of consecutive plots
+start <- 1
+
+while (start <= length(plots)) {
+  end <- start
+  # Extend the group forward if next plot has identical legend variables
+  while (end + 1 <= length(plots) &&
+           identical(legend_vars[[end]], legend_vars[[end + 1]])) {
+    end <- end + 1
+  }
+  # Store indices of consecutive plots sharing the same legend
+  group_list[[length(group_list) + 1]] <- start:end
+  start <- end + 1
+}
+
+# ---------------------------
+# Step 4: Combine plots sequentially with patchwork
+# ---------------------------
+
+combined <- NULL       # Initialize combined plot
+heights_list <- c()    # To store relative heights for each group
+
+for (grp in seq_along(group_list)) {
+  idx <- group_list[[grp]]  # Indices of plots in the current group
+
+  if (length(idx) == 1) {
+    # Single plot: just add the legend at the bottom
+    p <- plots[[idx]] + theme(legend.position = "bottom")
+  } else {
+    # Multiple consecutive plots: combine vertically and collect shared legend
+    p <- wrap_plots(plots[idx], ncol = 1, guides = "collect") &
+      theme(legend.position = "bottom")
+  }
+
+  # Stack the group vertically in the final combined plot
+  if (is.null(combined)) {
+    combined <- p
+  } else {
+    combined <- combined / p
+  }
+
+  # Assign relative height proportional to the number of plots in the group
+  heights_list <- c(heights_list, length(idx))
+}
+
+# ---------------------------
+# Step 5: Apply relative heights and display
+# ---------------------------
+
+combined + plot_layout(heights = heights_list)
 ```
 
 ```{r}
@@ -79,7 +226,30 @@ det_prob_df %>%
 # Get densities
 densities_stratum_target <- tar_read_ds("densities_stratum", params$species,
                                         store = store)
-# Create plot
+
+# Parse thresholds
+threshold_vals <- tibble(
+  species = c("Patrijs", "Geelgors", "Veldleeuwerik", "Grauwe Gors"),
+  values = c(4, 12.5, 15, 10)
+)
+
+# Add effects
+if (params$species %in% threshold_vals$species) {
+  t <- subset(threshold_vals, species == params$species, "values", drop = TRUE)
+  densities_stratum_target <- densities_stratum_target %>%
+    mutate(effect = factor(
+      case_when(
+        lcl > t ~ "boven",
+        ucl < t ~ "onder",
+        TRUE ~ "geen sign.\nverschil"
+      ),
+      levels = c("boven", "geen sign.\nverschil", "onder")
+    ))
+}
+```
+
+```{r}
+# Prepare base plot data
 p <- densities_stratum_target %>%
   filter(
     year == 2023 & grepl("^Zandleem|^Leem", Label) | year != 2023
@@ -88,30 +258,58 @@ p <- densities_stratum_target %>%
   filter(stratum != "Total") %>%
   separate(stratum, into = c("regio", "openheid", "sbp"), sep = " - ") %>%
   mutate(stratum = paste(openheid, sbp, sep = " - ")) %>%
-  ggplot(aes(x = year, y = estimate, colour = stratum))
+  # Initialize ggplot with year on x, estimate on y, grouped by stratum
+  ggplot(aes(x = year, y = estimate, group = stratum))
 
-# Parse thresholds
-threshold_vals <- tibble(
-  species = c("Patrijs", "Geelgors", "Veldleeuwerik", "Grauwe Gors"),
-  values = c(4, 12.5, 15, 10)
-)
+# Plot if species has a defined threshold value
 if (params$species %in% threshold_vals$species) {
+  # Extract species-specific threshold
   t <- subset(threshold_vals, species == params$species, "values", drop = TRUE)
-  p <- p +
-    geom_hline(yintercept = t, linetype = "dashed", colour = "darkgrey")
-}
 
-# Create final plot
-p + geom_point(position = position_dodge(width = 0.5)) +
-  geom_errorbar(aes(ymin = lcl, ymax = ucl),
-    width = 0.2,
-    position = position_dodge(width = 0.5)
-  ) +
-  scale_y_continuous(limits = c(0, NA)) +
-  labs(y = "broedparen / 100 ha", x = "", colour = "Stratum") +
-  facet_wrap(~regio, ncol = 2, scales = "free_x") +
-  theme(legend.position = c(0.8, 0.1),
-        legend.background = element_rect(fill = "white", color = "black"))
+  p +
+    geom_hline(yintercept = t, linetype = "dashed", colour = "darkgrey") +
+    geom_errorbar(aes(ymin = lcl, ymax = ucl, colour = stratum),
+      width = 0.2,
+      position = position_dodge(width = 0.7),
+      linewidth = 0.8
+    ) +
+    geom_point(aes(shape = effect), position = position_dodge(width = 0.7),
+               colour = "black", show.legend = TRUE) +
+    scale_y_continuous(limits = c(0, NA)) +
+    scale_shape_manual(
+      values =  c(0, 2, 4),
+      drop = FALSE
+    ) +
+    labs(y = "broedparen / 100 ha", x = "", colour = "Stratum",
+         shape = "Verschil met\nstreefwaarde") +
+    facet_wrap(~regio, ncol = 2, scales = "free_x") +
+    theme(legend.position = c(0.8, 0.1),
+          legend.background = element_rect(fill = "white", color = "darkgrey"),
+          legend.margin = margin(6, 6, 6, 6),
+          legend.box = "horizontal") +
+    guides(
+      colour = guide_legend(
+        override.aes = list(shape = NA, linetype = 1, size = 1)
+      ),
+      shape = guide_legend(
+        override.aes = list(linetype = 0, colour = "black")
+      )
+    )
+} else {
+  # If no threshold, simpler plot without horizontal line or shape legend
+  p + geom_point(aes(colour = stratum),
+                 position = position_dodge(width = 0.7)) +
+    geom_errorbar(aes(ymin = lcl, ymax = ucl, colour = stratum),
+      width = 0.2,
+      position = position_dodge(width = 0.7)
+    ) +
+    scale_y_continuous(limits = c(0, NA)) +
+    labs(y = "broedparen / 100 ha", x = "", colour = "Stratum") +
+    facet_wrap(~regio, ncol = 2, scales = "free_x") +
+    theme(legend.position = c(0.8, 0.1),
+          legend.background = element_rect(fill = "white", color = "darkgrey"),
+          legend.margin = margin(6, 6, 6, 6))
+}
 ```
 
 ```{r}
@@ -120,29 +318,62 @@ p + geom_point(position = position_dodge(width = 0.5)) +
 densities_region_target <- tar_read_ds("densities_region", params$species,
                                        store = store)
 
-# Create plot
+# Add effects
+if (params$species %in% threshold_vals$species) {
+  t <- subset(threshold_vals, species == params$species, "values", drop = TRUE)
+  densities_region_target <- densities_region_target %>%
+    mutate(effect = factor(
+      case_when(
+        lcl > t ~ "boven",
+        ucl < t ~ "onder",
+        TRUE ~ "geen sign.\nverschil"
+      ),
+      levels = c("boven", "geen sign.\nverschil", "onder")
+    ))
+}
+```
+
+```{r}
+# Prepare base plot data
 p <- densities_region_target %>%
   filter(
     year == 2023 & grepl("^Zandleem|^Leem", Label) | year != 2023
   ) %>%
   rename("region" = "Label", "estimate" = "Estimate") %>%
   filter(region != "Total") %>%
+  # Initialize ggplot with year on x, estimate on y
   ggplot(aes(x = year, y = estimate))
 
-# Parse thresholds
+# Plot if species has a defined threshold value
 if (params$species %in% threshold_vals$species) {
+  # Extract species-specific threshold
   t <- subset(threshold_vals, species == params$species, "values", drop = TRUE)
-  p <- p +
-    geom_hline(yintercept = t, linetype = "dashed", colour = "darkgrey")
-}
 
-# Create final plot
-p +
-  geom_point() +
-  geom_errorbar(aes(ymin = lcl, ymax = ucl),
-    width = 0.1,
-  ) +
-  scale_y_continuous(limits = c(0, NA)) +
-  labs(y = "broedparen / 100 ha", x = "") +
-  facet_wrap(~region, ncol = 2, scales = "free_x")
+  p +
+    geom_hline(yintercept = t, linetype = "dashed", colour = "darkgrey") +
+    geom_point(aes(colour = effect), show.legend = TRUE) +
+    geom_errorbar(aes(ymin = lcl, ymax = ucl, colour = effect),
+      width = 0.1, show.legend = TRUE
+    ) +
+    scale_colour_manual(
+      values =  c("chartreuse3",
+                  "skyblue",
+                  "firebrick1"),
+      drop = FALSE
+    ) +
+    scale_y_continuous(limits = c(0, NA)) +
+    labs(y = "broedparen / 100 ha", x = "",
+         colour = "Verschil met\nstreefwaarde") +
+    facet_wrap(~region, ncol = 2, scales = "free_x")
+} else {
+  # If no threshold, simpler plot without horizontal line or shape legend
+  p +
+    geom_point() +
+    geom_errorbar(aes(ymin = lcl, ymax = ucl),
+      width = 0.1,
+    ) +
+    scale_y_continuous(limits = c(0, NA)) +
+    labs(y = "broedparen / 100 ha", x = "") +
+    facet_wrap(~region, ncol = 2, scales = "free_x")
+}
 ```
