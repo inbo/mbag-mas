@@ -43,7 +43,7 @@ source("summarise_detection_patterns.R")
 # To make it easier
 params <- NULL
 params$species <- "{{species}}"
-params$species <- "Veldleeuwerik"
+#params$species <- "Veldleeuwerik"
 ```
 
 ```{r}
@@ -74,7 +74,7 @@ det_prob_df %>%
   select("jaar" = "year", any_of(c("regio", "openheid", "sbp")),
          "detectiekans (95 % interval)" = "detectiekans",
          "standaardfout" = "se_p") %>%
-  kable(booktabs = TRUE) %>%
+  kable(digits = 3, booktabs = TRUE) %>%
   kableExtra::kable_styling(latex_options = "striped") %>%
   kableExtra::row_spec(0, bold = TRUE) %>%
   kableExtra::collapse_rows(1)
@@ -222,7 +222,6 @@ combined + plot_layout(heights = heights_list)
 ```
 
 ```{r}
-#| fig-height: 6
 # Get densities
 densities_stratum_target <- tar_read_ds("densities_stratum", params$species,
                                         store = store)
@@ -249,6 +248,9 @@ if (params$species %in% threshold_vals$species) {
 ```
 
 ```{r}
+#| label: fig-densstratum-{{label}}
+#| fig-cap: "Densiteitsschattingen voor {{species}} per stratum."
+#| fig-height: 6
 # Prepare base plot data
 p <- densities_stratum_target %>%
   filter(
@@ -269,12 +271,12 @@ if (params$species %in% threshold_vals$species) {
   p +
     geom_hline(yintercept = t, linetype = "dashed", colour = "darkgrey") +
     geom_errorbar(aes(ymin = lcl, ymax = ucl, colour = stratum),
-      width = 0.2,
+      width = 0.5,
       position = position_dodge(width = 0.7),
-      linewidth = 0.8
+      linewidth = 0.6
     ) +
     geom_point(aes(shape = effect), position = position_dodge(width = 0.7),
-               colour = "black", show.legend = TRUE) +
+               colour = "black", size = 2.5, show.legend = TRUE) +
     scale_y_continuous(limits = c(0, NA)) +
     scale_shape_manual(
       values =  c(0, 2, 4),
@@ -283,10 +285,11 @@ if (params$species %in% threshold_vals$species) {
     labs(y = "broedparen / 100 ha", x = "", colour = "Stratum",
          shape = "Verschil met\nstreefwaarde") +
     facet_wrap(~regio, ncol = 2, scales = "free_x") +
-    theme(legend.position = c(0.8, 0.1),
+    theme(legend.position = c(0.75, 0.1),
           legend.background = element_rect(fill = "white", color = "darkgrey"),
           legend.margin = margin(6, 6, 6, 6),
-          legend.box = "horizontal") +
+          legend.box = "horizontal",
+          legend.text = element_text(size = 8)) +
     guides(
       colour = guide_legend(
         override.aes = list(shape = NA, linetype = 1, size = 1)
@@ -297,23 +300,24 @@ if (params$species %in% threshold_vals$species) {
     )
 } else {
   # If no threshold, simpler plot without horizontal line or shape legend
-  p + geom_point(aes(colour = stratum),
+  p + geom_point(aes(colour = stratum), size = 2,
                  position = position_dodge(width = 0.7)) +
     geom_errorbar(aes(ymin = lcl, ymax = ucl, colour = stratum),
-      width = 0.2,
-      position = position_dodge(width = 0.7)
+      width = 0.5,
+      position = position_dodge(width = 0.7),
+      linewidth = 0.6
     ) +
     scale_y_continuous(limits = c(0, NA)) +
     labs(y = "broedparen / 100 ha", x = "", colour = "Stratum") +
     facet_wrap(~regio, ncol = 2, scales = "free_x") +
-    theme(legend.position = c(0.8, 0.1),
+    theme(legend.position = c(0.75, 0.1),
           legend.background = element_rect(fill = "white", color = "darkgrey"),
-          legend.margin = margin(6, 6, 6, 6))
+          legend.margin = margin(6, 6, 6, 6),
+          legend.text = element_text(size = 8))
 }
 ```
 
 ```{r}
-#| fig-height: 8
 # Get densities
 densities_region_target <- tar_read_ds("densities_region", params$species,
                                        store = store)
@@ -334,6 +338,10 @@ if (params$species %in% threshold_vals$species) {
 ```
 
 ```{r}
+#| label: fig-densregio-{{label}}
+#| fig-cap: "Densiteitsschattingen voor {{species}} per landbouwregio."
+#| fig-height: 6
+#| fig-width: 8
 # Prepare base plot data
 p <- densities_region_target %>%
   filter(
@@ -351,9 +359,13 @@ if (params$species %in% threshold_vals$species) {
 
   p +
     geom_hline(yintercept = t, linetype = "dashed", colour = "darkgrey") +
-    geom_point(aes(colour = effect), show.legend = TRUE) +
-    geom_errorbar(aes(ymin = lcl, ymax = ucl, colour = effect),
-      width = 0.1, show.legend = TRUE
+    geom_point(aes(colour = effect), size = 2.5, show.legend = TRUE) +
+    geom_errorbar(
+      aes(ymin = lcl, ymax = ucl, colour = effect),
+      width = 0.2,
+      position = position_dodge(width = 0.7),
+      linewidth = 0.8,
+      show.legend = TRUE
     ) +
     scale_colour_manual(
       values =  c("chartreuse3",
@@ -368,9 +380,12 @@ if (params$species %in% threshold_vals$species) {
 } else {
   # If no threshold, simpler plot without horizontal line or shape legend
   p +
-    geom_point() +
-    geom_errorbar(aes(ymin = lcl, ymax = ucl),
-      width = 0.1,
+    geom_point(size = 2.5) +
+    geom_errorbar(
+      aes(ymin = lcl, ymax = ucl),
+      width = 0.2,
+      position = position_dodge(width = 0.7),
+      linewidth = 0.8,
     ) +
     scale_y_continuous(limits = c(0, NA)) +
     labs(y = "broedparen / 100 ha", x = "") +
