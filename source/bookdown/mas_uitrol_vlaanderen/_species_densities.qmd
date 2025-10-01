@@ -1,8 +1,3 @@
----
-output: html_document
-editor_options: 
-  chunk_output_type: console
----
 ### {{species}}
 
 ```{r}
@@ -39,19 +34,31 @@ store <- file.path(mbag_dir,
 # Source functions
 source(file.path(mbag_dir, "source", "R", "tar_read_ds.R"))
 source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
+source("summarise_detection_patterns.R")
 ```
 
 ```{r}
 # To make it easier
 params <- NULL
 params$species <- "{{species}}"
+params$label <- "{{label}}"
 #params$species <- "Veldleeuwerik"
 ```
 
 ```{r}
-tar_read_ds("detection_probabilities", params$species , store = store) %>%
+det_prob_df <- tar_read_ds("detection_probabilities", params$species , store = store) %>%
   select(-species) %>%
-  replace(is.na(.), "-") %>%
+  replace(is.na(.), "-")
+
+detprob_label <- paste0("tbl-detprob-", params$label)
+detprob_cap <- paste0("Geschatte detectiekansen ", params$species, ".")
+```
+
+`r summarise_detection_patterns(det_prob_df, params$species, table_ref = detprob_label)`
+
+```{r tbl-detprob-{{label}}}
+#| tbl-cap: !expr detprob_cap
+det_prob_df %>%
   mutate(detectiekans = paste0(
       sprintf("%.3f", round(estimate_p, 3)),
       " (",
