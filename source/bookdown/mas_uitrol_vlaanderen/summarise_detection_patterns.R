@@ -11,14 +11,12 @@
 #'   - ul_beta: upper bound of 95% confidence interval
 #'   - Optional: regio, openheid, sbp (categorical strata)
 #' @param species Character; species name to include in the summary text.
-#' @param table_ref Character; reference to the table in the report (default "Tabel X").
 #' @param threshold Numeric; if range of detection probabilities is below this, considered "consistent" (default 0.05).
 #'
 #' @return A character string summarising detection probabilities for the species.
 #'
 #' @export
-summarise_detection_patterns <- function(df, species, table_ref = "Tabel X",
-                                         threshold = 0.05) {
+summarise_detection_patterns <- function(df, species, threshold = 0.05) {
 
   # Helper function to create a label for strata
   # Combines non-empty columns: regio, openheid, sbp
@@ -28,20 +26,17 @@ summarise_detection_patterns <- function(df, species, table_ref = "Tabel X",
       parts <- c(parts, row$regio)
     }
     if (!is.null(row$openheid) && !is.na(row$openheid) && row$openheid != "-") {
-      parts <- c(parts, paste0("openheid ", row$openheid))
+      parts <- c(parts, row$openheid)
     }
     if (!is.null(row$sbp) && !is.na(row$sbp) && row$sbp != "-") {
-      parts <- c(parts, paste0("sbp ", row$sbp))
+      parts <- c(parts, paste0(row$sbp, " sbp"))
     }
     if (length(parts) == 0) return("")
     paste0("(", paste(parts, collapse = ", "), ")")
   }
 
   # Start summary text
-  txt <- paste0(
-    "De detectiekansen voor ", species, " zijn weergegeven in @",
-    table_ref, ". "
-  )
+  txt <- ""
 
   # Total range of detection probabilities
   range_total <- max(df$estimate_p, na.rm = TRUE) - min(df$estimate_p, na.rm = TRUE)

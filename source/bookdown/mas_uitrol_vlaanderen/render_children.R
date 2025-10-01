@@ -1,4 +1,5 @@
 library(knitr)
+library(targets)
 
 # Globals
 species <- sort(
@@ -21,6 +22,11 @@ species <- sort(
 )
 main_qmd <- "09_densiteitsschattingen.qmd"
 
+mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
+store <- file.path(mbag_dir,
+                   "source", "targets", "data_preparation", "_targets")
+taxa_df <- tar_read("manual_taxon_mapping", store = store)
+
 # -------------------------------
 # 1. Define species and generate child QMDs
 # -------------------------------
@@ -30,9 +36,19 @@ output_files <- paste0("_", gsub("\\s", ".", tolower(species)), ".qmd")
 
 for (i in seq_along(species)) {
   spec <- species[i]
+  lab <- gsub("\\s", ".", tolower(spec))
   out_file <- output_files[i]
+
+  # Get scientific name
+  sci_name <- subset(
+    taxa_df,
+    dwc_vernacularName == spec,
+    select = species,
+    drop = TRUE
+  )
+
   knit_expand(
-    "_species_densities.qmd", species = spec
+    "_species_densities.qmd", species = spec, sci_name = sci_name, label = lab
   ) |>
     writeLines(file.path(spec_dir, out_file))
 }

@@ -41,7 +41,6 @@ source("summarise_detection_patterns.R")
 # To make it easier
 params <- NULL
 params$species <- "{{species}}"
-params$label <- "{{label}}"
 #params$species <- "Veldleeuwerik"
 ```
 
@@ -50,14 +49,15 @@ det_prob_df <- tar_read_ds("detection_probabilities", params$species , store = s
   select(-species) %>%
   replace(is.na(.), "-")
 
-detprob_label <- paste0("tbl-detprob-", params$label)
 detprob_cap <- paste0("Geschatte detectiekansen ", params$species, ".")
 ```
 
-`r summarise_detection_patterns(det_prob_df, params$species, table_ref = detprob_label)`
+De detectiekansen voor `r params$species` (*{{sci_name}}*) zijn weergegeven in @tbl-detprob-{{label}}.
+`r summarise_detection_patterns(det_prob_df, params$species)`
 
-```{r tbl-detprob-{{label}}}
-#| tbl-cap: !expr detprob_cap
+```{r}
+#| label: tbl-detprob-{{label}}
+#| tbl-cap: "Geschatte detectiekansen {{species}}."
 det_prob_df %>%
   mutate(detectiekans = paste0(
       sprintf("%.3f", round(estimate_p, 3)),
