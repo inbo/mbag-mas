@@ -106,7 +106,7 @@ plot_detection_curve <- function(# nolint: cyclocomp_linter.
       tibble::column_to_rownames("rownames") %>%
       as.data.frame()
 
-    labels <- rownames(design_mat)
+    labels <- sort(rownames(design_mat))
 
     key <- ds_model$ddf$ds$aux$ddfobj$type
     if (key == "hr") {
