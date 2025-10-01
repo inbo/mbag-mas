@@ -45,7 +45,8 @@ params$species <- "{{species}}"
 ```
 
 ```{r}
-det_prob_df <- tar_read_ds("detection_probabilities", params$species , store = store) %>%
+det_prob_df <- tar_read_ds("detection_probabilities", params$species,
+                           store = store) %>%
   select(-species) %>%
   replace(is.na(.), "-")
 
@@ -53,21 +54,20 @@ detprob_cap <- paste0("Geschatte detectiekansen ", params$species, ".")
 ```
 
 De detectiekansen voor `r params$species` (*{{sci_name}}*) zijn weergegeven in @tbl-detprob-{{label}}.
-`r summarise_detection_patterns(det_prob_df, params$species)`
+`r summarise_detection_patterns(det_prob_df, threshold = 0.05)`
 
 ```{r}
 #| label: tbl-detprob-{{label}}
 #| tbl-cap: "Geschatte detectiekansen {{species}}."
 det_prob_df %>%
   mutate(detectiekans = paste0(
-      sprintf("%.3f", round(estimate_p, 3)),
-      " (",
-      sprintf("%.3f", round(ll_beta, 3)),
-      "-",
-      sprintf("%.3f", round(ul_beta, 3)),
-      ")"
-    )
-  ) %>%
+    sprintf("%.3f", round(estimate_p, 3)),
+    " (",
+    sprintf("%.3f", round(ll_beta, 3)),
+    "-",
+    sprintf("%.3f", round(ul_beta, 3)),
+    ")"
+  )) %>%
   select("jaar" = "year", any_of(c("regio", "openheid", "sbp")),
          "detectiekans (95 % interval)" = "detectiekans",
          "standaardfout" = "se_p") %>%

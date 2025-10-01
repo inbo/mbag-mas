@@ -1,22 +1,25 @@
-#' Summarise distance sampling detection patterns for a species
+#' Summarise distance sampling detection patterns
 #'
-#' This function generates a textual summary of detection probabilities estimated
-#' via distance sampling. It highlights variations across years and strata,
-#' and includes the 95% confidence intervals for each estimate.
+#' This function generates a textual summary of detection probabilities
+#' estimated via distance sampling. It highlights variations across years and
+#' strata, and includes the 95% confidence intervals for each estimate.
 #'
-#' @param df A data frame containing distance sampling results. Required columns:
+#' @param df A data frame containing distance sampling results.
+#' Required columns:
 #'   - year: numeric year of observation
 #'   - estimate_p: estimated detection probability
 #'   - ll_beta: lower bound of 95% confidence interval
 #'   - ul_beta: upper bound of 95% confidence interval
 #'   - Optional: regio, openheid, sbp (categorical strata)
-#' @param species Character; species name to include in the summary text.
-#' @param threshold Numeric; if range of detection probabilities is below this, considered "consistent" (default 0.05).
+#' @param threshold Numeric; if range of detection probabilities is below this,
+#' considered "consistent" (default 0.05).
 #'
-#' @return A character string summarising detection probabilities for the species.
+#' @return A character string summarising detection probabilities.
 #'
 #' @export
-summarise_detection_patterns <- function(df, species, threshold = 0.05) {
+summarise_detection_patterns <- function(df, threshold = 0.05) { # nolint: cyclocomp_linter
+  require("dplyr")
+  require("rlang")
 
   # Helper function to create a label for strata
   # Combines non-empty columns: regio, openheid, sbp
@@ -39,7 +42,8 @@ summarise_detection_patterns <- function(df, species, threshold = 0.05) {
   txt <- ""
 
   # Total range of detection probabilities
-  range_total <- max(df$estimate_p, na.rm = TRUE) - min(df$estimate_p, na.rm = TRUE)
+  range_total <- max(df$estimate_p, na.rm = TRUE) -
+    min(df$estimate_p, na.rm = TRUE)
 
   # If overall variation is low, report consistent detection probabilities
   if (range_total < threshold) {
@@ -58,13 +62,14 @@ summarise_detection_patterns <- function(df, species, threshold = 0.05) {
 
   # Otherwise, describe variation per year
   for (y in sort(unique(df$year))) {
-    sub <- df %>% filter(year == y)
+    sub <- df %>% filter(.data$year == y)
     if (nrow(sub) == 0) next
 
     # Identify highest and lowest detection probabilities
     best <- sub[which.max(sub$estimate_p), ]
     worst <- sub[which.min(sub$estimate_p), ]
-    range_y <- max(sub$estimate_p, na.rm = TRUE) - min(sub$estimate_p, na.rm = TRUE)
+    range_y <- max(sub$estimate_p, na.rm = TRUE) -
+      min(sub$estimate_p, na.rm = TRUE)
 
     # If year-specific variation is small, report as consistent
     if (range_y < threshold) {
@@ -81,9 +86,11 @@ summarise_detection_patterns <- function(df, species, threshold = 0.05) {
       # Otherwise, report lowest and highest per year with labels
       year_txt <- paste0(
         "In ", y, " varieerden de detectiekansen tussen ",
-        sprintf("%.2f [%.2f–%.2f] %s en %.2f [%.2f–%.2f] %s. ",
-                worst$estimate_p, worst$ll_beta, worst$ul_beta, label_fun(worst),
-                best$estimate_p,  best$ll_beta,  best$ul_beta,  label_fun(best))
+        sprintf(
+          "%.2f [%.2f–%.2f] %s en %.2f [%.2f–%.2f] %s. ",
+          worst$estimate_p, worst$ll_beta, worst$ul_beta, label_fun(worst),
+          best$estimate_p,  best$ll_beta,  best$ul_beta,  label_fun(best)
+        )
       )
     }
     # Append to final summary
