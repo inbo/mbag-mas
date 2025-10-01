@@ -83,7 +83,8 @@ Dit gebeurt via een "inner join" wat wil zeggen dat we kunnen nagaan of telpunte
 sample <- tar_read("sample", store = targets_store)
 
 select_sampled_points <- tar_read_sf("select_sampled_points",
-                                     store = targets_store)
+                                     store = targets_store) %>%
+  filter(jaar <= 2024)
 ```
 
 Welke aantallen hebben we per stratum?
@@ -156,7 +157,8 @@ not_counted_ol %>%
 > Waarom?
 
 ```{r}
-crs_pipeline <- tar_read_sf("crs_pipeline", store = targets_store)
+crs_pipeline <- tar_read_sf("crs_pipeline", store = targets_store) %>%
+  filter(jaar <= 2024)
 ```
 
 Ol_12833.8
@@ -172,20 +174,6 @@ crs_pipeline %>%
   arrange(jaar)
 ```
 
-Ol_815.5
-
-- nooit geteld (2022-2024)
-- steekproef beslissing: zou ter vervanging zijn van Ol_11054.15 en Ol_3417.2
-
-> vervangen door VL0322
-
-Ol_5760.2.14
-
-- nooit geteld (2022-2024)
-- steekproef beslissing: zou ter vervanging zijn van Ol_513.1
-
-> vervangen door VL0555
-
 VL0605
 
 - niet geteld in 2022, wel in 2023 en 2024
@@ -198,11 +186,6 @@ crs_pipeline %>%
   distinct(plotnaam, jaar, waarnemer = waarneme) %>%
   arrange(jaar)
 ```
-
-Ol_2025.4
-
-- nooit geteld (2022-2024)
-- steekproef beslissing: zou ter vervanging zijn van Ol_22546.2
 
 VL0363
 
@@ -231,7 +214,11 @@ Verliezen we data indien we filteren binnen deze periodes?
 Indien ja, hoeveel en waar?
 
 ```{r}
-select_time_periods <- tar_read_sf("select_time_periods", store = targets_store)
+select_time_periods <- tar_read_sf(
+  "select_time_periods",
+  store = targets_store
+) %>%
+  filter(jaar <= 2024)
 ```
 
 In totaal vallen `r nrow(select_sampled_points) - nrow(select_time_periods)` waarnemingen buiten de telperiodes.
@@ -565,7 +552,8 @@ Grote verschillen kunnen wijzen op fouten.
 ```{r}
 calculate_obs_distance <- tar_read_sf(
   "calculate_obs_distance", store = targets_store
-)
+) %>%
+  filter(jaar <= 2024)
 ```
 
 Zijn er punten waarbij het absolute verschil meer dan 1 m is?
@@ -609,7 +597,8 @@ Indien ja, hoeveel en waar?
 ```{r}
 select_within_radius <- tar_read_sf(
   "select_within_radius", store = targets_store
-)
+) %>%
+  filter(jaar <= 2024)
 ```
 
 In totaal vallen `r nrow(calculate_obs_distance) - nrow(select_within_radius)` waarnemingen buiten de telcirkels.
@@ -1081,7 +1070,8 @@ Vervolgens selecteren we de data van vogels (soortgrp 2) en zoogdieren (soortgrp
 ```{r}
 select_species_groups <- tar_read_sf(
   "select_species_groups", store = targets_store
-)
+) %>%
+  filter(jaar <= 2024)
 ```
 
 Is het aantal soortgroepen in de data gelijk aan 2?
@@ -1162,11 +1152,13 @@ data.frame(
 ```{r}
 remove_double_counts <- tar_read_sf(
   "remove_double_counts", store = targets_store
-)
+) %>%
+  filter(jaar <= 2024)
 
 remove_subspecies_names <- tar_read_sf(
   "remove_subspecies_names", store = targets_store
-)
+) %>%
+  filter(jaar <= 2024)
 ```
 
 We lijsten op waar dubbeltellingen zijn verwijderd.
@@ -1274,7 +1266,8 @@ data.frame(
 ## Telpunten in finale dataset (mas_data_full)
 
 ```{r}
-mas_data_full <- tar_read("mas_data_full", store = targets_store)
+mas_data_full <- tar_read("mas_data_full", store = targets_store) %>%
+  filter(jaar <= 2024)
 ```
 
 Zijn alle telpunten zijn nog altijd aanwezig?
@@ -1302,7 +1295,8 @@ Ook hierop doen we enkele controlestappen.
 Zijn alle soorten correct (bv. Blauwe Pauw i.p.v. Blauwe Reiger)? Zijn er opvallend veel individuen opgegeven (bv. 300 i.p.v. 30)? ...
 
 ```{r}
-mas_data_clean <- tar_read("mas_data_clean", store = targets_store)
+mas_data_clean <- tar_read("mas_data_clean", store = targets_store) %>%
+  filter(jaar <= 2024)
 ```
 
 ## Telpunt- en waarneminglocaties
@@ -1399,7 +1393,7 @@ mas_data_clean %>%
 Er is inderdaad een aantal keer hogere aantallen dan 1 ingevoerd bij broedcodes 1-5.
 
 ```{r}
-mas_data_clean %>%
+mas_data_full %>%
   st_drop_geometry() %>%
   filter(aantal > 1,
          wrntype > 0) %>%
@@ -1415,7 +1409,7 @@ We kijken per jaar hoe vaak een hoger getal dan **2** is geteld voor broedcodes 
 Het is een probleem elk jaar.
 
 ```{r}
-mas_data_clean %>%
+mas_data_full %>%
   st_drop_geometry() %>%
   filter(aantal > 2,
          wrntype > 0) %>%
@@ -1439,6 +1433,21 @@ mas_data_clean %>%
   arrange(waarnemer, aantal, datum) %>%
   write_csv(file.path(mbag_dir, "output", "data_controle",
                       "hoge_aantallen_broedcodes.csv"))
+```
+
+Manueel passen we alle aantallen voor broedcode > 0 manueel aan naar 1.
+
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  filter(aantal > 1,
+         wrntype > 0) %>%
+  count(wrntype, aantal, name = "aantal keer in dataset") %>%
+  rename(
+    "broedcode" = "wrntype",
+    "aantal vogels" = aantal
+  ) %>%
+  kable()
 ```
 
 # Controle data publicatie
@@ -1485,15 +1494,37 @@ taxon_data %>%
 ```
 
 Matching ziet er op het eerste zicht goed uit.
-Enkel voor “Veldmuis/Aardmuis”, “rat spec.” en “spitsmuis spec.” niet.
+
+> Voor Krakeend moeten we het manueel op soortniveau zetten.
+
+Enkel voor `r taxon_data$dwc_vernacularName[is.na(taxon_data$scientificName)]` niet.
 Deze moeten we manueel mappen (manual_taxon_mapping).
 
 ```{r}
 manual_taxon_data <- tar_read("manual_taxon_mapping", store = targets_store)
 
 manual_taxon_data %>%
-  filter(is.na(species)) %>%
-  select(dwc_vernacularName, dwc_class, family, scientificName, rank, key) %>%
+  filter(dwc_vernacularName %in%
+           taxon_data$dwc_vernacularName[is.na(taxon_data$scientificName)] |
+           dwc_vernacularName == "Krakeend") %>%
+  select(dwc_vernacularName, dwc_class, family, genus, species, scientificName,
+         rank, key) %>%
+  arrange(dwc_vernacularName) %>%
+  kable()
+```
+
+Voor sommige soorten kunnen we zgn. "aggregate species" maken.
+
+```{r}
+species_agg_data <- tar_read("map_species_aggregates", store = targets_store)
+
+species_agg_data %>%
+  filter(dwc_vernacularName %in%
+           taxon_data$dwc_vernacularName[is.na(taxon_data$scientificName)] |
+           dwc_vernacularName == "Krakeend") %>%
+  select(dwc_vernacularName, dwc_class, family, genus, species, scientificName,
+         rank, key) %>%
+  arrange(dwc_vernacularName) %>%
   kable()
 ```
 
@@ -1558,8 +1589,10 @@ Na DwC mapping bekomen we de finale dataset voor publicatie.
 We bekijken hier of er nog tekortkomingen zijn.
 
 ```{r}
-darwincore_mapping <- tar_read("darwincore_mapping", store = targets_store)
-dwc_mapping_final <- tar_read("dwc_mapping_final", store = targets_store)
+darwincore_mapping <- tar_read("darwincore_mapping", store = targets_store) %>%
+  filter(dwc_year <= 2024)
+dwc_mapping_final <- tar_read("dwc_mapping_final", store = targets_store) %>%
+  filter(year <= 2024)
 ```
 
 Welke kolommen zitten niet in de dataset?
@@ -1584,7 +1617,7 @@ sort(colnames(darwincore_mapping)[
   - `raw_plotid`: we gebruiken eigenlijk altijd plotnaam
   - `raw_projectid`: is dit INBO of SOVON gerelateerd?
 
-> Laatste 2 lijken ons alvast niet relevant.
+> niet relevant
 
 Welke kolommen moet nog aangevuld worden?
 
@@ -1596,7 +1629,7 @@ empty_col_df <- dwc_mapping_final[
 sort(colnames(empty_col_df))
 ```
 
-> Aanvullen
+> ok
 
 Hoe ziet de dataset er uit?
 
@@ -1608,12 +1641,10 @@ glimpse(dwc_mapping_final)
 
 Overige opmerkingen en vragen:
 
-- Ok dat `varbatimBehavior` de Nederlandstalige beschrijving is? De Engelstalige beschrijving staat onder `behavior`. Of mag de Nederlandse beschrijving weg?
 - We kunnen ook afwezigheden toevoegen (`occurrenceStatus = "absent"` en `organismQuantity = 0`) aangezien alle vogels worden genoteerd op het moment van tellen vanaf dat telpunt. Hoe doen we dit?
   - We kijken per jaar naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten per jaar. *Voordeel:* geen verandering als er data van een nieuw jaar bijkomt. *Nadeel:* niet volledig aangezien deze lijst niet volledig is.
   - We kijken over de hele dataset naar de lijst van soorten en voegen zo afwezigheden per telpunt toe op basis van deze lijst van soorten. *Voordeel:* steeds meer volledige lijst van soorten. *Nadeel:* dataset zal elk jaar veranderen.
   - Afwezigheden toevoegen o.b.v. externe lijst?
   - ...
-- Buiten MBAG - MAS, publiceren we ook de overige MAS data van de Sovon export. Is de kolomnaam `is_mas_sample` ok?
 
 > Zouden afwezigheden correct zijn? Er is geen streeplijst gebruikt, dus eerder niet.
