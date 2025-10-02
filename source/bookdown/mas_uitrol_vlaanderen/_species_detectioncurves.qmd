@@ -182,3 +182,5 @@ for (grp in seq_along(group_list)) {
 
 combined + plot_layout(heights = heights_list)
 ```
+
+\newpage
