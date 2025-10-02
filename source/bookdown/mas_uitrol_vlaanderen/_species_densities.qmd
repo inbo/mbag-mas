@@ -37,13 +37,14 @@ store <- file.path(mbag_dir,
 source(file.path(mbag_dir, "source", "R", "tar_read_ds.R"))
 source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
 source(file.path("scripts", "summarise_detection_patterns.R"))
+source(file.path("scripts", "summarise_density_patterns_stratum.R"))
 ```
 
 ```{r}
 # To make it easier
 params <- NULL
 params$species <- "{{species}}"
-#params$species <- "Veldleeuwerik"
+params$species <- "Veldleeuwerik"
 ```
 
 ```{r}
@@ -84,6 +85,14 @@ det_prob_df %>%
 # Get densities
 densities_stratum_target <- tar_read_ds("densities_stratum", params$species,
                                         store = store)
+densities_stratum_target <- densities_stratum_target %>%
+  filter(
+    year == 2023 & grepl("^Zandleem|^Leem", Label) | year != 2023
+  ) %>%
+  rename("stratum" = "Label", "estimate" = "Estimate") %>%
+  filter(stratum != "Total") %>%
+  separate(stratum, into = c("regio", "openheid", "sbp"), sep = " - ") %>%
+  mutate(stratum = paste(openheid, sbp, sep = " - "))
 
 # Parse thresholds
 threshold_vals <- tibble(
@@ -107,20 +116,15 @@ if (params$species %in% threshold_vals$species) {
 ```
 
 ```{r}
+summarise_density_patterns_stratum(densities_stratum_target)
+```
+
+```{r}
 #| label: fig-densstratum-{{label}}
 #| fig-cap: "Densiteitsschattingen voor {{species}} per stratum."
 #| fig-height: 6
 # Prepare base plot data
-p <- densities_stratum_target %>%
-  filter(
-    year == 2023 & grepl("^Zandleem|^Leem", Label) | year != 2023
-  ) %>%
-  rename("stratum" = "Label", "estimate" = "Estimate") %>%
-  filter(stratum != "Total") %>%
-  separate(stratum, into = c("regio", "openheid", "sbp"), sep = " - ") %>%
-  mutate(stratum = paste(openheid, sbp, sep = " - ")) %>%
-  # Initialize ggplot with year on x, estimate on y, grouped by stratum
-  ggplot(aes(x = year, y = estimate, group = stratum))
+p <- ggplot(aes(x = year, y = estimate, group = stratum))
 
 # Plot if species has a defined threshold value
 if (params$species %in% threshold_vals$species) {
