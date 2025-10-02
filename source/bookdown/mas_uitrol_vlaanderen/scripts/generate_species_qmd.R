@@ -57,7 +57,7 @@ generate_species_qmd <- function(
     )
 
     # Expand the template with current arguments and write to file
-    do.call(knit_expand, c(list(template), args)) |>
+    do.call(knitr::knit_expand, c(list(template), args)) |>
       writeLines(file.path(spec_dir, out_file))
   }
 
