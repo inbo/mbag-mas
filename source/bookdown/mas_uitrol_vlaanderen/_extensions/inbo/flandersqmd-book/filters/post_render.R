@@ -15,7 +15,7 @@ if (length(start) != 1 || length(end) != 1 || start > end) {
 # Add informative message
 msg <- c(
   "",
-  "> ⚠️ **Let op:** de inhoud onder `## Resultaten` wordt automatisch",
+  "> ⚠️ **Let op:** de inhoud onder wordt automatisch",
   "> gegenereerd tijdens het renderen via `render_children.R`.",
   "> Pas dit deel niet manueel aan."
 )
