@@ -142,3 +142,4 @@ book:
   appendices:
     - kaarten_sbp.qmd
     - detection_curves.qmd
+    - densities_stratum.qmd
