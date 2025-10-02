@@ -39,7 +39,6 @@ source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
 # To make it easier
 params <- NULL
 params$species <- "{{species}}"
-#params$species <- "Veldleeuwerik"
 ```
 
 ```{r}
@@ -47,7 +46,7 @@ params$species <- "{{species}}"
 #| fig-cap: "Detectiecurves {{species}}. De stippellijn geeft de gemiddelde
 #|   detectiecurve aan."
 #| fig-width: 8
-#| fig-height: 12
+#| fig-height: 10
 #| fig.align: "center"
 # ---------------------------
 # Step 0: Load models and extract formulas/keys
