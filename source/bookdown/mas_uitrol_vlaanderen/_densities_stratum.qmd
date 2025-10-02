@@ -40,7 +40,6 @@ source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
 # To make it easier
 params <- NULL
 params$species <- "{{species}}"
-params$species <- "Torenvalk"
 ```
 
 ```{r}
