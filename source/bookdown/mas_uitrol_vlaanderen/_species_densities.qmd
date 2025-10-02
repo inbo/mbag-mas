@@ -56,7 +56,7 @@ detprob_cap <- paste0("Geschatte detectiekansen ", params$species, ".")
 ```
 
 De detectiekansen voor `r params$species` (*{{sci_name}}*) zijn weergegeven in @tbl-detprob-{{label}}.
-@fig-detprob-{{label}} visualiseert de detectiecurve(s) per jaar. 
+@fig-detprob-{{label}} (@sec-detectiecurve-soort) visualiseert de detectiecurve(s) per jaar. 
 `r summarise_detection_patterns(det_prob_df, threshold = 0.05)`
 
 ```{r}
