@@ -1,0 +1,184 @@
+```{r}
+#| include: FALSE
+# set up
+library(knitr)
+opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  out.width = "100%"
+)
+```
+
+```{r}
+# packages
+library(tidyverse)
+library(targets)
+library(patchwork)
+
+library(INBOtheme)
+theme_set(theme_inbo(transparent = TRUE))
+
+# Conflicts
+conflicted::conflicts_prefer(dplyr::filter)
+conflicted::conflicts_prefer(dplyr::select)
+
+# Paths
+mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
+store <- file.path(mbag_dir,
+                   "source", "targets", "distance_sampling", "_targets")
+
+# Source functions
+source(file.path(mbag_dir, "source", "R", "tar_read_ds.R"))
+source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
+```
+
+## {{species}}
+
+```{r}
+# To make it easier
+params <- NULL
+params$species <- "{{species}}"
+#params$species <- "Veldleeuwerik"
+```
+
+```{r}
+#| label: fig-detprob-{{label}}
+#| fig-cap: "Detectiecurves {{species}}. De stippellijn geeft de gemiddelde
+#|   detectiecurve aan."
+#| fig-width: 8
+#| fig-height: 12
+#| fig.align: "center"
+# ---------------------------
+# Step 0: Load models and extract formulas/keys
+# ---------------------------
+
+# Read the final models from the targets store for the specified species
+final_models <- tar_read_ds("model_selection", params$species, store = store)
+
+# Assign names to the models corresponding to years
+names(final_models) <- 2023:2025
+
+# Extract the detection function formula from each model
+forms <- lapply(final_models, function(model) {
+  model$ddf$ds$aux$ddfobj$scale$formula
+})
+
+# Determine the key function type (half-normal vs hazard-rate) for each model
+keys <- lapply(final_models, function(model) {
+  ifelse(
+    model$ddf$ds$aux$ddfobj$type == "hn",
+    "half-normal",
+    "hazard-rate"
+  )
+})
+
+# ---------------------------
+# Step 1: Create detection curve plots for each year
+# ---------------------------
+
+# Initialize an empty list to store the plots
+plots <- vector(mode = "list", length = length(final_models))
+
+# Loop over each model/year
+for (i in seq_along(final_models)) {
+  year <- as.character(names(final_models[i]))  # Current year
+  ds_model <- final_models[[year]]             # Current detection model
+  f <- forms[[year]]                           # Current formula
+  key <- keys[[year]]                          # Current key function type
+
+  # Generate the detection curve plot
+  p <- plot_detection_curve(
+    ds_model,
+    show_data = TRUE,            # Show observed data points
+    plot_average_fit = TRUE,     # Show average fit line
+    plot_covariate_fit = TRUE    # Show covariate-specific fit lines
+  ) +
+    scale_y_continuous(limits = c(0, NA), breaks = seq(0, 100, by = 0.25)) +
+    labs(
+      x = "Afstand (m)",
+      y = "Detectiekans",
+      colour = "",  # Remove legend title
+      title = paste0(year, ": ", key, " sleutelfunctie (", f, ")")  # Plot title
+    ) +
+    theme_minimal() +  # Clean minimal theme
+    theme(
+      legend.background = element_rect(fill = "white", color = "darkgrey"),
+      legend.margin = margin(6, 6, 6, 6),
+      legend.position = "bottom"
+    )
+
+  # Store the plot in the list
+  plots[[i]] <- p
+}
+
+# Assign names to the plots for easy reference
+names(plots) <- names(final_models)
+
+# ---------------------------
+# Step 2: Identify legend variables for each plot
+# ---------------------------
+
+# For each model, extract all variables that determine legend groups
+legend_vars <- lapply(final_models, function(ds_model) {
+  # Variables in the formula
+  vars <- all.vars(as.formula(ds_model$ddf$ds$aux$ddfobj$scale$formula))
+  # Unique combinations of covariates
+  sort(unique(apply(ds_model$ddf$data[vars], 1, paste, collapse = " - ")))
+})
+
+# ---------------------------
+# Step 3: Group only consecutive plots with identical legend variables
+# ---------------------------
+
+group_list <- list()  # List to store groups of consecutive plots
+start <- 1
+
+while (start <= length(plots)) {
+  end <- start
+  # Extend the group forward if next plot has identical legend variables
+  while (end + 1 <= length(plots) &&
+           identical(legend_vars[[end]], legend_vars[[end + 1]])) {
+    end <- end + 1
+  }
+  # Store indices of consecutive plots sharing the same legend
+  group_list[[length(group_list) + 1]] <- start:end
+  start <- end + 1
+}
+
+# ---------------------------
+# Step 4: Combine plots sequentially with patchwork
+# ---------------------------
+
+combined <- NULL       # Initialize combined plot
+heights_list <- c()    # To store relative heights for each group
+
+for (grp in seq_along(group_list)) {
+  idx <- group_list[[grp]]  # Indices of plots in the current group
+
+  if (length(idx) == 1) {
+    # Single plot: just add the legend at the bottom
+    p <- plots[[idx]] + theme(legend.position = "bottom")
+  } else {
+    # Multiple consecutive plots: combine vertically and collect shared legend
+    p <- wrap_plots(plots[idx], ncol = 1, guides = "collect") &
+      theme(legend.position = "bottom")
+  }
+
+  # Stack the group vertically in the final combined plot
+  if (is.null(combined)) {
+    combined <- p
+  } else {
+    combined <- combined / p
+  }
+
+  # Assign relative height proportional to the number of plots in the group
+  heights_list <- c(heights_list, length(idx))
+}
+
+# ---------------------------
+# Step 5: Apply relative heights and display
+# ---------------------------
+
+combined + plot_layout(heights = heights_list)
+```
