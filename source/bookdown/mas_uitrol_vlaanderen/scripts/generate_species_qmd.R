@@ -20,11 +20,11 @@
 #' @return Invisibly returns a character vector with the paths of the generated
 #' files. The files are also written to disk.
 generate_species_qmd <- function(
-    species,
-    ...,
-    template,
-    suffix = "",
-    spec_dir = "spec_files"
+  species,
+  ...,
+  template,
+  suffix = "",
+  spec_dir = "spec_files"
 ) {
   # Capture additional arguments into a list
   dots <- list(...)
