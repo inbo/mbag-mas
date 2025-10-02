@@ -9,7 +9,7 @@ project:
   - '!LICENSE.md'
   - '!README.md'
   output-dir: "../../../output/rapporten/mas_uitrol_vlaanderen"
-  pre-render: render_children.R
+  pre-render: scripts/render_children.R
   post-render: _extensions/inbo/flandersqmd-book/filters/post_render.R
 
 execute:
@@ -141,3 +141,4 @@ book:
   - 11_referenties.md
   appendices:
     - kaarten_sbp.qmd
+    - detection_curves.qmd

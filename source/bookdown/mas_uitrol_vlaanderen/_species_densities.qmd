@@ -36,7 +36,7 @@ store <- file.path(mbag_dir,
 # Source functions
 source(file.path(mbag_dir, "source", "R", "tar_read_ds.R"))
 source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
-source("summarise_detection_patterns.R")
+source(file.path("scripts", "summarise_detection_patterns.R"))
 ```
 
 ```{r}
