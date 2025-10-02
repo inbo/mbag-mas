@@ -44,7 +44,7 @@ source(file.path("scripts", "summarise_density_patterns_stratum.R"))
 # To make it easier
 params <- NULL
 params$species <- "{{species}}"
-params$species <- "Geelgors"
+#params$species <- "Geelgors"
 ```
 
 ```{r}
@@ -118,20 +118,13 @@ if (params$species %in% threshold_vals$species) {
 }
 ```
 
-De densiteiten voor `r params$species` zijn gevisualiseerd in @fig-densstratum-{{label}}. De exacte cijfers kunnen geraadpleegd worden in @tbl-densstratum-{{label}} (@sec-densiteiten-stratum).
+De densiteiten per stratum voor `r params$species` zijn gevisualiseerd in @fig-densstratum-{{label}}. De exacte cijfers kunnen geraadpleegd worden in @tbl-densstratum-{{label}} (@sec-densiteiten-stratum).
 
 We bespreken eerst de cijfers van 2023.
 `r summarise_density_patterns_stratum(filter(densities_stratum_target, year == 2023))`
 
 In de andere jaren zien we de volgende patronen.
 `r summarise_density_patterns_stratum(filter(densities_stratum_target, year != 2023))`
-
-```{r, eval=FALSE}
-summarise_density_patterns_stratum(densities_stratum_target %>%
-                                     filter(year == 2023))
-summarise_density_patterns_stratum(densities_stratum_target %>%
-                                     filter(year != 2023))
-```
 
 ```{r}
 #| label: fig-densstratum-{{label}}
@@ -203,13 +196,13 @@ densities_region_target <- densities_region_target %>%
   filter(
     year == 2023 & grepl("^Zandleem|^Leem", Label) | year != 2023
   ) %>%
-  rename("regio" = "Label", "estimate" = "Estimate")
+  rename("region" = "Label", "estimate" = "Estimate")
 
 # Add effects
 if (params$species %in% threshold_vals$species) {
   t <- subset(threshold_vals, species == params$species, "values", drop = TRUE)
   densities_region_target <- densities_region_target %>%
-    mutate(`verschil met streefwaarde` = factor(
+    mutate(effect = factor(
       case_when(
         lcl > t ~ "boven",
         ucl < t ~ "onder",
@@ -220,37 +213,72 @@ if (params$species %in% threshold_vals$species) {
 }
 ```
 
+De densiteiten per regio voor `r params$species` zijn weergegeven in @tbl-densregio-{{label}} en gevisualiseerd in @fig-densregio-{{label}}.
+
+We bespreken eerst de cijfers van 2023.
+
+In de andere jaren zien we de volgende patronen.
+
 ```{r}
 #| label: tbl-densregio-{{label}}
 #| tbl-cap: "Geschatte densiteiten per regio voor {{species}}."
-library(dplyr)
-library(kableExtra)
-
-densities_region_target %>%
-  mutate(
-    regio = ifelse(regio == "Total", "Vlaanderen", regio),
-    densiteit = paste0(
-      sprintf("%.3f", round(estimate, 3)),
-      " (",
-      sprintf("%.3f", round(lcl, 3)),
-      "-",
-      sprintf("%.3f", round(ucl, 3)),
-      ")"
-    )
-  ) %>%
-  select(
-    "jaar" = "year",
-    "regio",
-    "densiteit (95 % interval)" = "densiteit",
-    "standaardfout" = "se",
-    any_of(c("verschil met streefwaarde"))
-  ) %>%
-  kable(digits = 3, booktabs = TRUE, linesep = "") %>%
-  kable_styling(latex_options = "striped") %>%
-  row_spec(0, bold = TRUE) %>%
-  collapse_rows(1) %>%
-  row_spec(which(densities_region_target$regio == "Total"), 
-           bold = TRUE, hline_after = TRUE)
+if (params$species %in% threshold_vals$species) {
+  densities_region_target %>%
+    mutate(
+      regio = ifelse(region == "Total", "Vlaanderen", region),
+      densiteit = paste0(
+        sprintf("%.3f", round(estimate, 3)),
+        " (",
+        sprintf("%.3f", round(lcl, 3)),
+        "-",
+        sprintf("%.3f", round(ucl, 3)),
+        ")"
+      ),
+      `verschil met streefwaarde` = ifelse(
+        as.vector(effect) == "geen sign.\nverschil",
+        "geen sign. verschil",
+        as.vector(effect)
+      )
+    ) %>%
+    select(
+      "jaar" = "year",
+      "regio",
+      "densiteit (95 % interval)" = "densiteit",
+      "standaardfout" = "se",
+      "verschil met streefwaarde"
+    ) %>%
+    kable(digits = 3, booktabs = TRUE) %>%
+    kable_styling(latex_options = "striped") %>%
+    row_spec(0, bold = TRUE) %>%
+    collapse_rows(1) %>%
+    row_spec(which(densities_region_target$regio == "Total"), 
+             bold = TRUE, underline = TRUE, hline_after = TRUE)
+} else {
+  densities_region_target %>%
+    mutate(
+      regio = ifelse(region == "Total", "Vlaanderen", region),
+      densiteit = paste0(
+        sprintf("%.3f", round(estimate, 3)),
+        " (",
+        sprintf("%.3f", round(lcl, 3)),
+        "-",
+        sprintf("%.3f", round(ucl, 3)),
+        ")"
+      )
+    ) %>%
+    select(
+      "jaar" = "year",
+      "regio",
+      "densiteit (95 % interval)" = "densiteit",
+      "standaardfout" = "se"
+    ) %>%
+    kable(digits = 3, booktabs = TRUE) %>%
+    kable_styling(latex_options = "striped") %>%
+    row_spec(0, bold = TRUE) %>%
+    collapse_rows(1) %>%
+    row_spec(which(densities_region_target$regio == "Total"), 
+             bold = TRUE, hline_after = TRUE)
+}
 ```
 
 ```{r}
