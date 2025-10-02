@@ -199,12 +199,17 @@ if (params$species %in% threshold_vals$species) {
 # Get densities
 densities_region_target <- tar_read_ds("densities_region", params$species,
                                        store = store)
+densities_region_target <- densities_region_target %>%
+  filter(
+    year == 2023 & grepl("^Zandleem|^Leem", Label) | year != 2023
+  ) %>%
+  rename("regio" = "Label", "estimate" = "Estimate")
 
 # Add effects
 if (params$species %in% threshold_vals$species) {
   t <- subset(threshold_vals, species == params$species, "values", drop = TRUE)
   densities_region_target <- densities_region_target %>%
-    mutate(effect = factor(
+    mutate(`verschil met streefwaarde` = factor(
       case_when(
         lcl > t ~ "boven",
         ucl < t ~ "onder",
@@ -216,16 +221,45 @@ if (params$species %in% threshold_vals$species) {
 ```
 
 ```{r}
+#| label: tbl-densregio-{{label}}
+#| tbl-cap: "Geschatte densiteiten per regio voor {{species}}."
+library(dplyr)
+library(kableExtra)
+
+densities_region_target %>%
+  mutate(
+    regio = ifelse(regio == "Total", "Vlaanderen", regio),
+    densiteit = paste0(
+      sprintf("%.3f", round(estimate, 3)),
+      " (",
+      sprintf("%.3f", round(lcl, 3)),
+      "-",
+      sprintf("%.3f", round(ucl, 3)),
+      ")"
+    )
+  ) %>%
+  select(
+    "jaar" = "year",
+    "regio",
+    "densiteit (95 % interval)" = "densiteit",
+    "standaardfout" = "se",
+    any_of(c("verschil met streefwaarde"))
+  ) %>%
+  kable(digits = 3, booktabs = TRUE, linesep = "") %>%
+  kable_styling(latex_options = "striped") %>%
+  row_spec(0, bold = TRUE) %>%
+  collapse_rows(1) %>%
+  row_spec(which(densities_region_target$regio == "Total"), 
+           bold = TRUE, hline_after = TRUE)
+```
+
+```{r}
 #| label: fig-densregio-{{label}}
 #| fig-cap: "Densiteitsschattingen voor {{species}} per landbouwregio."
 #| fig-height: 6
 #| fig-width: 8
 # Prepare base plot data
 p <- densities_region_target %>%
-  filter(
-    year == 2023 & grepl("^Zandleem|^Leem", Label) | year != 2023
-  ) %>%
-  rename("region" = "Label", "estimate" = "Estimate") %>%
   filter(region != "Total") %>%
   # Initialize ggplot with year on x, estimate on y
   ggplot(aes(x = year, y = estimate))
