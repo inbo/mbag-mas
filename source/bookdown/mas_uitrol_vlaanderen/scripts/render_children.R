@@ -102,7 +102,7 @@ if (length(start) != 1 || length(end) != 1 || start > end) {
 
 # Append the child includes as R chunk
 child_lines <- sprintf(
-  "{{< include %s >}}\n", file.path(spec_dir, output_files)
+  "{{< include %s >}}\n", file.path(spec_dir, output_files2)
 )
 lines_new <- c(
   lines[1:start],
