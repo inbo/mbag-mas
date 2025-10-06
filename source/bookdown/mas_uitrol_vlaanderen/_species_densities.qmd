@@ -45,7 +45,6 @@ source(file.path("scripts", "summarise_region_densities.R"))
 # To make it easier
 params <- NULL
 params$species <- "{{species}}"
-#params$species <- "Geelgors"
 ```
 
 ```{r}
@@ -137,6 +136,7 @@ In de andere jaren zien we de volgende patronen.
 #| label: fig-densstratum-{{label}}
 #| fig-cap: "Densiteitsschattingen voor {{species}} per stratum."
 #| fig-height: 6
+#| fig-width: 8
 # Prepare base plot data
 p <- densities_stratum_target %>%
   ggplot(aes(x = year, y = estimate, group = stratum))
