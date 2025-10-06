@@ -208,14 +208,15 @@ densities_region_target <- densities_region_target %>%
 if (params$species %in% threshold_vals$species) {
   t <- subset(threshold_vals, species == params$species, "values", drop = TRUE)
   densities_region_target <- densities_region_target %>%
-    mutate(effect = factor(
-      case_when(
-        lcl > t ~ "boven",
-        ucl < t ~ "onder",
-        TRUE ~ "geen sign.\nverschil"
-      ),
-      levels = c("boven", "geen sign.\nverschil", "onder")
-      ),
+    mutate(
+      effect = factor(
+        case_when(
+          lcl > t ~ "boven",
+          ucl < t ~ "onder",
+          TRUE ~ "geen sign.\nverschil"
+        ),
+        levels = c("boven", "geen sign.\nverschil", "onder")
+       ),
       threshold = t
     )
 }
@@ -265,7 +266,7 @@ if (params$species %in% threshold_vals$species) {
     kable_styling(latex_options = "striped") %>%
     row_spec(0, bold = TRUE) %>%
     collapse_rows(1) %>%
-    row_spec(which(densities_region_target$regio == "Total"), 
+    row_spec(which(densities_region_target$regio == "Total"),
              bold = TRUE) %>%
     row_spec(last_rows, hline_after = TRUE)
 } else {
@@ -295,7 +296,7 @@ if (params$species %in% threshold_vals$species) {
     kable_styling(latex_options = "striped") %>%
     row_spec(0, bold = TRUE) %>%
     collapse_rows(1) %>%
-    row_spec(which(densities_region_target$regio == "Total"), 
+    row_spec(which(densities_region_target$regio == "Total"),
              bold = TRUE) %>%
     row_spec(last_rows, hline_after = TRUE)
 }
