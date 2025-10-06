@@ -45,7 +45,7 @@ source(file.path("scripts", "summarise_region_densities.R"))
 # To make it easier
 params <- NULL
 params$species <- "{{species}}"
-params$species <- "Geelgors"
+#params$species <- "Geelgors"
 ```
 
 ```{r}
@@ -80,10 +80,11 @@ last_rows <- cumsum(rle(df$jaar)$lengths)[
   -length(cumsum(rle(df$jaar)$lengths))
 ]
 df %>%
-  kable(digits = 3, booktabs = TRUE) %>%
+  kable(digits = 3, align = "l", booktabs = TRUE) %>%
   kable_styling(latex_options = "striped") %>%
   row_spec(0, bold = TRUE) %>%
   collapse_rows(1) %>%
+  row_spec(last_rows, hline_after = TRUE) %>%
   row_spec(last_rows, hline_after = TRUE)
 ```
 
@@ -124,7 +125,7 @@ if (params$species %in% threshold_vals$species) {
 }
 ```
 
-De densiteiten per stratum voor `r params$species` zijn gevisualiseerd in @fig-densstratum-{{label}}. De exacte cijfers kunnen geraadpleegd worden in @tbl-densstratum-{{label}} (@sec-densiteiten-stratum).
+De densiteiten per stratum voor `r params$species` zijn gevisualiseerd in @fig-densstratum-{{label}}. De exacte cijfers kunnen geraadpleegd worden in @tbl-densstratum-{{label}} (@sec-densiteiten-soort).
 
 We bespreken eerst de cijfers van 2023.
 `r summarise_stratum_densities(filter(densities_stratum_target, year == 2023))`
@@ -216,91 +217,19 @@ if (params$species %in% threshold_vals$species) {
           TRUE ~ "geen sign.\nverschil"
         ),
         levels = c("boven", "geen sign.\nverschil", "onder")
-       ),
+      ),
       threshold = t
     )
 }
 ```
 
-De densiteiten per regio voor `r params$species` zijn weergegeven in @tbl-densregio-{{label}} en gevisualiseerd in @fig-densregio-{{label}}.
+De densiteiten per regio voor `r params$species` zijn gevisualiseerd in @fig-densregio-{{label}}. De exacte cijfers kunnen geraadpleegd worden in @tbl-densregio-{{label}} (@sec-densiteiten-soort).
 
 We bespreken eerst de cijfers van 2023.
 `r summarise_region_densities(filter(densities_region_target, year == 2023))`
 
 In de andere jaren zien we de volgende patronen.
 `r summarise_region_densities(filter(densities_region_target, year != 2023))`
-
-```{r}
-#| label: tbl-densregio-{{label}}
-#| tbl-cap: "Geschatte densiteiten per regio voor {{species}}."
-if (params$species %in% threshold_vals$species) {
-  df <- densities_region_target %>%
-    mutate(
-      regio = ifelse(region == "Total", "Vlaanderen", region),
-      densiteit = paste0(
-        sprintf("%.3f", round(estimate, 3)),
-        " (",
-        sprintf("%.3f", round(lcl, 3)),
-        "-",
-        sprintf("%.3f", round(ucl, 3)),
-        ")"
-      ),
-      `verschil met streefwaarde` = ifelse(
-        as.vector(effect) == "geen sign.\nverschil",
-        "geen sign. verschil",
-        as.vector(effect)
-      )
-    ) %>%
-    select(
-      "jaar" = "year",
-      "regio",
-      "densiteit (95 % interval)" = "densiteit",
-      "standaardfout" = "se",
-      "verschil met streefwaarde"
-    )
-  last_rows <- cumsum(rle(df$jaar)$lengths)[
-    -length(cumsum(rle(df$jaar)$lengths))
-  ]
-  df %>%
-    kable(digits = 3, booktabs = TRUE) %>%
-    kable_styling(latex_options = "striped") %>%
-    row_spec(0, bold = TRUE) %>%
-    collapse_rows(1) %>%
-    row_spec(which(densities_region_target$regio == "Total"),
-             bold = TRUE) %>%
-    row_spec(last_rows, hline_after = TRUE)
-} else {
-  df <- densities_region_target %>%
-    mutate(
-      regio = ifelse(region == "Total", "Vlaanderen", region),
-      densiteit = paste0(
-        sprintf("%.3f", round(estimate, 3)),
-        " (",
-        sprintf("%.3f", round(lcl, 3)),
-        "-",
-        sprintf("%.3f", round(ucl, 3)),
-        ")"
-      )
-    ) %>%
-    select(
-      "jaar" = "year",
-      "regio",
-      "densiteit (95 % interval)" = "densiteit",
-      "standaardfout" = "se"
-    )
-  last_rows <- cumsum(rle(df$jaar)$lengths)[
-    -length(cumsum(rle(df$jaar)$lengths))
-  ]
-  df %>%
-    kable(digits = 3, booktabs = TRUE) %>%
-    kable_styling(latex_options = "striped") %>%
-    row_spec(0, bold = TRUE) %>%
-    collapse_rows(1) %>%
-    row_spec(which(densities_region_target$regio == "Total"),
-             bold = TRUE) %>%
-    row_spec(last_rows, hline_after = TRUE)
-}
-```
 
 ```{r}
 #| label: fig-densregio-{{label}}
@@ -353,5 +282,3 @@ if (params$species %in% threshold_vals$species) {
     facet_wrap(~region, ncol = 2, scales = "free_x")
 }
 ```
-
-\newpage

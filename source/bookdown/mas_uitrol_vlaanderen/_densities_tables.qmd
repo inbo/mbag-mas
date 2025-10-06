@@ -1,0 +1,213 @@
+
+```{r}
+#| include: FALSE
+# set up
+library(knitr)
+opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  out.width = "100%"
+)
+```
+
+```{r}
+# packages
+library(tidyverse)
+library(targets)
+library(kableExtra)
+
+# Conflicts
+conflicted::conflicts_prefer(dplyr::filter)
+conflicted::conflicts_prefer(dplyr::select)
+
+# Paths
+mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
+store <- file.path(mbag_dir,
+                   "source", "targets", "distance_sampling", "_targets")
+
+# Source functions
+source(file.path(mbag_dir, "source", "R", "tar_read_ds.R"))
+source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
+```
+
+## {{species}}
+
+```{r}
+# To make it easier
+params <- NULL
+params$species <- "{{species}}"
+```
+
+```{r}
+# Get densities
+densities_stratum_target <- tar_read_ds("densities_stratum", params$species,
+                                        store = store)
+densities_stratum_target <- densities_stratum_target %>%
+  filter(
+    year == 2023 & grepl("^Zandleem|^Leem", Label) | year != 2023
+  ) %>%
+  rename("stratum" = "Label", "estimate" = "Estimate") %>%
+  filter(stratum != "Total") %>%
+  separate(stratum, into = c("regio", "openheid", "sbp"), sep = " - ") %>%
+  mutate(stratum = paste(openheid, sbp, sep = " - "))
+
+# Parse thresholds
+threshold_vals <- tibble(
+  species = c("Patrijs", "Geelgors", "Veldleeuwerik", "Grauwe Gors"),
+  values = c(4, 12.5, 15, 10)
+)
+
+# Add effects
+if (params$species %in% threshold_vals$species) {
+  t <- subset(threshold_vals, species == params$species, "values", drop = TRUE)
+  densities_stratum_target <- densities_stratum_target %>%
+    mutate(`verschil met streefwaarde` = factor(
+      case_when(
+        lcl > t ~ "boven",
+        ucl < t ~ "onder",
+        TRUE ~ "geen sign. verschil"
+      ),
+      levels = c("boven", "geen sign. verschil", "onder")
+    ))
+}
+```
+
+```{r}
+#| label: tbl-densstratum-{{label}}
+#| tbl-cap: "Geschatte densiteiten per stratum voor {{species}}."
+df <- densities_stratum_target %>%
+  mutate(densiteit = paste0(
+    sprintf("%.3f", round(estimate, 3)),
+    " (",
+    sprintf("%.3f", round(lcl, 3)),
+    "-",
+    sprintf("%.3f", round(ucl, 3)),
+    ")"
+  )) %>%
+  select("jaar" = "year", any_of(c("regio", "openheid", "sbp")),
+         "densiteit (95 % interval)" = "densiteit",
+         "standaardfout" = "se", any_of(c("verschil met streefwaarde")))
+last_rows <- cumsum(rle(df$jaar)$lengths)[
+  -length(cumsum(rle(df$jaar)$lengths))
+]
+if (params$species %in% threshold_vals$species) {
+  df %>%
+    rename("standaard- fout" = "standaardfout") %>%
+    kable(
+      digits = 3, align = "l", booktabs = TRUE) %>%
+    kable_styling(latex_options = "striped") %>%
+    column_spec(5, width = "2.2cm") %>%
+    column_spec(6:7, width = "2cm") %>%
+    row_spec(0, bold = TRUE) %>%
+    collapse_rows(1:3) %>%
+    row_spec(last_rows, hline_after = TRUE) %>%
+    row_spec(last_rows, hline_after = TRUE)
+} else {
+  df %>%
+    kable(digits = 3, align = "l", booktabs = TRUE) %>%
+    kable_styling(latex_options = "striped") %>%
+    row_spec(0, bold = TRUE) %>%
+    collapse_rows(1:3) %>%
+    row_spec(last_rows, hline_after = TRUE) %>%
+    row_spec(last_rows, hline_after = TRUE)
+}
+```
+
+\newpage
+
+```{r}
+# Get densities
+densities_region_target <- tar_read_ds("densities_region", params$species,
+                                       store = store)
+densities_region_target <- densities_region_target %>%
+  filter(
+    year == 2023 & grepl("^Zandleem|^Leem", Label) | year != 2023
+  ) %>%
+  rename("region" = "Label", "estimate" = "Estimate")
+
+# Add effects
+if (params$species %in% threshold_vals$species) {
+  t <- subset(threshold_vals, species == params$species, "values", drop = TRUE)
+  densities_region_target <- densities_region_target %>%
+    mutate(
+      `verschil met streefwaarde` = factor(
+        case_when(
+          lcl > t ~ "boven",
+          ucl < t ~ "onder",
+          TRUE ~ "geen sign. verschil"
+        ),
+        levels = c("boven", "geen sign. verschil", "onder")
+      )
+    )
+}
+```
+
+```{r}
+#| label: tbl-densregio-{{label}}
+#| tbl-cap: "Geschatte densiteiten per regio voor {{species}}."
+if (params$species %in% threshold_vals$species) {
+  df <- densities_region_target %>%
+    mutate(
+      regio = ifelse(region == "Total", "Vlaanderen", region),
+      densiteit = paste0(
+        sprintf("%.3f", round(estimate, 3)),
+        " (",
+        sprintf("%.3f", round(lcl, 3)),
+        "-",
+        sprintf("%.3f", round(ucl, 3)),
+        ")"
+      )
+    ) %>%
+    select(
+      "jaar" = "year",
+      "regio",
+      "densiteit (95 % interval)" = "densiteit",
+      "standaardfout" = "se",
+      "verschil met streefwaarde"
+    )
+  last_rows <- cumsum(rle(df$jaar)$lengths)[
+    -length(cumsum(rle(df$jaar)$lengths))
+  ]
+  df %>%
+    kable(digits = 3, align = "l", booktabs = TRUE) %>%
+    kable_styling(latex_options = "striped") %>%
+    row_spec(0, bold = TRUE) %>%
+    collapse_rows(1) %>%
+    row_spec(which(densities_region_target$regio == "Total"),
+             underline = TRUE) %>%
+    row_spec(last_rows, hline_after = TRUE) %>%
+    row_spec(last_rows, hline_after = TRUE)
+} else {
+  df <- densities_region_target %>%
+    mutate(
+      regio = ifelse(region == "Total", "Vlaanderen", region),
+      densiteit = paste0(
+        sprintf("%.3f", round(estimate, 3)),
+        " (",
+        sprintf("%.3f", round(lcl, 3)),
+        "-",
+        sprintf("%.3f", round(ucl, 3)),
+        ")"
+      )
+    ) %>%
+    select(
+      "jaar" = "year",
+      "regio",
+      "densiteit (95 % interval)" = "densiteit",
+      "standaardfout" = "se"
+    )
+  last_rows <- cumsum(rle(df$jaar)$lengths)[
+    -length(cumsum(rle(df$jaar)$lengths))
+  ]
+  df %>%
+    kable(digits = 3, align = "l", booktabs = TRUE) %>%
+    kable_styling(latex_options = "striped") %>%
+    row_spec(0, bold = TRUE) %>%
+    collapse_rows(1) %>%
+    row_spec(which(densities_region_target$regio == "Total"),
+             underline = TRUE) %>%
+    row_spec(last_rows, hline_after = TRUE) %>%
+    row_spec(last_rows, hline_after = TRUE)
+}
+```
