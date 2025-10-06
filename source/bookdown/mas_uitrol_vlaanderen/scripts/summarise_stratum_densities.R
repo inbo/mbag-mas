@@ -44,8 +44,8 @@
 #'   species = "Geelgors",
 #'   year = rep(2024, 8)
 #' )
-#' summarise_density_patterns_stratum(df)
-summarise_density_patterns_stratum <- function(data, threshold = 1.5) { # nolint: cyclocomp_linter
+#' summarise_stratum_densities(df)
+summarise_stratum_densities <- function(data, threshold = 1.5) { # nolint: cyclocomp_linter
   # Check that required columns are present
   stopifnot(
     all(
