@@ -53,7 +53,7 @@ summarise_region_densities <- function( # nolint: cyclocomp_linter
   text_parts <- list()
 
   # Add statement for absent regions
-  if (length(absent_regions) > 0) {
+  if (length(absent_regions) > 0 && length(absent_regions) != nrow(data)) {
     text_parts <- c(text_parts,
                     sprintf("De soort is praktisch afwezig in %s.",
                             paste(absent_regions, collapse = ", ")))
@@ -68,8 +68,12 @@ summarise_region_densities <- function( # nolint: cyclocomp_linter
     # Mark presence
     df <- df[df$estimate > 0 & df$lcl >= 0.1, ]
     if (nrow(df) == 0) {
-      return(sprintf("In %s is de soort in alle regio's praktisch afwezig.",
-                     year_label))
+      return(
+        sprintf(
+          "In %s was de soort in alle onderzochte regio's praktisch afwezig.",
+          year_label
+        )
+      )
     }
 
     # Order by densiteit (highest first)
@@ -83,12 +87,20 @@ summarise_region_densities <- function( # nolint: cyclocomp_linter
     })
 
     # Compose text for this year
-    year_text <- sprintf(
-      "In %s waren de hoogste densiteiten in %s, gevolgd door %s.",
-      year_label,
-      regional_text[1],
-      paste(regional_text[-1], collapse = ", ")
-    )
+    if (length(regional_text) == 1) {
+      year_text <- sprintf(
+        "In %s was er enkel een relatief hoge densiteit in de %s.",
+        year_label,
+        regional_text[1]
+      )
+    } else {
+      year_text <- sprintf(
+        "In %s waren de hoogste densiteiten in %s, gevolgd door %s.",
+        year_label,
+        regional_text[1],
+        paste(regional_text[-1], collapse = ", ")
+      )
+    }
 
     # If Total/Vlaanderen is present, mention separately
     if (nrow(total_rows) > 0) {
