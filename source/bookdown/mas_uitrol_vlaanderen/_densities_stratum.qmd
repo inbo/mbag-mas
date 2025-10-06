@@ -79,7 +79,7 @@ if (params$species %in% threshold_vals$species) {
 ```{r}
 #| label: tbl-densstratum-{{label}}
 #| tbl-cap: "Geschatte densiteiten per stratum voor {{species}}."
-densities_stratum_target %>%
+df <- densities_stratum_target %>%
   mutate(densiteit = paste0(
     sprintf("%.3f", round(estimate, 3)),
     " (",
@@ -90,11 +90,16 @@ densities_stratum_target %>%
   )) %>%
   select("jaar" = "year", any_of(c("regio", "openheid", "sbp")),
          "densiteit (95 % interval)" = "densiteit",
-         "standaardfout" = "se", any_of(c("verschil met streefwaarde"))) %>%
+         "standaardfout" = "se", any_of(c("verschil met streefwaarde")))
+last_rows <- cumsum(rle(df$jaar)$lengths)[
+  -length(cumsum(rle(df$jaar)$lengths))
+]
+df %>%
   kable(digits = 3, booktabs = TRUE) %>%
   kableExtra::kable_styling(latex_options = "striped") %>%
   kableExtra::row_spec(0, bold = TRUE) %>%
-  kableExtra::collapse_rows(1:3)
+  kableExtra::collapse_rows(1:3) %>%
+  kableExtra::row_spec(last_rows, hline_after = TRUE)
 ```
 
 \newpage
