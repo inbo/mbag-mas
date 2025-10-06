@@ -37,14 +37,15 @@ store <- file.path(mbag_dir,
 source(file.path(mbag_dir, "source", "R", "tar_read_ds.R"))
 source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
 source(file.path("scripts", "summarise_detection_patterns.R"))
-source(file.path("scripts", "summarise_density_patterns_stratum.R"))
+source(file.path("scripts", "summarise_stratum_densities.R"))
+source(file.path("scripts", "summarise_region_densities.R"))
 ```
 
 ```{r}
 # To make it easier
 params <- NULL
 params$species <- "{{species}}"
-#params$species <- "Geelgors"
+params$species <- "Geelgors"
 ```
 
 ```{r}
@@ -63,7 +64,7 @@ De detectiekansen voor `r params$species` zijn weergegeven in @tbl-detprob-{{lab
 ```{r}
 #| label: tbl-detprob-{{label}}
 #| tbl-cap: "Geschatte detectiekansen {{species}}."
-det_prob_df %>%
+df <- det_prob_df %>%
   mutate(detectiekans = paste0(
     sprintf("%.3f", round(estimate_p, 3)),
     " (",
@@ -74,11 +75,16 @@ det_prob_df %>%
   )) %>%
   select("jaar" = "year", any_of(c("regio", "openheid", "sbp")),
          "detectiekans (95 % interval)" = "detectiekans",
-         "standaardfout" = "se_p") %>%
+         "standaardfout" = "se_p")
+last_rows <- cumsum(rle(df$jaar)$lengths)[
+  -length(cumsum(rle(df$jaar)$lengths))
+]
+df %>%
   kable(digits = 3, booktabs = TRUE) %>%
-  kableExtra::kable_styling(latex_options = "striped") %>%
-  kableExtra::row_spec(0, bold = TRUE) %>%
-  kableExtra::collapse_rows(1)
+  kable_styling(latex_options = "striped") %>%
+  row_spec(0, bold = TRUE) %>%
+  collapse_rows(1) %>%
+  row_spec(last_rows, hline_after = TRUE)
 ```
 
 ```{r}
@@ -121,10 +127,10 @@ if (params$species %in% threshold_vals$species) {
 De densiteiten per stratum voor `r params$species` zijn gevisualiseerd in @fig-densstratum-{{label}}. De exacte cijfers kunnen geraadpleegd worden in @tbl-densstratum-{{label}} (@sec-densiteiten-stratum).
 
 We bespreken eerst de cijfers van 2023.
-`r summarise_density_patterns_stratum(filter(densities_stratum_target, year == 2023))`
+`r summarise_stratum_densities(filter(densities_stratum_target, year == 2023))`
 
 In de andere jaren zien we de volgende patronen.
-`r summarise_density_patterns_stratum(filter(densities_stratum_target, year != 2023))`
+`r summarise_stratum_densities(filter(densities_stratum_target, year != 2023))`
 
 ```{r}
 #| label: fig-densstratum-{{label}}
@@ -209,21 +215,25 @@ if (params$species %in% threshold_vals$species) {
         TRUE ~ "geen sign.\nverschil"
       ),
       levels = c("boven", "geen sign.\nverschil", "onder")
-    ))
+      ),
+      threshold = t
+    )
 }
 ```
 
 De densiteiten per regio voor `r params$species` zijn weergegeven in @tbl-densregio-{{label}} en gevisualiseerd in @fig-densregio-{{label}}.
 
 We bespreken eerst de cijfers van 2023.
+`r summarise_region_densities(filter(densities_region_target, year == 2023))`
 
 In de andere jaren zien we de volgende patronen.
+`r summarise_region_densities(filter(densities_region_target, year != 2023))`
 
 ```{r}
 #| label: tbl-densregio-{{label}}
 #| tbl-cap: "Geschatte densiteiten per regio voor {{species}}."
 if (params$species %in% threshold_vals$species) {
-  densities_region_target %>%
+  df <- densities_region_target %>%
     mutate(
       regio = ifelse(region == "Total", "Vlaanderen", region),
       densiteit = paste0(
@@ -246,15 +256,20 @@ if (params$species %in% threshold_vals$species) {
       "densiteit (95 % interval)" = "densiteit",
       "standaardfout" = "se",
       "verschil met streefwaarde"
-    ) %>%
+    )
+  last_rows <- cumsum(rle(df$jaar)$lengths)[
+    -length(cumsum(rle(df$jaar)$lengths))
+  ]
+  df %>%
     kable(digits = 3, booktabs = TRUE) %>%
     kable_styling(latex_options = "striped") %>%
     row_spec(0, bold = TRUE) %>%
     collapse_rows(1) %>%
     row_spec(which(densities_region_target$regio == "Total"), 
-             bold = TRUE, underline = TRUE, hline_after = TRUE)
+             bold = TRUE) %>%
+    row_spec(last_rows, hline_after = TRUE)
 } else {
-  densities_region_target %>%
+  df <- densities_region_target %>%
     mutate(
       regio = ifelse(region == "Total", "Vlaanderen", region),
       densiteit = paste0(
@@ -271,13 +286,18 @@ if (params$species %in% threshold_vals$species) {
       "regio",
       "densiteit (95 % interval)" = "densiteit",
       "standaardfout" = "se"
-    ) %>%
+    )
+  last_rows <- cumsum(rle(df$jaar)$lengths)[
+    -length(cumsum(rle(df$jaar)$lengths))
+  ]
+  df %>%
     kable(digits = 3, booktabs = TRUE) %>%
     kable_styling(latex_options = "striped") %>%
     row_spec(0, bold = TRUE) %>%
     collapse_rows(1) %>%
     row_spec(which(densities_region_target$regio == "Total"), 
-             bold = TRUE, hline_after = TRUE)
+             bold = TRUE) %>%
+    row_spec(last_rows, hline_after = TRUE)
 }
 ```
 
