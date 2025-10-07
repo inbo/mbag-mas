@@ -67,6 +67,12 @@ flandersqmd:
     orcid: "0009-0005-2174-672X"
     affiliation: "Instituut voor Natuur- en Bosonderzoek (INBO)"
   - name:
+      given: "Kato"
+      family: "Vanpoucke"
+    email: "kato.vanpoucke@inbo.be"
+    orcid: "0009-0009-6170-4339"
+    affiliation: "Instituut voor Natuur- en Bosonderzoek (INBO)"
+  - name:
       given: "Johannes"
       family: "Jansen"
     email: "johannes.jansen@inbo.be"
