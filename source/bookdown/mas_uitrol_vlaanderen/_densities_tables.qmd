@@ -31,7 +31,7 @@ source(file.path(mbag_dir, "source", "R", "tar_read_ds.R"))
 source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
 ```
 
-## {{species}}
+## {{specname_cap}}
 
 ```{r}
 # To make it easier
@@ -79,7 +79,7 @@ if (params$species %in% threshold_vals$species) {
 
 ```{r}
 #| label: tbl-densstratum-{{label}}
-#| tbl-cap: "Geschatte densiteiten per stratum voor {{species}}."
+#| tbl-cap: "Geschatte densiteiten per stratum voor {{specname_low}}."
 df <- densities_stratum_target %>%
   mutate(densiteit = paste0(
     sprintf("%.3f", round(estimate, 3)),
@@ -149,7 +149,7 @@ if (params$species %in% threshold_vals$species) {
 
 ```{r}
 #| label: tbl-densregio-{{label}}
-#| tbl-cap: "Geschatte densiteiten per regio voor {{species}}."
+#| tbl-cap: "Geschatte densiteiten per regio voor {{specname_low}}."
 if (params$species %in% threshold_vals$species) {
   df <- densities_region_target %>%
     mutate(

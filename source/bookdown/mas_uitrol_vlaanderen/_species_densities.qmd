@@ -1,4 +1,4 @@
-### {{species}} (*{{sci_name}}*)
+### {{specname_cap}} (*{{sci_name}}*)
 
 ```{r}
 #| include: FALSE
@@ -48,9 +48,10 @@ params$species <- "{{species}}"
 
 # Species results not 2023
 exclude_2023 <- c("Graspieper", "Grutto", "Scholekster", "Wulp")
-exclude_msg <- paste("Voor {{species}} was er niet genoeg data in 2023 voor",
-                     "correcte berekening van de detectiekans en bijgevolg",
-                     "densiteiten.")
+exclude_msg <- paste(
+  "Voor {{specname_low}} was er niet genoeg data in 2023 voor",
+  "correcte berekening van de detectiekans en bijgevolg densiteiten."
+)
 ```
 
 ```{r}
@@ -68,7 +69,7 @@ De detectiekansen voor `r params$species` zijn weergegeven in @tbl-detprob-{{lab
 
 ```{r}
 #| label: tbl-detprob-{{label}}
-#| tbl-cap: "Geschatte detectiekansen {{species}}."
+#| tbl-cap: "Geschatte detectiekansen {{specname_low}}."
 df <- det_prob_df %>%
   filter(
     year == 2023 & !params$species %in% exclude_2023 | year != 2023
@@ -144,7 +145,7 @@ In de andere jaren zien we de volgende patronen.
 
 ```{r}
 #| label: fig-densstratum-{{label}}
-#| fig-cap: "Densiteitsschattingen voor {{species}} per stratum."
+#| fig-cap: "Densiteitsschattingen voor {{specname_low}} per stratum."
 #| fig-height: 6
 #| fig-width: 8
 # Prepare base plot data
@@ -244,7 +245,7 @@ In de andere jaren zien we de volgende patronen.
 
 ```{r}
 #| label: fig-densregio-{{label}}
-#| fig-cap: "Densiteitsschattingen voor {{species}} per landbouwregio."
+#| fig-cap: "Densiteitsschattingen voor {{specname_low}} per landbouwregio."
 #| fig-height: 6
 #| fig-width: 8
 # Prepare base plot data

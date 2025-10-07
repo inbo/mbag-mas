@@ -33,7 +33,7 @@ source(file.path(mbag_dir, "source", "R", "tar_read_ds.R"))
 source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
 ```
 
-## {{species}}
+## {{specname_cap}}
 
 ```{r}
 # To make it easier
@@ -46,7 +46,7 @@ exclude_2023 <- c("Graspieper", "Grutto", "Scholekster", "Wulp")
 
 ```{r}
 #| label: fig-detprob-{{label}}
-#| fig-cap: "Detectiecurves {{species}}. De stippellijn geeft de gemiddelde
+#| fig-cap: "Detectiecurves voor {{specname_low}}. De stippellijn geeft de gemiddelde
 #|   detectiecurve aan."
 #| fig-width: 8
 #| fig-height: 10
