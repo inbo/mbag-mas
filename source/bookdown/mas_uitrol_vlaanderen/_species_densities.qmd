@@ -45,6 +45,12 @@ source(file.path("scripts", "summarise_region_densities.R"))
 # To make it easier
 params <- NULL
 params$species <- "{{species}}"
+
+# Species results not 2023
+exclude_2023 <- c("Graspieper", "Grutto", "Scholekster", "Wulp")
+exclude_msg <- paste("Voor {{species}} was er niet genoeg data in 2023 voor",
+                     "correcte berekening van de detectiekans en bijgevolg",
+                     "densiteiten.")
 ```
 
 ```{r}
@@ -64,6 +70,9 @@ De detectiekansen voor `r params$species` zijn weergegeven in @tbl-detprob-{{lab
 #| label: tbl-detprob-{{label}}
 #| tbl-cap: "Geschatte detectiekansen {{species}}."
 df <- det_prob_df %>%
+  filter(
+    year == 2023 & !params$species %in% exclude_2023 | year != 2023
+  ) %>%
   mutate(detectiekans = paste0(
     sprintf("%.3f", round(estimate_p, 3)),
     " (",
@@ -93,7 +102,8 @@ densities_stratum_target <- tar_read_ds("densities_stratum", params$species,
                                         store = store)
 densities_stratum_target <- densities_stratum_target %>%
   filter(
-    year == 2023 & grepl("^Zandleem|^Leem", Label) | year != 2023
+    year == 2023 & grepl("^Zandleem|^Leem", Label) | year != 2023,
+    year == 2023 & !params$species %in% exclude_2023 | year != 2023
   ) %>%
   rename("stratum" = "Label", "estimate" = "Estimate") %>%
   filter(stratum != "Total") %>%
@@ -127,7 +137,7 @@ if (params$species %in% threshold_vals$species) {
 De densiteiten per stratum voor `r params$species` zijn gevisualiseerd in @fig-densstratum-{{label}}. De exacte cijfers kunnen geraadpleegd worden in @tbl-densstratum-{{label}} (@sec-densiteiten-soort).
 
 We bespreken eerst de cijfers van 2023.
-`r summarise_stratum_densities(filter(densities_stratum_target, year == 2023))`
+`r ifelse(params$species %in% exclude_2023, exclude_msg, summarise_stratum_densities(filter(densities_stratum_target, year == 2023)))`
 
 In de andere jaren zien we de volgende patronen.
 `r summarise_stratum_densities(filter(densities_stratum_target, year != 2023))`
@@ -201,7 +211,8 @@ densities_region_target <- tar_read_ds("densities_region", params$species,
                                        store = store)
 densities_region_target <- densities_region_target %>%
   filter(
-    year == 2023 & grepl("^Zandleem|^Leem", Label) | year != 2023
+    year == 2023 & grepl("^Zandleem|^Leem", Label) | year != 2023,
+    year == 2023 & !params$species %in% exclude_2023 | year != 2023
   ) %>%
   rename("region" = "Label", "estimate" = "Estimate")
 
@@ -226,7 +237,7 @@ if (params$species %in% threshold_vals$species) {
 De densiteiten per regio voor `r params$species` zijn gevisualiseerd in @fig-densregio-{{label}}. De exacte cijfers kunnen geraadpleegd worden in @tbl-densregio-{{label}} (@sec-densiteiten-soort).
 
 We bespreken eerst de cijfers van 2023.
-`r summarise_region_densities(filter(densities_region_target, year == 2023))`
+`r ifelse(params$species %in% exclude_2023, exclude_msg, summarise_region_densities(filter(densities_region_target, year == 2023)))`
 
 In de andere jaren zien we de volgende patronen.
 `r summarise_region_densities(filter(densities_region_target, year != 2023))`

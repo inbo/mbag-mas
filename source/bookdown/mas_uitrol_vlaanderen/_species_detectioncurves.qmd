@@ -39,6 +39,9 @@ source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
 # To make it easier
 params <- NULL
 params$species <- "{{species}}"
+
+# Species results not 2023
+exclude_2023 <- c("Graspieper", "Grutto", "Scholekster", "Wulp")
 ```
 
 ```{r}
@@ -57,6 +60,10 @@ final_models <- tar_read_ds("model_selection", params$species, store = store)
 
 # Assign names to the models corresponding to years
 names(final_models) <- 2023:2025
+
+if (params$species %in% exclude_2023) {
+  final_models <- final_models[-1]
+}
 
 # Extract the detection function formula from each model
 forms <- lapply(final_models, function(model) {
@@ -84,7 +91,8 @@ for (i in seq_along(final_models)) {
   year <- as.character(names(final_models[i]))  # Current year
   ds_model <- final_models[[year]]             # Current detection model
   f <- forms[[year]]                           # Current formula
-  key <- keys[[year]]                          # Current key function type
+  form_title <- ifelse(f == "~1", "", paste0(" (", f, ")"))
+  title <- paste0(Distance:::model.description(ds_model$ddf), form_title)
 
   # Generate the detection curve plot
   p <- plot_detection_curve(
@@ -98,7 +106,8 @@ for (i in seq_along(final_models)) {
       x = "Afstand (m)",
       y = "Detectiekans",
       colour = "",  # Remove legend title
-      title = paste0(year, ": ", key, " sleutelfunctie (", f, ")")  # Plot title
+      title = year,
+      subtitle = title
     ) +
     theme_minimal() +  # Clean minimal theme
     theme(
