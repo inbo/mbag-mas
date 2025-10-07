@@ -63,7 +63,7 @@ det_prob_df <- tar_read_ds("detection_probabilities", params$species,
 detprob_cap <- paste0("Geschatte detectiekansen ", params$species, ".")
 ```
 
-De detectiekansen voor `r params$species` zijn weergegeven in @tbl-detprob-{{label}}.
+De detectiekansen voor {{specname_low}} zijn weergegeven in @tbl-detprob-{{label}}.
 @fig-detprob-{{label}} (@sec-detectiecurve-soort) visualiseert de detectiecurve(s) per jaar. 
 `r summarise_detection_patterns(det_prob_df, threshold = 0.05)`
 
@@ -135,7 +135,7 @@ if (params$species %in% threshold_vals$species) {
 }
 ```
 
-De densiteiten per stratum voor `r params$species` zijn gevisualiseerd in @fig-densstratum-{{label}}. De exacte cijfers kunnen geraadpleegd worden in @tbl-densstratum-{{label}} (@sec-densiteiten-soort).
+De densiteiten per stratum voor {{specname_low}} zijn gevisualiseerd in @fig-densstratum-{{label}}. De exacte cijfers kunnen geraadpleegd worden in @tbl-densstratum-{{label}} (@sec-densiteiten-soort).
 
 We bespreken eerst de cijfers van 2023.
 `r ifelse(params$species %in% exclude_2023, exclude_msg, summarise_stratum_densities(filter(densities_stratum_target, year == 2023)))`
@@ -235,7 +235,7 @@ if (params$species %in% threshold_vals$species) {
 }
 ```
 
-De densiteiten per regio voor `r params$species` zijn gevisualiseerd in @fig-densregio-{{label}}. De exacte cijfers kunnen geraadpleegd worden in @tbl-densregio-{{label}} (@sec-densiteiten-soort).
+De densiteiten per regio voor {{specname_low}} zijn gevisualiseerd in @fig-densregio-{{label}}. De exacte cijfers kunnen geraadpleegd worden in @tbl-densregio-{{label}} (@sec-densiteiten-soort).
 
 We bespreken eerst de cijfers van 2023.
 `r ifelse(params$species %in% exclude_2023, exclude_msg, summarise_region_densities(filter(densities_region_target, year == 2023)))`
