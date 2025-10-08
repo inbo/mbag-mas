@@ -49,7 +49,7 @@ exclude_2023 <- c("Graspieper", "Grutto", "Scholekster", "Wulp")
 #| fig-cap: "Detectiecurves voor {{specname_low}}. De stippellijn geeft de gemiddelde
 #|   detectiecurve aan."
 #| fig-width: 8
-#| fig-height: 12
+#| fig-height: 11
 #| fig.align: "center"
 # ---------------------------
 # Step 0: Load models and extract formulas/keys
