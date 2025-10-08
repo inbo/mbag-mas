@@ -170,15 +170,15 @@ select_time_periods %>%
 
 <!-- spell-check: ignore:start -->
 
-- Ol_18064.5: 
-- Zn_56194.1.1:
-- Km_21470.1.4:
-- Ol_1585.1:
-- Ol_6671.7: 
-- Pl_8493.1.5: werd niet geteld in eerste ronde wegens miscommunicatie (zie mail Simon)
-- VL0273:
-- VL0584:
-- Zn_8668.9: nagevraagd bij freelancer, per ongeluk 3x geteld
+- Ol_18064.5: nultellingen
+- Zn_56194.1.1: nultellingen
+- Km_21470.1.4: nultelling
+- Ol_1585.1: nultelling
+- Ol_6671.7: nultelling
+- Pl_8493.1.5: misverstand met vrijwilliger (oefentelling op dit punt in maart); nultelling toegevoegd door admin SDST00
+- VL0273: nultelling
+- VL0584: kwijt... wordt nagevraagd bij SOVON
+- Zn_8668.9: correct ingevoerd door freelancer; geen telling in derde ronde
 
 <!-- spell-check: ignore:end -->
 
@@ -924,6 +924,20 @@ mas_data_clean %>%
   filter(naam %in% c("Glanskop", "Kuifleeuwerik", "Roodkopklauwier")) %>%
   write_csv(file.path(mbag_dir, "output", "data_controle",
                       "vreemde_soorten_mastellingen_2025.csv"))
+```
+
+We schrijven ook soorten weg die minder dan 10x gezien zijn.
+
+```{r}
+mas_data_clean %>%
+  st_drop_geometry() %>%
+  group_by(naam) %>%
+  mutate(n = n()) %>%
+  ungroup() %>%
+  filter(n < 10) %>%
+  arrange(n, naam, regio, plotnaam) %>%
+  write_csv(file.path(mbag_dir, "output", "data_controle",
+                      "zeldzame_soorten_mastellingen_2025.csv"))
 ```
 
 ## Broedcodes
