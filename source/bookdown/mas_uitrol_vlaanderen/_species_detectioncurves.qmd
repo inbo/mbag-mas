@@ -33,7 +33,7 @@ source(file.path(mbag_dir, "source", "R", "tar_read_ds.R"))
 source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
 ```
 
-## {{specname_cap}}
+### {{specname_cap}}
 
 ```{r}
 # To make it easier
@@ -49,7 +49,7 @@ exclude_2023 <- c("Graspieper", "Grutto", "Scholekster", "Wulp")
 #| fig-cap: "Detectiecurves voor {{specname_low}}. De stippellijn geeft de gemiddelde
 #|   detectiecurve aan."
 #| fig-width: 8
-#| fig-height: 10
+#| fig-height: 12
 #| fig.align: "center"
 # ---------------------------
 # Step 0: Load models and extract formulas/keys

@@ -146,6 +146,5 @@ book:
   - 10_discussie.qmd
   - 11_referenties.md
   appendices:
-    - kaarten_sbp.qmd
-    - detection_curves.qmd
-    - densities_tables.qmd
+    - bijlage_kaarten_sbp.qmd
+    - bijlage_densiteiten.qmd

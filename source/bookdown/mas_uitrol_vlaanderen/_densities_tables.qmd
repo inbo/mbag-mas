@@ -31,7 +31,7 @@ source(file.path(mbag_dir, "source", "R", "tar_read_ds.R"))
 source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
 ```
 
-## {{specname_cap}}
+### {{specname_cap}}
 
 ```{r}
 # To make it easier

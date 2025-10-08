@@ -1,0 +1,11 @@
+# Bijlagen bij densiteitsschattingen akkervogels
+
+Bijlagen bij @sec-densiteitsschattingen. In 2023 werden enkel nog maar de Leemstreek en de Zandleemstreek bezocht. Voor Graspieper, Grutto, Scholekster en Wulp hadden we in dat jaar niet genoeg data om de detectiekans en bijgevolg de densiteiten betrouwbaar te schatten. Voor deze soorten rapporteren we enkel de resultaten vanaf 2024. Schattingen voor de Weidestreek zijn enkel beschikbaar op regioniveau en niet op stratumniveau.
+
+\newpage
+
+{{< include detection_curves.qmd >}}
+
+\newpage
+
+{{< include densities_tables.qmd >}}
