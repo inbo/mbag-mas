@@ -161,8 +161,8 @@ par(op)
 #| label: fig-raster-indices
 #| fig-cap: "Rasterbeelden van landbouwpercelen rond telpunt Ol_12833.8 van
 #|  02-03-2024 tot 20-07-2024.
-#|  \\textbf{A.} NDVI: een lagere waarde betekend minder bedekking.
-#|  \\textbf{B.} BSI: een hogere waarde betekend minder bedekking."
+#|  A. NDVI: een lagere waarde betekend minder bedekking.
+#|  B. BSI: een hogere waarde betekend minder bedekking."
 #| fig-height: 12.5
 #| fig-width: 8
 #-----------------------------
