@@ -1,9 +1,11 @@
 # Remote sensing–indicatoren op basis van optische satelliettijdsreeksen {#sec-remote-sensing}
 ## Inleiding
 
+- zie aparte google doc
+
 ## Methodiek
 
-
+- zie aparte google doc
 
 ## Resultaten
 
