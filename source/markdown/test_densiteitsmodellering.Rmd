@@ -601,7 +601,7 @@ det_probs_df %>%
 
 ### Bootstrapping
 
-Om de verdeling van de detectiekans te achterhalen kunnen we pbootstrapping toepassen.
+Om de verdeling van de detectiekans te achterhalen kunnen we bootstrapping toepassen.
 Het lijkt echter vrij computerintensief om dit voor elke soort voor elk jaar te moeten doen.
 
 ```{r, message=FALSE, echo=FALSE}
