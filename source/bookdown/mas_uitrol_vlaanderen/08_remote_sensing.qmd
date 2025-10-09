@@ -3,4 +3,188 @@
 
 ## Methodiek
 
+
+
 ## Resultaten
+
+```{r}
+#| include: FALSE
+# set up
+library(knitr)
+opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  out.width = "100%"
+)
+```
+
+```{r}
+# packages
+library(tidyverse)
+library(targets)
+library(terra)
+
+library(INBOtheme)
+theme_set(theme_inbo(transparent = TRUE))
+
+# Conflicts
+conflicted::conflicts_prefer(dplyr::filter)
+conflicted::conflicts_prefer(dplyr::select)
+
+# Paths
+mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
+store <- file.path(
+  mbag_dir, "source", "targets", "data_preparation", "_targets"
+)
+data_path <- file.path(mbag_dir, "data", "remote_sensing")
+```
+
+### Rasterlagen
+
+We krijgen per telpunt rasterlagen met NDVI- en BSI-waarden om de tien dagen van 1 februari tot en met 1 september (vanaf 2022). Dit is voor een beperkte periode gevisualiseerd voor telpunt Ol_12833.8 (Oostelijke leemstreek, HOL, binnen SBP) in @fig-raster-indices. We zien duidelijke verschillen in indexwaarden tussen verschillende percelen. We zien ook verschillende trends in naakte bodem per perceel doorheen de tijd (bij sommige percelen stijgt de index, terwijl deze bij andere daalt). We zien gelijkaardige trends voor NDVI als voor BSI. De figuren geven aan dat dergelijke gegevens nuttig zijn, omdat ze gedetailleerde spatiale en temporele informatie opleveren. Hierdoor kunnen veranderingen in vegetatie en bodemtoestand op een fijnmazig niveau worden opgevolgd, wat waardevolle input biedt voor verdere analyses.
+
+```{r}
+#| output: false
+plots <- tibble(
+  plotnaam = c("Ol_12833.8", "Ol_7536.6", "Ol_9077.8", "Ol_9797.2"),
+  regio = "Oostelijke leemstreek",
+  openheid = rep(c("HOL", "OL"), each = 2),
+  sbp = rep(c("binnen", "buiten"), 2)
+)
+
+# Get NDVI rasters
+rast_ndvi_list <- apply(plots, 1, function(row) {
+  # Create file path
+  plotnaam <- row[["plotnaam"]]
+  file_name <- paste("multiband_raster_ndvi", plotnaam, "sg.tif", sep = "_")
+
+  # Read tif file
+  raster <- rast(file.path(data_path, file_name))
+
+  # Select date range
+  raster[[grepl("^2024-0[^12]", names(raster))]]
+})
+names(rast_ndvi_list) <- plots$plotnaam
+
+# Get BSI rasters
+rast_bsi_list <- apply(plots, 1, function(row) {
+  # Create file path
+  plotnaam <- row[["plotnaam"]]
+  file_name <- paste("multiband_raster_bsi", plotnaam, "sg.tif", sep = "_")
+
+  # Read tif file
+  raster <- rast(file.path(data_path, file_name))
+
+  # Select date range
+  raster[[grepl("^2024-0[^12]", names(raster))]]
+})
+names(rast_bsi_list) <- plots$plotnaam
+
+#-----------------------------
+# NDVI PLOT
+#-----------------------------
+# Compute global range
+ranges_ndvi <- sapply(
+  rast_ndvi_list, function(r) range(values(r), na.rm = TRUE)
+)
+rng <- c(min(ranges_ndvi[1, ]), max(ranges_ndvi[2, ]))
+
+# Define colors and breaks
+pal <- rev(map.pal("elevation", 50))
+brks <- pretty(rng, n = 5)
+
+# Save original par settings to restore later
+op <- par(no.readonly = TRUE)
+
+# Save NDVI plot to a temporary file
+ndvi_file <- tempfile(fileext = ".png")
+png(ndvi_file, width = 1800, height = 1400, res = 200)
+
+# Plot the raster (without legend)
+plot(rast_ndvi_list[[1]], col = pal, range = rng, legend = FALSE, maxnl = 3 * 5)
+
+# Add legend in bottom-right corner
+par(fig = c(0.10, 0.95, 0, 0.2), new = TRUE, mar = c(0, 0, 0, 0))
+fields::image.plot(
+  legend.only = TRUE,
+  zlim = rng,
+  col = pal,
+  legend.args = list(text = "NDVI", side = 3, line = 1),
+  axis.args = list(at = brks, labels = format(brks, digits = 2)),
+  legend.shrink = 0.7
+)
+dev.off()
+
+# Restore original graphical parameters safely
+par(op)
+
+#-----------------------------
+# BSI PLOT
+#-----------------------------
+# Compute global range
+ranges_bsi <- sapply(rast_bsi_list, function(r) range(values(r), na.rm = TRUE))
+rng <- c(min(ranges_bsi[1, ]), max(ranges_bsi[2, ]))
+
+# Define colors and breaks
+pal <- map.pal("elevation", 50)
+brks <- pretty(rng, n = 5)
+
+# Save original par settings to restore later
+op <- par(no.readonly = TRUE)
+
+bsi_file <- tempfile(fileext = ".png")
+png(bsi_file, width = 1800, height = 1400, res = 200)
+
+# Plot the raster (without legend)
+plot(rast_bsi_list[[1]], col = pal, range = rng, legend = FALSE, maxnl = 3 * 5)
+
+# Add legend in bottom-right corner
+par(fig = c(0.10, 0.95, 0, 0.2), new = TRUE, mar = c(0, 0, 0, 0))
+fields::image.plot(
+  legend.only = TRUE,
+  zlim = rng,
+  col = pal,
+  legend.args = list(text = "BSI", side = 3, line = 1),
+  axis.args = list(at = brks, labels = format(brks, digits = 2)),
+  legend.shrink = 0.7
+)
+dev.off()
+
+# Restore original graphical parameters safely
+par(op)
+```
+
+```{r}
+#| label: fig-raster-indices
+#| fig-cap: "Rasterbeelden van landbouwpercelen rond telpunt Ol_12833.8 van
+#|  02-03-2024 tot 20-07-2024.
+#|  \\textbf{A.} NDVI: een lagere waarde betekend minder bedekking.
+#|  \\textbf{B.} BSI: een hogere waarde betekend minder bedekking."
+#| fig-height: 12.5
+#| fig-width: 8
+#-----------------------------
+# Combine with cowplot
+#-----------------------------
+p_ndvi <- cowplot::ggdraw() + cowplot::draw_image(ndvi_file)
+p_bsi  <- cowplot::ggdraw() + cowplot::draw_image(bsi_file)
+
+# Combine side by side with labels
+combined <- cowplot::plot_grid(
+  p_ndvi, p_bsi,
+  ncol = 1,
+  labels = c("A.", "B."),
+  label_size = 20,
+  label_fontface = "bold",
+  scale = c(0.9, 0.9)
+)
+
+# Show combined figure
+combined
+```
+
+### Tijdsreeksen
+
+```{r}
+sample <- tar_read("sample", store = store)
+```
