@@ -160,7 +160,7 @@ par(op)
 ```{r}
 #| label: fig-raster-indices
 #| fig-cap: "Rasterbeelden van landbouwpercelen rond telpunt Ol_12833.8 van
-#|  02-03-2024 tot 20-07-2024.
+#|  02-03-2024 tot en met 20-07-2024.
 #|  A. NDVI: een lagere waarde betekend minder bedekking.
 #|  B. BSI: een hogere waarde betekend minder bedekking."
 #| fig-height: 12.5
@@ -190,3 +190,15 @@ combined
 ```{r}
 sample <- tar_read("sample", store = store)
 ```
+
+```{r}
+vec <- c(ndvi = "ndvi", bsi = "bsi")
+
+time_series_tbl <- lapply(vec, function(indicator) {
+  file_name <- paste0("time_series_mas_", indicator, ".csv")
+  path <- file.path(data_path, file_name)
+  
+  read_csv(path, show_col_types = FALSE)[, -1]
+})
+```
+
