@@ -202,8 +202,99 @@ time_series_tbl <- lapply(vec, function(indicator) {
 })
 
 time_series_plots <- lapply(time_series_tbl, function(df) {
+  if ("ndvi" %in% names(df)) {
+    y_var <- "ndvi"
+    cutoff <- 0.3
+    rule <- `<`
+  } else {
+    y_var <- "bsi"
+    cutoff <- 0.021
+    rule <- `>`
+  }
+
+  names(df) <- tolower(names(df))
+
   df %>%
-    inner_join(plots, join_by(pointid == plotnaam))
+    # Parse dates
+    mutate(
+      day = day(time),
+      month = month(time),
+      monthday = format(time, "%m%d"),
+      year = year(time)
+    ) %>%
+    # Filter data
+    drop_na() %>%
+    filter(
+      monthday >= "0201",
+      monthday <= "0901"
+    ) %>%
+    # Describe trends
+    mutate(
+      naakte_bodem = ifelse(exec(rule, !!sym(y_var), cutoff),
+                            "onbedekt", "bedekt"),
+    ) %>%
+    arrange(pointid, year, time) %>%
+    group_by(ref_id, year) %>%
+    mutate(
+      trend_raw = paste0(rle(naakte_bodem)$values, collapse = " → "),
+      trend = factor(
+        case_when(
+          trend_raw == "onbedekt → bedekt" ~ "toename bedekking",
+          trend_raw == "bedekt → onbedekt" ~ "afname bedekking",
+          trend_raw == "onbedekt → bedekt → onbedekt" ~ "parabool",
+          trend_raw == "bedekt → onbedekt → bedekt" ~ "omgekeerde parabool",
+          trend_raw == "bedekt" ~ "altijd bedekt",
+          trend_raw == "onbedekt" ~ "altijd onbedekt",
+          TRUE ~ "complex patroon"
+        ),
+        levels = c("altijd bedekt", "altijd onbedekt", "toename bedekking",
+                   "afname bedekking", "parabool", "omgekeerde parabool",
+                   "complex patroon")
+      )
+    ) %>%
+    ungroup()
 })
+```
+
+```{r}
+plot_time_series <- function(df, plot_name, colour_var) {
+  if ("ndvi" %in% names(df)) {
+    y_axis_title <- "NDVI"
+    y_var <- "ndvi"
+    cutoff <- 0.3
+  } else {
+    y_axis_title <- "BSI"
+    y_var <- "bsi"
+    cutoff <- 0.021
+  }
+  
+  df %>%
+    filter(pointid %in% plot_name) %>%
+    mutate(
+      monthday_date = as.Date(paste0("2000-", substr(monthday, 1, 2), "-",
+                                     substr(monthday, 3, 4)))
+    ) %>%
+    ggplot(aes(x = monthday_date, y = !!sym(y_var), group = ref_id)) +
+    geom_line(alpha = 0.5, linetype = 5) +
+    geom_point(aes(colour = !!sym(colour_var)), size = 2, show.legend = TRUE) +
+    geom_hline(yintercept = cutoff, linetype = "dotdash", colour = "black") +
+    labs(x = "", y = y_axis_title, colour = "Naakte bodem") +
+    scale_x_date(date_breaks = "1 month", date_labels = "%b",
+                 limits = as.Date(c("2000-02-01", "2000-09-01"))) +
+    scale_colour_discrete(drop = FALSE) +
+    facet_wrap(~year, ncol = 1, scales = "fixed")
+}
+```
+
+
+```{r}
+lapply(time_series_plots, plot_time_series, plot_name = plots$plotnaam[1],
+       colour_var = "naakte_bodem")
+```
+
+
+```{r}
+lapply(time_series_plots, plot_time_series, plot_name = plots$plotnaam[1],
+       colour_var = "trend")
 ```
 
