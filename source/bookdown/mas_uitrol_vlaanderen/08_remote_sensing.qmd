@@ -200,5 +200,10 @@ time_series_tbl <- lapply(vec, function(indicator) {
   
   read_csv(path, show_col_types = FALSE)[, -1]
 })
+
+time_series_plots <- lapply(time_series_tbl, function(df) {
+  df %>%
+    inner_join(plots, join_by(pointid == plotnaam))
+})
 ```
 
