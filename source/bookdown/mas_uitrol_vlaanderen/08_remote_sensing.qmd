@@ -387,6 +387,108 @@ time_series_data <- lapply(time_series_csv, function(df) {
 ```
 
 ```{r}
+# Function to describe trends within a plot
+describe_trend_table <- function(
+  df,
+  all_trends = c("altijd bedekt", "altijd onbedekt",
+                 "toename bedekking", "afname bedekking",
+                 "parabool", "omgekeerde parabool",
+                 "complex patroon")
+) {
+  require("glue")
+  require("dplyr")
+
+  df %>%
+    mutate(y = year) %>%
+    group_by(year) %>%
+    group_map(~{
+      data_year <- .x
+
+      total <- sum(data_year$n)
+      avg_complex <- weighted.mean(data_year$complexity, data_year$n)
+      complexity_level <- ifelse(avg_complex > 1.5, "meer complexe",
+                                 "meer eenvoudige")
+
+      most_common <- data_year %>%
+        filter(n == max(n))
+      most_common_vec <- paste(most_common$trend, collapse = ", ")
+      least_common <- data_year %>%
+        filter(n == min(n))
+      least_common_vec <- paste(least_common$trend, collapse = ", ")
+      missing <- setdiff(all_trends, data_year$trend)
+      missing_vec <- paste(missing, collapse = ", ")
+
+      if (nrow(most_common) > 1) {
+        most_common_trend <- "trends"
+        most_common_voorkomen <- "voorkomen"
+        most_common_is <- "zijn"
+      } else {
+        most_common_trend <- "trend"
+        most_common_voorkomen <- "voorkomt"
+        most_common_is <- "is"
+      }
+
+      if (nrow(least_common) > 1) {
+        least_common_voorkomen <- "voorkomen"
+      } else {
+        least_common_voorkomen <- "voorkomt"
+      }
+
+      if (length(missing) > 1) {
+        missing_trends <- "trends"
+        missing_komen <- "komen"
+      } else {
+        missing_trends <- "trend"
+        missing_komen <- "komt"
+      }
+
+      text <- glue(
+        "In {unique(data_year$y)} zien we vooral {complexity_level} trends. ",
+        paste(
+          "De {most_common_trend} die het vaakst {most_common_voorkomen}",
+          "{most_common_is} {most_common_vec} (n = {unique(most_common$n)}),",
+          "terwijl {least_common_vec} het minst {least_common_voorkomen}",
+          "(n = {unique(least_common$n)}). "
+        ),
+        if (length(missing) > 0) {
+          glue(
+            paste("De volgende {missing_trends} {missing_komen} in dit jaar",
+                  "niet voor: {missing_vec}.")
+          )
+        } else {
+          "Alle mogelijke trendcategorieën komen in dit jaar voor."
+        }
+      )
+
+      text
+    }) %>%
+    unlist() %>%
+    paste(collapse = " ")
+}
+
+# Use function for each indicator
+trend_summary <- lapply(time_series_data, function(df) {
+  trend_df <- df %>%
+    filter(pointid == plots$plotnaam[1]) %>%
+    mutate(complexity = case_when(
+      grepl("altijd", trend) ~ 0,
+      grepl("bedekking", trend) ~ 1,
+      grepl("parabool", trend) ~ 2,
+      TRUE ~ 3
+    )) %>%
+    count(year, trend, complexity)
+
+  return(describe_trend_table(trend_df))
+})
+```
+
+Voor elk landbouwperceel krijgen we tijdsreeksen van NDVI en BSI waarden. @fig-tijdsreeks-trend toont de tijdsreeksen voor telpunt Ol_12833.8. De verschillende percelen tonen duidelijk verschillende trends doorheen het jaar.
+
+Voor NDVI: `r trend_summary$ndvi`
+
+Voor BSI: `r trend_summary$bsi`
+
+```{r}
 #| label: fig-tijdsreeks-trend
 #| fig-cap: "Tijdsreeks van landbouwpercelen rond telpunt Ol_12833.8 van
 #|  1 februari tot en met 1 september.
@@ -512,25 +614,35 @@ trend_data <- lapply(time_series_data_full, function(df) {
 })
 ```
 
+We willen patronen onderzoeken voor alle percelen over alle MAS-telpunten.
+Bovenstaande resultaten geven (1) geen duidelijke vergelijking in trends of complexiteit tussen de twee types indicatoren: NDVI en BSI, en (2) het is niet duidelijk of percelen met dezelfde trend ook eenzelfde landgebruik hebben.
+
+We maken daarom in eerste plaats een vergelijking tussen de trends in van NDVI en BSI (@fig-trend-pairwise). Er vallen twee patronen op:
+
+1. Voor 2023 en 2024 tonen de waardes van NDVI en BSI meestal dezelfde trend doorheen de tijd. Dit is niet zo voor 2022 waar de trends iets vaker verschillen tussen beide indicatortypes.
+2. Als de trends verschillen tussen de types, heeft BSI vaker complexe trends dan NDVI. Dit patroon is extra opvallend voor 2022.
+
 ```{r}
 #| label: fig-trend-pairwise
 #| fig-cap: "Vergelijking van trends in indicatorwaarden van BSI ten opzichte
 #|  van NDVI per jaar. Opgesplitst volgens patrooncomplexiteit."
 #| out-width: "80%"
+# Prepare pairwise trends table
 pairwise_trends <- bind_rows(trend_data) %>%
   pivot_wider(id_cols = c("pointid", "ref_id", "year"),
               names_from = "indicator", values_from = "trend") %>%
+  # Compute complexity for each indicator
   mutate(
     across(
       c("ndvi", "bsi"),
       ~ case_when(grepl("altijd", .x) ~ 0,
                   grepl("bedekking", .x) ~ 1,
                   grepl("parabool", .x) ~ 2,
-                  TRUE ~ 4),
+                  TRUE ~ 3),
       .names = "{.col}_complexity"
-    ),
+    )
   ) %>%
-  rowwise() %>%
+  # Compare NDVI and BSI
   mutate(
     trend = factor(
       ifelse(ndvi == bsi, "zelfde\ntrend", "verschillende\ntrend"),
@@ -538,54 +650,94 @@ pairwise_trends <- bind_rows(trend_data) %>%
     ),
     comp_bsi = factor(
       case_when(
-        bsi_complexity > ndvi_complexity ~ "complexer\ndan NDVI",
+        bsi_complexity > ndvi_complexity ~ "complexer dan\nNDVI",
         bsi_complexity < ndvi_complexity ~ "minder complex\ndan NDVI",
-        TRUE ~ "zelfde complexiteit"
+        TRUE ~ "zelfde complexiteit\n"
       ),
-      levels = c("minder complex\ndan NDVI", "zelfde complexiteit",
-                 "complexer\ndan NDVI")
+      levels = c("minder complex\ndan NDVI", "zelfde complexiteit\n",
+                 "complexer dan\nNDVI")
     )
-  )
+  ) %>%
+  ungroup()
 
-# Create pairwise heat map
-pairwise_trends %>%
+# Summarize counts and proportions
+pairwise_summary <- pairwise_trends %>%
   count(year, trend, comp_bsi) %>%
   group_by(year) %>%
-  mutate(prop = n / sum(n)) %>%  # scale fill by proportion
+  mutate(prop = n / sum(n)) %>%
   ungroup() %>%
   complete(year, trend, comp_bsi, fill = list(n = 0, prop = 0)) %>%
+  group_by(year, trend) %>%
+  mutate(prop_trend = sum(prop)) %>%
+  ungroup() %>%
+  group_by(year, comp_bsi) %>%
+  mutate(prop_comp_bsi = sum(prop)) %>%
+  ungroup() %>%
   mutate(
-    is_nvt = (trend == "zelfde\ntrend" & comp_bsi != "zelfde complexiteit"),
+    is_nvt = (trend == "zelfde\ntrend" & comp_bsi != "zelfde complexiteit\n"),
     label = case_when(
       is_nvt ~ "n.v.t.",
       n == 0 ~ "",
       TRUE ~ paste0(n, " (", sprintf("%.3f", prop), ")")
     ),
-    # Simple heuristic for readable text colour
     text_col = ifelse(prop > 0.4, "white", "black")
+  )
+
+# Add row/column proportions to labels
+pairwise_summary_plot <- pairwise_summary %>%
+  group_by(year) %>%
+  mutate(
+    trend_original = trend,
+    trend = paste0(trend, " (", sprintf("%.2f", prop_trend), ")"),
+    trend = factor(
+      trend,
+      levels = paste0(
+        levels(trend_original),
+        " (",
+        sprintf(
+          "%.2f",
+          sapply(levels(trend_original),
+                 function(lv) unique(prop_trend[trend_original == lv]))
+        ),
+        ")"
+      )
+    ),
+    comp_bsi_original = comp_bsi,
+    comp_bsi = paste0(comp_bsi, " (", sprintf("%.2f", prop_comp_bsi), ")"),
+    comp_bsi = factor(
+      comp_bsi,
+      levels = paste0(
+        levels(comp_bsi_original),
+        " (",
+        sprintf(
+          "%.2f",
+          sapply(levels(comp_bsi_original),
+                 function(lv) unique(prop_comp_bsi[comp_bsi_original == lv]))
+        ),
+        ")"
+      )
+    )
   ) %>%
-  ggplot(aes(x = trend, y = comp_bsi)) +
-  # draw normal tiles
+  ungroup()
+
+# Plot heat map
+ggplot(pairwise_summary_plot, aes(x = trend, y = comp_bsi)) +
   geom_tile(aes(fill = ifelse(is_nvt, NA, prop)), color = "white") +
-  # overlay white rectangles for n.v.t. tiles
   geom_tile(data = ~filter(.x, is_nvt), fill = "white", color = "white") +
   geom_text(aes(label = label, colour = text_col), size = 3) +
-  scale_colour_identity() +  # use text_col directly
-  scale_fill_viridis_c(
-    option = "C",
-    direction = -1,
-    labels = scales::percent_format(accuracy = 1),
-    na.value = "white"  # ensure n.v.t. tiles are white
-  ) +
-  facet_wrap(~year, ncol = 2) +
+  scale_colour_identity() +
+  scale_fill_viridis_c(option = "C", direction = -1,
+                       labels = scales::percent_format(accuracy = 1),
+                       na.value = "white") +
+  facet_wrap(~year, ncol = 2, scales = "free") +
   labs(x = NULL, y = NULL, fill = "Proportie") +
   theme_minimal(base_size = 12) +
   theme(
     strip.text = element_text(face = "bold"),
     legend.position = c(0.75, 0.2),
-    legend.key.height = unit(0.4, "cm"),   # smaller legend keys
+    legend.key.height = unit(0.4, "cm"),
     legend.key.width  = unit(0.4, "cm"),
-    legend.text = element_text(size = 8),  # smaller text
+    legend.text = element_text(size = 8),
     legend.title = element_text(size = 9, face = "bold")
   )
 ```
