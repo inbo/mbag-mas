@@ -1,13 +1,4 @@
 # Remote sensing–indicatoren op basis van optische satelliettijdsreeksen {#sec-remote-sensing}
-## Inleiding
-
-- zie aparte google doc
-
-## Methodiek
-
-- zie aparte google doc
-
-## Resultaten
 
 ```{r}
 #| include: FALSE
@@ -43,6 +34,132 @@ store <- file.path(
 data_path <- file.path(mbag_dir, "data", "remote_sensing")
 ```
 
+## Inleiding
+
+- zie aparte google doc
+
+## Methodiek
+
+- zie aparte google doc
+
+### Data
+
+### Berekening naakte bodem
+
+### Data exporatie
+
+In dit hoofdstuk verkennen we de tijdreeksen van de indicatoren voor naakte bodem tussen 1 februari en 1 september voor de jaren 2022–2024.  
+De data werden geanalyseerd in R [@R] met RStudio [@RStudio].
+
+We beschrijven onder andere seizoenspatronen van bedekking op percelen.  
+Daarbij onderscheiden we verschillende trends in de evolutie van de indicatorwaarde ten opzichte van hun drempelwaardes (NDVI: naakte bodem onder 0,3; BSI: naakte bodem boven 0.021) (@fig-trend-methods):
+
+- **Altijd onbedekt** – de indicator wijst gedurende de volledige periode op weinig vegetatie (onder (NDVI) of boven (BSI) de drempelwaarde)
+- **Altijd bedekt** – de indicator blijft constant boven (NDVI) of onder (BSI) de drempelwaarde
+- **Toename bedekking** – een overgang van onbedekt naar bedekt
+- **Afname bedekking** – een overgang van bedekt naar onbedekt
+- **Paraboolvorm** – eerst een toename, daarna een afname in bedekking (onbedekt → bedekt → onbedekt)
+- **Omgekeerde parabool** – eerst een afname, daarna een toename in bedekking (bedekt → onbedekt → bedekt)
+- **Complex patroon** – meer dan twee wisselingen tussen bedekt en onbedekt
+
+Merk op dat deze trendindeling afhankelijk is van de lengte van de tijdsreeks en van de gekozen drempelwaarde voor naakte bodem.
+Een tijdsreeks kan bijvoorbeeld een parabolisch verloop vertonen, maar net onder de drempelwaarde blijven, waardoor ze in onze interpretatie als een constant patroon wordt beschouwd.
+Het gaat om een eerste manier om de temporele dynamiek en complexiteit van de bedekkingsindicatoren te beschrijven, als opstap naar latere, meer verklarende analyses bijvoorbeeld in relatie tot de aanwezigheid van akkervogels of andere variabelen.
+Deze verkenning brengt enkel de variabiliteit en complexiteit van de indicatorwaarden in kaart doorheen de tijd.
+
+```{r}
+#| label: fig-trend-methods
+#| fig-cap: "..."
+#| fig-height: 8
+#| fig-width: 8
+set.seed(1)
+threshold <- 0.35
+
+# Create example data
+example_subset <- tibble(
+  trend = rep(
+    c("altijd bedekt", "altijd onbedekt", "toename bedekking",
+      "afname bedekking", "parabool", "omgekeerde parabool", "complex patroon"),
+    each = 12
+  ),
+  monthday_date = rep(seq(as.Date("2000-02-01"), by = "20 days", length.out = 12), 7)
+) %>%
+  group_by(trend) %>%
+  mutate(
+    indicator = case_when(
+      trend == "altijd bedekt" ~ rep(0.7, n()),
+      trend == "altijd onbedekt" ~ rep(0.15, n()),
+      trend == "toename bedekking" ~ seq(0.1, 0.8, length.out = n()),
+      trend == "afname bedekking" ~ seq(0.8, 0.1, length.out = n()),
+      trend == "parabool" ~ c(seq(0.1, 0.8, length.out = n()/2),
+                              seq(0.8, 0.1, length.out = n()/2)),
+      trend == "omgekeerde parabool" ~ c(seq(0.8, 0.2, length.out = n()/2),
+                                         seq(0.2, 0.8, length.out = n()/2)),
+      TRUE ~ abs(sin(seq(0, 2 * pi, length.out = n()))) / 2
+    ),
+    naakte_bodem = if_else(indicator < threshold, "onbedekt", "bedekt"),
+    complexity = case_when(
+      grepl("altijd", trend) ~ 0,
+      grepl("bedekking", trend) ~ 1,
+      grepl("parabool", trend) ~ 2,
+      TRUE ~ 4
+    )
+  ) %>%
+  ungroup() %>%
+  mutate(
+    trend = factor(
+      trend,
+      levels = c("altijd bedekt", "altijd onbedekt", "toename bedekking",
+                 "afname bedekking", "parabool", "omgekeerde parabool",
+                 "complex patroon")
+    )
+  )
+
+# Create trend plot
+ggplot(example_subset, aes(x = monthday_date, y = indicator, group = trend)) +
+  geom_line(alpha = 0.7, colour = "grey40", linetype = 5) +
+  geom_point(aes(colour = trend, shape = naakte_bodem), size = 2) +
+  geom_hline(yintercept = threshold, linetype = "dotdash", colour = "black") +
+  facet_wrap(~ complexity, ncol = 1, labeller = labeller(complexity = c(
+    `0` = "Constante patronen",
+    `1` = "Eenvoudige overgangspatronen",
+    `2` = "Paraboolvormige patronen",
+    `4` = "Complexe patronen"
+  ))) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b") +
+  labs(
+    x = "",
+    y = "Indicatorwaarde",
+    colour = "Trend in bedekking",
+    shape = "Bedekkingstoestand"
+  ) +
+  theme_minimal() +
+  theme(
+    strip.text = element_text(face = "bold")
+  ) +
+  # ↑ Bedekt arrow and label
+  annotate("segment",
+           x = as.Date("2000-01-20"), xend = as.Date("2000-01-20"),
+           y = threshold + 0.05, yend = threshold + 0.2,
+           arrow = arrow(length = unit(0.03, "npc")),
+           colour = "black") +
+  annotate("text",
+           label = "bedekt",
+           x = as.Date("2000-01-22"), y = threshold + 0.1,
+           size = 2.5, fontface = "italic", hjust = "left") +
+  # ↓ Onbedekt arrow and label
+  annotate("segment",
+           x = as.Date("2000-01-20"), xend = as.Date("2000-01-20"),
+           y = threshold - 0.05, yend = threshold - 0.2,
+           arrow = arrow(length = unit(0.03, "npc")),
+           colour = "black") +
+  annotate("text",
+           label = "onbedekt",
+           x = as.Date("2000-01-22"), y = threshold - 0.1,
+           size = 2.5, fontface = "italic", hjust = "left", vjust = "bottom")
+```
+
+## Resultaten {#sec-remote-sensing-resultaten}
 ### Rasterlagen
 
 We krijgen per telpunt rasterlagen met NDVI- en BSI-waarden om de tien dagen van 1 februari tot en met 1 september (vanaf 2022). Dit is voor een beperkte periode gevisualiseerd voor telpunt Ol_12833.8 (Oostelijke leemstreek, HOL, binnen SBP) in @fig-raster-indices. We zien duidelijke verschillen in indexwaarden tussen verschillende percelen. We zien ook verschillende trends in naakte bodem per perceel doorheen de tijd (bij sommige percelen stijgt de index, terwijl deze bij andere daalt). We zien gelijkaardige trends voor NDVI als voor BSI. De figuren geven aan dat dergelijke gegevens nuttig zijn, omdat ze gedetailleerde spatiale en temporele informatie opleveren. Hierdoor kunnen veranderingen in vegetatie en bodemtoestand op een fijnmazig niveau worden opgevolgd, wat waardevolle input biedt voor verdere analyses.
@@ -335,7 +452,7 @@ plot_time_series <- function(
 #|  1 februari tot en met 1 september.
 #|  A. NDVI: afsnijding naakte bodem onder een waarde van 0.3.
 #|  B. BSI: afsnijding naakte bodem boven een waarde van 0.021."
-#| fig-height: 13
+#| fig-height: 12.5
 #| fig-width: 8
 # Create plots
 plot_trend_full <- lapply(
@@ -345,7 +462,7 @@ plot_trend_full <- lapply(
   colour_var = "trend",
   legend_colour = "Trend in bedekking",
   shape_var = "naakte_bodem",
-  legend_shape = "Naakte bodem"
+  legend_shape = "Bedekkingstoestand"
 )
 
 # 1. Extract the shared legend (keep it vertical)
@@ -521,11 +638,11 @@ pairwise_trends %>%
   )
 ```
 
-
 ```{r}
 #| label: fig-trend-gewasgroep
 #| fig-cap: "..."
-#| fig-height: 14
+#| fig-height: 12.5
+#| fig-width: 8
 # NDVI plot
 p_trend_ndvi <- trend_data$ndvi %>%
   group_by(year, gwsgrp_h) %>%
