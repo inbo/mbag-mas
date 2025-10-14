@@ -258,7 +258,14 @@ time_series_data <- lapply(time_series_csv, function(df) {
 
 ```{r}
 # Plot indicator time series for a plot
-plot_time_series <- function(df, plot_name, colour_var, legend_title) {
+plot_time_series <- function(
+  df,
+  loc_name,
+  colour_var,
+  shape_var = NULL,
+  legend_colour = "Legende",
+  legend_shape = "Legende"
+) {
   # Rules for different indicator types
   if ("ndvi" %in% names(df)) {
     y_axis_title <- "NDVI"
@@ -269,84 +276,110 @@ plot_time_series <- function(df, plot_name, colour_var, legend_title) {
     y_var <- "bsi"
     cutoff <- 0.021
   }
-
-  # Create output
-  df %>%
+  
+  # Prepare data
+  data <- df %>%
     # Get plot
-    filter(pointid %in% plot_name) %>%
+    filter(pointid %in% loc_name) %>%
     # Create variable to set x-axis limits
     mutate(
       monthday_date = as.Date(
         paste0("2000-", substr(monthday, 1, 2), "-", substr(monthday, 3, 4))
       )
-    ) %>%
+    )
+  
+  # Return simple plot
+  if (is.null(shape_var)) {
+    # Create output
+    p <- data %>%
+      ggplot(aes(x = monthday_date, y = !!sym(y_var), group = ref_id)) +
+      # Create time series
+      geom_line(alpha = 0.5, linetype = 5) +
+      geom_point(aes(colour = !!sym(colour_var)), size = 2, show.legend = TRUE) +
+      # Add reference lines
+      geom_hline(yintercept = cutoff, linetype = "dotdash", colour = "black") +
+      # Settings
+      labs(x = "", y = y_axis_title, colour = legend_colour) +
+      scale_x_date(date_breaks = "1 month", date_labels = "%b",
+                   limits = as.Date(c("2000-02-01", "2000-09-01"))) +
+      scale_colour_discrete(drop = FALSE) +
+      facet_wrap(~year, ncol = 1, scales = "fixed")
+    return(p)
+  }
+  
+  # Return complex plot
+  data %>%
     ggplot(aes(x = monthday_date, y = !!sym(y_var), group = ref_id)) +
     # Create time series
     geom_line(alpha = 0.5, linetype = 5) +
-    geom_point(aes(colour = !!sym(colour_var)), size = 2, show.legend = TRUE) +
+    geom_point(aes(colour = !!sym(colour_var), shape = !!sym(shape_var)),
+               size = 2, show.legend = TRUE) +
     # Add reference lines
     geom_hline(yintercept = cutoff, linetype = "dotdash", colour = "black") +
     # Settings
-    labs(x = "", y = y_axis_title, colour = legend_title) +
+    labs(x = "", y = y_axis_title, colour = legend_colour, shape = legend_shape) +
     scale_x_date(date_breaks = "1 month", date_labels = "%b",
                  limits = as.Date(c("2000-02-01", "2000-09-01"))) +
+    scale_shape_manual(
+      values = c("bedekt" = 16, "onbedekt" = 4),
+      drop = FALSE
+    ) +
     scale_colour_discrete(drop = FALSE) +
     facet_wrap(~year, ncol = 1, scales = "fixed")
 }
 ```
 
-
 ```{r}
-#| label: fig-tijdsreeks-naaktebodem
+#| label: fig-tijdsreeks-trend
 #| fig-cap: "Tijdsreeks van landbouwpercelen rond telpunt Ol_12833.8 van
 #|  1 februari tot en met 1 september.
 #|  A. NDVI: afsnijding naakte bodem onder een waarde van 0.3.
 #|  B. BSI: afsnijding naakte bodem boven een waarde van 0.021."
-#| fig-height: 12.5
+#| fig-height: 13
 #| fig-width: 8
-plot_naakte_bodem <- lapply(
+# Create plots
+plot_trend_full <- lapply(
   time_series_data,
   plot_time_series,
-  plot_name = plots$plotnaam[1],
-  colour_var = "naakte_bodem",
-  legend_title = "Naakte bodem"
-)
-
-cowplot::plot_grid(
-  plot_naakte_bodem$ndvi, plot_naakte_bodem$bsi,
-  ncol = 1,
-  labels = c("A.", "B."),
-  label_size = 20,
-  label_fontface = "bold",
-  scale = c(0.95, 0.95)
-)
-```
-
-
-```{r}
-#| label: fig-tijdsreeks-trend
-#| fig-cap: "Trends van tijdsreeks van landbouwpercelen rond telpunt Ol_12833.8
-#|  van 1 februari tot en met 1 september.
-#|  A. NDVI: afsnijding naakte bodem onder een waarde van 0.3.
-#|  B. BSI: afsnijding naakte bodem boven een waarde van 0.021."
-#| fig-height: 12.5
-#| fig-width: 8
-plot_trend <- lapply(
-  time_series_data,
-  plot_time_series,
-  plot_name = plots$plotnaam[1],
+  loc_name = plots$plotnaam[1],
   colour_var = "trend",
-  legend_title = "Trend in bedekking"
+  legend_colour = "Trend in bedekking",
+  shape_var = "naakte_bodem",
+  legend_shape = "Naakte bodem"
 )
 
-cowplot::plot_grid(
-  plot_trend$ndvi, plot_trend$bsi,
+# 1. Extract the shared legend (keep it vertical)
+legend_shared <- cowplot::get_legend(
+  plot_trend_full$ndvi +
+    theme(
+      legend.position = "right",
+      legend.direction = "vertical"
+    )
+)
+
+# 2. Remove legends from the individual plots
+p_ndvi <- plot_trend_full$ndvi + theme(legend.position = "none")
+p_bsi  <- plot_trend_full$bsi  + theme(legend.position = "none")
+
+# 3. Combine the two plots vertically
+plots_combined <- cowplot::plot_grid(
+  p_ndvi, p_bsi,
   ncol = 1,
   labels = c("A.", "B."),
   label_size = 20,
   label_fontface = "bold",
   scale = c(0.95, 0.95)
 )
+
+# 4. Add the shared legend to the right of both
+final_plot <- cowplot::plot_grid(
+  plots_combined, legend_shared,
+  ncol = 2,
+  rel_widths = c(1, 0.3)  # adjust legend width
+)
+
+# 5. Display final figure
+final_plot
 ```
 
 ```{r}
@@ -360,17 +393,7 @@ sample_df <- sample %>%
 # Read crop type data
 years <- 2022:2024
 
-#--- Read crop group reference -------------------------------------------------
-
-crop_groups <- read_csv2(
-  file.path(mbag_dir, "data", "gewasgroepen", "hoofdteelten_groep.csv"),
-  show_col_types = FALSE
-) %>%
-  rename_with(tolower) %>%
-  select(lblhfdtlt, nieuwe_groep)
-
-#--- Helper to read parcel data for one year -----------------------------------
-
+# Helper to read parcel data for one year
 read_parcels_year <- function(year) {
   gpkg_path <- file.path(
     mbag_dir, "data", "landbouwgebruikspercelen",
@@ -385,17 +408,14 @@ read_parcels_year <- function(year) {
            ref_id = as.numeric(ref_id))
 }
 
-#--- Read and combine all years -----------------------------------------------
-
+# Read and combine all years
 parcels_all <- map_dfr(years, read_parcels_year)
 
-#--- Join crop group info ------------------------------------------------------
-
+# Join crop group info
 parcels_all_joined <- parcels_all %>%
   inner_join(distinct(time_series_data$ndvi, ref_id, year),
              by = join_by(ref_id, year)) %>%
-  left_join(crop_groups, by = c("gwsnam_h" = "lblhfdtlt")) %>%
-  select(ref_id, year, gwsnam_h, nieuwe_groep, oude_groep = gwsgrph_lb)
+  select(ref_id, year, gwsnam_h, gwsgrp_h = gwsgrph_lb)
 ```
 
 ```{r}
@@ -417,10 +437,9 @@ trend_data <- lapply(time_series_data_full, function(df) {
   
   df %>%
     distinct(pointid, ref_id, year, trend_raw, trend, regio,
-             openheid_klasse, sbp, gwsnam_h, nieuwe_groep, oude_groep) %>%
+             openheid_klasse, sbp, gwsnam_h, gwsgrp_h) %>%
     mutate(
-      nieuwe_groep = fct_reorder(nieuwe_groep, as.numeric(trend), mean),
-      oude_groep = fct_reorder(oude_groep, as.numeric(trend), mean),
+      gwsgrp_h = fct_reorder(gwsgrp_h, as.numeric(trend), mean),
       indicator = indicator,
     )
 })
@@ -429,6 +448,7 @@ trend_data <- lapply(time_series_data_full, function(df) {
 ```{r}
 #| label: fig-trend-pairwise
 #| fig-cap: "..."
+#| out-width: "80%"
 pairwise_trends <- bind_rows(trend_data) %>%
   pivot_wider(id_cols = c("pointid", "ref_id", "year"),
               names_from = "indicator", values_from = "trend") %>%
@@ -508,10 +528,10 @@ pairwise_trends %>%
 #| fig-height: 14
 # NDVI plot
 p_trend_ndvi <- trend_data$ndvi %>%
-  group_by(year, oude_groep) %>%
+  group_by(year, gwsgrp_h) %>%
   mutate(n = n()) %>%
   ungroup() %>%
-  ggplot(aes(x = oude_groep, fill = trend)) +
+  ggplot(aes(x = gwsgrp_h, fill = trend)) +
   geom_bar(position = "fill") +
   geom_text(aes(label = n, y = 1.05), size = 2.5) +
   labs(x = "", y = "Proportie percelen", fill = "Trend in bedekking (NDVI)") +
@@ -524,10 +544,10 @@ p_trend_ndvi <- trend_data$ndvi %>%
         legend.text = element_text(size = 8))
 # BSI plot
 p_trend_bsi <- trend_data$bsi %>%
-  group_by(year, oude_groep) %>%
+  group_by(year, gwsgrp_h) %>%
   mutate(n = n()) %>%
   ungroup() %>%
-  ggplot(aes(x = oude_groep, fill = trend)) +
+  ggplot(aes(x = gwsgrp_h, fill = trend)) +
   geom_bar(position = "fill") +
   geom_text(aes(label = n, y = 1.05), size = 2.5) +
   labs(x = "", y = "Proportie percelen", fill = "Trend in bedekking (BSI)") +
