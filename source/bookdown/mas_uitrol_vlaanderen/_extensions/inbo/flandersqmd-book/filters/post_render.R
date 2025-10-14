@@ -3,7 +3,7 @@ source(file.path("scripts", "autoqmd_cleanup.R"))
 
 autoqmd_finalise <- function(qmd_files, message, child_dir) {
   # Clean up qmd
-  lapply(qmd_files, autoqmd_cleanup, message = message)
+  lapply(qmd_files, autoqmd_cleanup, message = message) # nolint: object_usage_linter
 
   # Remove child documents folder
   unlink(child_dir, recursive = TRUE)
