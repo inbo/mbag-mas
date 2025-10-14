@@ -76,7 +76,8 @@ Deze verkenning brengt enkel de variabiliteit en complexiteit van de indicatorwa
 ```{r}
 #| label: fig-trend-methods
 #| fig-cap: "Verschillende types trends van een indicatorwaarde doorheen de tijd
-#|  ten opzichte van een drempelwaarde."
+#|  ten opzichte van een drempelwaarde. Van boven naar beneden met toenemende
+#|  complexiteit."
 #| fig-height: 6
 #| fig-width: 8
 set.seed(1)
@@ -625,8 +626,7 @@ We maken daarom in eerste plaats een vergelijking tussen de trends in van NDVI e
 ```{r}
 #| label: fig-trend-pairwise
 #| fig-cap: "Vergelijking van trends in indicatorwaarden van BSI ten opzichte
-#|  van NDVI per jaar. Opgesplitst volgens patrooncomplexiteit."
-#| out-width: "80%"
+#|  van NDVI per jaar. Opgesplitst volgens verschil in complexiteit."
 # Prepare pairwise trends table
 pairwise_trends <- bind_rows(trend_data) %>%
   pivot_wider(id_cols = c("pointid", "ref_id", "year"),
@@ -724,14 +724,14 @@ pairwise_summary_plot <- pairwise_summary %>%
 ggplot(pairwise_summary_plot, aes(x = trend, y = comp_bsi)) +
   geom_tile(aes(fill = ifelse(is_nvt, NA, prop)), color = "white") +
   geom_tile(data = ~filter(.x, is_nvt), fill = "white", color = "white") +
-  geom_text(aes(label = label, colour = text_col), size = 3) +
+  geom_text(aes(label = label, colour = text_col), size = 2.5) +
   scale_colour_identity() +
   scale_fill_viridis_c(option = "C", direction = -1,
                        labels = scales::percent_format(accuracy = 1),
                        na.value = "white") +
   facet_wrap(~year, ncol = 2, scales = "free") +
-  labs(x = NULL, y = NULL, fill = "Proportie") +
-  theme_minimal(base_size = 12) +
+  labs(x = NULL, y = NULL, fill = "Proportie\npercelen") +
+  theme_minimal(base_size = 10) +
   theme(
     strip.text = element_text(face = "bold"),
     legend.position = c(0.75, 0.2),
