@@ -94,6 +94,7 @@ plot_time_series <- function(
     facet_wrap(~year, ncol = 1, scales = "fixed")
 }
 
+
 #' Plot distribution of indicator trends by crop type
 #'
 #' Creates a bar plot showing the proportion of plots with different indicator
@@ -103,7 +104,7 @@ plot_time_series <- function(
 #'
 #' @param df A data frame containing columns for `year`, `gwsgrp_h`
 #' (crop group), `trend`, and `indicator`.
-plot_trend_by_crop <- function(df) {
+plot_trendtype_by_crop <- function(df) {
   require("dplyr")
   require("ggplot2")
   require("rlang")
@@ -129,4 +130,96 @@ plot_trend_by_crop <- function(df) {
           legend.margin = margin(6, 6, 6, 6),
           legend.box = "horizontal",
           legend.text = element_text(size = 8))
+}
+
+
+#' Plot seasonal trends by crop group
+#'
+#' Generates a facetted time series plot of either NDVI or BSI values per crop
+#' group (`gwsgrp_h`) and year. The plot shows the central tendency (default
+#' median) with an interquartile or custom quantile ribbon, highlights points
+#' above/below a threshold, and formats long crop group names for readability.
+#'
+#' @param df A data frame containing at least the columns `gwsgrp_h`, `year`,
+#' `monthday`, and either `ndvi` or `bsi`.
+#' @param order_levels A character vector specifying the desired order of
+#' `gwsgrp_h` categories for plotting.
+#' @param .f A summary function to calculate the central tendency (default is
+#' `median`).
+#' @param prob Numeric value between 0 and 0.5 specifying the quantile for the
+#' lower and upper bounds of the ribbon (default 0.25).
+
+plot_trend_by_crop <- function(df, order_levels, .f = median, prob = 0.25) {
+  require("dplyr")
+  require("ggplot2")
+  require("rlang")
+
+  # Rules for different indicator types
+  if ("ndvi" %in% names(df)) {
+    y_axis_title <- "NDVI"
+    y_var <- "ndvi"
+    cutoff <- 0.3
+    rule <- `<`
+  } else {
+    y_axis_title <- "BSI"
+    y_var <- "bsi"
+    cutoff <- 0.021
+    rule <- `>`
+  }
+
+  # Create data
+  plot_summary <- df %>%
+    mutate(
+      monthday_date = as.Date(
+        paste0("2000-", substr(.data$monthday, 1, 2), "-",
+               substr(.data$monthday, 3, 4))
+      )
+    ) %>%
+    group_by(.data$gwsgrp_h, .data$year, .data$monthday_date) %>%
+    summarise(
+      center_val = .f(.data[[y_var]], na.rm = TRUE),
+      q_low = quantile(.data[[y_var]], prob, na.rm = TRUE),
+      q_high = quantile(.data[[y_var]], 1 - prob, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    # Sort gwsgrp_h according to trend_data
+    mutate(
+      gwsgrp_h = factor(.data$gwsgrp_h, levels = order_levels),
+      cover = ifelse(exec(rule, .data$center_val, cutoff),
+                     "onbedekt", "bedekt"),
+      # Insert line break at the third space
+      gwsgrp_h_short = gsub(
+        pattern = "^((?:\\S+\\s){3})",  # match first two spaces
+        replacement = "\\1\n",
+        x = as.character(.data$gwsgrp_h)
+      )
+    )
+
+  # Ensure the order of the short names matches the original gwsgrp_h order
+  levels_short <- plot_summary %>%
+    distinct(.data$gwsgrp_h, .data$gwsgrp_h_short) %>%
+    arrange(factor(.data$gwsgrp_h, levels = order_levels)) %>%
+    pull(.data$gwsgrp_h_short)
+
+  plot_summary <- plot_summary %>%
+    mutate(gwsgrp_h_short = factor(.data$gwsgrp_h_short, levels = levels_short))
+
+  # Create plot
+  ggplot(plot_summary,
+         aes(x = .data$monthday_date, group = .data$gwsgrp_h_short)) +
+    geom_ribbon(aes(ymin = .data$q_low, ymax = .data$q_high), alpha = 0.2) +
+    geom_line(aes(y = .data$center_val)) +
+    geom_point(aes(y = .data$center_val, colour = .data$cover)) +
+    geom_hline(yintercept = cutoff, linetype = "dotdash", colour = "black") +
+    scale_colour_manual(
+      values = c("bedekt" = "#4CAF50", "onbedekt" = "#FFC107")
+    ) +
+    scale_x_date(date_breaks = "1 month", date_labels = "%b",
+                 limits = as.Date(c("2000-02-01", "2000-09-01"))) +
+    facet_grid(gwsgrp_h_short ~ year, scales = "free_y") +
+    labs(x = "", y = y_axis_title, colour = "Bedekkingstoestand") +
+    theme_minimal(base_size = 12) +
+    theme(strip.text.x = element_text(face = "bold"),
+          strip.text.y = element_text(face = "bold", size = 6),
+          legend.position = "bottom")
 }
