@@ -584,15 +584,9 @@ parcels_all_joined <- parcels_all %>%
 ```
 
 ```{r}
-# Read sample information
-sample <- tar_read("sample", store = store)
-sample_df <- sample %>%
-  select(pointid, regio, openheid_klasse, sbp)
-
 # Add variables to time series data
 time_series_data_full <- lapply(time_series_data, function(df) {
   df %>%
-    left_join(sample_df, by = join_by(pointid)) %>%
     left_join(parcels_all_joined, by = join_by(ref_id, year))
 })
 
@@ -774,7 +768,7 @@ cowplot::plot_grid(
 
 ```{r}
 #| label: fig-trend-gewasgroep-ndvi
-#| fig-cap: "Seizoensverloop van NDVI (mediaan over alle percelen) per gewastype
+#| fig-cap: "Seizoensverloop van NDVI (mediaan over alle percelen) per gewasgroep
 #|  en jaar. De band toont het interkwartielbereik (25 % – 75 %)."
 #| fig-height: 12.5
 #| fig-width: 8
@@ -788,7 +782,7 @@ plot_trend_by_crop(
 
 ```{r}
 #| label: fig-trend-gewasgroep-bsi
-#| fig-cap: "Seizoensverloop van BSI (mediaan over alle percelen) per gewastype
+#| fig-cap: "Seizoensverloop van BSI (mediaan over alle percelen) per gewasgroep
 #|  en jaar. De band toont het interkwartielbereik (25 % – 75 %)."
 #| fig-height: 12.5
 #| fig-width: 8
@@ -798,6 +792,32 @@ plot_trend_by_crop(
 )
 ```
 
-\newpage
+\clearpage
 
 ### Naakte bodem per telpunt
+
+```{r}
+# Read sample information
+sample <- tar_read("sample", store = store)
+sample_df <- sample %>%
+  select(pointid, regio, openheid_klasse, sbp)
+
+# Helper to read bare soil CSVs
+read_bare_soil_year <- function(year, index) {
+  file_path <- file.path(
+    data_path,
+    paste0("bare_soil_analysis_mas_", index, "_", year, "_v1.csv")
+  )
+  file <- readr::read_csv(file_path, show_col_types = FALSE)[, -1]
+  names(file) <- c("pointid", "year", "period", "perc_bare_soil")
+  file$index <- index
+  return(file)
+}
+
+# Read data
+perc_bare_soil_data <- lapply(vec, function(i) {
+  df <- map_dfr(years, read_bare_soil_year, index = i)
+  df %>%
+    left_join(sample_df, by = join_by(pointid))
+})
+```
