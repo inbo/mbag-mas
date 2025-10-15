@@ -742,8 +742,14 @@ ggplot(pairwise_summary_plot, aes(x = trend, y = comp_bsi)) +
   )
 ```
 
+In tweede plaats bekijken we de trends per landgebruik (gewasgroep). Ook tussen verschillende gewasgroepen zien we verschillen in complexiteit van trends (@fig-trendtype-gewasgroep). Zowel voor NDVI als BSI volgen de trends hoofdzakelijk een eenvoudig patroon in Grasland, Fruit en Noten, Water, Voedergewassen, Houtachtige gewassen en Overige gewassen (bv. altijd bedekt/onbedekt or toename/afname bedekking) en complexere patronen voor Maïs, Groenten, kruiden en sierplanten, Aardappelen en Vlas en Hennep (bv. paraboolvormig of complexer). Suikerbieten en Granen, zaden en peulvruchten zitten er wat tussenin. Deze patronen zijn enkel voor BSI in 2022 niet zo opvallend. In ander jaren zien we wel sterke gelijkenis in de verhoudingen van trendtypes per gewasgroep. Net als eerder zien we ook hier dat BSI hogere proporties heeft aan complexere trendtypes.
+
+@fig-trend-gewasgroep-ndvi toont de gemiddelde trends voor NDVI (mediaan en interkwartielbereik) per gewasgroep in meer detail (geordend als in @fig-trendtype-gewasgroep). @fig-trend-gewasgroep-ndvi voor BSI. De trends vertonen voor beide indicatoren gelijkaardig patronen. Ook zijn de patronen per gewasgroep gelijkaardig voor elk jaar. De trendtypes verschillen soms wel tussen de jaren omdat de indexwaarden soms net wel of net niet de drempelwaarde overschreiden.
+
+\clearpage
+
 ```{r}
-#| label: fig-trend-gewasgroep
+#| label: fig-trendtype-gewasgroep
 #| fig-cap: "Verschillende types trends van een indicatorwaarde per gewasgroep
 #|  per jaar (A: NDVI, B: BSI).
 #|  De gewasgroepen zijn gerangschikt van links naar rechts volgens toenemende
@@ -764,9 +770,10 @@ cowplot::plot_grid(
 )
 ```
 
-\clearpage
+\newpage
 
 ```{r}
+#| label: fig-trend-gewasgroep-ndvi
 #| fig-cap: "Seizoensverloop van NDVI (mediaan over alle percelen) per gewastype
 #|  en jaar. De band toont het interkwartielbereik (25 % – 75 %)."
 #| fig-height: 12.5
@@ -777,11 +784,14 @@ plot_trend_by_crop(
 )
 ```
 
+\newpage
+
 ```{r}
+#| label: fig-trend-gewasgroep-bsi
 #| fig-cap: "Seizoensverloop van BSI (mediaan over alle percelen) per gewastype
 #|  en jaar. De band toont het interkwartielbereik (25 % – 75 %)."
-#| fig-height: 13
-#| fig-width: 9
+#| fig-height: 12.5
+#| fig-width: 8
 plot_trend_by_crop(
   time_series_data_full$bsi,
   order_levels = levels(trend_data$bsi$gwsgrp_h)
