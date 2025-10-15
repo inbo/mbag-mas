@@ -751,7 +751,7 @@ ggplot(pairwise_summary_plot, aes(x = trend, y = comp_bsi)) +
 #|  Het aantal percelen is aangegeven per gewasgroep boven elke staaf."
 #| fig-height: 12.5
 #| fig-width: 8
-p_trend_crop <- lapply(trend_data, plot_trend_by_crop)
+p_trend_crop <- lapply(trend_data, plot_trendtype_by_crop)
 
 # Combine plots
 cowplot::plot_grid(
@@ -763,5 +763,31 @@ cowplot::plot_grid(
   scale = c(0.95, 0.95)
 )
 ```
+
+
+
+```{r}
+#| fig-cap: "Seizoensverloop van NDVI (mediaan van alle percelen) per gewastype
+#|  en jaar. De band toont het interkwartielbereik (25–75%)."
+#| fig-height: 12.5
+#| fig-width: 8
+plot_trend_by_crop(
+  time_series_data_full$ndvi,
+  order_levels = levels(trend_data$ndvi$gwsgrp_h)
+)
+```
+
+```{r}
+#| fig-cap: "Seizoensverloop van BSI (mediaan van alle percelen) per gewastype
+#|  en jaar. De band toont het interkwartielbereik (25–75%)."
+#| fig-height: 12.5
+#| fig-width: 8
+plot_trend_by_crop(
+  time_series_data_full$bsi,
+  order_levels = levels(trend_data$bsi$gwsgrp_h)
+)
+```
+
+\newpage
 
 ### Naakte bodem per telpunt
