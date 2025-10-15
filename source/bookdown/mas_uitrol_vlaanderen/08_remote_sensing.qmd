@@ -24,6 +24,7 @@ library(INBOtheme)
 theme_set(theme_inbo(transparent = TRUE))
 
 source(file.path("scripts", "plot_remote_sensing.R"))
+source(file.path("scripts", "describe_remote_sensing.R"))
 
 # Conflicts
 conflicted::conflicts_prefer(dplyr::filter)
@@ -385,89 +386,8 @@ time_series_data <- lapply(time_series_csv, function(df) {
     ) %>%
     ungroup()
 })
-```
 
-```{r}
-# Function to describe trends within a plot
-describe_trend_table <- function(
-  df,
-  all_trends = c("altijd bedekt", "altijd onbedekt",
-                 "toename bedekking", "afname bedekking",
-                 "parabool", "omgekeerde parabool",
-                 "complex patroon")
-) {
-  require("glue")
-  require("dplyr")
-
-  df %>%
-    mutate(y = year) %>%
-    group_by(year) %>%
-    group_map(~{
-      data_year <- .x
-
-      total <- sum(data_year$n)
-      avg_complex <- weighted.mean(data_year$complexity, data_year$n)
-      complexity_level <- ifelse(avg_complex > 1.5, "meer complexe",
-                                 "meer eenvoudige")
-
-      most_common <- data_year %>%
-        filter(n == max(n))
-      most_common_vec <- paste(most_common$trend, collapse = ", ")
-      least_common <- data_year %>%
-        filter(n == min(n))
-      least_common_vec <- paste(least_common$trend, collapse = ", ")
-      missing <- setdiff(all_trends, data_year$trend)
-      missing_vec <- paste(missing, collapse = ", ")
-
-      if (nrow(most_common) > 1) {
-        most_common_trend <- "trends"
-        most_common_voorkomen <- "voorkomen"
-        most_common_is <- "zijn"
-      } else {
-        most_common_trend <- "trend"
-        most_common_voorkomen <- "voorkomt"
-        most_common_is <- "is"
-      }
-
-      if (nrow(least_common) > 1) {
-        least_common_voorkomen <- "voorkomen"
-      } else {
-        least_common_voorkomen <- "voorkomt"
-      }
-
-      if (length(missing) > 1) {
-        missing_trends <- "trends"
-        missing_komen <- "komen"
-      } else {
-        missing_trends <- "trend"
-        missing_komen <- "komt"
-      }
-
-      text <- glue(
-        "In {unique(data_year$y)} zien we vooral {complexity_level} trends. ",
-        paste(
-          "De {most_common_trend} die het vaakst {most_common_voorkomen}",
-          "{most_common_is} {most_common_vec} (n = {unique(most_common$n)}),",
-          "terwijl {least_common_vec} het minst {least_common_voorkomen}",
-          "(n = {unique(least_common$n)}). "
-        ),
-        if (length(missing) > 0) {
-          glue(
-            paste("De volgende {missing_trends} {missing_komen} in dit jaar",
-                  "niet voor: {missing_vec}.")
-          )
-        } else {
-          "Alle mogelijke trendcategorieën komen in dit jaar voor."
-        }
-      )
-
-      text
-    }) %>%
-    unlist() %>%
-    paste(collapse = " ")
-}
-
-# Use function for each indicator
+# Use description function for each indicator
 trend_summary <- lapply(time_series_data, function(df) {
   trend_df <- df %>%
     filter(pointid == plots$plotnaam[1]) %>%
@@ -600,8 +520,7 @@ trend_data <- lapply(time_series_data_full, function(df) {
   }
 
   df %>%
-    distinct(pointid, ref_id, year, trend_raw, trend, regio,
-             openheid_klasse, sbp, gwsnam_h, gwsgrp_h) %>%
+    distinct(pointid, ref_id, year, trend_raw, trend, gwsnam_h, gwsgrp_h) %>%
     mutate(
       gwsgrp_h = fct_reorder(gwsgrp_h, as.numeric(trend), mean),
       indicator = indicator,
@@ -740,8 +659,6 @@ In tweede plaats bekijken we de trends per landgebruik (gewasgroep). Ook tussen 
 
 @fig-trend-gewasgroep-ndvi toont de gemiddelde trends voor NDVI (mediaan en interkwartielbereik) per gewasgroep in meer detail (geordend als in @fig-trendtype-gewasgroep). @fig-trend-gewasgroep-ndvi voor BSI. De trends vertonen voor beide indicatoren gelijkaardig patronen. Ook zijn de patronen per gewasgroep gelijkaardig voor elk jaar. De trendtypes verschillen soms wel tussen de jaren omdat de indexwaarden soms net wel of net niet de drempelwaarde overschreiden.
 
-\clearpage
-
 ```{r}
 #| label: fig-trendtype-gewasgroep
 #| fig-cap: "Verschillende types trends van een indicatorwaarde per gewasgroep
@@ -764,8 +681,6 @@ cowplot::plot_grid(
 )
 ```
 
-\newpage
-
 ```{r}
 #| label: fig-trend-gewasgroep-ndvi
 #| fig-cap: "Seizoensverloop van NDVI (mediaan over alle percelen) per
@@ -778,8 +693,6 @@ plot_trend_by_crop(
 )
 ```
 
-\newpage
-
 ```{r}
 #| label: fig-trend-gewasgroep-bsi
 #| fig-cap: "Seizoensverloop van BSI (mediaan over alle percelen) per
@@ -791,8 +704,6 @@ plot_trend_by_crop(
   order_levels = levels(trend_data$bsi$gwsgrp_h)
 )
 ```
-
-\clearpage
 
 ### Naakte bodem per telpunt
 
@@ -823,12 +734,24 @@ perc_bare_soil_data <- lapply(vec, function(i) {
     mutate(stratum = paste(openheid_klasse, sbp, sep = " - "),
            period = factor(period, levels = paste0("R", 1:4)),
            perc_bare_soil = perc_bare_soil / 100) %>%
-    arrange(year, pointid, period)
+    arrange(year, pointid, period) %>%
+    mutate(regio_lab = paste("de", regio),
+           openheid_lab = openheid_klasse,
+           sbp_lab = paste(sbp, "SBP-gebied"))
 })
 ```
 
+Per telpunt werd het percentage naakte bodem berekend voor elke MAS-telperiode in elk jaar. Alle patronen zijn gelijkaardig voor berekeningen op basis van NDVI en BSI en zijn gelijkaardig tussen de jaren.
+
+In telperiode vier is het percentage naakte bodem duidelijk lager dan in de ander periodes. Tussen de landbouwregio's zien we kleine verschillen (@fig-baresoil-region). `r describe_summary_tables(perc_bare_soil_data, "regio_lab")`
+
+In @fig-baresoil-stratum vergelijken we per stratum.
+Voor openheid landschap zien we een verschil. `r describe_summary_tables(perc_bare_soil_data, "openheid_lab")`
+Voor binnen versus buiten SBP-gebied is er geen opvallend verschil. `r describe_summary_tables(perc_bare_soil_data, "sbp_lab")`
+
 ```{r}
-#| fig-cap: "..."
+#| label: fig-baresoil-region
+#| fig-cap: "gesorteerd volgens gemiddelde"
 #| fig-height: 12.5
 #| fig-width: 8
 p_baresoil_region <- lapply(
@@ -849,6 +772,7 @@ cowplot::plot_grid(
 ```
 
 ```{r}
+#| label: fig-baresoil-stratum
 #| fig-cap: "..."
 #| fig-height: 12.5
 #| fig-width: 8
@@ -867,59 +791,4 @@ cowplot::plot_grid(
   label_fontface = "bold",
   scale = c(0.95, 0.95)
 )
-```
-
-```{r}
-#| fig-cap: "..."
-#| fig-height: 12.5
-#| fig-width: 8
-# Create plots
-p_baresoil_stratum <- lapply(
-  perc_bare_soil_data,
-  plot_bare_soil,
-  by = "stratum"
-)
-
-# 1. Extract the shared legend (keep it vertical)
-legend_shared <- cowplot::get_legend(
-  p_baresoil_stratum$ndvi +
-    theme(
-      legend.position = "right",
-      legend.direction = "vertical"
-    )
-)
-
-# 2. Remove legends from the individual plots
-p_ndvi <- p_baresoil_stratum$ndvi +
-  theme_minimal(base_size = 12) +
-  theme(
-    legend.position = "none",
-    strip.text = element_text(face = "bold")
-  )
-p_bsi  <- p_baresoil_stratum$bsi +
-  theme_minimal(base_size = 12) +
-  theme(
-    legend.position = "none",
-    strip.text = element_text(face = "bold")
-  )
-
-# 3. Combine the two plots vertically
-plots_combined <- cowplot::plot_grid(
-  p_ndvi, p_bsi,
-  ncol = 1,
-  labels = c("A.", "B."),
-  label_size = 20,
-  label_fontface = "bold",
-  scale = c(0.95, 0.95)
-)
-
-# 4. Add the shared legend to the right of both
-final_plot <- cowplot::plot_grid(
-  plots_combined, legend_shared,
-  ncol = 2,
-  rel_widths = c(1, 0.3)  # adjust legend width
-)
-
-# 5. Display final figure
-final_plot
 ```
