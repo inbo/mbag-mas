@@ -800,7 +800,8 @@ plot_trend_by_crop(
 # Read sample information
 sample <- tar_read("sample", store = store)
 sample_df <- sample %>%
-  select(pointid, regio, openheid_klasse, sbp)
+  select(pointid, regio, openheid_klasse, sbp) %>%
+   mutate(regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio))
 
 # Helper to read bare soil CSVs
 read_bare_soil_year <- function(year, index) {
@@ -818,6 +819,98 @@ read_bare_soil_year <- function(year, index) {
 perc_bare_soil_data <- lapply(vec, function(i) {
   df <- map_dfr(years, read_bare_soil_year, index = i)
   df %>%
-    left_join(sample_df, by = join_by(pointid))
+    left_join(sample_df, by = join_by(pointid)) %>%
+    mutate(stratum = paste(openheid_klasse, sbp, sep = " - "),
+           period = factor(period, levels = paste0("R", 1:4)),
+           perc_bare_soil = perc_bare_soil / 100) %>%
+    arrange(year, pointid, period)
 })
+```
+
+```{r}
+#| fig-cap: "..."
+#| fig-height: 12.5
+#| fig-width: 8
+p_baresoil_region <- lapply(perc_bare_soil_data, plot_bare_soil,
+                             by = "region")
+
+# Combine plots
+cowplot::plot_grid(
+  p_baresoil_region$ndvi, p_baresoil_region$bsi,
+  ncol = 1,
+  labels = c("A.", "B."),
+  label_size = 20,
+  label_fontface = "bold",
+  scale = c(0.95, 0.95)
+)
+```
+
+```{r}
+#| fig-cap: "..."
+#| fig-height: 12.5
+#| fig-width: 8
+p_baresoil_stratum <- lapply(perc_bare_soil_data, plot_bare_soil,
+                             by = "stratum")
+
+# Combine plots
+cowplot::plot_grid(
+  p_baresoil_stratum$ndvi, p_baresoil_stratum$bsi,
+  ncol = 1,
+  labels = c("A.", "B."),
+  label_size = 20,
+  label_fontface = "bold",
+  scale = c(0.95, 0.95)
+)
+```
+
+```{r}
+#| fig-cap: "..."
+#| fig-height: 12.5
+#| fig-width: 8
+# Create plots
+p_baresoil_stratum <- lapply(perc_bare_soil_data, plot_bare_soil,
+                             by = "stratum")
+
+# 1. Extract the shared legend (keep it vertical)
+legend_shared <- cowplot::get_legend(
+  p_baresoil_stratum$ndvi +
+    theme(
+      legend.position = "right",
+      legend.direction = "vertical"
+    )
+)
+
+# 2. Remove legends from the individual plots
+p_ndvi <- p_baresoil_stratum$ndvi +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "none",
+    strip.text = element_text(face = "bold")
+  )
+p_bsi  <- p_baresoil_stratum$bsi +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "none",
+    strip.text = element_text(face = "bold")
+  )
+
+# 3. Combine the two plots vertically
+plots_combined <- cowplot::plot_grid(
+  p_ndvi, p_bsi,
+  ncol = 1,
+  labels = c("A.", "B."),
+  label_size = 20,
+  label_fontface = "bold",
+  scale = c(0.95, 0.95)
+)
+
+# 4. Add the shared legend to the right of both
+final_plot <- cowplot::plot_grid(
+  plots_combined, legend_shared,
+  ncol = 2,
+  rel_widths = c(1, 0.3)  # adjust legend width
+)
+
+# 5. Display final figure
+final_plot
 ```
