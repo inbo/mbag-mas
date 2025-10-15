@@ -263,3 +263,38 @@ plot_trend_by_crop <- function(df, order_levels, .f = median, prob = 0.25) {
           strip.text.y = element_text(face = "bold", size = 6),
           legend.position = "bottom")
 }
+
+plot_bare_soil <- function(df, by) {
+  require("dplyr")
+  require("ggplot2")
+  require("rlang")
+
+  if (by == "region") {
+    df %>%
+      mutate(
+        regio = fct_reorder(factor(.data$regio), .data$perc_bare_soil, mean)
+      ) %>%
+      ggplot(aes(x = .data$regio, y = .data$perc_bare_soil)) +
+      geom_boxplot() +
+      labs(x = "", y = "Percentage naakte bodem",
+           subtitle = toupper(unique(df$index))) +
+      facet_grid(year ~ period) +
+      theme_minimal(base_size = 12) +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1),
+            strip.text = element_text(face = "bold"))
+  } else if (by == "stratum") {
+    df %>%
+      mutate(
+        regio = fct_reorder(factor(.data$stratum), .data$perc_bare_soil, mean)
+      ) %>%
+      ggplot(aes(x = .data$period, y = .data$perc_bare_soil)) +
+      geom_boxplot(aes(fill = .data$stratum)) +
+      facet_wrap(~year, ncol = 1) +
+      labs(x = "", y = "Percentage naakte bodem", fill = "Stratum",
+           subtitle = toupper(unique(df$index))) +
+      theme_minimal(base_size = 12) +
+      theme(strip.text = element_text(face = "bold"))
+  } else {
+    stop("Not implemented! Choose one of 'region' or 'stratum'.")
+  }
+}
