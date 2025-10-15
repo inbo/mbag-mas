@@ -247,7 +247,7 @@ plot_trend_by_crop <- function(df, order_levels, .f = median, prob = 0.25) {
     geom_text(
       data = trend_pos,
       aes(x = as.Date("2000-05-01"), y = .data$y_pos, label = .data$trend),
-      hjust = 0.5, vjust = 0, size = 2,
+      hjust = 0.5, vjust = 0, size = 2.5,
       colour = "black"
     ) +
     scale_colour_manual(
@@ -255,7 +255,7 @@ plot_trend_by_crop <- function(df, order_levels, .f = median, prob = 0.25) {
     ) +
     scale_x_date(date_breaks = "1 month", date_labels = "%b",
                  limits = as.Date(c("2000-02-01", "2000-09-01"))) +
-    scale_y_continuous(expand = expansion(mult = c(0, 0.3))) +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.2))) +
     facet_grid(gwsgrp_h_short ~ year, scales = "free_y") +
     labs(x = "", y = y_axis_title, colour = "Bedekkingstoestand") +
     theme_minimal(base_size = 12) +
