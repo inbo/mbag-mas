@@ -204,6 +204,39 @@ plot_trend_by_crop <- function(df, order_levels, .f = median, prob = 0.25) {
   plot_summary <- plot_summary %>%
     mutate(gwsgrp_h_short = factor(.data$gwsgrp_h_short, levels = levels_short))
 
+  # Calculate trends
+  trend_df <- plot_summary %>%
+    arrange(.data$gwsgrp_h_short, .data$year, .data$monthday_date) %>%
+    group_by(.data$gwsgrp_h_short, .data$year) %>%
+    summarise(
+      trend_raw = paste0(rle(cover)$values, collapse = " → "),
+      trend = factor(
+        case_when(
+          trend_raw == "onbedekt → bedekt" ~ "toename bedekking",
+          trend_raw == "bedekt → onbedekt" ~ "afname bedekking",
+          trend_raw == "onbedekt → bedekt → onbedekt" ~ "parabool",
+          trend_raw == "bedekt → onbedekt → bedekt" ~ "omgekeerde parabool",
+          trend_raw == "bedekt" ~ "altijd bedekt",
+          trend_raw == "onbedekt" ~ "altijd onbedekt",
+          TRUE ~ "complex patroon"
+        ),
+        levels = c("altijd bedekt", "altijd onbedekt", "toename bedekking",
+                   "afname bedekking", "parabool", "omgekeerde parabool",
+                   "complex patroon")
+      ),
+      .groups = "drop"
+    ) %>%
+    select("year", "gwsgrp_h_short", "trend")
+
+  # Position of trend lables
+  trend_pos <- plot_summary %>%
+    group_by(.data$gwsgrp_h_short) %>%
+    summarise(
+      y_pos = max(.data$center_val, na.rm = TRUE) + 0.1,
+      .groups = "drop"
+    ) %>%
+    left_join(trend_df, by = "gwsgrp_h_short")
+
   # Create plot
   ggplot(plot_summary,
          aes(x = .data$monthday_date, group = .data$gwsgrp_h_short)) +
@@ -211,11 +244,18 @@ plot_trend_by_crop <- function(df, order_levels, .f = median, prob = 0.25) {
     geom_line(aes(y = .data$center_val)) +
     geom_point(aes(y = .data$center_val, colour = .data$cover)) +
     geom_hline(yintercept = cutoff, linetype = "dotdash", colour = "black") +
+    geom_text(
+      data = trend_pos,
+      aes(x = as.Date("2000-05-01"), y = .data$y_pos, label = .data$trend),
+      hjust = 0.5, vjust = 0, size = 2,
+      colour = "black"
+    ) +
     scale_colour_manual(
       values = c("bedekt" = "#4CAF50", "onbedekt" = "#FFC107")
     ) +
     scale_x_date(date_breaks = "1 month", date_labels = "%b",
                  limits = as.Date(c("2000-02-01", "2000-09-01"))) +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.3))) +
     facet_grid(gwsgrp_h_short ~ year, scales = "free_y") +
     labs(x = "", y = y_axis_title, colour = "Bedekkingstoestand") +
     theme_minimal(base_size = 12) +
