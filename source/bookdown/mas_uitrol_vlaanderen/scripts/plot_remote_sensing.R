@@ -276,9 +276,11 @@ plot_trend_by_crop <- function(df, order_levels, .f = median, prob = 0.25) {
 #'   - `perc_bare_soil`: numeric, percentage of bare soil
 #'   - `year`: numeric or factor, year of observation
 #'   - `period`: factor, period or season within the year
-#'   - `index`: character, indicating which index (e.g. "NDVI", "BSI") the data refer to
+#'   - `index`: character, indicating which index (e.g. "NDVI", "BSI") the data
+#'      refer to
 #'   - `regio` or `stratum`: factor, indicating spatial grouping
-#' @param by Character string indicating whether to group by `"region"` or `"stratum"`.
+#' @param by Character string indicating whether to group by `"region"` or
+#'   `"stratum"`.
 #'   Determines the type of boxplot:
 #'   - `"region"`: boxplots per region across years and periods.
 #'   - `"stratum"`: boxplots per stratum across years, with facets by year.
