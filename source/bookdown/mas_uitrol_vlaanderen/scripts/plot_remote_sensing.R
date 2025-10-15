@@ -264,6 +264,24 @@ plot_trend_by_crop <- function(df, order_levels, .f = median, prob = 0.25) {
           legend.position = "bottom")
 }
 
+
+#' Plot bare soil percentage by region or stratum
+#'
+#' Creates publication-ready boxplots showing the percentage of bare soil
+#' across regions or strata, optionally split by year and period. The function
+#' allows quick visual assessment of spatial and temporal variation in bare soil
+#' cover for a given index (e.g. NDVI or BSI).
+#'
+#' @param df A data frame containing at least the following columns:
+#'   - `perc_bare_soil`: numeric, percentage of bare soil
+#'   - `year`: numeric or factor, year of observation
+#'   - `period`: factor, period or season within the year
+#'   - `index`: character, indicating which index (e.g. "NDVI", "BSI") the data refer to
+#'   - `regio` or `stratum`: factor, indicating spatial grouping
+#' @param by Character string indicating whether to group by `"region"` or `"stratum"`.
+#'   Determines the type of boxplot:
+#'   - `"region"`: boxplots per region across years and periods.
+#'   - `"stratum"`: boxplots per stratum across years, with facets by year.
 plot_bare_soil <- function(df, by) {
   require("dplyr")
   require("ggplot2")
