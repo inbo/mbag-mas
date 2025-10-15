@@ -764,11 +764,11 @@ cowplot::plot_grid(
 )
 ```
 
-
+\clearpage
 
 ```{r}
-#| fig-cap: "Seizoensverloop van NDVI (mediaan van alle percelen) per gewastype
-#|  en jaar. De band toont het interkwartielbereik (25–75%)."
+#| fig-cap: "Seizoensverloop van NDVI (mediaan over alle percelen) per gewastype
+#|  en jaar. De band toont het interkwartielbereik (25 % – 75 %)."
 #| fig-height: 12.5
 #| fig-width: 8
 plot_trend_by_crop(
@@ -778,10 +778,10 @@ plot_trend_by_crop(
 ```
 
 ```{r}
-#| fig-cap: "Seizoensverloop van BSI (mediaan van alle percelen) per gewastype
-#|  en jaar. De band toont het interkwartielbereik (25–75%)."
-#| fig-height: 12.5
-#| fig-width: 8
+#| fig-cap: "Seizoensverloop van BSI (mediaan over alle percelen) per gewastype
+#|  en jaar. De band toont het interkwartielbereik (25 % – 75 %)."
+#| fig-height: 13
+#| fig-width: 9
 plot_trend_by_crop(
   time_series_data_full$bsi,
   order_levels = levels(trend_data$bsi$gwsgrp_h)
