@@ -123,7 +123,7 @@ modified_mapping <- function(data_df) {
                                     "Present", "Absent"),
       dwc_behavior = case_when(
         .data$dwc_verbatimBehavior == "Territoriaal gedrag" ~
-          "Teritorial behaviour",
+          "Territorial behaviour",
         .data$dwc_verbatimBehavior == "Individu of groep niet plaatsgebonden" ~
           "Individual or group not bound to a location",
         .data$dwc_verbatimBehavior == "Volwassen individu in broedbiotoop" ~
