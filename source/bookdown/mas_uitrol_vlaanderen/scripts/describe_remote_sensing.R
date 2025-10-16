@@ -1,4 +1,25 @@
-# Function to describe trends within a plot
+#' Describe trends in coverage over time
+#'
+#' This function generates short textual descriptions of observed trends in
+#' vegetation (or other coverage categories) per year based on a summary table.
+#' For each year, it reports the dominant trend type(s), the least frequent
+#' trend(s), whether trends tend to be simple or complex, and which trend
+#' categories (if any) are missing.
+#'
+#' @param df A data frame containing trend information with at least the
+#' columns:
+#'   \itemize{
+#'     \item \code{year}: numeric or factor year value
+#'     \item \code{trend}: character string describing the trend category
+#'     \item \code{n}: numeric count of observations for that trend in the given
+#'           year
+#'     \item \code{complexity}: numeric value describing the complexity level of
+#'           the trend
+#'   }
+#' @param all_trends A character vector listing all possible trend categories.
+#'   Defaults to a set of Dutch trend descriptions:
+#'   \code{c("altijd bedekt", "altijd onbedekt", "toename bedekking",
+#'   "afname bedekking", "parabool", "omgekeerde parabool", "complex patroon")}.
 describe_trend_table <- function(
   df,
   all_trends = c("altijd bedekt", "altijd onbedekt",
@@ -13,22 +34,31 @@ describe_trend_table <- function(
     mutate(y = .data$year) %>%
     group_by(.data$year) %>%
     group_map(~{
-      data_year <- .x
+      data_year <- .x  # Subset of data for one year
 
+      # Compute total observations and average complexity
       total <- sum(data_year$n)
       avg_complex <- weighted.mean(data_year$complexity, data_year$n)
+
+      # Decide if trends are generally more simple or complex
       complexity_level <- ifelse(avg_complex > 1.5, "meer complexe",
                                  "meer eenvoudige")
 
+      # Identify most common and least common trends
       most_common <- data_year %>%
         filter(n == max(n))
-      most_common_vec <- paste(most_common$trend, collapse = ", ")
       least_common <- data_year %>%
         filter(n == min(n))
+
+      # Convert trend names to comma-separated text
+      most_common_vec <- paste(most_common$trend, collapse = ", ")
       least_common_vec <- paste(least_common$trend, collapse = ", ")
+
+      # Identify missing trend categories
       missing <- setdiff(all_trends, data_year$trend)
       missing_vec <- paste(missing, collapse = ", ")
 
+      # Adjust grammar depending on singular/plural cases
       if (nrow(most_common) > 1) {
         most_common_trend <- "trends"
         most_common_voorkomen <- "voorkomen"
@@ -53,6 +83,7 @@ describe_trend_table <- function(
         missing_komen <- "komt"
       }
 
+      # Compose the descriptive text for this year
       text <- glue(
         "In {unique(data_year$y)} zien we vooral {complexity_level} trends. ",
         paste(
@@ -78,36 +109,83 @@ describe_trend_table <- function(
 }
 
 
-describe_summary_tables <- function(df, var, tol = 0.05) {
+#' Describe and compare NDVI and BSI summary tables
+#'
+#' This function produces natural-language descriptions (in Dutch) of
+#' summary statistics for the percentage of bare soil (\code{perc_bare_soil})
+#' across categories (e.g., habitat type, region, etc.), comparing two
+#' indicators: NDVI and BSI. For each indicator, the function reports which
+#' categories have the highest or lowest average bare soil percentage and
+#' whether the order of categories is consistent between indicators.
+#'
+#' @param summary_data A list or data object containing both NDVI and BSI data
+#'   frames, each with at least the columns:
+#'   \itemize{
+#'     \item \code{perc_bare_soil}: numeric, percentage of bare soil
+#'     \item the grouping variable given in \code{var}, e.g. habitat or stratum
+#'   }
+#'   Typically this would be a list such as
+#'   \code{list(ndvi = ndvi_df, bsi = bsi_df)}.
+#' @param var A character string giving the column name to group by (e.g.
+#'  \code{"habitat"}).
+#' @param tol Numeric tolerance (default = 0.05) used to decide if two means
+#'   are considered similar between NDVI and BSI or between categories.
+#'
+#' @return A character string containing a Dutch-language description of the
+#'   trends and their similarities or differences between NDVI and BSI.
+#' @export
+#'
+#' @examples
+#' ndvi_df <- data.frame(
+#'   habitat = c("grasland", "akker"),
+#'   perc_bare_soil = c(0.12, 0.25)
+#' )
+#' bsi_df <- data.frame(
+#'   habitat = c("grasland", "akker"),
+#'   perc_bare_soil = c(0.10, 0.22)
+#' )
+#' summary_data <- list(ndvi = ndvi_df, bsi = bsi_df)
+#' describe_summary_tables(summary_data, var = "habitat")
+describe_summary_tables <- function(summary_data, var, tol = 0.05) {
   require("dplyr")
   require("rlang")
   require("glue")
 
-  summarise_bare_soil <- function(df, var) {
-    df %>%
+  #--------------------------------------------------------------------
+  # Helper function to summarise percentage of bare soil for one indicator
+  #--------------------------------------------------------------------
+  summarise_bare_soil <- function(data, var) {
+    data %>%
       group_by(.data[[var]]) %>%
       summarise(
-        min_bs = min(.data$perc_bare_soil, na.rm = TRUE),
-        q25_bs = quantile(.data$perc_bare_soil, 0.25, na.rm = TRUE),
+        min_bs    = min(.data$perc_bare_soil, na.rm = TRUE),
+        q25_bs    = quantile(.data$perc_bare_soil, 0.25, na.rm = TRUE),
         median_bs = median(.data$perc_bare_soil, na.rm = TRUE),
-        q75_bs = quantile(.data$perc_bare_soil, 0.75, na.rm = TRUE),
-        max_bs = max(.data$perc_bare_soil, na.rm = TRUE),
-        mean_bs = mean(.data$perc_bare_soil, na.rm = TRUE),
-        sd_bs = sd(.data$perc_bare_soil, na.rm = TRUE),
+        q75_bs    = quantile(.data$perc_bare_soil, 0.75, na.rm = TRUE),
+        max_bs    = max(.data$perc_bare_soil, na.rm = TRUE),
+        mean_bs   = mean(.data$perc_bare_soil, na.rm = TRUE),
+        sd_bs     = sd(.data$perc_bare_soil, na.rm = TRUE),
         .groups = "drop"
       ) %>%
       arrange(desc(.data$mean_bs))
   }
 
-  # Compute summaries for both indicators
-  ndvi_summary <- summarise_bare_soil(df$ndvi, var)
-  bsi_summary  <- summarise_bare_soil(df$bsi, var)
+  #--------------------------------------------------------------------
+  # Compute summaries for both indicators (NDVI and BSI)
+  #--------------------------------------------------------------------
+  ndvi_summary <- summarise_bare_soil(summary_data$ndvi, var)
+  bsi_summary  <- summarise_bare_soil(summary_data$bsi, var)
 
-  # Function to check if orders are effectively the same within tolerance
+  #--------------------------------------------------------------------
+  # Helper function to check if NDVI and BSI orders are similar
+  # within tolerance (for simple cases with two categories)
+  #--------------------------------------------------------------------
   same_order_tol <- function(ndvi_df, bsi_df, tol) {
+    # If order is identical, return TRUE
     if (identical(ndvi_df[[var]], bsi_df[[var]])) {
       return(TRUE)
     } else {
+      # Special handling for only two categories
       if (nrow(ndvi_df) == 2) {
         bool <- abs(ndvi_df$mean_bs[1] - ndvi_df$mean_bs[2]) < tol &&
           abs(bsi_df$mean_bs[1] - bsi_df$mean_bs[2])
@@ -120,14 +198,20 @@ describe_summary_tables <- function(df, var, tol = 0.05) {
 
   same_order <- same_order_tol(ndvi_summary, bsi_summary, tol)
 
-  # Helper: natural Dutch text summary (like your original version)
+  #--------------------------------------------------------------------
+  # Helper to describe one indicator’s results in natural Dutch
+  #--------------------------------------------------------------------
   describe_one <- function(summary_df, indicator_label) {
+    # Format each row as a text snippet with mean, median, and SD
     var_text <- apply(summary_df, 1, function(row) {
       sprintf("%s (gemiddelde: %.3f, mediaan: %.3f, SD: %.3f)",
-              row[[var]], as.numeric(row[["mean_bs"]]),
-              as.numeric(row[["median_bs"]]), as.numeric(row[["sd_bs"]]))
+              row[[var]],
+              as.numeric(row[["mean_bs"]]),
+              as.numeric(row[["median_bs"]]),
+              as.numeric(row[["sd_bs"]]))
     })
 
+    # Construct sentences depending on number of categories
     if (nrow(summary_df) > 2) {
       sprintf(
         paste(
@@ -139,6 +223,7 @@ describe_summary_tables <- function(df, var, tol = 0.05) {
         paste(var_text[-1], collapse = ", ")
       )
     } else if (nrow(summary_df) == 2) {
+      # For two categories, check if means are similar within tolerance
       if (abs(summary_df$mean_bs[1] - summary_df$mean_bs[2]) < tol) {
         sprintf(
           paste("Het percentage naakte bodem, gemiddeld over alle jaren,",
@@ -153,27 +238,30 @@ describe_summary_tables <- function(df, var, tol = 0.05) {
         )
       }
     } else {
-      stop("At least two categories needed.")
+      stop("At least two categories are required.")
     }
   }
 
-  # Output depends on similarity
+  #--------------------------------------------------------------------
+  # Generate the final textual description
+  #--------------------------------------------------------------------
   if (same_order) {
-    # Combined description
+    # Case 1: NDVI and BSI show similar ordering across categories
     var_text <- mapply(
-      function(nrow, brow) {
+      function(n_row, b_row) {
         sprintf(
           paste("%s (NDVI – gemiddelde: %.3f, mediaan: %.3f, SD: %.3f;",
                 "BSI – %.3f, %.3f, %.3f)"),
-          nrow[[var]],
-          nrow[["mean_bs"]], nrow[["median_bs"]], nrow[["sd_bs"]],
-          brow[["mean_bs"]], brow[["median_bs"]], brow[["sd_bs"]]
+          n_row[[var]],
+          n_row[["mean_bs"]], n_row[["median_bs"]], n_row[["sd_bs"]],
+          b_row[["mean_bs"]], b_row[["median_bs"]], b_row[["sd_bs"]]
         )
       },
       split(ndvi_summary, seq_len(nrow(ndvi_summary))),
       split(bsi_summary, seq_len(nrow(bsi_summary)))
     )
 
+    # Multi-category narrative
     if (nrow(ndvi_summary) > 2) {
       out_text <- sprintf(
         paste("De resultaten zijn vergelijkbaar tussen NDVI en BSI.",
@@ -183,6 +271,7 @@ describe_summary_tables <- function(df, var, tol = 0.05) {
         paste(var_text[-1], collapse = ", ")
       )
     } else {
+      # Two-category comparison with tolerance checks
       if (abs(ndvi_summary$mean_bs[1] - ndvi_summary$mean_bs[2]) < tol &&
             abs(bsi_summary$mean_bs[1] - bsi_summary$mean_bs[2]) < tol) {
         out_text <- sprintf(
@@ -194,7 +283,7 @@ describe_summary_tables <- function(df, var, tol = 0.05) {
       } else {
         text <- sprintf(
           paste("Het percentage naakte bodem, gemiddeld over alle jaren,",
-                "is hoger %s, dan %s."),
+                "is hoger in %s dan in %s."),
           var_text[1],
           paste(var_text[-1], collapse = ", ")
         )
@@ -206,7 +295,7 @@ describe_summary_tables <- function(df, var, tol = 0.05) {
     }
 
   } else {
-    # Distinct orders → separate narratives
+    # Case 2: NDVI and BSI show different ordering
     ndvi_text <- describe_one(ndvi_summary, "NDVI")
     bsi_text  <- describe_one(bsi_summary, "BSI")
 
