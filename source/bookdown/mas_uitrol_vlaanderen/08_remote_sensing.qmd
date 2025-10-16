@@ -1,13 +1,4 @@
 # Remote sensing–indicatoren op basis van optische satelliettijdsreeksen {#sec-remote-sensing}
-## Inleiding
-
-- zie aparte google doc
-
-## Methodiek
-
-- zie aparte google doc
-
-## Resultaten
 
 ```{r}
 #| include: FALSE
@@ -26,9 +17,14 @@ opts_chunk$set(
 library(tidyverse)
 library(targets)
 library(terra)
+library(sf)
+library(rlang)
 
 library(INBOtheme)
 theme_set(theme_inbo(transparent = TRUE))
+
+source(file.path("scripts", "plot_remote_sensing.R"))
+source(file.path("scripts", "describe_remote_sensing.R"))
 
 # Conflicts
 conflicted::conflicts_prefer(dplyr::filter)
@@ -42,6 +38,143 @@ store <- file.path(
 data_path <- file.path(mbag_dir, "data", "remote_sensing")
 ```
 
+## Inleiding
+
+- zie aparte google doc
+
+## Methodiek
+
+- zie aparte google doc
+
+### Data
+
+### Berekening naakte bodem
+
+### Data exploratie
+
+In dit hoofdstuk verkennen we de tijdreeksen van de indicatoren voor naakte bodem voor de jaren 2022–2024.
+De data werden geanalyseerd in R [@R] met RStudio [@RStudio].
+
+We beschrijven onder andere seizoenspatronen van bedekking op percelen.
+Daarbij onderscheiden we verschillende trends in de evolutie van de indicatorwaarde ten opzichte van hun drempelwaardes (NDVI: naakte bodem onder 0,3; BSI: naakte bodem boven 0.021) (@fig-trend-methods):
+
+- **Altijd onbedekt** – de indicator wijst gedurende de volledige periode op weinig vegetatie\
+  (onder (NDVI) of boven (BSI) de drempelwaarde)
+- **Altijd bedekt** – de indicator blijft constant boven (NDVI) of onder (BSI) de drempelwaarde
+- **Toename bedekking** – een overgang van onbedekt naar bedekt
+- **Afname bedekking** – een overgang van bedekt naar onbedekt
+- **Paraboolvorm** – eerst een toename, daarna een afname in bedekking\
+  (onbedekt → bedekt → onbedekt)
+- **Omgekeerde parabool** – eerst een afname, daarna een toename in bedekking\
+  (bedekt → onbedekt → bedekt)
+- **Complex patroon** – meer dan twee wisselingen tussen bedekt en onbedekt
+
+Merk op dat deze trendindeling afhankelijk is van de lengte van de tijdsreeks en van de gekozen drempelwaarde voor naakte bodem.
+Een tijdsreeks kan bijvoorbeeld een parabolisch verloop vertonen, maar net onder de drempelwaarde blijven, waardoor ze in onze interpretatie als een constant patroon wordt beschouwd.
+Het gaat om een eerste manier om de temporele dynamiek en complexiteit van de bedekkingsindicatoren te beschrijven, als opstap naar latere, meer verklarende analyses bijvoorbeeld in relatie tot de aanwezigheid van akkervogels of andere variabelen.
+Deze verkenning brengt enkel de variabiliteit en complexiteit van de indicatorwaarden in kaart doorheen de tijd.
+
+```{r}
+#| label: fig-trend-methods
+#| fig-cap: "Verschillende types trends van een indicatorwaarde doorheen de tijd
+#|  ten opzichte van een drempelwaarde. Van boven naar beneden met toenemende
+#|  complexiteit."
+#| fig-height: 6
+#| fig-width: 8
+set.seed(1)
+threshold <- 0.35
+
+# Create example data
+example_subset <- tibble(
+  trend = rep(
+    c("altijd bedekt", "altijd onbedekt", "toename bedekking",
+      "afname bedekking", "parabool", "omgekeerde parabool", "complex patroon"),
+    each = 12
+  ),
+  monthday_date = rep(
+    seq(as.Date("2000-02-01"), by = "20 days", length.out = 12), 7
+  )
+) %>%
+  group_by(trend) %>%
+  mutate(
+    indicator = case_when(
+      trend == "altijd bedekt" ~ rep(0.7, n()),
+      trend == "altijd onbedekt" ~ rep(0.15, n()),
+      trend == "toename bedekking" ~ seq(0.1, 0.8, length.out = n()),
+      trend == "afname bedekking" ~ seq(0.8, 0.1, length.out = n()),
+      trend == "parabool" ~ c(seq(0.1, 0.8, length.out = n() / 2),
+                              seq(0.8, 0.1, length.out = n() / 2)),
+      trend == "omgekeerde parabool" ~ c(seq(0.8, 0.2, length.out = n() / 2),
+                                         seq(0.2, 0.8, length.out = n() / 2)),
+      TRUE ~ abs(sin(seq(0, 2 * pi, length.out = n()))) / 2
+    ),
+    naakte_bodem = if_else(indicator < threshold, "onbedekt", "bedekt"),
+    complexity = case_when(
+      grepl("altijd", trend) ~ 0,
+      grepl("bedekking", trend) ~ 1,
+      grepl("parabool", trend) ~ 2,
+      TRUE ~ 4
+    )
+  ) %>%
+  ungroup() %>%
+  mutate(
+    trend = factor(
+      trend,
+      levels = c("altijd bedekt", "altijd onbedekt", "toename bedekking",
+                 "afname bedekking", "parabool", "omgekeerde parabool",
+                 "complex patroon")
+    )
+  )
+
+# Create trend plot
+ggplot(example_subset, aes(x = monthday_date, y = indicator, group = trend)) +
+  geom_line(alpha = 0.7, colour = "grey40", linetype = 5) +
+  geom_point(aes(colour = trend, shape = naakte_bodem), size = 2) +
+  geom_hline(yintercept = threshold, linetype = "dotdash", colour = "black") +
+  facet_wrap(~ complexity, ncol = 1, labeller = labeller(complexity = c(
+    `0` = "Constante patronen",
+    `1` = "Eenvoudige overgangspatronen",
+    `2` = "Paraboolvormige patronen",
+    `4` = "Complexe patronen"
+  ))) +
+  scale_shape_manual(
+    values = c("bedekt" = 16, "onbedekt" = 4),
+    drop = FALSE
+  ) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b") +
+  labs(
+    x = "",
+    y = "Indicatorwaarde",
+    colour = "Trend in bedekking",
+    shape = "Bedekkingstoestand"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    strip.text = element_text(face = "bold")
+  ) +
+  # ↑ Bedekt arrow and label
+  annotate("segment",
+           x = as.Date("2000-01-20"), xend = as.Date("2000-01-20"),
+           y = threshold + 0.05, yend = threshold + 0.2,
+           arrow = arrow(length = unit(0.03, "npc")),
+           colour = "black") +
+  annotate("text",
+           label = "bedekt",
+           x = as.Date("2000-01-22"), y = threshold + 0.1,
+           size = 2.5, fontface = "italic", hjust = "left") +
+  # ↓ Onbedekt arrow and label
+  annotate("segment",
+           x = as.Date("2000-01-20"), xend = as.Date("2000-01-20"),
+           y = threshold - 0.05, yend = threshold - 0.2,
+           arrow = arrow(length = unit(0.03, "npc")),
+           colour = "black") +
+  annotate("text",
+           label = "onbedekt",
+           x = as.Date("2000-01-22"), y = threshold - 0.1,
+           size = 2.5, fontface = "italic", hjust = "left", vjust = "bottom")
+```
+
+## Resultaten {#sec-remote-sensing-resultaten}
 ### Rasterlagen
 
 We krijgen per telpunt rasterlagen met NDVI- en BSI-waarden om de tien dagen van 1 februari tot en met 1 september (vanaf 2022). Dit is voor een beperkte periode gevisualiseerd voor telpunt Ol_12833.8 (Oostelijke leemstreek, HOL, binnen SBP) in @fig-raster-indices. We zien duidelijke verschillen in indexwaarden tussen verschillende percelen. We zien ook verschillende trends in naakte bodem per perceel doorheen de tijd (bij sommige percelen stijgt de index, terwijl deze bij andere daalt). We zien gelijkaardige trends voor NDVI als voor BSI. De figuren geven aan dat dergelijke gegevens nuttig zijn, omdat ze gedetailleerde spatiale en temporele informatie opleveren. Hierdoor kunnen veranderingen in vegetatie en bodemtoestand op een fijnmazig niveau worden opgevolgd, wat waardevolle input biedt voor verdere analyses.
@@ -160,7 +293,7 @@ par(op)
 ```{r}
 #| label: fig-raster-indices
 #| fig-cap: "Rasterbeelden van landbouwpercelen rond telpunt Ol_12833.8 van
-#|  02-03-2024 tot 20-07-2024.
+#|  02-03-2024 tot en met 20-07-2024.
 #|  A. NDVI: een lagere waarde betekend minder bedekking.
 #|  B. BSI: een hogere waarde betekend minder bedekking."
 #| fig-height: 12.5
@@ -188,5 +321,483 @@ combined
 ### Tijdsreeksen
 
 ```{r}
+# Read time series data from CSV
+vec <- c(ndvi = "ndvi", bsi = "bsi")
+time_series_csv <- lapply(vec, function(indicator) {
+  file_name <- paste0("time_series_mas_", indicator, ".csv")
+  path <- file.path(data_path, file_name)
+
+  read_csv(path, show_col_types = FALSE)[, -1]
+})
+
+# Filter and prepare data
+time_series_data <- lapply(time_series_csv, function(df) {
+  # Rules for different indicator types
+  if ("ndvi" %in% names(df)) {
+    y_var <- "ndvi"
+    cutoff <- 0.3
+    rule <- `<`
+  } else {
+    y_var <- "bsi"
+    cutoff <- 0.021
+    rule <- `>`
+  }
+
+  names(df) <- tolower(names(df)) # Lower column names
+
+  # Output dataframe
+  df %>%
+    # Create date variables
+    mutate(
+      day = day(time),
+      month = month(time),
+      monthday = format(time, "%m%d"),
+      year = year(time)
+    ) %>%
+    # Filter data
+    drop_na() %>%
+    filter(
+      monthday >= "0201",
+      monthday <= "0901"
+    ) %>%
+    # Describe trends
+    mutate(
+      naakte_bodem = ifelse(exec(rule, !!sym(y_var), cutoff),
+                            "onbedekt", "bedekt"),
+    ) %>%
+    arrange(pointid, year, time) %>%
+    group_by(ref_id, year) %>%
+    mutate(
+      trend_raw = paste0(rle(naakte_bodem)$values, collapse = " → "),
+      trend = factor(
+        case_when(
+          trend_raw == "onbedekt → bedekt" ~ "toename bedekking",
+          trend_raw == "bedekt → onbedekt" ~ "afname bedekking",
+          trend_raw == "onbedekt → bedekt → onbedekt" ~ "parabool",
+          trend_raw == "bedekt → onbedekt → bedekt" ~ "omgekeerde parabool",
+          trend_raw == "bedekt" ~ "altijd bedekt",
+          trend_raw == "onbedekt" ~ "altijd onbedekt",
+          TRUE ~ "complex patroon"
+        ),
+        levels = c("altijd bedekt", "altijd onbedekt", "toename bedekking",
+                   "afname bedekking", "parabool", "omgekeerde parabool",
+                   "complex patroon")
+      )
+    ) %>%
+    ungroup()
+})
+
+# Use description function for each indicator
+trend_summary <- lapply(time_series_data, function(df) {
+  trend_df <- df %>%
+    filter(pointid == plots$plotnaam[1]) %>%
+    mutate(complexity = case_when(
+      grepl("altijd", trend) ~ 0,
+      grepl("bedekking", trend) ~ 1,
+      grepl("parabool", trend) ~ 2,
+      TRUE ~ 3
+    )) %>%
+    count(year, trend, complexity)
+
+  return(describe_trend_table(trend_df))
+})
+```
+
+Voor elk landbouwperceel krijgen we tijdsreeksen van NDVI en BSI waarden. @fig-tijdsreeks-trend toont de tijdsreeksen voor telpunt Ol_12833.8. De verschillende percelen tonen duidelijk verschillende trends doorheen het jaar.
+
+Voor NDVI: `r trend_summary$ndvi`
+
+Voor BSI: `r trend_summary$bsi`
+
+```{r}
+#| label: fig-tijdsreeks-trend
+#| fig-cap: "Tijdsreeks van landbouwpercelen rond telpunt Ol_12833.8 van
+#|  1 februari tot en met 1 september.
+#|  A. NDVI: overgang naakte bodem onder een waarde van 0.3.
+#|  B. BSI: overgang naakte bodem boven een waarde van 0.021."
+#| fig-height: 12.5
+#| fig-width: 8
+# Create plots
+plot_trend_full <- lapply(
+  time_series_data,
+  plot_time_series,
+  loc_name = plots$plotnaam[1],
+  colour_var = "trend",
+  legend_colour = "Trend in bedekking",
+  shape_var = "naakte_bodem",
+  legend_shape = "Bedekkingstoestand"
+)
+
+# 1. Extract the shared legend (keep it vertical)
+legend_shared <- cowplot::get_legend(
+  plot_trend_full$ndvi +
+    theme(
+      legend.position = "right",
+      legend.direction = "vertical"
+    )
+)
+
+# 2. Remove legends from the individual plots
+p_ndvi <- plot_trend_full$ndvi +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "none",
+    strip.text = element_text(face = "bold")
+  )
+p_bsi  <- plot_trend_full$bsi +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "none",
+    strip.text = element_text(face = "bold")
+  )
+
+# 3. Combine the two plots vertically
+plots_combined <- cowplot::plot_grid(
+  p_ndvi, p_bsi,
+  ncol = 1,
+  labels = c("A.", "B."),
+  label_size = 20,
+  label_fontface = "bold",
+  scale = c(0.95, 0.95)
+)
+
+# 4. Add the shared legend to the right of both
+final_plot <- cowplot::plot_grid(
+  plots_combined, legend_shared,
+  ncol = 2,
+  rel_widths = c(1, 0.3)  # adjust legend width
+)
+
+# 5. Display final figure
+final_plot
+```
+
+```{r}
+# Read crop type data
+years <- 2022:2024
+
+# Helper to read parcel data for one year
+read_parcels_year <- function(year) {
+  require("dplyr")
+  require("rlang")
+
+  gpkg_path <- file.path(
+    mbag_dir, "data", "landbouwgebruikspercelen",
+    sprintf("Landbouwgebruikspercelen_%d", year),
+    sprintf("Landbouwgebruikspercelen_%d.gpkg", year)
+  )
+
+  sf::st_read(gpkg_path, quiet = TRUE) %>%
+    sf::st_drop_geometry() %>%
+    rename_with(tolower) %>%
+    mutate(year = year,
+           ref_id = as.numeric(.data$ref_id))
+}
+
+# Read and combine all years
+parcels_all <- map_dfr(years, read_parcels_year)
+
+# Join crop group info
+parcels_all_joined <- parcels_all %>%
+  inner_join(distinct(time_series_data$ndvi, ref_id, year),
+             by = join_by(ref_id, year)) %>%
+  select(ref_id, year, gwsnam_h, gwsgrp_h = gwsgrph_lb)
+```
+
+```{r}
+# Add variables to time series data
+time_series_data_full <- lapply(time_series_data, function(df) {
+  df %>%
+    left_join(parcels_all_joined, by = join_by(ref_id, year))
+})
+
+# Get trend data
+trend_data <- lapply(time_series_data_full, function(df) {
+  # Rules for different indicator types
+  if ("ndvi" %in% names(df)) {
+    indicator <- "ndvi"
+  } else {
+    indicator <- "bsi"
+  }
+
+  df %>%
+    distinct(pointid, ref_id, year, trend_raw, trend, gwsnam_h, gwsgrp_h) %>%
+    mutate(
+      gwsgrp_h = fct_reorder(gwsgrp_h, as.numeric(trend), mean),
+      indicator = indicator,
+    )
+})
+```
+
+We willen patronen onderzoeken voor alle percelen over alle MAS-telpunten.
+Bovenstaande resultaten geven (1) geen duidelijke vergelijking in trends of complexiteit tussen de twee types indicatoren: NDVI en BSI, en (2) het is niet duidelijk of percelen met dezelfde trend ook eenzelfde landgebruik hebben.
+
+We maken daarom in eerste plaats een vergelijking tussen de trends in van NDVI en BSI (@fig-trend-pairwise). Er vallen twee patronen op:
+
+1. Voor 2023 en 2024 tonen de waardes van NDVI en BSI meestal dezelfde trend doorheen de tijd. Dit is niet zo voor 2022 waar de trends iets vaker verschillen tussen beide indicatortypes.
+2. Als de trends verschillen tussen de types, heeft BSI vaker complexe trends dan NDVI. Dit patroon is extra opvallend voor 2022.
+
+```{r}
+#| label: fig-trend-pairwise
+#| fig-cap: "Vergelijking van trends in indicatorwaarden van BSI ten opzichte
+#|  van NDVI per jaar. Opgesplitst volgens verschil in complexiteit."
+# Prepare pairwise trends table
+pairwise_trends <- bind_rows(trend_data) %>%
+  pivot_wider(id_cols = c("pointid", "ref_id", "year"),
+              names_from = "indicator", values_from = "trend") %>%
+  # Compute complexity for each indicator
+  mutate(
+    across(
+      c("ndvi", "bsi"),
+      ~ case_when(grepl("altijd", .x) ~ 0,
+                  grepl("bedekking", .x) ~ 1,
+                  grepl("parabool", .x) ~ 2,
+                  TRUE ~ 3),
+      .names = "{.col}_complexity"
+    )
+  ) %>%
+  # Compare NDVI and BSI
+  mutate(
+    trend = factor(
+      ifelse(ndvi == bsi, "zelfde\ntrend", "verschillende\ntrend"),
+      levels = c("zelfde\ntrend", "verschillende\ntrend")
+    ),
+    comp_bsi = factor(
+      case_when(
+        bsi_complexity > ndvi_complexity ~ "complexer dan\nNDVI",
+        bsi_complexity < ndvi_complexity ~ "minder complex\ndan NDVI",
+        TRUE ~ "zelfde complexiteit\n"
+      ),
+      levels = c("minder complex\ndan NDVI", "zelfde complexiteit\n",
+                 "complexer dan\nNDVI")
+    )
+  ) %>%
+  ungroup()
+
+# Summarize counts and proportions
+pairwise_summary <- pairwise_trends %>%
+  count(year, trend, comp_bsi) %>%
+  group_by(year) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  complete(year, trend, comp_bsi, fill = list(n = 0, prop = 0)) %>%
+  group_by(year, trend) %>%
+  mutate(prop_trend = sum(prop)) %>%
+  ungroup() %>%
+  group_by(year, comp_bsi) %>%
+  mutate(prop_comp_bsi = sum(prop)) %>%
+  ungroup() %>%
+  mutate(
+    is_nvt = (trend == "zelfde\ntrend" & comp_bsi != "zelfde complexiteit\n"),
+    label = case_when(
+      is_nvt ~ "n.v.t.",
+      n == 0 ~ "",
+      TRUE ~ paste0(n, " (", sprintf("%.3f", prop), ")")
+    ),
+    text_col = ifelse(prop > 0.4, "white", "black")
+  )
+
+# Add row/column proportions to labels
+pairwise_summary_plot <- pairwise_summary %>%
+  group_by(year) %>%
+  mutate(
+    trend_original = trend,
+    trend = paste0(trend, " (", sprintf("%.2f", prop_trend), ")"),
+    trend = factor(
+      trend,
+      levels = paste0(
+        levels(trend_original),
+        " (",
+        sprintf(
+          "%.2f",
+          sapply(levels(trend_original),
+                 function(lv) unique(prop_trend[trend_original == lv]))
+        ),
+        ")"
+      )
+    ),
+    comp_bsi_original = comp_bsi,
+    comp_bsi = paste0(comp_bsi, " (", sprintf("%.2f", prop_comp_bsi), ")"),
+    comp_bsi = factor(
+      comp_bsi,
+      levels = paste0(
+        levels(comp_bsi_original),
+        " (",
+        sprintf(
+          "%.2f",
+          sapply(levels(comp_bsi_original),
+                 function(lv) unique(prop_comp_bsi[comp_bsi_original == lv]))
+        ),
+        ")"
+      )
+    )
+  ) %>%
+  ungroup()
+
+# Plot heat map
+ggplot(pairwise_summary_plot, aes(x = trend, y = comp_bsi)) +
+  geom_tile(aes(fill = ifelse(is_nvt, NA, prop)), color = "white") +
+  geom_tile(data = ~filter(.x, is_nvt), fill = "white", color = "white") +
+  geom_text(aes(label = label, colour = text_col), size = 2.5) +
+  scale_colour_identity() +
+  scale_fill_viridis_c(option = "C", direction = -1,
+                       labels = scales::percent_format(accuracy = 1),
+                       na.value = "white") +
+  facet_wrap(~year, ncol = 2, scales = "free") +
+  labs(x = NULL, y = NULL, fill = "Proportie\npercelen") +
+  theme_minimal(base_size = 10) +
+  theme(
+    strip.text = element_text(face = "bold"),
+    legend.position = c(0.75, 0.2),
+    legend.key.height = unit(0.4, "cm"),
+    legend.key.width  = unit(0.4, "cm"),
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 9, face = "bold")
+  )
+```
+
+In tweede plaats bekijken we de trends per landgebruik (gewasgroep). Ook tussen verschillende gewasgroepen zien we verschillen in complexiteit van trends (@fig-trendtype-gewasgroep). Zowel voor NDVI als BSI volgen de trends hoofdzakelijk een eenvoudig patroon in Grasland, Fruit en Noten, Water, Voedergewassen, Houtachtige gewassen en Overige gewassen (bv. altijd bedekt/onbedekt or toename/afname bedekking) en complexere patronen voor Maïs, Groenten, kruiden en sierplanten, Aardappelen en Vlas en Hennep (bv. paraboolvormig of complexer). Suikerbieten en Granen, zaden en peulvruchten zitten er wat tussenin. Deze patronen zijn enkel voor BSI in 2022 niet zo opvallend. In ander jaren zien we wel sterke gelijkenis in de verhoudingen van trendtypes per gewasgroep. Net als eerder zien we ook hier dat BSI hogere proporties heeft aan complexere trendtypes.
+
+@fig-trend-gewasgroep-ndvi toont de gemiddelde trends voor NDVI (mediaan en interkwartielbereik) per gewasgroep in meer detail (geordend als in @fig-trendtype-gewasgroep). @fig-trend-gewasgroep-ndvi voor BSI. De trends vertonen voor beide indicatoren gelijkaardig patronen. Ook zijn de patronen per gewasgroep gelijkaardig voor elk jaar. De trendtypes verschillen soms wel tussen de jaren omdat de indexwaarden soms net wel of net niet de drempelwaarde overschrijden.
+
+```{r}
+#| label: fig-trendtype-gewasgroep
+#| fig-cap: "Verschillende types trends van een indicatorwaarde per gewasgroep
+#|  per jaar (A: NDVI, B: BSI).
+#|  De gewasgroepen zijn gerangschikt van links naar rechts volgens toenemende
+#|  complexiteit aan trends.
+#|  Het aantal percelen is aangegeven per gewasgroep boven elke staaf."
+#| fig-height: 12.5
+#| fig-width: 8
+p_trend_crop <- lapply(trend_data, plot_trendtype_by_crop)
+
+# Combine plots
+cowplot::plot_grid(
+  p_trend_crop$ndvi, p_trend_crop$bsi,
+  ncol = 1,
+  labels = c("A.", "B."),
+  label_size = 20,
+  label_fontface = "bold",
+  scale = c(0.95, 0.95)
+)
+```
+
+```{r}
+#| label: fig-trend-gewasgroep-ndvi
+#| fig-cap: "Seizoensverloop van NDVI (mediaan over alle percelen) per
+#|  gewasgroep en jaar. De band toont het interkwartielbereik (25 % – 75 %)."
+#| fig-height: 12.5
+#| fig-width: 8
+plot_trend_by_crop(
+  time_series_data_full$ndvi,
+  order_levels = levels(trend_data$ndvi$gwsgrp_h)
+)
+```
+
+```{r}
+#| label: fig-trend-gewasgroep-bsi
+#| fig-cap: "Seizoensverloop van BSI (mediaan over alle percelen) per
+#|  gewasgroep en jaar. De band toont het interkwartielbereik (25 % – 75 %)."
+#| fig-height: 12.5
+#| fig-width: 8
+plot_trend_by_crop(
+  time_series_data_full$bsi,
+  order_levels = levels(trend_data$bsi$gwsgrp_h)
+)
+```
+
+### Naakte bodem per telpunt
+
+```{r}
+# Read sample information
 sample <- tar_read("sample", store = store)
+sample_df <- sample %>%
+  select(pointid, regio, openheid_klasse, sbp) %>%
+  mutate(regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio))
+
+# Helper to read bare soil CSVs
+read_bare_soil_year <- function(year, index) {
+  file_path <- file.path(
+    data_path,
+    paste0("bare_soil_analysis_mas_", index, "_", year, "_v1.csv")
+  )
+  file <- readr::read_csv(file_path, show_col_types = FALSE)[, -1]
+  names(file) <- c("pointid", "year", "period", "perc_bare_soil")
+  file$index <- index
+  return(file)
+}
+
+# Read data
+perc_bare_soil_data <- lapply(vec, function(i) {
+  df <- map_dfr(years, read_bare_soil_year, index = i)
+  df %>%
+    left_join(sample_df, by = join_by(pointid)) %>%
+    mutate(stratum = paste(openheid_klasse, sbp, sep = " - "),
+           period = factor(period, levels = paste0("R", 1:4)),
+           perc_bare_soil = perc_bare_soil / 100) %>%
+    arrange(year, pointid, period) %>%
+    mutate(regio_lab = paste("de", regio),
+           openheid_lab = openheid_klasse,
+           sbp_lab = paste(sbp, "SBP-gebied"),
+           period_lab = paste("telronde", gsub("R", "", period)))
+})
+```
+
+Per telpunt werd het percentage naakte bodem berekend voor elke MAS-telperiode in elk jaar. Meeste patronen zijn gelijkaardig voor berekeningen op basis van NDVI en BSI en zijn gelijkaardig tussen de jaren.
+
+In telperiode vier is het percentage naakte bodem duidelijk lager dan in de ander periodes. `r describe_summary_tables(perc_bare_soil_data, "period_lab")`
+
+Tussen de landbouwregio's zien we kleine verschillen (@fig-baresoil-region). `r describe_summary_tables(perc_bare_soil_data, "regio_lab")`
+
+In @fig-baresoil-stratum vergelijken we per stratum.
+Voor openheid landschap zien we een verschil. `r describe_summary_tables(perc_bare_soil_data, "openheid_lab")`
+Voor binnen versus buiten SBP-gebied is er geen opvallend verschil. `r describe_summary_tables(perc_bare_soil_data, "sbp_lab")`
+
+```{r}
+#| label: fig-baresoil-region
+#| fig-cap: "Verdeling van percentage naakte bodem per telronde per
+#|  landbouwregio per jaar. De regio's zijn gesorteerd volgens gemiddelde
+#|  percentage van laag naar hoog over alle jaren. R1: 01/04–20/04,
+#|  R2: 21/04–10/05, R3: 11/05–10/06, R4: 21/06–15/07."
+#| fig-height: 12.5
+#| fig-width: 8
+p_baresoil_region <- lapply(
+  perc_bare_soil_data,
+  plot_bare_soil,
+  by = "region"
+)
+
+# Combine plots
+cowplot::plot_grid(
+  p_baresoil_region$ndvi, p_baresoil_region$bsi,
+  ncol = 1,
+  labels = c("A.", "B."),
+  label_size = 20,
+  label_fontface = "bold",
+  scale = c(0.95, 0.95)
+)
+```
+
+```{r}
+#| label: fig-baresoil-stratum
+#| fig-cap: "Verdeling van percentage naakte bodem per telronde per
+#|  stratum per jaar. De strata zijn gesorteerd volgens gemiddelde
+#|  percentage van laag naar hoog over alle jaren."
+#| fig-height: 12.5
+#| fig-width: 8
+p_baresoil_stratum <- lapply(
+  perc_bare_soil_data,
+  plot_bare_soil,
+  by = "stratum"
+)
+
+# Combine plots
+cowplot::plot_grid(
+  p_baresoil_stratum$ndvi, p_baresoil_stratum$bsi,
+  ncol = 1,
+  labels = c("A.", "B."),
+  label_size = 20,
+  label_fontface = "bold",
+  scale = c(0.95, 0.95)
+)
 ```

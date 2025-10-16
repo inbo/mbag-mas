@@ -25,13 +25,13 @@ autoqmd_prepare <- function(
   page_break   = NULL,
   quiet = FALSE
 ) {
-  child_files <- autoqmd_generate_children(
+  child_files <- autoqmd_generate_children( # nolint: object_usage_linter
     ...,
     template = template,
     child_dir = child_dir
   )
 
-  autoqmd_insert_includes(
+  autoqmd_insert_includes( # nolint: object_usage_linter
     qmd_file = qmd_file,
     child_files = child_files,
     start_marker = start_marker,
