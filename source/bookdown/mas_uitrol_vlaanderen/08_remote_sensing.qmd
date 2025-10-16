@@ -737,14 +737,17 @@ perc_bare_soil_data <- lapply(vec, function(i) {
            perc_bare_soil = perc_bare_soil / 100) %>%
     arrange(year, pointid, period) %>%
     mutate(regio_lab = paste("de", regio),
-           openheid_lab = past("in", openheid_klasse),
-           sbp_lab = paste(sbp, "SBP-gebied"))
+           openheid_lab = openheid_klasse,
+           sbp_lab = paste(sbp, "SBP-gebied"),
+           period_lab = paste("telronde", gsub("R", "", period)))
 })
 ```
 
-Per telpunt werd het percentage naakte bodem berekend voor elke MAS-telperiode in elk jaar. Alle patronen zijn gelijkaardig voor berekeningen op basis van NDVI en BSI en zijn gelijkaardig tussen de jaren.
+Per telpunt werd het percentage naakte bodem berekend voor elke MAS-telperiode in elk jaar. Meeste patronen zijn gelijkaardig voor berekeningen op basis van NDVI en BSI en zijn gelijkaardig tussen de jaren.
 
-In telperiode vier is het percentage naakte bodem duidelijk lager dan in de ander periodes. Tussen de landbouwregio's zien we kleine verschillen (@fig-baresoil-region). `r describe_summary_tables(perc_bare_soil_data, "regio_lab")`
+In telperiode vier is het percentage naakte bodem duidelijk lager dan in de ander periodes. `r describe_summary_tables(perc_bare_soil_data, "period_lab")`
+
+Tussen de landbouwregio's zien we kleine verschillen (@fig-baresoil-region). `r describe_summary_tables(perc_bare_soil_data, "regio_lab")`
 
 In @fig-baresoil-stratum vergelijken we per stratum.
 Voor openheid landschap zien we een verschil. `r describe_summary_tables(perc_bare_soil_data, "openheid_lab")`
