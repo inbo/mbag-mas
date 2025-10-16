@@ -117,10 +117,14 @@ modified_mapping <- function(data_df) {
         "MBAG", "MAS", .data$dwc_eventDate, .data$dwc_locationID, sep = ":"
       ),
       dwc_class = ifelse(.data$raw_soortgrp == 2, "Aves", "Mammalia"),
-      dwc_taxonID = paste(
-        "euring",
-        formatC(.data$raw_soortnr, width = 5, format = "d", flag = "0"),
-        sep = ":"
+      dwc_taxonID = ifelse(
+        .data$raw_soortgrp == 2,
+        paste(
+          "euring",
+          formatC(.data$raw_soortnr, width = 5, format = "d", flag = "0"),
+          sep = ":"
+        ),
+        as.character(.data$raw_soortnr)
       ),
       dwc_occurrenceStatus = ifelse(.data$dwc_organismQuantity > 0,
                                     "Present", "Absent"),
