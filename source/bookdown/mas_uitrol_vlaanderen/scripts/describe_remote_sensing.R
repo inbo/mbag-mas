@@ -10,8 +10,8 @@ describe_trend_table <- function(
   require("dplyr")
 
   df %>%
-    mutate(y = year) %>%
-    group_by(year) %>%
+    mutate(y = .data$year) %>%
+    group_by(.data$year) %>%
     group_map(~{
       data_year <- .x
 

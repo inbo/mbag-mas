@@ -209,7 +209,7 @@ plot_trend_by_crop <- function(df, order_levels, .f = median, prob = 0.25) {
     arrange(.data$gwsgrp_h_short, .data$year, .data$monthday_date) %>%
     group_by(.data$gwsgrp_h_short, .data$year) %>%
     summarise(
-      trend_raw = paste0(rle(cover)$values, collapse = " → "),
+      trend_raw = paste0(rle(.data$cover)$values, collapse = " → "),
       trend = factor(
         case_when(
           trend_raw == "onbedekt → bedekt" ~ "toename bedekking",
@@ -292,7 +292,11 @@ plot_bare_soil <- function(df, by) {
   if (by == "region") {
     df %>%
       mutate(
-        regio = fct_reorder(factor(.data$regio), .data$perc_bare_soil, mean)
+        regio = forcats::fct_reorder(
+          factor(.data$regio),
+          .data$perc_bare_soil,
+          mean
+        )
       ) %>%
       ggplot(aes(x = .data$regio, y = .data$perc_bare_soil)) +
       geom_boxplot() +
@@ -305,7 +309,11 @@ plot_bare_soil <- function(df, by) {
   } else if (by == "stratum") {
     df %>%
       mutate(
-        regio = fct_reorder(factor(.data$stratum), .data$perc_bare_soil, mean)
+        regio = forcats::fct_reorder(
+          factor(.data$stratum),
+          .data$perc_bare_soil,
+          mean
+        )
       ) %>%
       ggplot(aes(x = .data$period, y = .data$perc_bare_soil)) +
       geom_boxplot(aes(fill = .data$stratum)) +

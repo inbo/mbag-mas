@@ -478,6 +478,7 @@ years <- 2022:2024
 
 # Helper to read parcel data for one year
 read_parcels_year <- function(year) {
+  require("dplyr")
   require("rlang")
 
   gpkg_path <- file.path(
@@ -486,8 +487,8 @@ read_parcels_year <- function(year) {
     sprintf("Landbouwgebruikspercelen_%d.gpkg", year)
   )
 
-  st_read(gpkg_path, quiet = TRUE) %>%
-    st_drop_geometry() %>%
+  sf::st_read(gpkg_path, quiet = TRUE) %>%
+    sf::st_drop_geometry() %>%
     rename_with(tolower) %>%
     mutate(year = year,
            ref_id = as.numeric(.data$ref_id))
@@ -736,7 +737,7 @@ perc_bare_soil_data <- lapply(vec, function(i) {
            perc_bare_soil = perc_bare_soil / 100) %>%
     arrange(year, pointid, period) %>%
     mutate(regio_lab = paste("de", regio),
-           openheid_lab = openheid_klasse,
+           openheid_lab = past("in", openheid_klasse),
            sbp_lab = paste(sbp, "SBP-gebied"))
 })
 ```
@@ -751,7 +752,10 @@ Voor binnen versus buiten SBP-gebied is er geen opvallend verschil. `r describe_
 
 ```{r}
 #| label: fig-baresoil-region
-#| fig-cap: "gesorteerd volgens gemiddelde"
+#| fig-cap: "Verdeling van percentage naakte bodem per telronde per
+#|  landbouwregio per jaar. De regio's zijn gesorteerd volgens gemiddelde
+#|  percentage van laag naar hoog over alle jaren. R1: 01/04–20/04,
+#|  R2: 21/04–10/05, R3: 11/05–10/06, R4: 21/06–15/07."
 #| fig-height: 12.5
 #| fig-width: 8
 p_baresoil_region <- lapply(
@@ -773,7 +777,9 @@ cowplot::plot_grid(
 
 ```{r}
 #| label: fig-baresoil-stratum
-#| fig-cap: "..."
+#| fig-cap: "Verdeling van percentage naakte bodem per telronde per
+#|  stratum per jaar. De strata zijn gesorteerd volgens gemiddelde
+#|  percentage van laag naar hoog over alle jaren."
 #| fig-height: 12.5
 #| fig-width: 8
 p_baresoil_stratum <- lapply(
