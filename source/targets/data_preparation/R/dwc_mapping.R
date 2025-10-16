@@ -24,8 +24,11 @@ spatial_mapping <- function(data_df) {
     # Convert to WGS 84 decimal coordinates
     st_transform(4326) %>%
     mutate(
-      dwc_decimalLatitude = round(st_coordinates(.data$raw_geometry)[, 2], 5),
-      dwc_decimalLongitude = round(st_coordinates(.data$raw_geometry)[, 1], 5),
+      # Round coordinates to 10 cm
+      dwc_verbatimLatitude = round(dwc_verbatimLatitude, 1),
+      dwc_verbatimLongitude = round(dwc_verbatimLatitude, 1),
+      dwc_decimalLatitude = round(st_coordinates(.data$raw_geometry)[, 2], 6),
+      dwc_decimalLongitude = round(st_coordinates(.data$raw_geometry)[, 1], 6),
       dwc_geodeticDatum = "EPSG:4326"
     ) %>%
     st_drop_geometry()
@@ -148,8 +151,13 @@ modified_mapping <- function(data_df) {
             0.1 * .data$raw_distance2plot
           )
         ),
-      dwc_organismQuantityType = ifelse(.data$raw_wrntype == "0",
-                                        "individuals", "breeding pairs")
+      dwc_organismQuantityType = case_when(
+        .data$raw_wrntype %in% c("0", "1") ~ "individual",
+        .data$raw_wrntype %in% c("2") ~ "pair",
+        .data$raw_wrntype %in% c("3", "4") ~ "territorium",
+        .data$raw_wrntype %in% c("5") ~ "nest"
+      ),
+      dwc_lifeStage = ifelse(.data$raw_wrntype == "0", "", "adult")
     ) %>%
     select(
       -"raw_oid",
@@ -305,7 +313,7 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
 
     # --- Occurrence ---
     "recordedBy",
-    "organismQuantity", "organismQuantityType",
+    "organismQuantity", "organismQuantityType", "lifeStage",
     "occurrenceStatus", "behavior", "verbatimBehavior",
     "occurrenceRemarks",
 
