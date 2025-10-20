@@ -205,7 +205,7 @@ list(
       what = rbind.data.frame,
       args = c(crs_pipeline, make.row.names = FALSE)
     ) %>%
-      filter(jaar <= 2024)
+      filter(jaar <= 2024) # !! UP TILL THIS YEAR !!
   ),
   # Add non-MAS data to MAS data for GBIF publication
   # Column is_mas_sample indicates whether the observation is part of the
@@ -214,7 +214,7 @@ list(
     name = complete_data_gbif_raw,
     command = rbind_all_mas_data(
       sample_data = mas_data_clean %>%
-        filter(jaar <= 2024),
+        filter(jaar <= 2024), # !! UP TILL THIS YEAR !!
       extra_data = complete_data_crs
     )
   ),
