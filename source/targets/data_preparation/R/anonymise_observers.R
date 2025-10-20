@@ -18,8 +18,9 @@ anonymise_observers <- function(
   lookup_path,
   prefix
 ) {
-  library("dplyr")
-  library("readr")
+  require("dplyr")
+  require("readr")
+  require("rlang")
 
   if (!observer_col %in% names(data)) {
     stop(paste("Column", observer_col, "not found in data."))
