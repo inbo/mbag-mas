@@ -267,13 +267,12 @@ add_species_aggregates <- function(
   aggregate_taxa_df <- taxonomy_df %>%
     filter(.data[[vernacular_name_col]] %in% names(manual_taxon_list)) %>%
     mutate(
-      scientificName = recode(.data[[vernacular_name_col]],
-                              !!!manual_taxon_list)
+      verbatimIdentification = recode(.data[[vernacular_name_col]],
+                                      !!!manual_taxon_list)
     ) %>%
     mutate(
-      authorship = NA,
-      key = NA,
-      rank = "species aggregate"
+      identificationQualifier = "species aggregate",
+      verbatimTaxonRank = "species aggregate"
     )
 
   # Get other taxa
@@ -343,6 +342,7 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
     # --- Taxonomy ---
     "taxonID", "scientificName", "scientificNameAuthorship",
     "scientificNameID", "taxonRank", "nomenclaturalCode",
+    "verbatimIdentification", "identificationQualifier", "verbatimTaxonRank",
     "kingdom", "phylum", "class", "order", "family", "genus", "species"
   )
   out_df <- out_df[, col_order]
