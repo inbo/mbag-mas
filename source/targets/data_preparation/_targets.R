@@ -297,6 +297,15 @@ list(
     )
   ),
 
+  # Blur data
+  tar_target(
+    name = dwc_mapping_final_blurred,
+    command = blur_occurrences(
+      occ_df = dwc_mapping_final,
+      utm_grid_path = file.path(mbag_dir, "data", "utm_roosters", "utm5_vl.shp")
+    )
+  ),
+
   # Write out GBIF datasets
   # Split datasets
   tar_target(
