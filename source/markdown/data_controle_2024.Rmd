@@ -1458,7 +1458,7 @@ Het gaat om de volgende stappen (zie ook `dwc_mapping_mas.Rmd` voor een uitgebre
 - Dataset preparatie
   - We verwijderen kolommen gerelateerd aan steekproef
   - We voegen de finale data samen met MAS data die buiten MBAG valt
-    - De kolom `is_mas_sample` duidt aan of ze bij MBAG - MAS horen of niet
+    - De kolom `occurrenceRemarks` duidt aan of ze bij MBAG - MAS horen of niet
   - We passen kolomnamen aan
 - Ruimtelijke verwerking
   - We verwijderen de Amersfoord coördinaten
@@ -1478,6 +1478,21 @@ Het gaat om de volgende stappen (zie ook `dwc_mapping_mas.Rmd` voor een uitgebre
 - Nabewerking dataset
   - Selectie relevante kolommen
   - Sorteren van kolommen
+  - Opsplitsen in event en occurrences datasets
+  - Opsplitsen in open en vervaagde datasets
+  
+We vullen de volgende waarden in:
+
+| brc | behavior | organismQuantityType | lifeStage |
+| ----- | :---- | :---- | :---- |
+| 0 | Individual or group not bound to a location | individual |  |
+| 1 | Adult individual in breeding habitat | individual | adult |
+| 2 | Pair in breeding habitat | pair | adult |
+| 3 | Territorial behaviour | territorium | adult |
+| 4 | Nest-indicating behaviour | territorium | adult |
+| 5 | Nest discovery | nest | adult |
+
+We anonymiseren de namen van de tellers.
 
 ## Taxon matching
 
@@ -1523,7 +1538,8 @@ species_agg_data %>%
            taxon_data$dwc_vernacularName[is.na(taxon_data$scientificName)] |
            dwc_vernacularName == "Krakeend") %>%
   select(dwc_vernacularName, dwc_class, family, genus, species, scientificName,
-         rank, key) %>%
+         rank, key, verbatimIdentification, identificationQualifier,
+         verbatimTaxonRank) %>%
   arrange(dwc_vernacularName) %>%
   kable()
 ```
@@ -1536,14 +1552,15 @@ soorten_wet_mas <- read_csv2(file.path("data", "SOVON", "soorten_wet_mas.csv"))
 test_wet_names <- manual_taxon_data %>%
   select("dwc_taxonID", "dwc_vernacularName", "scientificName",
          "authorship") %>%
-  mutate(authorship = trimws(authorship)) %>%
+  mutate(authorship = trimws(authorship),
+         euring = as.numeric(sub("^0+", "", sub("^euring:", "", dwc_taxonID)))) %>%
   rowwise() %>%
   mutate(
     scientificName = gsub(authorship, "", scientificName),
     dwc_scientificName = trimws(gsub("\\(.*?\\)", "", scientificName))
   ) %>%
   select(-"authorship", -"scientificName") %>%
-  left_join(soorten_wet_mas, by = join_by("dwc_taxonID" == "euring")) %>%
+  left_join(soorten_wet_mas, by = join_by(euring)) %>%
   select(-"groepnr")
 ```
 
