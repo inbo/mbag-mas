@@ -1552,8 +1552,10 @@ soorten_wet_mas <- read_csv2(file.path("data", "SOVON", "soorten_wet_mas.csv"))
 test_wet_names <- manual_taxon_data %>%
   select("dwc_taxonID", "dwc_vernacularName", "scientificName",
          "authorship") %>%
-  mutate(authorship = trimws(authorship),
-         euring = as.numeric(sub("^0+", "", sub("^euring:", "", dwc_taxonID)))) %>%
+  mutate(
+    authorship = trimws(authorship),
+    euring = as.numeric(sub("^0+", "", sub("^euring:", "", dwc_taxonID)))
+  ) %>%
   rowwise() %>%
   mutate(
     scientificName = gsub(authorship, "", scientificName),
