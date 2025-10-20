@@ -164,7 +164,7 @@ modified_mapping <- function(data_df) {
       dwc_lifeStage = ifelse(.data$raw_wrntype == "0", "", "adult")
     ) %>%
     # Anynomise observers
-    anonymise_observers(
+    anonymise_observers( # nolint: object_usage_linter
       observer_col = "dwc_recordedBy",
       lookup_path = file.path("data", "observer_lookup.csv"),
       prefix = "observer:"
