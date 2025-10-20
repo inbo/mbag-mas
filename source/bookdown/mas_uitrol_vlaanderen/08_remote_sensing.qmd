@@ -58,16 +58,14 @@ De data werden geanalyseerd in R [@R] met RStudio [@RStudio].
 We beschrijven onder andere seizoenspatronen van bedekking op percelen.
 Daarbij onderscheiden we verschillende trends in de evolutie van de indicatorwaarde ten opzichte van hun drempelwaardes (NDVI: naakte bodem onder 0,3; BSI: naakte bodem boven 0.021) (@fig-trend-methods):
 
-- **Altijd onbedekt** – de indicator wijst gedurende de volledige periode op weinig vegetatie\
-  (onder (NDVI) of boven (BSI) de drempelwaarde)
-- **Altijd bedekt** – de indicator blijft constant boven (NDVI) of onder (BSI) de drempelwaarde
-- **Toename bedekking** – een overgang van onbedekt naar bedekt
-- **Afname bedekking** – een overgang van bedekt naar onbedekt
-- **Paraboolvorm** – eerst een toename, daarna een afname in bedekking\
-  (onbedekt → bedekt → onbedekt)
-- **Omgekeerde parabool** – eerst een afname, daarna een toename in bedekking\
-  (bedekt → onbedekt → bedekt)
-- **Complex patroon** – meer dan twee wisselingen tussen bedekt en onbedekt
+- **Altijd onbedekt** – de indicator wijst gedurende de volledige periode, of met hoogstens één tijdstap van bedekking, op weinig vegetatie (onder (NDVI) of boven (BSI) de drempelwaarde)
+- **Altijd bedekt** – de indicator blijft gedurende de volledige periode, of met hoogstens één tijdstap van onbedekking, boven (NDVI) of onder (BSI) de drempelwaarde
+- **Toename bedekking** – een overgang van onbedekt naar bedekt, waarbij minstens twee opeenvolgende tijdstappen bedekt zijn
+- **Afname bedekking** – een overgang van bedekt naar onbedekt, waarbij minstens twee opeenvolgende tijdstappen onbedekt zijn
+- **Paraboolvorm** – eerst een toename, daarna een afname in bedekking
+(onbedekt → bedekt → onbedekt), met een voldoende lange fase van bedekking (minstens 2 tijdstappen)
+- **Omgekeerde parabool** – eerst een afname, daarna een toename in bedekking (bedekt → onbedekt → bedekt), met een voldoende lange fase van bedekking
+- **Complex patroon** – andere, meer complexe reeksen met meerdere wisselingen tussen bedekt en onbedekt
 
 Merk op dat deze trendindeling afhankelijk is van de lengte van de tijdsreeks en van de gekozen drempelwaarde voor naakte bodem.
 Een tijdsreeks kan bijvoorbeeld een parabolisch verloop vertonen, maar net onder de drempelwaarde blijven, waardoor ze in onze interpretatie als een constant patroon wordt beschouwd.
@@ -346,7 +344,7 @@ time_series_data <- lapply(time_series_csv, function(df) {
   names(df) <- tolower(names(df)) # Lower column names
 
   # Output dataframe
-  df %>%
+  out_df <- df %>%
     # Create date variables
     mutate(
       day = day(time),
@@ -368,23 +366,32 @@ time_series_data <- lapply(time_series_csv, function(df) {
     arrange(pointid, year, time) %>%
     group_by(ref_id, year) %>%
     mutate(
-      trend_raw = paste0(rle(naakte_bodem)$values, collapse = " → "),
-      trend = factor(
-        case_when(
-          trend_raw == "onbedekt → bedekt" ~ "toename bedekking",
-          trend_raw == "bedekt → onbedekt" ~ "afname bedekking",
-          trend_raw == "onbedekt → bedekt → onbedekt" ~ "parabool",
-          trend_raw == "bedekt → onbedekt → bedekt" ~ "omgekeerde parabool",
-          trend_raw == "bedekt" ~ "altijd bedekt",
-          trend_raw == "onbedekt" ~ "altijd onbedekt",
-          TRUE ~ "complex patroon"
-        ),
-        levels = c("altijd bedekt", "altijd onbedekt", "toename bedekking",
-                   "afname bedekking", "parabool", "omgekeerde parabool",
-                   "complex patroon")
-      )
+      # Run-length encoding per time series
+      rle_vals = list(rle(naakte_bodem))
     ) %>%
     ungroup()
+
+  # Calculate trends
+  trend_df <- out_df %>%
+    distinct(rle_vals) %>%
+    mutate(
+      trend = map_chr(rle_vals, categorise_trends)
+    )
+
+  # Join trends
+  left_join(out_df, trend_df, by = join_by(rle_vals)) %>%
+    arrange(pointid, ref_id, time) %>%
+    mutate(
+      # Factor with consistent order for plotting
+      trend = factor(
+        trend,
+        levels = c(
+          "altijd bedekt", "altijd onbedekt", "toename bedekking",
+          "afname bedekking", "parabool", "omgekeerde parabool",
+          "complex patroon"
+        )
+      )
+    )
 })
 
 # Use description function for each indicator
@@ -521,11 +528,21 @@ trend_data <- lapply(time_series_data_full, function(df) {
   }
 
   df %>%
-    distinct(pointid, ref_id, year, trend_raw, trend, gwsnam_h, gwsgrp_h) %>%
+    distinct(pointid, ref_id, year, trend, gwsnam_h, gwsgrp_h) %>%
+    mutate(complexity = case_when(
+      grepl("altijd", trend) ~ 0,
+      grepl("bedekking", trend) ~ 1,
+      grepl("parabool", trend) ~ 2,
+      TRUE ~ 3
+    )) %>%
+    group_by(gwsgrp_h) %>%
+    mutate(prop_complexity = sum(complexity > 1) / n()) %>%
+    ungroup() %>%
     mutate(
-      gwsgrp_h = fct_reorder(gwsgrp_h, as.numeric(trend), mean),
+      gwsgrp_h = fct_reorder(gwsgrp_h, prop_complexity),
       indicator = indicator,
-    )
+    ) %>%
+    select(-complexity, -prop_complexity)
 })
 ```
 
@@ -656,7 +673,35 @@ ggplot(pairwise_summary_plot, aes(x = trend, y = comp_bsi)) +
   )
 ```
 
-In tweede plaats bekijken we de trends per landgebruik (gewasgroep). Ook tussen verschillende gewasgroepen zien we verschillen in complexiteit van trends (@fig-trendtype-gewasgroep). Zowel voor NDVI als BSI volgen de trends hoofdzakelijk een eenvoudig patroon in Grasland, Fruit en Noten, Water, Voedergewassen, Houtachtige gewassen en Overige gewassen (bv. altijd bedekt/onbedekt or toename/afname bedekking) en complexere patronen voor Maïs, Groenten, kruiden en sierplanten, Aardappelen en Vlas en Hennep (bv. paraboolvormig of complexer). Suikerbieten en Granen, zaden en peulvruchten zitten er wat tussenin. Deze patronen zijn enkel voor BSI in 2022 niet zo opvallend. In ander jaren zien we wel sterke gelijkenis in de verhoudingen van trendtypes per gewasgroep. Net als eerder zien we ook hier dat BSI hogere proporties heeft aan complexere trendtypes.
+```{r, eval=FALSE}
+trend_data$ndvi %>%
+  mutate(complexity = case_when(
+    grepl("altijd", trend) ~ 0,
+    grepl("bedekking", trend) ~ 1,
+    grepl("parabool", trend) ~ 2,
+    TRUE ~ 3
+  )) %>%
+  group_by(gwsgrp_h) %>%
+  summarise(prop_complexity = sum(complexity > 1) / n(),
+            complex = prop_complexity > 0.5) %>%
+  ungroup() %>%
+  arrange(prop_complexity)
+
+trend_data$bsi %>%
+  mutate(complexity = case_when(
+    grepl("altijd", trend) ~ 0,
+    grepl("bedekking", trend) ~ 1,
+    grepl("parabool", trend) ~ 2,
+    TRUE ~ 3
+  )) %>%
+  group_by(gwsgrp_h) %>%
+  summarise(prop_complexity = sum(complexity > 1) / n(),
+            complex = prop_complexity > 0.5) %>%
+  ungroup() %>%
+  arrange(prop_complexity)
+```
+
+In tweede plaats bekijken we de trends per landgebruik (gewasgroep). Ook tussen verschillende gewasgroepen zien we verschillen in complexiteit van trends (@fig-trendtype-gewasgroep). Zowel voor NDVI als BSI volgen de trends hoofdzakelijk een eenvoudig patroon in Grasland, Fruit en Noten, Water, Voedergewassen, Houtachtige gewassen, Overige gewassen en Granen, zaden en peulvruchten (bv. altijd bedekt/onbedekt of toename/afname bedekking) en complexere patronen voor Suikerbieten, Maïs, Aardappelen, Groenten, kruiden en sierplanten en Vlas en Hennep (bv. paraboolvormig of complexer). Deze patronen zijn enkel voor BSI in 2022 niet zo opvallend. In andere jaren zien we wel sterke gelijkenis in de verhoudingen van trendtypes per gewasgroep. Net als eerder zien we ook hier dat BSI hogere proporties heeft aan complexere trendtypes.
 
 @fig-trend-gewasgroep-ndvi toont de gemiddelde trends voor NDVI (mediaan en interkwartielbereik) per gewasgroep in meer detail (geordend als in @fig-trendtype-gewasgroep). @fig-trend-gewasgroep-ndvi voor BSI. De trends vertonen voor beide indicatoren gelijkaardig patronen. Ook zijn de patronen per gewasgroep gelijkaardig voor elk jaar. De trendtypes verschillen soms wel tussen de jaren omdat de indexwaarden soms net wel of net niet de drempelwaarde overschrijden.
 
@@ -665,7 +710,7 @@ In tweede plaats bekijken we de trends per landgebruik (gewasgroep). Ook tussen 
 #| fig-cap: "Verschillende types trends van een indicatorwaarde per gewasgroep
 #|  per jaar (A: NDVI, B: BSI).
 #|  De gewasgroepen zijn gerangschikt van links naar rechts volgens toenemende
-#|  complexiteit aan trends.
+#|  complexiteit aan trends (over alle jaren).
 #|  Het aantal percelen is aangegeven per gewasgroep boven elke staaf."
 #| fig-height: 12.5
 #| fig-width: 8

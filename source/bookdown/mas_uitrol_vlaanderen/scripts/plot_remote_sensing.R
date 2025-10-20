@@ -133,6 +133,63 @@ plot_trendtype_by_crop <- function(df) {
 }
 
 
+#' Categorise seasonal vegetation cover trends
+#'
+#' This function classifies a sequence of vegetation cover states
+#' (encoded as `"bedekt"` or `"onbedekt"`) into robust trend categories
+#' based on the run-length encoding (RLE) of the time series.
+#' It extends the basic classification by allowing small deviations
+#' (one-time-step anomalies) while still recognising overall trends.
+#'
+#' @param rle_obj A run-length encoded object (output of [rle()])
+#'   containing the elements:
+#'   \itemize{
+#'     \item `values` – a character vector of states (`"bedekt"` / `"onbedekt"`)
+#'     \item `lengths` – integer vector of run lengths for each state
+#'   }
+categorise_trends <- function(rle_obj) {
+  require("dplyr")
+
+  vals <- rle_obj$values # nolint: object_usage_linter
+  lens <- rle_obj$lengths # nolint: object_usage_linter
+
+  seq_has <- function(obj, value, minrun = 2) {
+    any(obj$values == value & obj$lengths >= minrun)
+  }
+
+  long_bed <- seq_has(rle_obj, "bedekt", 2) # nolint: object_usage_linter
+  long_onb <- seq_has(rle_obj, "onbedekt", 2) # nolint: object_usage_linter
+
+  case_when(
+    # Always or almost always one state
+    all(vals == "onbedekt") |
+      (sum(vals == "bedekt") == 1 &
+         all(lens[vals == "bedekt"] == 1)) ~ "altijd onbedekt",
+
+    all(vals == "bedekt") |
+      (sum(vals == "onbedekt") == 1 &
+         all(lens[vals == "onbedekt"] == 1)) ~ "altijd bedekt",
+
+    # Simple increase or decrease (require 2+ steps)
+    identical(vals, c("onbedekt", "bedekt")) &
+      long_bed ~ "toename bedekking",
+
+    identical(vals, c("bedekt", "onbedekt")) &
+      long_onb ~ "afname bedekking",
+
+    # Paraboolvorm (long enough middle segment)
+    identical(vals, c("onbedekt", "bedekt", "onbedekt")) &
+      long_bed ~ "parabool",
+
+    identical(vals, c("bedekt", "onbedekt", "bedekt")) &
+      long_onb ~ "omgekeerde parabool",
+
+    # Default fallback
+    TRUE ~ "complex patroon"
+  )
+}
+
+
 #' Plot seasonal trends by crop group
 #'
 #' Generates a facetted time series plot of either NDVI or BSI values per crop
@@ -148,7 +205,6 @@ plot_trendtype_by_crop <- function(df) {
 #' `median`).
 #' @param prob Numeric value between 0 and 0.5 specifying the quantile for the
 #' lower and upper bounds of the ribbon (default 0.25).
-
 plot_trend_by_crop <- function(df, order_levels, .f = median, prob = 0.25) {
   require("dplyr")
   require("ggplot2")
@@ -188,10 +244,14 @@ plot_trend_by_crop <- function(df, order_levels, .f = median, prob = 0.25) {
       cover = ifelse(exec(rule, .data$center_val, cutoff),
                      "onbedekt", "bedekt"),
       # Insert line break at the third space
-      gwsgrp_h_short = gsub(
-        pattern = "^((?:\\S+\\s){3})",  # match first two spaces
-        replacement = "\\1\n",
-        x = as.character(.data$gwsgrp_h)
+      gwsgrp_h_short = ifelse(
+        .data$gwsgrp_h == "Houtachtige gewassen",
+        "Houtachtige\ngewassen",
+        gsub(
+          pattern = "^((?:\\S+\\s){3})",  # match first two spaces
+          replacement = "\\1\n",
+          x = as.character(.data$gwsgrp_h)
+        )
       )
     )
 
@@ -209,22 +269,12 @@ plot_trend_by_crop <- function(df, order_levels, .f = median, prob = 0.25) {
     arrange(.data$gwsgrp_h_short, .data$year, .data$monthday_date) %>%
     group_by(.data$gwsgrp_h_short, .data$year) %>%
     summarise(
-      trend_raw = paste0(rle(.data$cover)$values, collapse = " → "),
-      trend = factor(
-        case_when(
-          trend_raw == "onbedekt → bedekt" ~ "toename bedekking",
-          trend_raw == "bedekt → onbedekt" ~ "afname bedekking",
-          trend_raw == "onbedekt → bedekt → onbedekt" ~ "parabool",
-          trend_raw == "bedekt → onbedekt → bedekt" ~ "omgekeerde parabool",
-          trend_raw == "bedekt" ~ "altijd bedekt",
-          trend_raw == "onbedekt" ~ "altijd onbedekt",
-          TRUE ~ "complex patroon"
-        ),
-        levels = c("altijd bedekt", "altijd onbedekt", "toename bedekking",
-                   "afname bedekking", "parabool", "omgekeerde parabool",
-                   "complex patroon")
-      ),
+      # Run-length encoding per time series
+      rle_vals = list(rle(cover)),
       .groups = "drop"
+    ) %>%
+    mutate(
+      trend = purrr::map_chr(.data$rle_vals, categorise_trends)
     ) %>%
     select("year", "gwsgrp_h_short", "trend")
 
