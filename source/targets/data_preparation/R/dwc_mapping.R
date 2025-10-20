@@ -25,8 +25,8 @@ spatial_mapping <- function(data_df) {
     st_transform(4326) %>%
     mutate(
       # Round coordinates to 10 cm
-      dwc_verbatimLatitude = round(dwc_verbatimLatitude, 1),
-      dwc_verbatimLongitude = round(dwc_verbatimLatitude, 1),
+      dwc_verbatimLatitude = round(.data$dwc_verbatimLatitude, 1),
+      dwc_verbatimLongitude = round(.data$dwc_verbatimLatitude, 1),
       dwc_decimalLatitude = round(st_coordinates(.data$raw_geometry)[, 2], 6),
       dwc_decimalLongitude = round(st_coordinates(.data$raw_geometry)[, 1], 6),
       dwc_geodeticDatum = "EPSG:4326"
@@ -89,9 +89,6 @@ unchanged_mapping <- function(data_df) {
       "dwc_locationID"         = "raw_plotnaam",
       "dwc_verbatimBehavior"   = "raw_wrntype_omschrijving",
       "dwc_occurrenceRemarks"  = "raw_is_mas_sample"
-    ) %>%
-    mutate(
-      dwc_identifiedBy = .data$dwc_recordedBy
     )
 
   return(out_df)
@@ -106,6 +103,7 @@ modified_mapping <- function(data_df) {
 
   out_df <- data_df %>%
     mutate(
+      # Add IDs
       dwc_occurrenceID = paste("MBAG", "MAS", .data$raw_oid, sep = ":"),
       dwc_parentEventID = ifelse(
         is.na(.data$raw_periode_in_jaar),
@@ -116,6 +114,7 @@ modified_mapping <- function(data_df) {
       dwc_eventID = paste(
         "MBAG", "MAS", .data$dwc_eventDate, .data$dwc_locationID, sep = ":"
       ),
+      # Taxonomic information
       dwc_class = ifelse(.data$raw_soortgrp == 2, "Aves", "Mammalia"),
       dwc_taxonID = ifelse(
         .data$raw_soortgrp == 2,
@@ -126,6 +125,7 @@ modified_mapping <- function(data_df) {
         ),
         as.character(.data$raw_soortnr)
       ),
+      # Observation information
       dwc_occurrenceStatus = ifelse(.data$dwc_organismQuantity > 0,
                                     "Present", "Absent"),
       dwc_behavior = case_when(
@@ -162,6 +162,15 @@ modified_mapping <- function(data_df) {
         .data$raw_wrntype %in% c("5") ~ "nest"
       ),
       dwc_lifeStage = ifelse(.data$raw_wrntype == "0", "", "adult")
+    ) %>%
+    # Anynomise observers
+    anonymise_observers(
+      observer_col = "dwc_recordedBy",
+      lookup_path = file.path("data", "observer_lookup.csv"),
+      prefix = "observer:"
+    ) %>%
+    mutate(
+      dwc_identifiedBy = .data$dwc_recordedBy
     ) %>%
     select(
       -"raw_oid",
