@@ -8,7 +8,9 @@ split_dwc_event_occ <- function(df) {
     "continent", "country", "countryCode", "stateProvince", "locationID",
     "verbatimLatitude", "verbatimLongitude", "verbatimCoordinateSystem",
     "verbatimSRS", "decimalLatitude", "decimalLongitude",
-    "geodeticDatum", "coordinateUncertaintyInMeters"
+    "geodeticDatum", "coordinateUncertaintyInMeters",
+    # For blurred dataset
+    "informationWithheld", "dataGeneralizations", "georeferenceRemarks"
   )
 
   # Occurrence file: metadata + event + occurrence + identification + taxonomy
