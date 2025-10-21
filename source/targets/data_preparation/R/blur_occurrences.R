@@ -125,7 +125,7 @@ blur_occurrences <- function(
   occ_out <- occ_blurred %>%
     filter(
       !(tolower(.data$vernacularName) %in% tolower(vulnerable_species) &
-          .data$eventDate < embargo_date)
+          .data$eventDate >= embargo_date)
     )
 
   return(occ_out)
