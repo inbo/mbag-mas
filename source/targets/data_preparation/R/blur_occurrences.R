@@ -1,10 +1,10 @@
 blur_occurrences <- function(
   occ_df,
   utm_grid_path,
-  blur_time = 2,
-  embargo_time = 2,
-  embargo_species = c("Grauwe Kiekendief", "Bruine Kiekendief",
-                      "Patrijs", "Kwartelkoning")
+  blur_years = 2,
+  embargo_years = 2,
+  vulnerable_species = c("Grauwe Kiekendief", "Bruine Kiekendief",
+                         "Patrijs", "Kwartelkoning")
 ) {
   require("sf")
   require("dplyr")
@@ -45,11 +45,19 @@ blur_occurrences <- function(
 
 
   # Identify occurrences to blur
+  blur_year <- year(Sys.time()) - blur_years
+  blur_date <- as_date(paste(blur_year, 1, 1, "-"))
+
   occs_to_blur <- occ_df %>%
     st_as_sf(coords = c("verbatimLongitude", "verbatimLatitude"),
              crs = 31370) %>%
-    filter(grepl("nest", .data$verbatimBehavior, ignore.case = TRUE) |
-             tolower(.data$vernacularName) %in% tolower(embargo_species)) %>%
+    filter(
+      # Blur nesting information for duration of blur_years
+      (grepl("nest", .data$verbatimBehavior, ignore.case = TRUE) &
+         .data$eventDate >= blur_date) |
+        # Blur all information of vulnerable_species
+        tolower(.data$vernacularName) %in% tolower(vulnerable_species)
+    ) %>%
     st_join(utm_grid, join = st_within, left = FALSE) %>%
     st_drop_geometry() %>%
     select(
@@ -110,13 +118,13 @@ blur_occurrences <- function(
     select(-contains("_centroid"), -"coordinate_uncertainty", -"spat_res",
            -"is_blurred")
 
-  # Remove recent occurrences of vulnerable species
-  embargo_year <- year(Sys.time()) - 2
+  # Remove recent occurrences of vulnerable_species
+  embargo_year <- year(Sys.time()) - embargo_years
   embargo_date <- as_date(paste(embargo_year, 1, 1, "-"))
 
   occ_out <- occ_blurred %>%
     filter(
-      !(tolower(.data$vernacularName) %in% tolower(embargo_species) &
+      !(tolower(.data$vernacularName) %in% tolower(vulnerable_species) &
           .data$eventDate < embargo_date)
     )
 
