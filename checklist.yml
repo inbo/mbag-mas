@@ -23,3 +23,6 @@ spelling:
   - source/targets/mas_steekproef_za_kp_po/targets_steekproef_za_kp_po.Rmd
   - source/R
   - data
+  other:
+    en-GB:
+    - source/targets/data_preparation/R/anonymise_observers.R

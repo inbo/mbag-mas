@@ -37,6 +37,9 @@ lapply(list.files(file.path(target_dir, "R"), full.names = TRUE), source)
 source(file.path(mbag_dir, "source", "R", "predatoren_f.R"))
 source(file.path(mbag_dir, "source", "R", "taxon_mapping.R"))
 
+# Global variables
+publication_year <- 2024
+
 
 # Download MAS pipeline data
 
@@ -205,7 +208,7 @@ list(
       what = rbind.data.frame,
       args = c(crs_pipeline, make.row.names = FALSE)
     ) %>%
-      filter(jaar <= 2024) # !! UP TILL THIS YEAR !!
+      filter(jaar <= publication_year) # !! UP TILL THIS YEAR !!
   ),
   # Add non-MAS data to MAS data for GBIF publication
   # Column is_mas_sample indicates whether the observation is part of the
@@ -214,7 +217,7 @@ list(
     name = complete_data_gbif_raw,
     command = rbind_all_mas_data(
       sample_data = mas_data_clean %>%
-        filter(jaar <= 2024), # !! UP TILL THIS YEAR !!
+        filter(jaar <= publication_year), # !! UP TILL THIS YEAR !!
       extra_data = complete_data_crs
     )
   ),
@@ -293,14 +296,41 @@ list(
       taxonomy_df = map_species_aggregates
     )
   ),
-  # Write out GBIF dataset
+
+  # Blur data
   tar_target(
-    name = create_dwc_csv,
-    command = create_output_csv(
-      x = dwc_mapping_final,
-      file = "mas_data_vlaanderen",
-      suffix_by = "year",
-      path = file.path(mbag_dir, "output", "datasets")
+    name = dwc_mapping_final_blurred,
+    command = blur_occurrences(
+      occ_df = dwc_mapping_final,
+      utm_grid_path = file.path(mbag_dir, "data", "utm_roosters", "utm5_vl.shp")
+    )
+  ),
+
+  # Write out GBIF datasets
+  # Split datasets
+  tar_target(
+    name = split_datasets,
+    command = split_dwc_event_occ(dwc_mapping_final)
+  ),
+  tar_target(
+    name = split_datasets_blurred,
+    command = split_dwc_event_occ(dwc_mapping_final_blurred)
+  ),
+  # Write datasets
+  tar_target(
+    name = create_ipt_csv,
+    command = write_ipt_csv(
+      split_list = split_datasets,
+      path = file.path(mbag_dir, "output", "datasets", publication_year),
+      suffix = "_mas"
+    )
+  ),
+  tar_target(
+    name = create_ipt_csv_blurred,
+    command = write_ipt_csv(
+      split_list = split_datasets_blurred,
+      path = file.path(mbag_dir, "output", "datasets", publication_year),
+      suffix = "_blur_mas"
     )
   )
 )

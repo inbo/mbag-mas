@@ -926,7 +926,7 @@ mas_data_clean %>%
                       "vreemde_soorten_mastellingen_2025.csv"))
 ```
 
-We schrijven ook soorten weg die minder dan 10x gezien zijn.
+We schrijven ook soorten weg die minder dan 10 maal gezien zijn.
 
 ```{r}
 mas_data_clean %>%
