@@ -26,7 +26,7 @@ spatial_mapping <- function(data_df) {
     mutate(
       # Round coordinates to 10 cm
       dwc_verbatimLatitude = round(.data$dwc_verbatimLatitude, 1),
-      dwc_verbatimLongitude = round(.data$dwc_verbatimLatitude, 1),
+      dwc_verbatimLongitude = round(.data$dwc_verbatimLongitude, 1),
       dwc_decimalLatitude = round(st_coordinates(.data$raw_geometry)[, 2], 6),
       dwc_decimalLongitude = round(st_coordinates(.data$raw_geometry)[, 1], 6),
       dwc_geodeticDatum = "EPSG:4326"
@@ -306,7 +306,8 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
   # Remove raw columns
   out_df <- taxon_core_final %>%
     select(-starts_with("raw_")) %>%
-    rename_with(~ gsub("dwc\\_", "", .x))
+    rename_with(~ gsub("dwc\\_", "", .x)) %>%
+    arrange(.data$eventDate, .data$locationID, .data$identifiedBy)
 
   # Select and sort columns
   col_order <- c(
