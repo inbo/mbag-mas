@@ -1492,7 +1492,7 @@ We vullen de volgende waarden in:
 | 4 | Nest-indicating behaviour | territorium | adult |
 | 5 | Nest discovery | nest | adult |
 
-We anonymiseren de namen van de tellers.
+We anonimiseren de namen van de tellers.
 
 ## Taxon matching
 
