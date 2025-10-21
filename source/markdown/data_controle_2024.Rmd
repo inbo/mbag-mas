@@ -1504,11 +1504,11 @@ Coördinaten:
 ```{r}
 decimalplaces <- function(x) {
   if ((x %% 1) != 0) {
-      nchar(
-        strsplit(sub('0+$', '', as.character(x)), ".", fixed = TRUE)[[1]][[2]]
-      )
+    nchar(
+      strsplit(sub("0+$", "", as.character(x)), ".", fixed = TRUE)[[1]][[2]]
+    )
   } else {
-      return(0)
+    return(0)
   }
 }
 ```
@@ -1835,7 +1835,7 @@ vuln_summary <- check_vuln_full %>%
 # 3 Check: all vulnerable species (blurred set) are older than 2 years
 check_vuln_old_full <- dwc_mapping_final_blurred %>%
   filter(tolower(vernacularName) %in% tolower(vulnerable_species),
-          eventDate >= embargo_date)
+         eventDate >= embargo_date)
 
 vuln_old_summary <- check_vuln_old_full %>%
   summarise(
