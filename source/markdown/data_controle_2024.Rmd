@@ -1499,7 +1499,7 @@ dwc_mapping_final <- tar_read("dwc_mapping_final", store = targets_store) %>%
   filter(year <= 2024)
 ```
 
-Coordinaten:
+Coördinaten:
 
 ```{r}
 decimalplaces <- function(x) {
@@ -1525,7 +1525,7 @@ dwc_mapping_final %>%
   kable()
 ```
 
-ok, maximum 6 cijfers na de komma
+> ok, maximum 6 cijfers na de komma
 
 ```{r}
 dwc_mapping_final %>%
@@ -1539,7 +1539,7 @@ dwc_mapping_final %>%
   kable()
 ```
 
-ok, maximum 1 cijfer na de komma
+> ok, maximum 1 cijfer na de komma
 
 `taxonID`:
 
@@ -1550,7 +1550,7 @@ dwc_mapping_final %>%
   kable()
 ```
 
-ziet er goed uit
+> ziet er goed uit
 
 Tellers:
 
@@ -1575,7 +1575,7 @@ dwc_mapping_final %>%
   nrow() == nrow(observer_lookup)
 ```
 
-ok
+> ok
 
 Gedrag:
 
@@ -1585,7 +1585,7 @@ dwc_mapping_final %>%
   kable()
 ```
 
-ok
+> ok
 
 ## Taxon matching
 
@@ -1761,7 +1761,7 @@ Hoe ziet de dataset er uit?
 glimpse(dwc_mapping_final)
 ```
 
-> ok?
+> ok
 
 Overige opmerkingen en vragen:
 
@@ -1772,3 +1772,124 @@ Overige opmerkingen en vragen:
   - ...
 
 > Zouden afwezigheden correct zijn? Er is geen streeplijst gebruikt, dus eerder niet.
+
+Vervaging:
+
+```{r}
+dwc_mapping_final_blurred <- tar_read("dwc_mapping_final_blurred",
+                                      store = targets_store)
+```
+
+We have 3 more columns.
+
+```{r}
+setdiff(names(dwc_mapping_final_blurred), names(dwc_mapping_final))
+```
+
+```{r}
+vulnerable_species <- c("Grauwe Kiekendief", "Bruine Kiekendief", "Patrijs",
+                        "Kwartelkoning")
+embargo_date <- as_date(paste(year(Sys.time()) - 2, 1, 1, "-"))
+
+# 1 Check: all broedcode 4–5 occurrences are blurred within last 2 years
+check_broed_full <- dwc_mapping_final %>%
+  filter(grepl("nest", verbatimBehavior, ignore.case = TRUE),
+         !tolower(vernacularName) %in% tolower(vulnerable_species),
+         eventDate >= embargo_date) %>%
+  left_join(dwc_mapping_final_blurred, by = "occurrenceID",
+            suffix = c("_orig", "_blurred")) %>%
+  mutate(
+    blurred = verbatimLatitude_orig != verbatimLatitude_blurred &
+      verbatimLongitude_orig != verbatimLongitude_blurred &
+      decimalLatitude_orig != decimalLatitude_blurred &
+      decimalLongitude_orig != decimalLongitude_blurred
+  )
+
+broed_summary <- check_broed_full %>%
+  summarise(
+    total = n(),
+    blurred = sum(blurred, na.rm = TRUE),
+    ok = total == blurred
+  )
+
+# 2 Check: all vulnerable species are blurred
+check_vuln_full <- dwc_mapping_final %>%
+  filter(tolower(vernacularName) %in% tolower(vulnerable_species),
+         eventDate < embargo_date) %>%
+  left_join(dwc_mapping_final_blurred, by = "occurrenceID",
+            suffix = c("_orig", "_blurred")) %>%
+  mutate(
+    blurred = verbatimLatitude_orig != verbatimLatitude_blurred &
+      verbatimLongitude_orig != verbatimLongitude_blurred &
+      decimalLatitude_orig != decimalLatitude_blurred &
+      decimalLongitude_orig != decimalLongitude_blurred
+  )
+
+vuln_summary <- check_vuln_full %>%
+  summarise(
+    total = n(),
+    blurred = sum(blurred, na.rm = TRUE),
+    ok = total == blurred
+  )
+
+# 3 Check: all vulnerable species (blurred set) are older than 2 years
+check_vuln_old_full <- dwc_mapping_final_blurred %>%
+  filter(tolower(vernacularName) %in% tolower(vulnerable_species),
+          eventDate >= embargo_date)
+
+vuln_old_summary <- check_vuln_old_full %>%
+  summarise(
+    total = n(),
+    ok = total == 0
+  )
+
+# Combine results into one summary data frame
+blur_embargo_summary <- tibble::tibble(
+  check = c(
+    "Broedcodes 4–5 vervaagd (≤2 jaar oud)",
+    "Kwetsbare soorten vervaagd",
+    "Kwetsbare soorten ouder dan 2 jaar"
+  ),
+  total = c(broed_summary$total, vuln_summary$total, vuln_old_summary$total),
+  passed = c(broed_summary$blurred, vuln_summary$blurred, 0),
+  ok = c(broed_summary$ok, vuln_summary$ok, vuln_old_summary$ok)
+)
+
+blur_embargo_summary %>%
+  kable()
+```
+
+Alle waarnemingen met broedcodes 4-5 moeten 2 jaar vervaagd zijn.
+
+```{r}
+check_broed_full %>%
+  filter(!blurred | is.na(blurred)) %>%
+  select(naam = vernacularName_orig, year = year_orig,
+         contains("latitude"), contains("longitude")) %>%
+  kable()
+```
+
+> De eerste waarneming ligt toevallig op dezelfde `decimalLatitude` en de tweede op dezelfde `verbatimLatitude`. Waarom bij eerste `verbatimLatitude` niet en in tweede `decimalLatitude` niet? Dit is omwille van de projectie.
+
+Alle waarnemingen van kwetsbare soorten moeten vervaagd zijn.
+
+```{r}
+check_vuln_full %>%
+  filter(!blurred | is.na(blurred)) %>%
+  select(naam = vernacularName_orig, year = year_orig,
+         contains("latitude"), contains("longitude")) %>%
+  nrow() == 0
+```
+
+> ok
+
+Alle waarnemingen van kwetsbare soorten moeten ouder dan twee jaar zijn.
+
+```{r}
+check_vuln_old_full %>%
+  select(naam = vernacularName, year,
+         contains("latitude"), contains("longitude")) %>%
+  nrow() == 0
+```
+
+> ok
