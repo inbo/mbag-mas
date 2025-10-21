@@ -1453,7 +1453,7 @@ mas_data_clean %>%
 # Controle data publicatie
 
 De finale dataset wordt verder in de pipeline klaar gemaakt voor publicatie op GBIF.
-Het gaat om de volgende stappen (zie ook `dwc_mapping_mas.Rmd` voor de initiële exploratie).
+Zie ook `dwc_mapping_mas.Rmd` voor de initiële exploratie.
 
 ## Dataset preparatie
 
@@ -1491,6 +1491,101 @@ Het gaat om de volgende stappen (zie ook `dwc_mapping_mas.Rmd` voor de initiële
 | 5 | Nest discovery | nest | adult |
 
 <!-- spell-check: ignore:end -->
+
+```{r}
+darwincore_mapping <- tar_read("darwincore_mapping", store = targets_store) %>%
+  filter(dwc_year <= 2024)
+dwc_mapping_final <- tar_read("dwc_mapping_final", store = targets_store) %>%
+  filter(year <= 2024)
+```
+
+Coordinaten:
+
+```{r}
+decimalplaces <- function(x) {
+  if ((x %% 1) != 0) {
+      nchar(
+        strsplit(sub('0+$', '', as.character(x)), ".", fixed = TRUE)[[1]][[2]]
+      )
+  } else {
+      return(0)
+  }
+}
+```
+
+```{r}
+dwc_mapping_final %>%
+  rowwise() %>%
+  mutate(ndecim_lat = decimalplaces(decimalLatitude),
+         ndecim_long = decimalplaces(decimalLongitude),
+         ndecim_max = sum(ndecim_lat, ndecim_long)) %>%
+  ungroup() %>%
+  slice_max(ndecim_max, with_ties = FALSE) %>%
+  select(ndecim_lat, ndecim_long, decimalLatitude, decimalLongitude) %>%
+  kable()
+```
+
+ok, maximum 6 cijfers na de komma
+
+```{r}
+dwc_mapping_final %>%
+  rowwise() %>%
+  mutate(ndecim_lat = decimalplaces(verbatimLatitude),
+         ndecim_long = decimalplaces(verbatimLongitude),
+         ndecim_max = sum(ndecim_lat, ndecim_long)) %>%
+  ungroup() %>%
+  slice_max(ndecim_max, with_ties = FALSE) %>%
+  select(ndecim_lat, ndecim_long, verbatimLatitude, verbatimLongitude) %>%
+  kable()
+```
+
+ok, maximum 1 cijfer na de komma
+
+`taxonID`:
+
+```{r}
+dwc_mapping_final %>%
+  filter(vernacularName %in% c("Haas", "Veldleeuwerik")) %>%
+  distinct(vernacularName, taxonID, scientificName) %>%
+  kable()
+```
+
+ziet er goed uit
+
+Tellers:
+
+```{r}
+observer_lookup <- read_csv(
+  file.path(mbag_dir, "source", "targets", "data_preparation",
+            "data", "observer_lookup.csv"),
+  show_col_types = FALSE
+)
+dwc_mapping_final %>%
+  count(recordedBy, identifiedBy) %>%
+  full_join(observer_lookup, by = join_by(recordedBy == observer_id)) %>%
+  head() %>%
+  kable()
+```
+
+Hebben we evenveel unieke waarden in de dataset als in de tabel?
+
+```{r}
+dwc_mapping_final %>%
+  count(recordedBy, identifiedBy) %>%
+  nrow() == nrow(observer_lookup)
+```
+
+ok
+
+Gedrag:
+
+```{r}
+dwc_mapping_final %>%
+  distinct(behavior, verbatimBehavior, organismQuantityType, lifeStage) %>%
+  kable()
+```
+
+ok
 
 ## Taxon matching
 
@@ -1623,13 +1718,6 @@ Ziet er over het algemeen ok uit.
 
 Na DwC mapping bekomen we de finale dataset.
 We bekijken hier of er nog tekortkomingen zijn.
-
-```{r}
-darwincore_mapping <- tar_read("darwincore_mapping", store = targets_store) %>%
-  filter(dwc_year <= 2024)
-dwc_mapping_final <- tar_read("dwc_mapping_final", store = targets_store) %>%
-  filter(year <= 2024)
-```
 
 Welke kolommen zitten niet in de dataset?
 
