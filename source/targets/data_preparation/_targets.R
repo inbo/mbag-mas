@@ -312,6 +312,10 @@ list(
     name = split_datasets,
     command = split_dwc_event_occ(dwc_mapping_final)
   ),
+  tar_target(
+    name = split_datasets_blurred,
+    command = split_dwc_event_occ(dwc_mapping_final_blurred)
+  ),
   # Write datasets
   tar_target(
     name = create_ipt_csv,
@@ -319,6 +323,14 @@ list(
       split_list = split_datasets,
       path = file.path(mbag_dir, "output", "datasets", publication_year),
       suffix = "_mas"
+    )
+  ),
+  tar_target(
+    name = create_ipt_csv_blurred,
+    command = write_ipt_csv(
+      split_list = split_datasets_blurred,
+      path = file.path(mbag_dir, "output", "datasets", publication_year),
+      suffix = "_blur_mas"
     )
   )
 )
