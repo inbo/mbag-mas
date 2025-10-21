@@ -1615,6 +1615,10 @@ Ziet er over het algemeen ok uit.
     - kwetsbare soorten alle waarnemingen --> opheffing nooit
   - Embargo
     - data kwetsbare soorten niet vrijgeven voor 2 jaar (telkens vanaf 1 januari)
+  - Nieuwe kolommen in vervaagde dataset
+    - `informationWithheld`: "original locations available upon request" <!-- spell-check: ignore -->
+    - `dataGeneralizations`: "UTM 5 km"
+    - `georeferenceRemarks`: "coordinates are centroid of used grid square" <!-- spell-check: ignore -->
 - Opsplitsen in "event" en "occurrence" datasets
 
 Na DwC mapping bekomen we de finale dataset.
