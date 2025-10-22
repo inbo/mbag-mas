@@ -115,14 +115,30 @@ De selectie, ontwikkeling en verwerking van deze verklarende variabelen ligt nie
 
 ## Statistische analyse {#sec-stap-7}
 
-- (@fig-analyse-plan, stap 7)
-- zie pilootproject @langeraert2025pilot
-- distance sampling
-  - detectiekans
-  - kaarten
-- correlaties verklarende variabelen
-- trendberekeningen
-- JSDMs
+Uiteindelijk kunnen we overgaan naar de effectieve analyses (@fig-analyse-plan, stap 7). De analyses werden al uitgebreid getest en besproken voor het Nederlandse meetnet [@roodbergen2011] en de pilootfase [@langeraert2025pilot]. We beperken ons hier tot een overzicht van een algemeen kader waarmee zowel beleidsmonitoring (macroschaal) als beheermonitoring (mesoschaal) kunnen worden uitgevoerd [@langeraert2025pilot]. In de beleidsmonitoring staat het opvolgen van langetermijntrends in populaties en gemeenschappen centraal op het niveau van het Vlaamse landbouwgebied. We onderzoeken generieke, regiobrede effecten van landbouw- en natuurbeleid op akkerfauna. Bij de beheermonitoring toetsen we de effectiviteit van uitgevoerde maatregelen op gebiedsniveau door prioritaire gebieden te vergelijken met controlegebieden.
+
+**1. Detectie- en densiteitsmodellering**
+
+Omdat detectiekansen niet constant zijn tussen soorten, habitats of jaren, wordt detectieprobabiliteit expliciet geschat met behulp van distance sampling.
+De resulterende detectiecorrecties worden gebruikt om densiteiten te schatten per soort, gebied of stratum. Dit laat toe om robuuste vergelijkingen te maken tussen gebieden of strata. In @sec-densiteitsschattingen overlopen we de methodiek en resultaten voor 2023-2025 [zie ook @langeraert2025pilot, paragraaf 4.4.1].
+
+**2. Ruimtelijke modellering en verspreidingskaarten**
+
+De uit de detectieanalyse afgeleide detectiekansen kunnen vervolgens worden gebruikt voor spatiale modellen om voorspellende verspreidingskaarten te maken die de ruimtelijke patronen in de relatieve abundantie of dichtheid van doelsoorten weergeven. Deze kaarten kunnen worden gebruikt om effecten van beheer of identificatie van kerngebieden visueel te evalueren.
+
+**3. Relaties met verklarende variabelen**
+
+De verkregen dichtheden en abundantiegegevens kunnen worden gekoppeld aan verklarende variabelen om inzicht te krijgen in de factoren die de aanwezigheid en trend van soorten bepalen. Dit maakt het mogelijk om de effectiviteit van specifieke beheermaatregelen te kwantificeren, rekening houdend met omgevingskenmerken zoals teeltstructuur of landschapselementen. Analyses onderscheiden enerzijds prioritaire gebieden (SBP-gebieden) van controlegebieden, en anderzijds variatie binnen telcirkels op basis van variabelen zoals oppervlakte aan beheermaatregelen of dominante hoofdteelten.
+Deze variabelen kunnen zowel ruimtelijk als temporeel variëren (@sec-stap-4), waardoor de verklarende kracht van de analyses zal toenemen naarmate langere tijdsreeksen beschikbaar komen.
+
+**4. Trendanalyses van soorten**
+
+Naast gerichte analyses per gebied of maatregel kunnen ook jaarlijkse indexwaarden per soort worden berekend om trends in de tijd te volgen. Deze trends kunnen op een hoger niveau worden samengevat in multisoortenindices, die een geïntegreerde maat bieden voor veranderingen in agrobiodiversiteit. De methodiek sluit aan bij die van de Algemene Broedvogelmonitoring Vlaanderen (ABV) [@onkelinx2025abv].
+Een vergelijking met ABV werd reeds besproken in het rapport van de pilootfase [@langeraert2025pilot, paragraaf 6.2], waarin werd aanbevolen om beide meetnetten gedurende minstens vijf jaar parallel op te volgen en de tijdsreeksen periodiek te vergelijken.
+
+**5. Toekomstige mogelijkheden en verkennend onderzoek**
+
+De hierboven beschreven analyses vormen het kernkader voor beleids- en beheermonitoring op macro- en mesoschaal. Tegelijk kunnen de resultaten signalen opleveren voor aanvullend, verklarend onderzoek op microniveau. Dergelijk verkennend onderzoek richt zich typisch op specifieke kennishiaten of hypothesen, bijvoorbeeld om lokale oorzaken van trends of beheerresponsen nader te onderzoeken. Dit gebeurt doorgaans op kleine schaal, gedurende één of enkele jaren, en kan worden aangevuld met aanvullende gegevensbronnen (zoals veldmetingen, remote sensing of agrarische beheergegevens). Zo vormt het MAS niet enkel een monitoringsinstrument, maar ook een onderbouw voor gerichte, hypothesegedreven ecologische studies binnen het landbouwgebied van Vlaanderen.
 
 ```{r}
 #| label: fig-analyse-plan
