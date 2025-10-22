@@ -1,4 +1,4 @@
-# Bijlagen bij densiteitsschattingen akkervogels
+# Bijlagen bij densiteitsschattingen akkervogels {#sec-bijlage-densiteiten}
 
 Bijlagen bij @sec-densiteitsschattingen. In 2023 werden enkel nog maar de Leemstreek en de Zandleemstreek bezocht. Voor Graspieper, Grutto, Scholekster en Wulp hadden we in dat jaar niet genoeg data om de detectiekans en bijgevolg de densiteiten betrouwbaar te schatten. Voor deze soorten rapporteren we enkel de resultaten vanaf 2024. Schattingen voor de Weidestreek zijn enkel beschikbaar op regioniveau en niet op stratumniveau.
 
@@ -53,15 +53,14 @@ strata_sf %>%
 #| fig-cap: "Steekproefkader MAS per stratum. Binnen regio's kan er overlap zijn
 #|  tussen strata."
 #| fig-width: 8
-#| fig-height: 12
+#| fig-height: 10
 # Split data by region
 plots <- strata_sf %>%
   mutate(stratum = paste(openheid, sbp, sep = " - ")) %>%
   split(.$regio) %>%
   lapply(function(d) {
     ggplot(d) +
-      geom_sf(aes(fill = stratum),
-              colour = alpha("black", 0.2), linewidth = 0.05) +
+      geom_sf(aes(fill = stratum), colour = alpha("black", 0)) +
       labs(title = unique(d$regio), fill = "") +
       theme_minimal() +
       theme(
@@ -74,7 +73,7 @@ plots <- strata_sf %>%
   })
 
 # Identify which are the wide regions
-wide_regions <- c("Leemstreek", "Zandleemstreek")
+wide_regions <- c("Zandleemstreek", "Leemstreek")
 
 # Split into two groups
 plots_narrow <- plots[setdiff(names(plots), wide_regions)]
@@ -108,8 +107,7 @@ region_sf %>%
 #| fig-cap: "Steekproefkader MAS per regio."
 region_sf %>%
   ggplot() +
-  geom_sf(aes(fill = regio),
-          colour = alpha("black", 0.2), linewidth = 0.05) +
+  geom_sf(aes(fill = regio), colour = alpha("black", 0)) +
   labs(fill = "") +
   theme(legend.position = "bottom")
 ```
