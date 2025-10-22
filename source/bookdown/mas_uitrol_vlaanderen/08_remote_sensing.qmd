@@ -846,3 +846,5 @@ cowplot::plot_grid(
   scale = c(0.95, 0.95)
 )
 ```
+
+## Discussie {#sec-remote-sensing-discussie}
