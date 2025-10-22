@@ -115,7 +115,7 @@ De selectie, ontwikkeling en verwerking van deze verklarende variabelen ligt nie
 
 ## Statistische analyse {#sec-stap-7}
 
-Uiteindelijk kunnen we overgaan naar de effectieve analyses (@fig-analyse-plan, stap 7). De analyses werden al uitgebreid getest en besproken voor het Nederlandse meetnet [@roodbergen2011] en de pilootfase [@langeraert2025pilot]. We beperken ons hier tot een overzicht van een algemeen kader waarmee zowel beleidsmonitoring (macroschaal) als beheermonitoring (mesoschaal) kunnen worden uitgevoerd [@langeraert2025pilot]. In de beleidsmonitoring staat het opvolgen van langetermijntrends in populaties en gemeenschappen centraal op het niveau van het Vlaamse landbouwgebied. We onderzoeken generieke, regiobrede effecten van landbouw- en natuurbeleid op akkerfauna. Bij de beheermonitoring toetsen we de effectiviteit van uitgevoerde maatregelen op gebiedsniveau door prioritaire gebieden te vergelijken met controlegebieden.
+Uiteindelijk kunnen we overgaan naar de effectieve analyses (@fig-analyse-plan, stap 7). De analyses werden al uitgebreid getest en besproken voor het Nederlandse meetnet [@roodbergen2011] en de pilootfase [@langeraert2025pilot]. We beperken ons hier tot een overzicht van een algemeen kader waarmee zowel beleidsmonitoring (macroschaal) als beheermonitoring (mesoschaal) kunnen worden uitgevoerd [@langeraert2025pilot]. In de beleidsmonitoring staat het opvolgen van langetermijntrends in populaties en gemeenschappen centraal op het niveau van het Vlaamse landbouwgebied. Bij de beheermonitoring toetsen we de effectiviteit van uitgevoerde maatregelen op gebiedsniveau door prioritaire gebieden te vergelijken met controlegebieden.
 
 **1. Detectie- en densiteitsmodellering**
 
