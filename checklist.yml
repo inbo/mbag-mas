@@ -27,3 +27,11 @@ spelling:
   other:
     en-GB:
     - source/bookdown/mas_uitrol_vlaanderen/00_abstract.Rmd
+    - source/bookdown/mas_uitrol_vlaanderen/scripts/autoqmd_cleanup.R
+    - source/bookdown/mas_uitrol_vlaanderen/scripts/autoqmd_generate_children.R
+    - source/bookdown/mas_uitrol_vlaanderen/scripts/autoqmdinsert_includes.R
+    - source/bookdown/mas_uitrol_vlaanderen/scripts/describe_remote_sensing.R
+    - source/bookdown/mas_uitrol_vlaanderen/scripts/plot_remote_sensing.R
+    - source/bookdown/mas_uitrol_vlaanderen/scripts/summarise_detection_patterns.R
+    - source/bookdown/mas_uitrol_vlaanderen/scripts/summarise_region_densities.R
+    - source/bookdown/mas_uitrol_vlaanderen/scripts/summarise_stratum_densities.R

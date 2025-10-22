@@ -10,8 +10,8 @@
 #' @param data A data frame with the following required columns:
 #'   \describe{
 #'     \item{regio}{Region (stratum name).}
-#'     \item{openheid}{Factor with values \code{"OL"} or \code{"HOL"}.}
-#'     \item{sbp}{Factor with values \code{"binnen"} or \code{"buiten"}
+#'     \item{openheid}{Factor with values `"OL"` or `"HOL"`.}
+#'     \item{sbp}{Factor with values `"binnen"` or `"buiten"`
 #'           (inside/outside SBP).}
 #'     \item{estimate}{Estimated density (numeric).}
 #'     \item{lcl}{Lower confidence limit (numeric).}
@@ -21,8 +21,8 @@
 #'   }
 #'   Optionally, if threshold comparisons are available:
 #'   \describe{
-#'     \item{effect}{Categorical: \code{"boven"}, \code{"onder"}, or
-#'           \code{"geen sign.\nverschil"}.}
+#'     \item{effect}{Categorical: `"boven"`, `"onder"`, or
+#'           `"geen sign.\nverschil"`.}
 #'     \item{threshold}{Numeric streefwaarde (policy target).}
 #'   }
 #'

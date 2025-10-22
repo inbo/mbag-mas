@@ -98,9 +98,13 @@ Voor het fitten van de detectiecurve (en dus het schatten van de detectiekans) g
 Binnen het MAS werken we met punttransecten met een telradius $w = 300$ m.
 De gemiddelde detectiekans $p$ binnen deze straal wordt berekend als
 
+<!-- spell-check: ignore:start -->
+
 $$
 p = \int_0^w \frac{2r}{w^2} g(r; \boldsymbol{\theta}) \, dr
 $$
+
+<!-- spell-check: ignore:end -->
 
 met $g(r; \boldsymbol{\theta})$ de detectiefunctie afhankelijk van de gemeten afstanden $r$ en $\boldsymbol{\theta}$ de te schatten parameters (@fig-distance-methode).
 De term $\frac{2r}{w^2}$ corrigeert voor de cirkelvormige oppervlakte rondom het telpunt.
@@ -123,28 +127,45 @@ We beschouwen twee veelgebruikte detectiefuncties:
 
 * **Half-normaal:**
 
-  $$
-  g(r) = \exp\left(-\frac{r^2}{2\sigma^2}\right)
-  $$
+<!-- spell-check: ignore:start -->
+
+$$
+g(r) = \exp\left(-\frac{r^2}{2\sigma^2}\right)
+$$
+
+<!-- spell-check: ignore:end -->
+
 * **Hazard-rate:**
 
-  $$
-  g(r) = 1 - \exp\left(-\left(\frac{r}{\sigma}\right)^{-b}\right)
-  $$
+<!-- spell-check: ignore:start -->
+
+$$
+g(r) = 1 - \exp\left(-\left(\frac{r}{\sigma}\right)^{-b}\right)
+$$
+
+<!-- spell-check: ignore:end -->
 
 waarbij $\sigma$ (scale-parameter) eventueel afhankelijk is van covariaten $\mathbf{z}$
 
 De geschatte abundantie in het bemonsterde gebied $a(s)$ van stratum $s$ is
 
+<!-- spell-check: ignore:start -->
+
 $$
 \hat{N}_C(s) = \sum_{i=1}^n \frac{c_i(s)}{\hat{p}(\mathbf{z}_i)}
 $$
 
+<!-- spell-check: ignore:end -->
+
 met $c\_i(s)$ de clustergrootte (in ons geval overal gelijk aan 1) van waarneming $i$. Dit wordt opgeschaald naar de totale oppervlakte $A(s)$ van stratum $s$ als
+
+<!-- spell-check: ignore:start -->
 
 $$
 \hat{N}(s) = \frac{A(s)}{a(s)} \hat{N}_C(s)
 $$
+
+<!-- spell-check: ignore:end -->
 
 en de densiteit volgt als $\hat{N}(s)/A(s)$.
 

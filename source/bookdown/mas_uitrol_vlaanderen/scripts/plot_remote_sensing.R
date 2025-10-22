@@ -270,7 +270,7 @@ plot_trend_by_crop <- function(df, order_levels, .f = median, prob = 0.25) {
     group_by(.data$gwsgrp_h_short, .data$year) %>%
     summarise(
       # Run-length encoding per time series
-      rle_vals = list(rle(cover)),
+      rle_vals = list(rle(.data$cover)),
       .groups = "drop"
     ) %>%
     mutate(
