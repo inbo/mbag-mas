@@ -1,8 +1,3 @@
----
-output: html_document
-editor_options: 
-  chunk_output_type: console
----
 # Bijlagen bij densiteitsschattingen akkervogels
 
 Bijlagen bij @sec-densiteitsschattingen. In 2023 werden enkel nog maar de Leemstreek en de Zandleemstreek bezocht. Voor Graspieper, Grutto, Scholekster en Wulp hadden we in dat jaar niet genoeg data om de detectiekans en bijgevolg de densiteiten betrouwbaar te schatten. Voor deze soorten rapporteren we enkel de resultaten vanaf 2024. Schattingen voor de Weidestreek zijn enkel beschikbaar op regioniveau en niet op stratumniveau.
@@ -58,14 +53,15 @@ strata_sf %>%
 #| fig-cap: "Steekproefkader MAS per stratum. Binnen regio's kan er overlap zijn
 #|  tussen strata."
 #| fig-width: 8
-#| fig-height: 8
+#| fig-height: 12
 # Split data by region
 plots <- strata_sf %>%
   mutate(stratum = paste(openheid, sbp, sep = " - ")) %>%
   split(.$regio) %>%
   lapply(function(d) {
     ggplot(d) +
-      geom_sf(aes(fill = stratum), colour = alpha("black", 0.2)) +
+      geom_sf(aes(fill = stratum),
+              colour = alpha("black", 0.2), linewidth = 0.05) +
       labs(title = unique(d$regio), fill = "") +
       theme_minimal() +
       theme(
@@ -94,6 +90,8 @@ final_plot &
   theme(legend.position = "bottom")
 ```
 
+\newpage
+
 ```{r}
 #| label: tbl-oppervlakte-regio
 #| tbl-cap: "Oppervlakte steekproefkader per regio."
@@ -110,7 +108,8 @@ region_sf %>%
 #| fig-cap: "Steekproefkader MAS per regio."
 region_sf %>%
   ggplot() +
-  geom_sf(aes(fill = regio), colour = alpha("black", 0.2)) +
+  geom_sf(aes(fill = regio),
+          colour = alpha("black", 0.2), linewidth = 0.05) +
   labs(fill = "") +
   theme(legend.position = "bottom")
 ```
