@@ -584,6 +584,16 @@ list(
       )),
       pattern = map(gam_data)
     ),
+    tar_target(
+      name = model_fit_smooth,
+      command = list(glmmTMB(
+        count ~ periode_in_jaar + s(x_plot, y_plot, bs = "tp") +
+          (1 | plotnaam) + (1 | stratum),
+        data = gam_data,
+        family = poisson()
+      )),
+      pattern = map(gam_data)
+    ),
 
     # Make predictions
     tar_target(
@@ -595,6 +605,17 @@ list(
         type = "response"
       ),
       pattern = map(model_fit),
+      iteration = "list"
+    ),
+    tar_target(
+      name = model_pred_smooth,
+      command = predict(
+        model_fit_smooth[[1]],
+        newdata = prediction_hexgrid_period[[1]] %>%
+          mutate(plotnaam = NA),
+        type = "response"
+      ),
+      pattern = map(model_fit_smooth),
       iteration = "list"
     )
   )

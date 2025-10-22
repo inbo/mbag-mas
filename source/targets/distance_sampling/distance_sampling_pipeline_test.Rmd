@@ -539,11 +539,11 @@ densities_region_target %>%
 ```
 
 # Spatiale predicties
-## Veldleeuwerik - 2023
+## Veldleeuwerik - 2024
 
 ```{r}
-params$year <- 2024
-params$species <- "Roodborsttapuit"
+params$year <- 2025
+params$species <- "Grasmus"
 ```
 
 We bereiden de data voor.
@@ -690,6 +690,16 @@ performance::check_model(fit_glmmtmb, check = "qq")
 performance::check_predictions(fit_glmmtmb, check_range = TRUE)
 ```
 
+```{r}
+fit_glmmtmb2 <- glmmTMB(
+  count ~ periode_in_jaar + s(x_plot, y_plot, bs = "tp") +
+    (1 | plotnaam) + (1 | stratum),
+  data = count_data_2023,
+  family = poisson()
+)
+performance::check_model(fit_glmmtmb2)
+```
+
 
 
 ```{r}
@@ -712,6 +722,14 @@ test <- brm(
   cores = nparallel,
   thin = thinning
 )
+
+pp_check(test, type = "bars", ndraws = 100)
+
+pp_check(test, group = "stratum", type = "bars_grouped",
+         ndraws = 100)
+
+pp_check(test, group = "periode_in_jaar", type = "bars_grouped",
+         ndraws = 100)
 ```
 
 
@@ -776,7 +794,7 @@ mapview::mapview(distinct(prediction_hexgrid, stratum, geometry),
 
 ```{r}
 preds <- predict(
-  fit_glmmtmb,
+  fit_glmmtmb2,
   newdata = prediction_hexgrid %>%
     mutate(plotnaam = NA),
   type = "response"
@@ -800,8 +818,9 @@ if ("openheid" %in% colnames(detprob_2023)) {
 pred_dens <- cbind(prediction_hexgrid, preds) %>%
   group_by(plotnaam, regio, openheid_klasse, sbp, stratum, geometry) %>%
   summarise(pred = max(preds), .groups = "drop") %>%
-  left_join(detprob_2023) %>%
+  #left_join(detprob_2023) %>%
   mutate(
+    estimate_p = 0.2017604,
     cirkelopp = pi * 300^2,
     ha_100 = 10^6,
     offset = (estimate_p * cirkelopp) / ha_100,
@@ -862,4 +881,146 @@ pred_dens %>%
     total_abundance = sum(pred_abu),
     total_density = sum(pred_dens) / n()
   )
+```
+
+```{r}
+count_df <- count_data_2023 %>%
+  slice_max(count, by = plotnaam, with_ties = FALSE) %>%
+  st_as_sf(coords = c("x_plot", "y_plot"), crs = 31370)
+count_presences <- count_data_2023 %>%
+  slice_max(count, by = plotnaam, with_ties = FALSE) %>%
+  filter(count > 0) %>%
+  st_as_sf(coords = c("x_plot", "y_plot"), crs = 31370) %>%
+  st_buffer(1000)
+count_absences <- count_data_2023 %>%
+  slice_max(count, by = plotnaam, with_ties = FALSE) %>%
+  filter(count == 0) %>%
+  st_as_sf(coords = c("x_plot", "y_plot"), crs = 31370) %>%
+  st_buffer(500)
+
+count_presences %>%
+  ggplot() +
+  geom_sf(aes(fill = count), colour = alpha("white", 0)) +
+  geom_sf(data = count_absences, aes(fill = count), colour = alpha("white", 0)) +
+  scale_fill_gradientn(colours = rainbow(5), limits = c(0, NA)) +
+  coord_sf(crs = 31370) +
+  labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha") +
+  theme(legend.position = "bottom")
+```
+
+```{r}
+pred_dens %>%
+  mutate(x = st_coordinates(st_centroid(geometry))[, 1],
+         y = st_coordinates(st_centroid(geometry))[, 2]) %>%
+  ggplot() +
+  geom_raster(aes(x = x, y = y, fill = pred_dens), colour = alpha("white", 0),
+              interpolate = TRUE) +
+  geom_sf(data = count_absences, aes(fill = count), colour = alpha("white", 0)) +
+  geom_sf(data = count_presences, aes(fill = count), colour = alpha("white", 0)) +
+  scale_fill_gradientn(colours = rainbow(5), limits = c(0, NA)) +
+  coord_sf(crs = 31370) +
+  labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha") +
+  theme(legend.position = "bottom")
+```
+
+
+```{r}
+pred_dens %>%
+  mutate(
+    x = st_coordinates(st_centroid(geometry))[, 1],
+    y = st_coordinates(st_centroid(geometry))[, 2]
+  ) %>%
+  ggplot() +
+  # Raster layer
+  geom_raster(aes(x = x, y = y, fill = pred_dens),
+              colour = NA, interpolate = TRUE) +
+  # Points with size proportional to count
+  geom_point(data = count_df %>% 
+               mutate(x = st_coordinates(geometry)[, 1],
+                      y = st_coordinates(geometry)[, 2]),
+             aes(x = x, y = y, size = count, fill = count),
+             shape = 21, colour = "black", alpha = 0.7) +
+  scale_fill_gradientn(colours = rainbow(5), limits = c(0, NA)) +
+  scale_size_continuous(range = c(1, 4)) +  # adjust min/max point size
+  coord_sf(crs = 31370) +
+  labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha", size = "Count") +
+  theme(legend.position = "bottom")
+```
+
+```{r}
+preds2 <- predict(
+  fit_glmmtmb,
+  newdata = prediction_hexgrid %>%
+    mutate(plotnaam = NA),
+  type = "response"
+)
+
+pred_dens2 <- cbind(prediction_hexgrid, preds2) %>%
+  group_by(plotnaam, regio, openheid_klasse, sbp, stratum, geometry) %>%
+  summarise(pred = max(preds2), .groups = "drop") %>%
+  #left_join(detprob_2023) %>%
+  mutate(
+    estimate_p = 0.2017604,
+    cirkelopp = pi * 300^2,
+    ha_100 = 10^6,
+    offset = (estimate_p * cirkelopp) / ha_100,
+    pred_abu = pred / estimate_p,
+    pred_dens = pred / offset
+  )
+```
+
+
+```{r}
+pred_dens2 %>%
+  mutate(
+    x = st_coordinates(st_centroid(geometry))[, 1],
+    y = st_coordinates(st_centroid(geometry))[, 2]
+  ) %>%
+  ggplot() +
+  # Raster layer
+  geom_raster(aes(x = x, y = y, fill = pred_dens),
+              colour = NA, interpolate = TRUE) +
+  # Points with size proportional to count
+  geom_point(data = count_df %>% 
+               mutate(x = st_coordinates(geometry)[, 1],
+                      y = st_coordinates(geometry)[, 2]),
+             aes(x = x, y = y, size = count, fill = count),
+             shape = 21, colour = "black", alpha = 0.7) +
+  scale_fill_gradientn(colours = rainbow(5), limits = c(0, NA)) +
+  scale_size_continuous(range = c(1, 4)) +  # adjust min/max point size
+  coord_sf(crs = 31370) +
+  labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha", size = "Count") +
+  theme(legend.position = "bottom")
+```
+
+without points
+
+```{r}
+pred_dens %>%
+  mutate(
+    x = st_coordinates(st_centroid(geometry))[, 1],
+    y = st_coordinates(st_centroid(geometry))[, 2]
+  ) %>%
+  ggplot() +
+  # Raster layer
+  geom_raster(aes(x = x, y = y, fill = pred_dens),
+              colour = NA, interpolate = TRUE) +
+  scale_fill_gradientn(colours = rainbow(5), limits = c(0, 14)) +
+  coord_sf(crs = 31370) +
+  labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha") +
+  theme(legend.position = "bottom")
+
+pred_dens2 %>%
+  mutate(
+    x = st_coordinates(st_centroid(geometry))[, 1],
+    y = st_coordinates(st_centroid(geometry))[, 2]
+  ) %>%
+  ggplot() +
+  # Raster layer
+  geom_raster(aes(x = x, y = y, fill = pred_dens),
+              colour = NA, interpolate = TRUE) +
+  scale_fill_gradientn(colours = rainbow(5), limits = c(0, 14)) +
+  coord_sf(crs = 31370) +
+  labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha") +
+  theme(legend.position = "bottom")
 ```

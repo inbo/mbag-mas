@@ -87,6 +87,7 @@ $$
 ```{r, message=FALSE}
 prediction_hexgrid <- tar_read("prediction_hexgrid_period")[[1]]
 out_list <- vector(mode = "list", length = sum(params$years > 2023))
+out_list_smooth <- out_list
 for (i in seq_along(params$years[params$years > 2023])) {
   y <- params$years[params$years > 2023][i]
 
@@ -123,9 +124,34 @@ for (i in seq_along(params$years[params$years > 2023])) {
         jaar = y
       )
   }
+  
+  preds_smooth <- tar_read_ds("model_pred_smooth", params$species, year = y,
+                              start_year = 2024)
+
+  pred_dens_smooth <- cbind(prediction_hexgrid, preds_smooth) %>%
+    group_by(plotnaam, regio, openheid_klasse, sbp, stratum, geometry) %>%
+    summarise(pred = max(preds_smooth), .groups = "drop")
+  if (nrow(detprob_df) == 1) {
+    pred_dens_smooth$estimate_p <- detprob_df$estimate_p
+    pred_dens_smooth <- pred_dens_smooth %>%
+      mutate(
+        pred_abu = pred / estimate_p,
+        jaar = y
+      )
+  } else {
+    pred_dens_smooth <- pred_dens_smooth %>%
+      left_join(detprob_df) %>%
+      mutate(
+        pred_abu = pred / estimate_p,
+        jaar = y
+      )
+  }
 
   out_list[[i]] <- pred_dens
+  out_list_smooth[[i]] <- pred_dens_smooth
 }
+
+y_lim <- max(bind_rows(out_list)$pred_abu, bind_rows(out_list_smooth)$pred_abu)
 ```
 
 ```{r, fig.height = 10, warning=FALSE}
@@ -134,7 +160,19 @@ bind_rows(out_list) %>%
          y = st_coordinates(st_centroid(geometry))[, 2]) %>%
   ggplot() +
   geom_raster(aes(x = x, y = y, fill = pred_abu), interpolate = TRUE) +
-  scale_fill_gradientn(colours = rainbow(5), limits = c(0, NA)) +
+  scale_fill_gradientn(colours = rainbow(5), limits = c(0, y_lim)) +
+  facet_wrap(~jaar, ncol = 1) +
+  coord_sf(crs = 31370) +
+  labs(x = "", y = "", fill = "Aantal\nbroedparen")
+```
+
+```{r, fig.height = 10, warning=FALSE}
+bind_rows(out_list_smooth) %>%
+  mutate(x = st_coordinates(st_centroid(geometry))[, 1],
+         y = st_coordinates(st_centroid(geometry))[, 2]) %>%
+  ggplot() +
+  geom_raster(aes(x = x, y = y, fill = pred_abu), interpolate = TRUE) +
+  scale_fill_gradientn(colours = rainbow(5), limits = c(0, y_lim)) +
   facet_wrap(~jaar, ncol = 1) +
   coord_sf(crs = 31370) +
   labs(x = "", y = "", fill = "Aantal\nbroedparen")
