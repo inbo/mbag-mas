@@ -11,9 +11,9 @@ editor:
 library(knitr)
 ```
 
-# Dataverwerking en statistisch analyseplan {#sec-analyseplan}
+# Dataverwerking en statistisch analysekader {#sec-analysekader}
 
-In het vorige hoofdstuk beschreven we hoe het steekproefkader voor het MAS-meetnet in Vlaanderen werd opgebouwd, en hoe daaruit een ruimtelijk gespreide, aselecte steekproef werd getrokken. Dit hoofdstuk beschrijft het algemene verwerkings- en analyseplan vanaf de ruwe tellingen tot een gestandaardiseerde dataset, klaar voor statistische analyse en publicatie op GBIF. Alle stappen worden uitgevoerd in R [@R], binnen RStudio [@RStudio], tenzij anders vermeld. De verwerking verloopt via een reproduceerbare workflow opgebouwd met het **targets**-pakket [@targets-package], zie @fig-analyse-plan.
+In het vorige hoofdstuk beschreven we hoe het steekproefkader voor het MAS-meetnet in Vlaanderen werd opgebouwd, en hoe daaruit een ruimtelijk gespreide, aselecte steekproef werd getrokken. Dit hoofdstuk beschrijft het algemene verwerkings- en analysekader vanaf de ruwe tellingen tot een gestandaardiseerde dataset, klaar voor statistische analyse en publicatie op GBIF. Alle stappen worden uitgevoerd in R [@R], binnen RStudio [@RStudio], tenzij anders vermeld. De verwerking verloopt via een reproduceerbare workflow opgebouwd met het **targets**-pakket [@targets-package], zie @fig-analyse-plan.
 
 ## Uitvoeren van de tellingen {#sec-stap-1}
 
