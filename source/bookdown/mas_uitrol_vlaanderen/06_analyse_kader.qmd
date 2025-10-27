@@ -8,7 +8,7 @@ library(knitr)
 # Dataverwerking en statistisch analysekader {#sec-analysekader}
 
 In het vorige hoofdstuk beschreven we hoe het steekproefkader voor het MAS-meetnet in Vlaanderen werd opgebouwd, en hoe daaruit een ruimtelijk gespreide, aselecte steekproef werd getrokken.
-Dit hoofdstuk beschrijft het algemene verwerkings- en analysekader vanaf de ruwe tellingen tot een gestandaardiseerde dataset, klaar voor statistische analyse en publicatie op GBIF.
+Dit hoofdstuk beschrijft het algemene verwerkings- en analysekader vanaf de ruwe tellingen tot een gestandaardiseerde dataset, klaar voor statistische analyse en publicatie.
 Voor aanvullende, meer gedetailleerde informatie omtrent dataverwerking en analyse verwijzen we naar @dmp-mas (Data Management Plan, DMP), @langeraert2025pilot (dataverwerking en verkennende analyses pilootfase) en [@roodbergen2011] (dataverwerking en verkennende analyses MAS Nederland).
 
 Alle stappen worden uitgevoerd in R [@R], binnen RStudio [@RStudio], tenzij anders vermeld. De verwerking verloopt via een reproduceerbare workflow opgebouwd met het **targets**-pakket [@targets-package], zie @fig-analyse-kader.
@@ -103,25 +103,24 @@ De finale dataset wordt klaargemaakt voor publicatie op het Global Biodiversity 
 
    * Selectie van relevante kolommen.
    * Standaardisatie van kolomvolgorde voor publicatie.
-   * Opsplitsing in (1) een op aanvraag beschikbare gedetailleerde dataset, en (2) een vervaagde openbare dataset voor GBIF-publicatie.
+   * Opsplitsing in (1) een op aanvraag beschikbare gedetailleerde dataset, en (2) een vervaagde openbare dataset voor GBIF-publicatie:
 
-Om zowel open data-principes als de bescherming van kwetsbare soorten te waarborgen, wordt de finale dataset als volgt georganiseerd:
+A. Gedetailleerde dataset (beschikbaar op aanvraag):
 
-  1. Gedetailleerde (open op aanvraag) dataset:
-  
-     * Bevat alle waarnemingsdetails, inclusief originele Lambert- en WGS84-coördinaten.
-     * Deze volledige dataset wordt niet publiek vrijgegeven via GBIF, maar is beschikbaar op verzoek aan bevoegde onderzoekers. Dit garandeert dat hoogresolutiegegevens voor wetenschappelijke doeleinden beschikbaar blijven zonder risico voor kwetsbare populaties.
-  
-  2. Vervaagde openbare dataset (GBIF):
-  
-     * Deze versie wordt gepubliceerd op GBIF en bevat geen exacte locaties van gevoelige waarnemingen.
-     * Locaties van kwetsbare soorten en gevoelige broedgegevens worden vervaagd op UTM 5 km resolutie (coördinaten in de openbare dataset zijn de centroïden van de gebruikte UTM-hokken).
-       * Kwetsbare soorten: grauwe kiekendief (*Circus pygargus*), bruine kiekendief (*Circus aeruginosus*), patrijs (*Perdix perdix*) en kwartelkoning (*Crex crex*).
-          * Alle waarnemingen van deze soorten worden permanent vervaagd in de openbare dataset (opheffing nooit).
-          * De lijst van kwetsbare soorten kan veranderen na verloop van tijd.
-       * Broedcodes 4–5: voor alle soorten worden waarnemingen met broedcodes 4–5 vervaagd in de openbare dataset voor een periode van twee jaar. Na twee jaar wordt de vervaging voor deze records opgeheven (startend vanaf 1 januari volgend op het teljaar).
+   * Bevat alle waarnemingsdetails, inclusief originele Lambert- en WGS84-coördinaten.
+   * Deze volledige dataset wordt niet publiek vrijgegeven via GBIF, maar is beschikbaar op verzoek aan bevoegde onderzoekers. Dit garandeert dat hoogresolutiegegevens voor wetenschappelijke doeleinden beschikbaar blijven zonder risico voor kwetsbare populaties.
+
+B. Vervaagde openbare dataset (GBIF):
+
+   * Deze versie wordt gepubliceerd op GBIF en bevat geen exacte locaties van gevoelige waarnemingen.
+   * Locaties van kwetsbare soorten en gevoelige broedgegevens worden vervaagd op UTM 5 km resolutie (coördinaten in de openbare dataset zijn de centroïden van de gebruikte UTM-hokken).
+     * Kwetsbare soorten: grauwe kiekendief (*Circus pygargus*), bruine kiekendief (*Circus aeruginosus*), patrijs (*Perdix perdix*) en kwartelkoning (*Crex crex*).
+        * Alle waarnemingen van deze soorten worden permanent vervaagd in de openbare dataset (opheffing nooit).
+        * De lijst van kwetsbare soorten kan veranderen na verloop van tijd.
+     * Broedcodes 4–5: voor alle soorten worden waarnemingen met broedcodes 4–5 vervaagd in de openbare dataset voor een periode van twee jaar. Na twee jaar wordt de vervaging voor deze records opgeheven (startend vanaf 1 januari volgend op het teljaar).
 
 Deze opzet garandeert dat de openbare GBIF-dataset toegankelijk en informatief blijft, terwijl gevoelige informatie beschermd wordt en hoogwaardige gegevens toch beschikbaar blijven voor gecontroleerd wetenschappelijk gebruik via aanvraagprocedures.
+
 Meer informatie over deze verwerkingsstappen en afspraken rond publicatie is beschikbaar in het DMP [@dmp-mas].
 
 ## Verzamelen van verklarende variabelen en samenvoegen van datasets {#sec-stap-4}
