@@ -24,8 +24,11 @@ spatial_mapping <- function(data_df) {
     # Convert to WGS 84 decimal coordinates
     st_transform(4326) %>%
     mutate(
-      dwc_decimalLatitude = round(st_coordinates(.data$raw_geometry)[, 2], 5),
-      dwc_decimalLongitude = round(st_coordinates(.data$raw_geometry)[, 1], 5),
+      # Round coordinates to 10 cm
+      dwc_verbatimLatitude = round(.data$dwc_verbatimLatitude, 1),
+      dwc_verbatimLongitude = round(.data$dwc_verbatimLongitude, 1),
+      dwc_decimalLatitude = round(st_coordinates(.data$raw_geometry)[, 2], 6),
+      dwc_decimalLongitude = round(st_coordinates(.data$raw_geometry)[, 1], 6),
       dwc_geodeticDatum = "EPSG:4326"
     ) %>%
     st_drop_geometry()
@@ -86,9 +89,6 @@ unchanged_mapping <- function(data_df) {
       "dwc_locationID"         = "raw_plotnaam",
       "dwc_verbatimBehavior"   = "raw_wrntype_omschrijving",
       "dwc_occurrenceRemarks"  = "raw_is_mas_sample"
-    ) %>%
-    mutate(
-      dwc_identifiedBy = .data$dwc_recordedBy
     )
 
   return(out_df)
@@ -103,6 +103,7 @@ modified_mapping <- function(data_df) {
 
   out_df <- data_df %>%
     mutate(
+      # Add IDs
       dwc_occurrenceID = paste("MBAG", "MAS", .data$raw_oid, sep = ":"),
       dwc_parentEventID = ifelse(
         is.na(.data$raw_periode_in_jaar),
@@ -113,17 +114,23 @@ modified_mapping <- function(data_df) {
       dwc_eventID = paste(
         "MBAG", "MAS", .data$dwc_eventDate, .data$dwc_locationID, sep = ":"
       ),
+      # Taxonomic information
       dwc_class = ifelse(.data$raw_soortgrp == 2, "Aves", "Mammalia"),
-      dwc_taxonID = paste(
-        "euring",
-        formatC(.data$raw_soortnr, width = 5, format = "d", flag = "0"),
-        sep = ":"
+      dwc_taxonID = ifelse(
+        .data$raw_soortgrp == 2,
+        paste(
+          "euring",
+          formatC(.data$raw_soortnr, width = 5, format = "d", flag = "0"),
+          sep = ":"
+        ),
+        as.character(.data$raw_soortnr)
       ),
+      # Observation information
       dwc_occurrenceStatus = ifelse(.data$dwc_organismQuantity > 0,
                                     "Present", "Absent"),
       dwc_behavior = case_when(
         .data$dwc_verbatimBehavior == "Territoriaal gedrag" ~
-          "Teritorial behaviour",
+          "Territorial behaviour",
         .data$dwc_verbatimBehavior == "Individu of groep niet plaatsgebonden" ~
           "Individual or group not bound to a location",
         .data$dwc_verbatimBehavior == "Volwassen individu in broedbiotoop" ~
@@ -148,8 +155,22 @@ modified_mapping <- function(data_df) {
             0.1 * .data$raw_distance2plot
           )
         ),
-      dwc_organismQuantityType = ifelse(.data$raw_wrntype == "0",
-                                        "individuals", "breeding pairs")
+      dwc_organismQuantityType = case_when(
+        .data$raw_wrntype %in% c("0", "1") ~ "individual",
+        .data$raw_wrntype %in% c("2") ~ "pair",
+        .data$raw_wrntype %in% c("3", "4") ~ "territorium",
+        .data$raw_wrntype %in% c("5") ~ "nest"
+      ),
+      dwc_lifeStage = ifelse(.data$raw_wrntype == "0", "", "adult")
+    ) %>%
+    # Anynomise observers
+    anonymise_observers( # nolint: object_usage_linter
+      observer_col = "dwc_recordedBy",
+      lookup_path = file.path("data", "observer_lookup.csv"),
+      prefix = "observer:"
+    ) %>%
+    mutate(
+      dwc_identifiedBy = .data$dwc_recordedBy
     ) %>%
     select(
       -"raw_oid",
@@ -246,13 +267,12 @@ add_species_aggregates <- function(
   aggregate_taxa_df <- taxonomy_df %>%
     filter(.data[[vernacular_name_col]] %in% names(manual_taxon_list)) %>%
     mutate(
-      scientificName = recode(.data[[vernacular_name_col]],
-                              !!!manual_taxon_list)
+      verbatimIdentification = recode(.data[[vernacular_name_col]],
+                                      !!!manual_taxon_list)
     ) %>%
     mutate(
-      authorship = NA,
-      key = NA,
-      rank = "species aggregate"
+      identificationQualifier = "species aggregate",
+      verbatimTaxonRank = "species aggregate"
     )
 
   # Get other taxa
@@ -286,7 +306,8 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
   # Remove raw columns
   out_df <- taxon_core_final %>%
     select(-starts_with("raw_")) %>%
-    rename_with(~ gsub("dwc\\_", "", .x))
+    rename_with(~ gsub("dwc\\_", "", .x)) %>%
+    arrange(.data$eventDate, .data$locationID, .data$identifiedBy)
 
   # Select and sort columns
   col_order <- c(
@@ -305,7 +326,7 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
 
     # --- Occurrence ---
     "recordedBy",
-    "organismQuantity", "organismQuantityType",
+    "organismQuantity", "organismQuantityType", "lifeStage",
     "occurrenceStatus", "behavior", "verbatimBehavior",
     "occurrenceRemarks",
 
@@ -322,6 +343,7 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
     # --- Taxonomy ---
     "taxonID", "scientificName", "scientificNameAuthorship",
     "scientificNameID", "taxonRank", "nomenclaturalCode",
+    "verbatimIdentification", "identificationQualifier", "verbatimTaxonRank",
     "kingdom", "phylum", "class", "order", "family", "genus", "species"
   )
   out_df <- out_df[, col_order]
