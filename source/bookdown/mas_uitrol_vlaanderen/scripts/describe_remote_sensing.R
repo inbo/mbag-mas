@@ -18,7 +18,7 @@
 #'   }
 #' @param all_trends A character vector listing all possible trend categories.
 #'   Defaults to a set of Dutch trend descriptions:
-#'   `c("altijd bedekt", "altijd onbedekt", "toename bedekking", "afname bedekking", "parabool", "omgekeerde parabool", "complex patroon")`.
+#'   `c("altijd bedekt", "altijd onbedekt", "toename bedekking", "afname bedekking", "parabool", "omgekeerde parabool", "complex patroon")`. # nolint: line_length_linter
 describe_trend_table <- function(
   df,
   all_trends = c("altijd bedekt", "altijd onbedekt",
