@@ -69,12 +69,12 @@ In deze markdown controleren we ...
 We doen dit in dit rapport voor de data van 2018-2024.
 
 # Controle data preparatie pipeline {#controle-pipeline}
-## Amersfoort naar Lambert coördinaten (crs_pipeline)
+## Amersfoort naar Lambert coördinaten (`crs_pipeline`)
 
 In de eerste stap worden Amersfoort coördinaten naar Lambert coördinaten omgezet.
 Dit gebeurt via een functie die op verschillende datasets goed getest is.
 
-## Selectie punten MBAG MAS steekproef (select_sampled_points) {#steekproef}
+## Selectie punten MBAG MAS steekproef (`select_sampled_points`) {#steekproef}
 
 In de tweede stap selecteren we de punten uit de totale dataset die tot het MBAG MAS steekproef behoren.
 Dit gebeurt via een "inner join" wat wil zeggen dat we kunnen nagaan of telpunten uit het steekproef niet bezocht zijn (bewust of onbewust).
@@ -174,10 +174,14 @@ crs_pipeline %>%
   arrange(jaar)
 ```
 
+<!-- spell-check: ignore:start -->
+
 VL0605
 
 - niet geteld in 2022, wel in 2023 en 2024
 - steekproef beslissing: Ol_8682.1 vervangen door bestaand
+
+<!-- spell-check: ignore:end -->
 
 ```{r}
 crs_pipeline %>%
@@ -187,10 +191,14 @@ crs_pipeline %>%
   arrange(jaar)
 ```
 
+<!-- spell-check: ignore:start -->
+
 VL0363
 
 - niet geteld in 2022, wel in 2023 en 2024
 - steekproef beslissing: Ol_593.1 vervangen door bestaand
+
+<!-- spell-check: ignore:end -->
 
 ```{r}
 crs_pipeline %>%
@@ -200,7 +208,7 @@ crs_pipeline %>%
   arrange(jaar)
 ```
 
-## Selecteer data binnen de telperiodes (select_time_periods) {#time-periods}
+## Selecteer data binnen de telperiodes (`select_time_periods`) {#time-periods}
 
 We selecteren data binnen de correcte telperiodes.
 Er zijn 4 telrondes:
@@ -544,7 +552,7 @@ select_sampled_points %>%
                       "tellingen_buiten_telrondes.csv"))
 ```
 
-## Herbereken afstand tot telpunt (calculate_obs_distance)
+## Herbereken afstand tot telpunt (`calculate_obs_distance`)
 
 We herberekenen de afstand van de waarnemingen tot elk telpunt.
 Grote verschillen kunnen wijzen op fouten.
@@ -585,7 +593,7 @@ nrow(outlying_distances)
 
 Nee. Dit is ok.
 
-## Selecteer data binnen telcirkel radius (select_within_radius)
+## Selecteer data binnen telcirkel radius (`select_within_radius`)
 
 We selecteren data binnen de telcirkels.
 Telcirkels hebben een radius van 300 m.
@@ -946,15 +954,23 @@ leaflet_map
 
 Bij de meeste punten lijkt dit ok, maar we zien een paar probleempunten:
 
+<!-- spell-check: ignore:start -->
+
 - Ol_1901.4: verkeerde locatie R2, 2022
 - Ol_1068.12: paar punten heel ver weg R3, 2022
 - Ol_827.8: verkeerde locatie R4, 2024
 
+<!-- spell-check: ignore:end -->
+
 In andere periodes zijn deze wel correct geteld. 
 We verliezen dus enkel:
 
+<!-- spell-check: ignore:start -->
+
 - Ol_1901.4: R2, 2022
 - Ol_827.8: R4, 2024
+
+<!-- spell-check: ignore:end -->
 
 ```{r}
 # Problem points
@@ -1063,9 +1079,9 @@ leaflet_map <- leaflet_map %>%
 leaflet_map
 ```
 
-## Selecteer soortengroepen (select_species_groups)
+## Selecteer soortengroepen (`select_species_groups`)
 
-Vervolgens selecteren we de data van vogels (soortgrp 2) en zoogdieren (soortgrp 1).
+Vervolgens selecteren we de data van vogels (`soortgrp` 2) en zoogdieren (`soortgrp` 1).
 
 ```{r}
 select_species_groups <- tar_read_sf(
@@ -1089,7 +1105,7 @@ n_soortgroups == 2
 
 Ok.
 
-## Verwerk dubbeltellingen (remove_double_counts)
+## Verwerk dubbeltellingen (`remove_double_counts`)
 
 Sommige telpunten zijn 2x geteld.
 We selecteren de telling van de laatste dag binnen de telperiode of de telling gedaan door een professionele teller indien van toepassing.
@@ -1168,8 +1184,8 @@ We lijsten op waar dubbeltellingen zijn verwijderd.
 removed_obs <- select_species_groups %>%
   st_drop_geometry() %>%
   anti_join(st_drop_geometry(remove_double_counts),
-            by = join_by(oid, projectid, plotid, plotnaam, x_amersfoort,
-                         y_amersfoort, x_lambert, y_lambert, soortgrp, soortnr,
+            by = join_by(oid, projectid, plotid, plotnaam, x_amersfoord,
+                         y_amersfoord, x_lambert, y_lambert, soortgrp, soortnr,
                          naam, aantal, jaar, maand, dag, doy, wrntype,
                          broedcode, opmerk, clterr, clterrid, inplot, periodeid,
                          periode, wrntype_omschrijving, sample_order, batch,
@@ -1234,11 +1250,15 @@ select_species_groups %>%
   kable()
 ```
 
+<!-- spell-check: ignore:start -->
+
 - Ol_12609.15, 2022, R1, LEVS01: ok, laatste telling
 - VL0587, 2024, R2, BSCX00: ok, laatste telling
 - VL0590, 2024, R2, BSCX00: ok, laatste telling
 
-## Verwerk namen van ondersoorten (remove_subspecies_names)
+<!-- spell-check: ignore:end -->
+
+## Verwerk namen van ondersoorten (`remove_subspecies_names`)
 
 De volgende ondersoorten worden aangepast tot op soortniveau.
 
@@ -1263,7 +1283,7 @@ data.frame(
   kable()
 ```
 
-## Telpunten in finale dataset (mas_data_full)
+## Telpunten in finale dataset (`mas_data_full`)
 
 ```{r}
 mas_data_full <- tar_read("mas_data_full", store = targets_store) %>%
@@ -1464,7 +1484,7 @@ Zie ook `dwc_mapping_mas.Rmd` voor de initiële exploratie.
 ## Darwin Core mapping
 
 - Ruimtelijke verwerking
-  - We verwijderen de Amersfoord coördinaten
+  - We verwijderen de Amersfoort-coördinaten
   - We zetten de Lambert coördinaten om naar WGS 84 decimale coördinaten (afronden op 6 cijfers na de komma ~ precisie 10 cm)
   - We behouden de Lambert coördinaten als verbatim coördinaten (afronden op 1 cijfer na de komma ~ precisie 10 cm)
 - Mappen van statische waarden
@@ -1474,7 +1494,7 @@ Zie ook `dwc_mapping_mas.Rmd` voor de initiële exploratie.
   - Ongewijzigde waarden worden gebruikt voor Darwin Core-termen waarvan de inhoud een exacte kopie is van het overeenkomstige veld in de input data
 - Mappen van gewijzigde waarden
   - Gewijzigde waarden worden gebruikt voor Darwin Core-termen waarvoor de inhoud in de input data als basis wordt gebruikt, maar deze moet worden gestandaardiseerd. Dit geldt voor Darwin Core-termen waarvoor we een vocabulaire gebruiken of waar we willen transformeren voor de duidelijkheid of om duidelijke fouten te corrigeren.
-  - `taxonID` zijn euring codes voor vogels en sovon codes voor zoogdieren. Voor vogels maken we ze `euring:xxxxx` en voor zoogdieren houden we de code van sovon.
+  - `taxonID` zijn euring codes voor vogels en Sovon-codes voor zoogdieren. Voor vogels maken we ze `euring:xxxxx` en voor zoogdieren houden we de code van Sovon.
   - Voor `coordinateUncertaintyInMeters` nemen we 10 meter tenzij de afstand meer dan 100 m is, dan nemen we een tiende van de afstand.
   - We anonimiseren de namen van de tellers
   - Voor gedrag vullen we de volgende waarden in:
@@ -1663,7 +1683,7 @@ test_wet_names <- manual_taxon_data %>%
   select(-"groepnr")
 ```
 
-De volgende soorten zijn niet in de lijst van sovon aanwezig.
+De volgende soorten zijn niet in de lijst van Sovon aanwezig.
 `dwc_taxonID` is de id voor de Nederlandstalige soortnaam van Sovon, `naam` is de Nederlandstalige naam op de lijst van Sovon en `wetenschap` is de wetenschappelijke naam op de lijst van Sovon.
 
 ```{r}

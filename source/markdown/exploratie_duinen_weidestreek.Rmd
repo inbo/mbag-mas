@@ -66,7 +66,7 @@ landbouwstreken <- landbouwstreken %>%
   st_transform(31370)
 ```
 
-We beschouwen `r nrow(landbouwstreken)` landbouwstreken in vlaanderen.
+We beschouwen `r nrow(landbouwstreken)` landbouwstreken in Vlaanderen.
 
 ```{r}
 ggplot() +
@@ -186,9 +186,9 @@ openheid_sf$Weidestreek %>%
 We sluiten bepaalde landgebruiken uit op basis van OpenStreetMap (OSM).
 OSM kaart gedownload op 27/02/2024.
 
-> Er zijn in beide gebieden geen snelwegen aanwezig dus dit wordt niet in de functie gespecifieerd (anders krijgen we een error). De code verschilt dus licht van de code in de targets pipeline, maar zal hetzelfde resultaat geven.
+> Er zijn in beide gebieden geen snelwegen aanwezig dus dit wordt niet in de functie gespecificeerd (anders krijgen we een error). De code verschilt dus licht van de code in de targets pipeline, maar zal hetzelfde resultaat geven.
 
-> Er is in de Weidestreek geen vliegveld aanwezig dus dit wordt niet in de functie gespecifieerd (anders krijgen we een error). De code verschilt dus licht van de code in de targets pipeline, maar zal hetzelfde resultaat geven.
+> Er is in de Weidestreek geen vliegveld aanwezig dus dit wordt niet in de functie gespecificeerd (anders krijgen we een error). De code verschilt dus licht van de code in de targets pipeline, maar zal hetzelfde resultaat geven.
 
 ```{r, cache=TRUE, results="hide"}
 exclusie_osm_duinen <- exclusie_landgebruik_osm(
@@ -573,7 +573,11 @@ punten$Weidestreek %>%
 We moeten nog verder filteren op landgebruik.
 We gebruiken volgende regel als selectiecriterium voor telpunten die in aanmerkingen komen voor wat betreft de samenstelling van het landgebruik in een buffer van 300 m rond het punt:
 
+<!-- spell-check: ignore:start -->
+
 -   Akker + Grasland \> 40% én Grasland + Bos + Struikgewas + Akker \> 50%
+
+<!-- spell-check: ignore:end -->
 
 ```{r, cache=TRUE}
 # Bereken landgebruik

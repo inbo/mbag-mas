@@ -353,6 +353,8 @@ Van 3 van de 7 punten komt het stratum (`openheid_sbp2`) niet overeen met het or
 
 We berekenen overlap voor de punten:
 
+<!-- spell-check: ignore:start -->
+
 - "Zn_63159.9" vervangen door "Maaibos"
 - "Pl_13942.1" vervangen door "VL0048"
 - "Pl_11796.2.5" vervangen door "Pl_1188.2", en "Pl_1188.2" daarna door "Beerpolder"
@@ -360,6 +362,8 @@ We berekenen overlap voor de punten:
 - "Pl_31984.3" vervangen door "DP KC"
 - "Pl_2761.2.1" vervangen door "NAP C"
 - "Pl_5258.6" vervangen door "Casteleynstraat"
+
+<!-- spell-check: ignore:end -->
 
 ```{r}
 original_point <- steekproefkader_za_kp_po %>%
@@ -443,6 +447,8 @@ avimap_za_kp_po_final <- bind_rows(
 
 We voegen deze oude punten samen met de nieuwe punten.
 
+<!-- spell-check: ignore:start -->
+
 > Punten uit steekproefkader genomen in plaats van vervangpunten?
 
 - Km_45192.7 was oorspronkelijk VL0432? Km_45192.7 is geteld maar zit niet in steekproef
@@ -452,6 +458,8 @@ We voegen deze oude punten samen met de nieuwe punten.
 > We behouden Km_45192.7 en Km_14981.5 
 
 We verwijderen ook Pl_45612.2 die niet kon geteld worden.
+
+<!-- spell-check: ignore:end -->
 
 ```{r}
 df1 <- steekproefkader_za_kp_po %>%
@@ -578,7 +586,7 @@ head(steekproef_weidestreek) %>%
 
 ### Finale steekproef na manuele controle
 
-Inlezen en preparatie finale punten die in avimap zijn ingevoerd.
+Inlezen en preparatie finale punten die in Avimap zijn ingevoerd.
 
 ```{r}
 weidestreek_avimap <- read.csv(

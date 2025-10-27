@@ -574,7 +574,7 @@ density_veldleeuwerik %>%
   facet_wrap(~regio, ncol = 2, scales = "free")
 ```
 
-Voor de Weidestreek zijn we niet van plan densiteiten te rapporteren op stratum-niveau.
+Voor de Weidestreek zijn we niet van plan densiteiten te rapporteren op stratumniveau.
 Voor deze oefening zijn deze hier toch getoond.
 Voor de Weidestreek zullen we enkel op niveau van de landbouwstreek rapporteren (zie verder).
 
@@ -700,7 +700,7 @@ We hebben de berekeningen gedaan op stratum niveau. Hoe verhoudt zicht dit op re
 
 ### Model specificatie
 
-We fitten het finale tabel als voordien, maar we maken de `region_table`, `sample_table` en `obs_table` aan op regio-niveau in plaats van op stratum-niveau.
+We fitten het finale tabel als voordien, maar we maken de `region_table`, `sample_table` en `obs_table` aan op regio-niveau in plaats van op stratumniveau.
 
 ```{r}
 # Area per region
@@ -796,8 +796,8 @@ density_veldleeuwerik2 %>%
 ```
 
 De detectiekans is dezelfde als voordien.
-Voordien (bij het stratum-model) hadden we een onderschatting van de totale densiteit binnen het steekproefkader:`r round(density_veldleeuwerik_tot, 2)` t.o.v. `r round(density_veldleeuwerik2_tot, 2)` gemiddeld aantal broedparen per 100 ha.
-Dit is omdat we bij het stratum-model geografisch overlap hebben.
+Voordien (bij het stratummodel) hadden we een onderschatting van de totale densiteit binnen het steekproefkader:`r round(density_veldleeuwerik_tot, 2)` t.o.v. `r round(density_veldleeuwerik2_tot, 2)` gemiddeld aantal broedparen per 100 ha.
+Dit is omdat we bij het stratummodel geografisch overlap hebben.
 
 Om correcte schattingen te krijgen op regio- en steekproefkader-niveau, kunnen we dus het finale model herfitten op aangepaste datasets.
 
@@ -904,8 +904,8 @@ De resultaten o.b.v. de maxima zijn een schatting van de densiteit per stratum d
 
 - We kunnen de detectiekans schatten o.b.v. de complete dataset en tegelijk de densiteit schatten o.b.v. een subset van de data.
   - We kunnen zowel densiteiten rapporteren o.b.v. de volledige dataset als een subset (maxima). Ze hebben een andere betekenis en beantwoorden andere vragen.
-- We moeten twee modellen fitten om schattingen te krijgen om stratum-niveau, en op regio- en steekproefkader-niveau
-  - We fitten meerdere modellen (bv. op stratum-niveau) waarbij we het beste model voor de detectiefunctie selecteren (sleutelfunctie, covariaten ...).
+- We moeten twee modellen fitten om schattingen te krijgen om stratumniveau, en op regio- en steekproefkader-niveau
+  - We fitten meerdere modellen (bv. op stratumniveau) waarbij we het beste model voor de detectiefunctie selecteren (sleutelfunctie, covariaten ...).
   - Het finale model wordt opnieuw gefit waarbij de dataset voor densiteitsschatting wordt aangepast (bv. op regio-niveau).
 
 Technisch gezien lijkt het dus dat we de methodiek van de pilootstudie eenvoudig kunnen toepassen voor de volledige MAS-data.
@@ -969,9 +969,13 @@ Het gemiddelde $\mu$ wordt gemodelleerd via een **lineaire predictorterm** $L$, 
 
 De relatie tussen $\mu$ en $L$ wordt beschreven via een linkfunctie $g$, zodat:
 
+<!-- spell-check: ignore:start -->
+
 $$
 g(\mu) = L = L^F + L^R + \text{offset}.
 $$
+
+<!-- spell-check: ignore:end -->
 
 In concrete termen:
 
@@ -1501,7 +1505,7 @@ $$
 - $p_{s, k}$: De $k$-de draw van de gemiddelde detectiekans in stratum $s$ waartoe telpunt $j$ behoort.
 - $A_j = \pi \cdot 300^2=$ `r pi * 300^2` m²: De oppervlakte van telcirkel $j$.
 
-Van deze nieuwe posterior nemen we ten slotte het gemiddelde, 95 % quantielen e.a. zoals voordien.
+Van deze nieuwe posterior nemen we ten slotte het gemiddelde, 95 % kwantielen e.a. zoals voordien.
 
 #### Model specificatie
 

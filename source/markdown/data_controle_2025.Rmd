@@ -63,12 +63,12 @@ In rapport controleren we ...
 We doen dit in dit rapport voor de data van 2025.
 
 # Controle data preparatie pipeline {#controle-pipeline}
-## Amersfoord naar Lambert coördinaten (crs_pipeline)
+## Amersfoort naar Lambert coördinaten (`crs_pipeline`)
 
-In de eerste stap worden Amersfoord coördinaten naar Lambert coördinaten omgezet.
+In de eerste stap worden Amersfoort coördinaten naar Lambert coördinaten omgezet.
 Dit gebeurt via een functie die op verschillende datasets goed getest is.
 
-## Selectie punten MBAG MAS steekproef (select_sampled_points) {#steekproef}
+## Selectie punten MBAG MAS steekproef (`select_sampled_points`) {#steekproef}
 
 In de tweede stap selecteren we de punten uit de totale dataset die tot het MBAG MAS steekproef behoren.
 Dit gebeurt via een "inner join" wat wil zeggen dat we kunnen nagaan of telpunten uit het steekproef niet bezocht zijn (bewust of onbewust).
@@ -113,7 +113,7 @@ sample_visited %>%
 
 > In de Polders zijn inderdaad 6 punten geschrapt. In de Zandstreek 2 punten.
 
-## Selecteer data binnen de telperiodes (select_time_periods) {#time-periods}
+## Selecteer data binnen de telperiodes (`select_time_periods`) {#time-periods}
 
 We selecteren data binnen de correcte telperiodes.
 Er zijn 4 telrondes:
@@ -182,7 +182,7 @@ select_time_periods %>%
 
 <!-- spell-check: ignore:end -->
 
-## Herbereken afstand tot telpunt (calculate_obs_distance)
+## Herbereken afstand tot telpunt (`calculate_obs_distance`)
 
 We herberekenen de afstand van de waarnemingen tot elk telpunt.
 Grote verschillen kunnen wijzen op fouten.
@@ -224,7 +224,7 @@ outlying_distances
 Ja, maar dit is op een zeer grote afstand.
 Die zullen in het volgende hoofdstuk bekeken worden.
 
-## Selecteer data binnen telcirkel radius (select_within_radius)
+## Selecteer data binnen telcirkel radius (`select_within_radius`)
 
 We selecteren data binnen de telcirkels.
 Telcirkels hebben een radius van 300 m.
@@ -513,9 +513,9 @@ leaflet_map <- leaflet_map %>%
 leaflet_map
 ```
 
-## Selecteer soortengroepen (select_species_groups)
+## Selecteer soortengroepen (`select_species_groups`)
 
-Vervolgens selecteren we de data van vogels (soortgrp 2) en zoogdieren (soortgrp 1).
+Vervolgens selecteren we de data van vogels (`soortgrp` 2) en zoogdieren (`soortgrp` 1).
 
 ```{r}
 select_species_groups <- tar_read_sf(
@@ -539,7 +539,7 @@ n_soortgroups == 2
 
 Ok.
 
-## Verwerk dubbeltellingen (remove_double_counts)
+## Verwerk dubbeltellingen (`remove_double_counts`)
 
 Sommige telpunten zijn 2x geteld.
 We selecteren de telling van de laatste dag binnen de telperiode of de telling gedaan door een professionele teller indien van toepassing.
@@ -694,9 +694,13 @@ select_species_groups %>%
   kable()
 ```
 
+<!-- spell-check: ignore:start -->
+
 - Km_43699.4, R3, CSLO00: ok, laatste telling
 - Km_9998.1, R2, SRMS02: ok, voorrang telling professionele teller NOVN00
 - Km_9998.1, R3, SRMS02: ok, voorrang telling professionele teller NOVN00
+
+<!-- spell-check: ignore:end -->
 
 **Oostelijke leemstreek**
 
@@ -800,7 +804,7 @@ select_species_groups %>%
 
 Ja, laatste tellingen zijn behouden.
 
-## Verwerk namen van ondersoorten (remove_subspecies_names)
+## Verwerk namen van ondersoorten (`remove_subspecies_names`)
 
 De volgende ondersoorten worden aangepast tot op soortniveau.
 
@@ -826,7 +830,7 @@ data.frame(
   kable()
 ```
 
-## Telpunten in finale dataset (mas_data_full)
+## Telpunten in finale dataset (`mas_data_full`)
 
 ```{r}
 mas_data_full <- tar_read("mas_data_full", store = targets_store) %>%

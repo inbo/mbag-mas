@@ -51,6 +51,8 @@ Voor de Europese Natuurherstelwet (NHW) bekijken we hoe en met welke data de lan
 Om het **MAS-meetnet** extra in de verf te zetten als noodzakelijke (beleids)monitoring, willen we meegeven voor welke soorten data uit **MAS** en **ABV** gebruikt kunnen worden.
 België heeft net zoals de andere lidstaten de verplichting om per biogeografische regio op Belgisch niveau te rapporteren. Maar België is de enige lidstaat die per gewest (Wallonië en Vlaanderen) een (verschillende) lijst van indicatorsoorten heeft:
 
+<!-- spell-check: ignore:start -->
+
 | Soort              | Lijst Vlaanderen      | Lijst Wallonië      | Monitoring Vlaanderen |
 |--------------------|-----------------------|---------------------|-----------------------|
 | Boerenzwaluw       | x                     | x                   | ABV + MAS             |
@@ -73,6 +75,8 @@ België heeft net zoals de andere lidstaten de verplichting om per biogeografisc
 | Veldleeuwerik      | x                     | x                   | ABV + MAS             |
 | Wulp               | x                     |                     | ???                   |
 | Zomertortel        |                       | x                   | ???                   |
+
+<!-- spell-check: ignore:end -->
 
 Voor een aantal soorten is het **MAS-meetnet** ongetwijfeld beter en preciezer dan **ABV** in landbouwgebied.  
 Om een verderzetting van MAS te beargumenteren, moeten we aantonen dat dit wettelijk noodzakelijk is voor de **NHW-rapportage** en voor de beleidsopvolging.
@@ -240,6 +244,8 @@ De Grauwe Klauwier werd enkel gezien in 2024 en enkel in het `Heide en duin` str
 
 Het is moeilijk om beide meetnetten te vergelijken omdat de telinspanningen niet hetzelfde zijn en bijgevolg de kans op detectie verschilt.
 
+<!-- spell-check: ignore:start -->
+
 |    | MAS | ABV |
 |----|-----|-----|
 | lengte telcyclus | 1 cyclus = 1 jaar | 1 cyclus = 3 jaar |
@@ -247,6 +253,8 @@ Het is moeilijk om beide meetnetten te vergelijken omdat de telinspanningen niet
 | aantal telpunten per steekproefeenheid | telpunt = steekproefeenheid | 6 telpunten per km-hok |
 | duur telling | 10' per telpunt | 5' per telpunt |
 | afstand | 300 m | ongelimiteerd |
+
+<!-- spell-check: ignore:end -->
 
 In de volgende sectie geven we eerst de ruwe aantallen mee.
 In de laatste sectie doen we een poging doen om te corrigeren voor de ongelijke telinspanningen.

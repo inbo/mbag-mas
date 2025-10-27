@@ -97,8 +97,8 @@ taxon_core <- raw_data
 taxon_core <- taxon_core %>%
   # Remove Amersfoort coordinates
   select(
-    -"raw_x_amersfoort",
-    -"raw_y_amersfoort"
+    -"raw_x_amersfoord",
+    -"raw_y_amersfoord"
   ) %>%
   # Keep original X, Y as verbatim coordinates
   rename(
@@ -205,7 +205,7 @@ In my opinion, the latter terms should be consistently mapped to dwc:behavior.
 
 -  Wat is het verschil tussen `dwc_individualCount` en `dwc_organismQuantity`? Voorlopig gebruiken we `organismQuantity` voor aantallen en `organismQuantityType = individuals` wanneer broedcode gelijk aan 0 en `organismQuantityType = breeding pairs` wanneer broedcode > 0. In geval van broedcode > 0 moet `organismQuantity` eigenlijk gelijk zijn aan 1.
 
-> Stijn: perfect, in dit geval, gezien de standaardwijze van data-input via avimap per territorium (niet per individu)
+> Stijn: perfect, in dit geval, gezien de standaardwijze van data-input via Avimap per territorium (niet per individu)
 
 <!-- spell-check: ignore:end -->
 
@@ -278,7 +278,7 @@ taxon_core <- taxon_core %>%
 # Nabewerking
 ## Taxon matching
 
-De soortcodes in `dwc_taxonID` zijn avimapcodes.
+De soortcodes in `dwc_taxonID` zijn Avimap-codes.
 We kunnen enkel matchen op de Nederlandstalige soortnamen in `dwc_vernacularName`.
 Dit doen we via aangepaste code van in [deze gist](https://gist.github.com/damianooldoni/3fa9cc1ffa67377a9757df097d48d19f).
 Een voorbeeldje:
@@ -309,7 +309,7 @@ example_df <- tibble(
 example_df
 ```
 
-We zijn niet tevreden met eerste beste match, maar gaan met een specifieke regex door meerdere vernacular names zoeken (Gele Kwikstaart zal bv. niet met Grote Gele Kwikstaart matchen en Merel zal bv. ook niet met Indische Merel matchen).
+We zijn niet tevreden met eerste beste match, maar gaan met een specifieke regex door meerdere namen zoeken (Gele Kwikstaart zal bv. niet met Grote Gele Kwikstaart matchen en Merel zal bv. ook niet met Indische Merel matchen).
 We nemen de default limit (100).
 
 ```{r}
@@ -388,7 +388,7 @@ species_matching_mas %>%
 ```
 
 Nu hebben we namen voor alle taxa.
-Enkel voor "Veldmuis/Aardmuis", "rat spec." en "spitsmuis spec." niet.
+Enkel voor `"Veldmuis/Aardmuis"`, `"rat spec."` en `"spitsmuis spec."` niet.
 Deze moeten we manueel mappen:
 
 ```{r}
@@ -493,7 +493,7 @@ taxon_core <- species_matching_mas2 %>%
   )
 ```
 
-We vergelijken met de soortenlijst die we van sovon doorkregen.
+We vergelijken met de soortenlijst die we van Sovon doorkregen.
 
 ```{r}
 soorten_wet_mas <- read_csv2(file.path("data", "SOVON", "soorten_wet_mas.csv"))
@@ -512,7 +512,7 @@ test_wet_names <- species_matching_mas2 %>%
   select(-"groepnr")
 ```
 
-De volgende soorten zijn niet in de lijst van sovon aanwezig:
+De volgende soorten zijn niet in de lijst van Sovon aanwezig:
 
 ```{r}
 missing_soorten_wet_mas <- test_wet_names %>%
@@ -526,7 +526,7 @@ missing_soorten_wet_mas %>%
   kable()
 ```
 
-Hoe zit het met de wetenschappelijke namen van onze functie en van de lijst van sovon.
+Hoe zit het met de wetenschappelijke namen van onze functie en van de lijst van Sovon.
 Komen deze overeen?
 
 ```{r}
@@ -565,7 +565,7 @@ sort(colnames(taxon_core)[grepl("^raw\\_", colnames(taxon_core))])
   - `raw_sbp` --> Overlap steekproefkader zenodo?
   - `raw_openheid_klasse` --> Overlap steekproefkader zenodo?
   - `raw_regio` --> Overlap steekproefkader zenodo?
-  - `raw_periode_in_jaar`: 1 van 4 telperiodes --> optioneel laat dit temporele dataveld toe om alle tellingen (events) in een jaar te groeperen per telperiode (als parentEvent)
+  - `raw_periode_in_jaar`: 1 van 4 telperiodes --> optioneel laat dit temporele dataveld toe om alle tellingen (events) in een jaar te groeperen per telperiode (als `parentEvent`)
   - `raw_status_teller`: is de waarnemer een professional of een vrijwilliger?
 - Kan hier nog iets mee gedaan worden?
   - `raw_doy`: day of year sinds januari
