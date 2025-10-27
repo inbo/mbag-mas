@@ -3,26 +3,26 @@
 #' Generates a narrative summary of regional density estimates (e.g. for
 #' distance sampling results) across years. The function lists all regions
 #' (except those where the species is practically absent, i.e.
-#' \code{estimate = 0} or \code{lcl < 0.1}) in order of decreasing densiteit per
+#' `estimate = 0` or `lcl < 0.1`) in order of decreasing density per
 #' year.
 #' If "Total" (or Vlaanderen) is present, it is mentioned separately at the end.
 #' Optionally, comparisons with policy thresholds are included if
-#' \code{effect} and \code{threshold} columns are available.
+#' `effect` and `threshold` columns are available.
 #'
 #' @param data A data frame with the following required columns:
 #'   \describe{
-#'     \item{region}{Region name (character).}
-#'     \item{estimate}{Estimated densiteit (numeric).}
-#'     \item{lcl}{Lower confidence limit (numeric).}
-#'     \item{ucl}{Upper confidence limit (numeric).}
-#'     \item{species}{Species name (character).}
-#'     \item{year}{Year of the estimate (numeric or factor).}
+#'     \item{`region`}{Region name (character).}
+#'     \item{`estimate`}{Estimated density (numeric).}
+#'     \item{`lcl`}{Lower confidence limit (numeric).}
+#'     \item{`ucl`}{Upper confidence limit (numeric).}
+#'     \item{`species`}{Species name (character).}
+#'     \item{`year`}{Year of the estimate (numeric or factor).}
 #'   }
 #'   Optionally:
 #'   \describe{
-#'     \item{effect}{Categorical: \code{"boven"}, \code{"onder"}, or
-#'           \code{"geen sign.\nverschil"}.}
-#'     \item{threshold}{Numeric streefwaarde (policy target).}
+#'     \item{effect}{Categorical: `"boven"`, `"onder"`, or
+#'           `"geen sign.\nverschil"`.}
+#'     \item{threshold}{Numeric policy target.}
 #'   }
 #'
 #' @param threshold Numeric ratio used to define a "remarkable" difference

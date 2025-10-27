@@ -285,7 +285,7 @@ De precieze verdeling en aantal punten per landbouwstreek word besproken in @sec
 ### Reproduceerbaarheid en traceerbaarheid {#sec-git-mas}
 
 De steekproeftrekkingen voor het MAS-meetnet zijn volledig reproduceerbaar uitgevoerd met de statistische programmeertaal R [@R] in RStudio [@RStudio]. De volledige analyse werd opgezet als een computationele workflow met behulp van het **targets**-pakket [@targets-package], dat zorgt voor transparante, efficiënte en reproduceerbare uitvoer van alle stappen — van gegevensinvoer tot steekproefselectie.
-Om te garanderen dat alle gebruikte softwareversies exact kunnen worden gereconstrueerd, werd een geïsoleerde projectomgeving opgezet via het **renv**-pakket [@renv-package]. Deze omgeving registreert zowel de gebruikte versie van R zelf als de precieze versies van alle R-packages waarop het project steunt.
+Om te garanderen dat alle gebruikte softwareversies exact kunnen worden gereconstrueerd, werd een geïsoleerde projectomgeving opgezet via het **renv**-pakket [@renv-package]. Deze omgeving registreert zowel de gebruikte versie van R zelf als de precieze versies van alle R-pakketten waarop het project steunt.
 
 Alle code werd beheerd met Git en opgeslagen in een publieke GitHub-repository, waardoor elke wijziging in de workflow historisch traceerbaar en controleerbaar is. De exacte toestand van de code op het moment van de steekproeftrekkingen is vastgelegd via unieke commit-hashes:
 

@@ -6,11 +6,11 @@
 #'
 #' @param df A data frame containing distance sampling results.
 #' Required columns:
-#'   - year: numeric year of observation
-#'   - estimate_p: estimated detection probability
-#'   - ll_beta: lower bound of 95% confidence interval
-#'   - ul_beta: upper bound of 95% confidence interval
-#'   - Optional: regio, openheid, sbp (categorical strata)
+#'   - `year`: numeric year of observation
+#'   - `estimate_p`: estimated detection probability
+#'   - `ll_beta`: lower bound of 95% confidence interval
+#'   - `ul_beta`: upper bound of 95% confidence interval
+#'   - Optional: `regio`, `openheid`, `sbp` (categorical strata)
 #' @param threshold Numeric; if range of detection probabilities is below this,
 #' considered "consistent" (default 0.05).
 #'

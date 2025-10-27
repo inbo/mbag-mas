@@ -137,7 +137,7 @@ plot_trendtype_by_crop <- function(df) {
 #'
 #' This function classifies a sequence of vegetation cover states
 #' (encoded as `"bedekt"` or `"onbedekt"`) into robust trend categories
-#' based on the run-length encoding (RLE) of the time series.
+#' based on the run-length encoding of the time series.
 #' It extends the basic classification by allowing small deviations
 #' (one-time-step anomalies) while still recognising overall trends.
 #'

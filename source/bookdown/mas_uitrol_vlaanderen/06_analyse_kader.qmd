@@ -29,7 +29,6 @@ De gebruikte broedcodes zijn:
 **Timing van de tellingen:**
 
 * Tellingen vinden plaats tijdens vier vaste perioden per seizoen:
-
   * R1: 1–20 april
   * R2: 21 april–10 mei
   * R3: 11 mei–10 juni
@@ -74,7 +73,7 @@ De finale dataset wordt klaargemaakt voor publicatie op het Global Biodiversity 
 
    * Amersfoort-coördinaten worden verwijderd.
    * Lambert-coördinaten worden omgezet naar WGS84-decimale graden voor publicatie.
-   * De oorspronkelijke Lambert-coördinaten worden behouden als "verbatim coördinaten".
+   * De oorspronkelijke Lambert-coördinaten worden behouden als 'verbatim coördinaten'.
 
 3. **Mapping naar Darwin Core-termen**
 
@@ -117,7 +116,7 @@ Om zowel open data-principes als de bescherming van kwetsbare soorten te waarbor
   
      * Deze versie wordt gepubliceerd op GBIF en bevat geen exacte locaties van gevoelige waarnemingen.
      * Locaties van kwetsbare soorten en gevoelige broedgegevens worden vervaagd op UTM 5 km resolutie (coördinaten in de openbare dataset zijn de centroïden van de gebruikte UTM-hokken).
-       * Kwetsbare soorten: Grauwe kiekendief (*Circus pygargus*), Bruine kiekendief (*Circus aeruginosus*), Patrijs (*Perdix perdix*) en Kwartelkoning (*Crex crex*).
+       * Kwetsbare soorten: grauwe kiekendief (*Circus pygargus*), bruine kiekendief (*Circus aeruginosus*), patrijs (*Perdix perdix*) en kwartelkoning (*Crex crex*).
           * Alle waarnemingen van deze soorten worden permanent vervaagd in de openbare dataset (opheffing nooit).
           * De lijst van kwetsbare soorten kan veranderen na verloop van tijd.
        * Broedcodes 4–5: voor alle soorten worden waarnemingen met broedcodes 4–5 vervaagd in de openbare dataset voor een periode van twee jaar. Na twee jaar wordt de vervaging voor deze records opgeheven (startend vanaf 1 januari volgend op het teljaar).
@@ -138,8 +137,8 @@ De verzameling en verkenning van verklarende variabelen werd eerder toegelicht i
 Ten opzichte van het pilootproject zijn er enkele belangrijke uitbreidingen voor MAS Vlaanderen:
 
 * **Toegenomen temporele resolutie**: waar mogelijk geven we voorkeur aan jaar-specifieke kaartlagen (bv. landbouwgebruiksgegevens of beheermonitoring), zodat we veranderingen doorheen de tijd expliciet kunnen meenemen in de analyse.
-* **Waarnemingsniveau in plaats van enkel telpuntniveau**: naast het berekenen van variabelen op telcirkel- of telpuntniveau (zoals het aandeel akkerrand binnen de 300 m-radius), verzamelen we ook fijnschalige informatie op waarnemingsniveau (bv. of een individu daadwerkelijk in een akkerrand werd gezien).
-* **Gebruik van remote sensing**: we verkennen hoe gedetailleerde remote sensing-producten kunnen bijdragen aan een nauwkeuriger karakterisering van de landgebruikssituatie op het moment van de telling. In tegenstelling tot administratieve perceelsinformatie bieden satellietbeelden een objectieve momentopname van de effectieve toestand ter plaatse. Zo kan een perceel dat administratief als "maïs" is aangeduid, in werkelijkheid nog braak liggen tijdens het broedseizoen. Het meenemen van zulke actuele informatie is essentieel om ecologische relaties correct te modelleren. In @sec-remote-sensing focussen we op tijdsreeksen van indicatoren voor naakte bodem op telpuntlocaties.
+* **Waarnemingsniveau in plaats van enkel telpuntniveau**: naast het berekenen van variabelen op telcirkel- of telpuntniveau (zoals het aandeel akkerrand binnen de 300 m radius), verzamelen we ook fijnschalige informatie op waarnemingsniveau (bv. of een individu daadwerkelijk in een akkerrand werd gezien).
+* **Gebruik van remote sensing**: we verkennen hoe gedetailleerde remote sensing-producten kunnen bijdragen aan een nauwkeuriger karakterisering van de landgebruikssituatie op het moment van de telling. In tegenstelling tot administratieve perceelsinformatie bieden satellietbeelden een objectieve momentopname van de effectieve toestand ter plaatse. Zo kan een perceel dat administratief als 'maïs' is aangeduid, in werkelijkheid nog braak liggen tijdens het broedseizoen. Het meenemen van zulke actuele informatie is essentieel om ecologische relaties correct te modelleren. In @sec-remote-sensing focussen we op tijdsreeksen van indicatoren voor naakte bodem op telpuntlocaties.
 
 De selectie, ontwikkeling en verwerking van deze verklarende variabelen ligt niet definitief vast. Ze kunnen verder evolueren in functie van nieuwe onderzoeksnoden, beleidsvragen of technologische ontwikkelingen binnen de looptijd van het meetnet.
 

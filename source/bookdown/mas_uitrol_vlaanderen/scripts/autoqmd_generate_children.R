@@ -1,21 +1,21 @@
 #' Generate random QMD files from a template
 #'
-#' This function generates one or more Quarto (\code{.qmd}) files from a
-#' template, filling in variables supplied via \code{...}. Each output file is
+#' This function generates one or more Quarto (`.qmd`) files from a
+#' template, filling in variables supplied via `...`. Each output file is
 #' written to a specified directory and given a random unique name.
 #'
 #' @param ... Named vectors or lists of equal length, passed to
-#'   \code{\link[knitr]{knit_expand}}. Each position across vectors represents
+#'   `knitr::knit_expand`. Each position across vectors represents
 #'   one document to generate.
-#' @param template Path to a Quarto template (\code{.qmd}) file to expand.
+#' @param template Path to a Quarto template (`.qmd`) file to expand.
 #' @param child_dir Directory where the generated files should be written.
 #'   The directory is created if it does not exist.
 #'
 #' @details
 #' Output filenames are generated using random hexadecimal strings, similar to
-#' \code{tempfile()}, but always saved in the specified directory.
+#' `tempfile()`, but always saved in the specified directory.
 #' For example, files may look like:
-#' \code{_qmd_a3f2b6d4.qmd}, \code{_qmd_7e19c8fa.qmd}, etc.
+#' `_qmd_a3f2b6d4.qmd`, `_qmd_7e19c8fa.qmd`, etc.
 #'
 #' @return Invisibly returns a character vector with the paths of the generated
 #'   QMD files. The files are also written to disk.

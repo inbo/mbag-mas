@@ -40,11 +40,19 @@ data_path <- file.path(mbag_dir, "data", "remote_sensing")
 
 ## Inleiding
 
-- zie aparte google doc
+<!-- spell-check: ignore:start -->
+
+- zie aparte google docµ
+
+<!-- spell-check: ignore:end -->
 
 ## Methodiek
 
+<!-- spell-check: ignore:start -->
+
 - zie aparte google doc
+
+<!-- spell-check: ignore:end -->
 
 ### Data
 

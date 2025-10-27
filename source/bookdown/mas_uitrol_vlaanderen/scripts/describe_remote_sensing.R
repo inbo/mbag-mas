@@ -9,17 +9,16 @@
 #' @param df A data frame containing trend information with at least the
 #' columns:
 #'   \itemize{
-#'     \item \code{year}: numeric or factor year value
-#'     \item \code{trend}: character string describing the trend category
-#'     \item \code{n}: numeric count of observations for that trend in the given
+#'     \item `year`: numeric or factor year value
+#'     \item `trend`: character string describing the trend category
+#'     \item `n`: numeric count of observations for that trend in the given
 #'           year
-#'     \item \code{complexity}: numeric value describing the complexity level of
+#'     \item `complexity`: numeric value describing the complexity level of
 #'           the trend
 #'   }
 #' @param all_trends A character vector listing all possible trend categories.
 #'   Defaults to a set of Dutch trend descriptions:
-#'   \code{c("altijd bedekt", "altijd onbedekt", "toename bedekking",
-#'   "afname bedekking", "parabool", "omgekeerde parabool", "complex patroon")}.
+#'   `c("altijd bedekt", "altijd onbedekt", "toename bedekking", "afname bedekking", "parabool", "omgekeerde parabool", "complex patroon")`.
 describe_trend_table <- function(
   df,
   all_trends = c("altijd bedekt", "altijd onbedekt",
@@ -112,7 +111,7 @@ describe_trend_table <- function(
 #' Describe and compare NDVI and BSI summary tables
 #'
 #' This function produces natural-language descriptions (in Dutch) of
-#' summary statistics for the percentage of bare soil (\code{perc_bare_soil})
+#' summary statistics for the percentage of bare soil (`perc_bare_soil`)
 #' across categories (e.g., habitat type, region, etc.), comparing two
 #' indicators: NDVI and BSI. For each indicator, the function reports which
 #' categories have the highest or lowest average bare soil percentage and
@@ -121,31 +120,18 @@ describe_trend_table <- function(
 #' @param summary_data A list or data object containing both NDVI and BSI data
 #'   frames, each with at least the columns:
 #'   \itemize{
-#'     \item \code{perc_bare_soil}: numeric, percentage of bare soil
-#'     \item the grouping variable given in \code{var}, e.g. habitat or stratum
+#'     \item `perc_bare_soil`: numeric, percentage of bare soil
+#'     \item the grouping variable given in `var`, e.g. habitat or stratum
 #'   }
 #'   Typically this would be a list such as
-#'   \code{list(ndvi = ndvi_df, bsi = bsi_df)}.
+#'   `list(ndvi = ndvi_df, bsi = bsi_df)`.
 #' @param var A character string giving the column name to group by (e.g.
-#'  \code{"habitat"}).
+#'  `"habitat"`).
 #' @param tol Numeric tolerance (default = 0.05) used to decide if two means
 #'   are considered similar between NDVI and BSI or between categories.
 #'
 #' @return A character string containing a Dutch-language description of the
 #'   trends and their similarities or differences between NDVI and BSI.
-#' @export
-#'
-#' @examples
-#' ndvi_df <- data.frame(
-#'   habitat = c("grasland", "akker"),
-#'   perc_bare_soil = c(0.12, 0.25)
-#' )
-#' bsi_df <- data.frame(
-#'   habitat = c("grasland", "akker"),
-#'   perc_bare_soil = c(0.10, 0.22)
-#' )
-#' summary_data <- list(ndvi = ndvi_df, bsi = bsi_df)
-#' describe_summary_tables(summary_data, var = "habitat")
 describe_summary_tables <- function(summary_data, var, tol = 0.05) {
   require("dplyr")
   require("rlang")

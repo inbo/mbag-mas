@@ -185,22 +185,22 @@ Voor elke soort voor elk jaar werd een reeks modellen opgesteld waarin verschill
   * *openheid* (open versus half-open landschap).
 * **Combinaties van twee covariaten** — additieve modellen met:
 
-  * *regio + sbp*,
-  * *regio + openheid*,
-  * *sbp + openheid*.
+  * *regio + sbp*, <!-- spell-check: ignore -->
+  * *regio + openheid*, <!-- spell-check: ignore -->
+  * *sbp + openheid*. <!-- spell-check: ignore -->
 * **Interacties** — een model met interactie tussen SBP-ligging en openheid (*sbp × openheid*).
 * **Uitgebreide modellen met drie covariaten** — modellen met:
 
-  * *regio + sbp + openheid*, en
-  * *regio + sbp × openheid*.
-* **Stratum-model** — een model waarin *regio*, *sbp* en *openheid* gecombineerd zijn tot één factor *stratum*.
+  * *regio + sbp + openheid*, en <!-- spell-check: ignore -->
+  * *regio + sbp × openheid*. <!-- spell-check: ignore -->
+* **Stratummodel** — een model waarin *regio*, *sbp* en *openheid* gecombineerd zijn tot één factor *stratum*.
   Dit model is vergelijkbaar met een drievoudige interactie tussen de drie variabelen, maar behandelt de Weidestreek als afzonderlijk stratum.
 
 In modellen zonder covariaten werden, indien nodig, één of twee aanpassingstermen toegevoegd om de fit van de detectiecurve aan de waargenomen afstandsverdeling te verbeteren.
 
 De modelselectie gebeurde op basis van het Akaike-informatiecriterium (AIC).
 Wanneer meerdere modellen een vergelijkbare verklarende kracht hadden (ΔAIC < 2), werd gekozen voor het meest parsimonieuze model, dat wil zeggen het model met het kleinste aantal parameters.
-De *goodness-of-fit* van elk model werd geëvalueerd met behulp van Q–Q-plots en de Cramér–von Mises-toets.
+De *goodness-of-fit* van elk model werd geëvalueerd met behulp van Q-Q-plots en de Cramér–von Mises-toets.
 Het best passende model per soort werd vervolgens gebruikt om de dichtheden te berekenen op twee ruimtelijke niveaus:
 (1) per stratum (combinatie van openheid en SBP-ligging), en
 (2) per landbouwregio en voor geheel Vlaanderen.

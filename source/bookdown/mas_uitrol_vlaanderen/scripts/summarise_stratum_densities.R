@@ -9,21 +9,21 @@
 #'
 #' @param data A data frame with the following required columns:
 #'   \describe{
-#'     \item{regio}{Region (stratum name).}
-#'     \item{openheid}{Factor with values `"OL"` or `"HOL"`.}
-#'     \item{sbp}{Factor with values `"binnen"` or `"buiten"`
+#'     \item{`regio}{`Region (stratum name).}
+#'     \item{`openheid}{`Factor with values `"OL"` or `"HOL"`.}
+#'     \item{`sbp}{`Factor with values `"binnen"` or `"buiten"`
 #'           (inside/outside SBP).}
-#'     \item{estimate}{Estimated density (numeric).}
-#'     \item{lcl}{Lower confidence limit (numeric).}
-#'     \item{ucl}{Upper confidence limit (numeric).}
-#'     \item{species}{Species name (character).}
-#'     \item{year}{Year of the estimate (numeric or factor).}
+#'     \item{`estimate}{`Estimated density (numeric).}
+#'     \item{`lcl}{`Lower confidence limit (numeric).}
+#'     \item{`ucl}{`Upper confidence limit (numeric).}
+#'     \item{`species}{`Species name (character).}
+#'     \item{`year}{`Year of the estimate (numeric or factor).}
 #'   }
 #'   Optionally, if threshold comparisons are available:
 #'   \describe{
-#'     \item{effect}{Categorical: `"boven"`, `"onder"`, or
+#'     \item{`effect}{`Categorical: `"boven"`, `"onder"`, or
 #'           `"geen sign.\nverschil"`.}
-#'     \item{threshold}{Numeric streefwaarde (policy target).}
+#'     \item{`threshold}{`Numeric policy target.}
 #'   }
 #'
 #' @param threshold Numeric ratio used to define a "remarkable" difference
