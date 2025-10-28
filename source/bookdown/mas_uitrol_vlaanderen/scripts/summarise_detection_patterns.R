@@ -32,7 +32,7 @@ summarise_detection_patterns <- function(df, threshold = 0.05) { # nolint: cyclo
       parts <- c(parts, row$openheid)
     }
     if (!is.null(row$sbp) && !is.na(row$sbp) && row$sbp != "-") {
-      parts <- c(parts, paste0(row$sbp, " sbp"))
+      parts <- c(parts, paste0(row$sbp, " SBP"))
     }
     if (length(parts) == 0) return("")
     paste0("(", paste(parts, collapse = ", "), ")")
