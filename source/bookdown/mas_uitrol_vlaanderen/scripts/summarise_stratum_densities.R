@@ -56,7 +56,7 @@ summarise_stratum_densities <- function(data, threshold = 1.5) { # nolint: cyclo
 
   # Parse species
   spec <- tolower(unique(data$species))
-  quantity_type <- ifelse(spec %in% tolower(roofvogels_f()),
+  quantity_type <- ifelse(spec %in% tolower(roofvogels_f()),  # nolint: object_usage_linter
                           "individuen", "broedparen")
 
 

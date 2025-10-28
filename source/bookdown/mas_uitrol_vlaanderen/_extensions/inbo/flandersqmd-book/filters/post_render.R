@@ -1,12 +1,12 @@
 # Load functions
 source(file.path("scripts", "autoqmd_cleanup.R"))
 
-autoqmd_finalise <- function(qmd_files, message, child_dir = NULL) {
+autoqmd_finalise <- function(qmd_files, message, child_dirs_rm = NULL) {
   # Clean up qmd
   lapply(qmd_files, autoqmd_cleanup, message = message) # nolint: object_usage_linter
 
   # Remove child documents folder
-  if (!is.null(child_dir)) unlink(child_dir, recursive = TRUE)
+  unlink(child_dirs_rm, recursive = TRUE)
 }
 
 # Globals
@@ -26,7 +26,7 @@ msg <- c(
 autoqmd_finalise(
   qmd_files = files,
   message = msg,
-  child_dir = "spec_files"
+  child_dirs_rm = "spec_files2"
 )
 
 # Flanders qmd post render
