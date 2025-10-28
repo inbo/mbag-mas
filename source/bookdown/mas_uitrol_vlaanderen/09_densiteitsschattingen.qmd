@@ -113,8 +113,9 @@ De gemiddelde detectiekans $p$ is dus de oppervlakte onder de detectiefunctie bi
 #| label: fig-distance-methode
 #| fig-cap: "Methodologie *distance sampling*.
 #|  **A.** Punttransect met radius $w$ en observatie $i$ op afstand $r$.
-#|  **B.** Histogram en detectiecurve gefit op 1000 gesimuleerde datapunten uit de
-#|  half-normale verdeling met parameter $\\sigma = 120$ en afknotafstand 300 m.
+#|  **B.** Histogram en detectiecurve gefit op 1000 gesimuleerde datapunten uit
+#|  de half-normale verdeling met parameter $\\sigma = 120$ en afknotafstand
+#|  300 m.
 #|  De oppervlakte onder de curve binnen de rode box is de gemiddelde
 #|  detectiekans $p$."
 #| out.width: "90%"
