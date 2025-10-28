@@ -953,7 +953,7 @@ Temporeel design:
 
 -   elk punt wordt elk jaar opnieuw bezocht
 
-N.B.: voor de steekproef over Vlaanderen is het best mogelijk dat een ander temporeel design nodig is zoals een 'rotating panel design' of een 'augmented panel design'.
+N.B.: voor de steekproef over Vlaanderen is het best mogelijk dat een ander temporeel design nodig is zoals een *rotating panel design* of een *augmented panel design*.
 
 Kaart van de steekproef:
 

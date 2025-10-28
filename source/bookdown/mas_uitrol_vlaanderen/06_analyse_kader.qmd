@@ -96,7 +96,7 @@ De finale dataset wordt klaargemaakt voor publicatie op het Global Biodiversity 
 
 4. **Taxonomische standaardisatie (taxon matching)**
 
-   * Nederlandstalige soortnamen worden automatisch gematcht met de GBIF Backbone Taxonomy [@gbifsecretariat2024] via de **rgbif**-package [@chamberlain2025].
+   * Nederlandstalige soortnamen worden automatisch gematcht met de *GBIF Backbone Taxonomy* [@gbifsecretariat2024] via de **rgbif**-pakket [@chamberlain2025].
    * Taxa die niet automatisch herkend worden en verzamelgroepen (bv. Veldmuis/Aardmuis), worden manueel toegewezen (beperkt aantal).
 
 5. **Finale nabewerking**
@@ -137,7 +137,7 @@ Ten opzichte van het pilootproject zijn er enkele belangrijke uitbreidingen voor
 
 * **Toegenomen temporele resolutie**: waar mogelijk geven we voorkeur aan jaar-specifieke kaartlagen (bv. landbouwgebruiksgegevens of beheermonitoring), zodat we veranderingen doorheen de tijd expliciet kunnen meenemen in de analyse.
 * **Waarnemingsniveau in plaats van enkel telpuntniveau**: naast het berekenen van variabelen op telcirkel- of telpuntniveau (zoals het aandeel akkerrand binnen de 300 m radius), verzamelen we ook fijnschalige informatie op waarnemingsniveau (bv. of een individu daadwerkelijk in een akkerrand werd gezien). <!-- spell-check: ignore -->
-* **Gebruik van remote sensing**: we verkennen hoe gedetailleerde remote sensing-producten kunnen bijdragen aan een nauwkeuriger karakterisering van de landgebruikssituatie op het moment van de telling. In tegenstelling tot administratieve perceelsinformatie bieden satellietbeelden een objectieve momentopname van de effectieve toestand ter plaatse. Zo kan een perceel dat administratief als 'maïs' is aangeduid, in werkelijkheid nog braak liggen tijdens het broedseizoen. Het meenemen van zulke actuele informatie is essentieel om ecologische relaties correct te modelleren. In @sec-remote-sensing focussen we op tijdsreeksen van indicatoren voor naakte bodem op telpuntlocaties.
+* **Gebruik van remote sensing**: we verkennen hoe gedetailleerde *remote sensing* producten kunnen bijdragen aan een nauwkeuriger karakterisering van de landgebruikssituatie op het moment van de telling. In tegenstelling tot administratieve perceelsinformatie bieden satellietbeelden een objectieve momentopname van de effectieve toestand ter plaatse. Zo kan een perceel dat administratief als 'maïs' is aangeduid, in werkelijkheid nog braak liggen tijdens het broedseizoen. Het meenemen van zulke actuele informatie is essentieel om ecologische relaties correct te modelleren. In @sec-remote-sensing focussen we op tijdsreeksen van indicatoren voor naakte bodem op telpuntlocaties.
 
 De selectie, ontwikkeling en verwerking van deze verklarende variabelen ligt niet definitief vast. Ze kunnen verder evolueren in functie van nieuwe onderzoeksnoden, beleidsvragen of technologische ontwikkelingen binnen de looptijd van het meetnet.
 
@@ -147,7 +147,7 @@ Uiteindelijk kunnen we overgaan naar de effectieve analyses (@fig-analyse-kader,
 
 1. **Detectie- en densiteitsmodellering**
 
-Omdat detectiekansen niet constant zijn tussen soorten, habitats of jaren, wordt detectiekans expliciet geschat met behulp van distance sampling.
+Omdat detectiekansen niet constant zijn tussen soorten, habitats of jaren, wordt detectiekans expliciet geschat met behulp van *distance sampling*.
 De resulterende detectiecorrecties worden gebruikt om densiteiten te schatten per soort, gebied of stratum. Dit laat toe om robuuste vergelijkingen te maken tussen gebieden of strata. In @sec-densiteitsschattingen overlopen we de methodiek en resultaten voor 2023-2025 [zie ook @langeraert2025pilot, paragraaf 4.4.1].
 
 2. **Ruimtelijke modellering en verspreidingskaarten**
@@ -166,7 +166,7 @@ Een vergelijking met ABV werd reeds besproken in het rapport van de pilootfase [
 
 5. **Toekomstige mogelijkheden en verkennend onderzoek**
 
-De hierboven beschreven analyses vormen het kernkader voor beleids- en beheermonitoring op macro- en mesoschaal. Tegelijk kunnen de resultaten signalen opleveren voor aanvullend, verklarend onderzoek op microniveau. Dergelijk verkennend onderzoek richt zich typisch op specifieke kennishiaten of hypothesen, bijvoorbeeld om lokale oorzaken van trends of beheerresponsen nader te onderzoeken. Dit gebeurt doorgaans op kleine schaal, gedurende één of enkele jaren, en kan worden aangevuld met aanvullende gegevensbronnen (zoals veldmetingen, remote sensing of agrarische beheergegevens). Zo vormt het MAS niet enkel een monitoringsinstrument, maar ook een onderbouw voor gerichte, hypothesegedreven ecologische studies binnen het landbouwgebied van Vlaanderen.
+De hierboven beschreven analyses vormen het kernkader voor beleids- en beheermonitoring op macro- en mesoschaal. Tegelijk kunnen de resultaten signalen opleveren voor aanvullend, verklarend onderzoek op microniveau. Dergelijk verkennend onderzoek richt zich typisch op specifieke kennishiaten of hypothesen, bijvoorbeeld om lokale oorzaken van trends of beheerresponsen nader te onderzoeken. Dit gebeurt doorgaans op kleine schaal, gedurende één of enkele jaren, en kan worden aangevuld met aanvullende gegevensbronnen (zoals veldmetingen, *remote sensing* of agrarische beheergegevens). Zo vormt het MAS niet enkel een monitoringsinstrument, maar ook een onderbouw voor gerichte, hypothesegedreven ecologische studies binnen het landbouwgebied van Vlaanderen.
 
 6. **Belang van continuïteit en langere tijdsreeksen**
 

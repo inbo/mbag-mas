@@ -56,7 +56,7 @@ species_list_total <- sort(
 
 ## Inleiding
 
-Om aantallen van akkervogels in te schatten op basis van MAS-tellingen maken we gebruik van distance sampling [@langeraert2025pilot; @roodbergen2011]. Deze methode corrigeert voor het feit dat de kans om een individu waar te nemen afneemt met de afstand tot de waarnemer. Door een detectiefunctie te schatten, kan het aantal niet-gedetecteerde individuen worden ingeschat en worden tellingen omgezet naar correcte abundantie- en densiteitsschattingen waarbij we corrigeren voor de detectiekans. De detectiekans kan verschillend zijn per soort (bv. kleine gecamoufleerde soorten versus grotere opvallende soorten) of per locatie (bv. een meer open versus meer gesloten landschap).
+Om aantallen van akkervogels in te schatten op basis van MAS-tellingen maken we gebruik van *distance sampling* [@langeraert2025pilot; @roodbergen2011]. Deze methode corrigeert voor het feit dat de kans om een individu waar te nemen afneemt met de afstand tot de waarnemer. Door een detectiefunctie te schatten, kan het aantal niet-gedetecteerde individuen worden ingeschat en worden tellingen omgezet naar correcte abundantie- en densiteitsschattingen waarbij we corrigeren voor de detectiekans. De detectiekans kan verschillend zijn per soort (bv. kleine gecamoufleerde soorten versus grotere opvallende soorten) of per locatie (bv. een meer open versus meer gesloten landschap).
 
 De methode wordt veelvuldig toegepast in vogelmonitoring [@rosenstock2002; @buckland2001; @roodbergen2011] en heeft enkele cruciale aannames: (1) dieren zijn uniform verdeeld ten opzichte van het steekproefdesign, (2) detectiekans is gelijk aan 1 op afstand 0, (3) dieren worden gedetecteerd op hun oorspronkelijke locatie, en (4) afstanden worden foutloos gemeten [@buckland2001].
 
@@ -65,7 +65,7 @@ Het doel van deze analyses is het schatten van densiteiten per stratum (open lan
 ## Materiaal en methoden
 ### Datavoorbereiding
 
-Voor een correcte toepassing van distance sampling werd de dataset eerst gefilterd en voorbereid:
+Voor een correcte toepassing van *distance sampling* werd de dataset eerst gefilterd en voorbereid:
 
 **1. Gebiedslagen voor extrapolatie**\
 Om abundantie- en densiteitsschattingen naar oppervlakte te kunnen extrapoleren, werden gebiedslagen afgebakend per stratum (OL, HOL, binnen/buiten SBP) (@tbl-oppervlakte-stratum) en per landbouwregio (@tbl-oppervlakte-regio) op basis van het MAS steekproefkader (de punten van het steekproefkader met buffer van 300 m). Omdat strata elkaar kunnen overlappen binnen een regio, werkten we met twee lagen: (1) strata (@fig-oppervlakte-stratum), en (2) regio’s (@fig-oppervlakte-regio). Schattingen voor Vlaanderen kunnen afgeleid worden uit (2).
@@ -92,7 +92,7 @@ Enkel tellingen die volledig binnen de gekende broedperiode van de soort vallen,
 **4. Gebruik van aantallen**\
 Voor het fitten van de detectiecurve (en dus het schatten van de detectiekans) gebruikten we alle observaties na bovenstaande filters. Voor het berekenen van abundantie- en densiteitsschattingen namen we echter enkel het maximum aantal per telpunt over de resterende telperiodes heen. Dit voorkomt overschatting door herhaalde tellingen van dezelfde individuen en we moeten hier dus ook niet voor corrigeren tijdens de analyses. Deze afwegingen werden onderzocht en besproken tijdens de pilootfase [@langeraert2025pilot, Paragraaf 4.4.1.4].
 
-### Distance sampling-methodiek
+### *Distance sampling* methodiek
 
 Binnen het MAS werken we met punttransecten met een telradius $w = 300$ m.
 De gemiddelde detectiekans $p$ binnen deze straal wordt berekend als
@@ -111,7 +111,7 @@ De gemiddelde detectiekans $p$ is dus de oppervlakte onder de detectiefunctie bi
 
 ```{r}
 #| label: fig-distance-methode
-#| fig-cap: "Methodologie distance sampling.
+#| fig-cap: "Methodologie *distance sampling*.
 #|  A. Punttransect met radius $w$ en observatie $i$ op afstand $r$.
 #|  B. Histogram en detectiecurve gefit op 1000 gesimuleerde datapunten uit de
 #|  half-normale verdeling met parameter $\\sigma = 120$ en afknotafstand 300 m.
@@ -174,7 +174,7 @@ De onzekerheid op de abundantie- en densiteitsschattingen komt van twee origines
 
 ### Modelstructuur en analyse-opzet
 
-De distance sampling-analyses werden uitgevoerd in R [@R] met RStudio [@RStudio] met behulp van de **Distance**-package [@R-Distance; @miller2019].
+De *distance sampling* analyses werden uitgevoerd in R [@R] met RStudio [@RStudio] met behulp van de **Distance**-pakket [@R-Distance; @miller2019].
 Voor elke soort voor elk jaar werd een reeks modellen opgesteld waarin verschillende combinaties van omgevingscovariaten werden getest die mogelijk een invloed hebben op de detectiekans. De volgende modelstructuren werden vergeleken:
 
 * **Zonder covariaten** — een nulmodel waarin de detectiekans enkel afhangt van de afstand tot de waarnemer (`~1`).
@@ -205,13 +205,13 @@ Het best passende model per soort werd vervolgens gebruikt om de dichtheden te b
 (1) per stratum (combinatie van openheid en SBP-ligging), en
 (2) per landbouwregio en voor geheel Vlaanderen.
 
-De onzekerheid op de schattingen werd berekend met de standaardopties van de **Distance**-package.
+De onzekerheid op de schattingen werd berekend met de standaardopties van de **Distance**-pakket.
 Voor de detectiekans ($p$) werden betrouwbaarheidsintervallen berekend op basis van de puntschatting en de standaardfout, onder de assumptie van een bètaverdeling.
 De betrouwbaarheidsintervallen voor de dichtheid werden rechtstreeks verkregen uit de **Distance**-analyse en zijn gebaseerd op lognormale verdelingen met een Satterthwaite-correctie voor de vrijheidsgraden [@buckland2001].
 
 ## Resultaten {#sec-resultaten-densiteitsschattingen}
 
-In dit hoofdstuk tonen we de resultaten van de distance sampling-analyses voor de soorten uit bijlage V van de natuurherstelverordening.
+In dit hoofdstuk tonen we de resultaten van de *distance sampling* analyses voor de soorten uit bijlage V van de natuurherstelverordening.
 Voor elke soort worden de geschatte detectiekans en densiteit weergegeven, zowel per stratum als per landbouwregio en voor geheel Vlaanderen.
 De resultaten worden per jaar gepresenteerd en voorzien van 95%-betrouwbaarheidsintervallen.
 

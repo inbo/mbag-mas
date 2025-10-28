@@ -261,12 +261,16 @@ Bij zero-inflated modellen in **mgcv** gebruiken we `family = ziplss()` of `fami
 
 ### Selectie van spatiale spline
 
+<!-- spell-check: ignore:start -->
+
 | `bs=`           | Naam                         | Best voor                                                          | Opmerkingen                                 |
 | --------------- | ---------------------------- | ------------------------------------------------------------------ | ------------------------------------------- |
 | `"tp"`          | Thin Plate Regression Spline | **Standaardkeuze**, goed voor algemeen gebruik                     | Automatisch isotroop, past goed bij Lambert |
 | `"ts"`          | Thin Plate Shrinkage         | Als `"tp"`, maar kan ruimtelijk effect volledig wegshrinken        | Nuttig als ruimtelijk effect optioneel is   |
 | `"te"` / `"ti"` | Tensor product smooth        | Als anisotropie mogelijk is of als x/y sterk verschillen in schaal | Bij Lambert meestal niet strikt nodig       |
 | `"soap"`        | Soap film smoother           | Complexe of kustlijnen met grenzen                                 | Vereist boundary polygon                    |
+
+<!-- spell-check: ignore:end -->
 
 **Beste opties voor Vlaanderen (Lambert72):**
 

@@ -1,4 +1,4 @@
-# Remote sensing–indicatoren op basis van optische satelliettijdsreeksen {#sec-remote-sensing}
+# Remote sensing indicatoren op basis van optische satelliettijdsreeksen {#sec-remote-sensing}
 
 ```{r}
 #| include: FALSE

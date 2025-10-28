@@ -63,8 +63,8 @@ Om de openheid van het landschap te bepalen, moeten we een operationele definiti
 We maken hiervoor gebruik van het DSM (digitaal oppervlakte model - DHMV II Vlaanderen, @DSM) en het DTM (digitaal terrein model, @DTM) op 5 m resolutie.
 Werkwijze:
 
--   berekening "canopy height model" (CHM) door verschil te berekenen tussen DSM en DTM. Dit geeft dan hoogte boven het maaiveld (gebouwen, bodem, struiken ...).
--   berekening van "positive topographic openness" (dit is een waarde tussen 0 en 2 in radialen) door voor elke rastercel van het CHM in 8 kijkrichtingen na te gaan wat de gemiddelde hoek is t.o.v. het zenit binnen een straal van 300 m. Deze hoek geeft aan hoe open het landschap is. Indien volledig open is de hoek 90° (of 1.57 radialen).
+-   berekening *canopy height model* (CHM) door verschil te berekenen tussen DSM en DTM. Dit geeft dan hoogte boven het maaiveld (gebouwen, bodem, struiken ...).
+-   berekening van *positive topographic openness* (dit is een waarde tussen 0 en 2 in radialen) door voor elke rastercel van het CHM in 8 kijkrichtingen na te gaan wat de gemiddelde hoek is t.o.v. het zenit binnen een straal van 300 m. Deze hoek geeft aan hoe open het landschap is. Indien volledig open is de hoek 90° (of 1.57 radialen).
 -   met dit resultaat de gemiddelde (van de gemiddelde) topografische openheid berekenen in een cirkelvormig landschap rond elke cel met straal 300 m.
 -   deze gemiddelden zijn daarna ingedeeld in vier klassen:
     -   OL: open landschap (\> 86,5°),
@@ -210,7 +210,7 @@ Met deze regel slagen we erin om potentiële telpunten uit te sluiten die bijvoo
 
 Uit het MAS pilootproject bleken er na de steekproeftrekking vooral problemen met zichtbaarheid omdat punten nog vielen in bossen, boomgaarden, holle wegen etc. [@langeraert2025pilot].
 Om de meest extreme gevallen weg te filteren worden punten met een te slechte zichtbaarheid verwijderd.
-We berekenen zichtbaarheid als de cumulatieve zichtbaarheidsindex (CVVI: cumulative viewshed visibility index) waarbij de waarnemer een bewegingsvrijheid heeft van 25 m rondom het telpunt (@fig-zichtbaarheid).
+We berekenen zichtbaarheid als de cumulatieve zichtbaarheidsindex (CVVI: *cumulative viewshed visibility index*) waarbij de waarnemer een bewegingsvrijheid heeft van 25 m rondom het telpunt (@fig-zichtbaarheid).
 De zichtbaarheidsindex wordt berekend vanaf een set van locaties die 10 m van elkaar liggen in deze zone van bewegingsvrijheid en geeft de proportie aan van zichtbare rastercellen (resolutie 5 m) in de telcirkel met straal 300 m.
 De cumulatieve zichtbaarheidsindex is dan de proportie die zichtbaar is vanuit minstens één locatie binnen de zone van bewegingsvrijheid.
 Hierbij wordt gebruik gemaakt van het DSM (digitaal oppervlakte model - DHMV II Vlaanderen) [@DSM] en het DTM (digitaal terrein model) [@DTM] op 5 m resolutie.
