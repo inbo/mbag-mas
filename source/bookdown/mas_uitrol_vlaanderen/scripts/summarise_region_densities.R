@@ -140,7 +140,8 @@ summarise_region_densities <- function( # nolint: cyclocomp_linter
             "Als we vergelijken met de streefwaarde van",
             "@agentschapvoornatuurenbos2021, nl. %s",
             quantity_type, "per 100 ha,",
-            "zien we dat alle densiteiten onder de streefwaarde liggen."
+            "zien we dat alle densiteiten significant lager dan de",
+            "streefwaarde liggen."
           ),
           gsub("\\.", ",", t)
         )
@@ -191,7 +192,8 @@ summarise_region_densities <- function( # nolint: cyclocomp_linter
       text_parts <- c(
         text_parts,
         paste(
-          "In alle andere gevallen ligt de densiteit onder de streefwaarde."
+          "In alle andere gevallen ligt de densiteit significant lager dan de",
+          "streefwaarde."
         )
       )
     }
