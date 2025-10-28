@@ -473,7 +473,7 @@ summarize_ds_models(
 
 ### Model fit
 
-Om te controleren of ons model goed past bij de data (“goodness of fit”) maken we een Q-Q plot waarbij de cumulatieve distributiefunctie van de gefitte detectiefunctie (CDF) wordt vergeleken met de distributie van de data (EDF). De Cramér-von Mises test kwantificeert de informatie van de Q-Q-plot door te testen of punten van de EDF en CDF uit dezelfde verdeling komen. Voor studies met punttransecten geven kansdichtheidsfunctieplots ook een goed idee over model fit.
+Om te controleren of ons model goed past bij de data (“goodness of fit”) maken we een Q-Q plot waarbij de cumulatieve distributiefunctie van de gefitte detectiefunctie (CDF) wordt vergeleken met de distributie van de data (EDF). De Cramér-von Mises test kwantificeert de informatie van de Q-Q plot door te testen of punten van de EDF en CDF uit dezelfde verdeling komen. Voor studies met punttransecten geven kansdichtheidsfunctieplots ook een goed idee over model fit.
 
 De fit is niet perfect, maar goed genoeg voor deze oefening.
 

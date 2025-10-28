@@ -9,7 +9,6 @@
 'yes'
 -analyse
 -bestand
--betrouwbaarheidsintervallen
 -de
 -package
 -pakket
@@ -71,11 +70,14 @@ DMP
 DSM
 DTM
 Datasetgrootte
+Density
 Depotter
+Distance
 Duinen/Weidestreek
 DwC
 Emberiza
 Facility
+Fixed
 Flanders
 GAM-software
 GAMs
@@ -99,6 +101,7 @@ HGL
 Habitatversnippering
 Haematopus
 Half-normaal
+Hazard-rate
 Hazegraspolder
 Hedley
 Homotypic
@@ -126,6 +129,7 @@ MAS-telperiode
 MAS-telprotocol
 MAS-telpunten
 MBAG
+Mapping
 Maps
 Matkop
 Meetnetontwerp
@@ -152,8 +156,6 @@ Poisson-model
 Process
 Processes
 Q-Q
-Q-Q-plot
-Q-Q-plots
 QGIS
 R-pakketten
 R1
@@ -193,6 +195,7 @@ Telpunt-
 Telpunten
 Tweedie
 UTM-hokken
+Union
 Vanellus
 Veldmuis/Aardmuis
 Version
@@ -204,6 +207,7 @@ Witsterblauwborst
 X-
 X-coördinaten
 Y-coördinaten
+Zero-inflated
 \
 abundantie-
 abundantiegegevens
@@ -363,7 +367,6 @@ opgeslaan
 opvalllende
 ostralegus
 paraboolvormig
-parsimonieuze
 penalizatie
 perceelsgebonden
 perceelsgrootte
@@ -402,7 +405,6 @@ sampelen
 sampling'
 sbp
 sci
-sensing-producten
 size
 smooth
 smoother

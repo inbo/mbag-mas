@@ -96,7 +96,7 @@ De finale dataset wordt klaargemaakt voor publicatie op het Global Biodiversity 
 
 4. **Taxonomische standaardisatie (taxon matching)**
 
-   * Nederlandstalige soortnamen worden automatisch gematcht met de *GBIF Backbone Taxonomy* [@gbifsecretariat2024] via de **rgbif**-pakket [@chamberlain2025].
+   * Nederlandstalige soortnamen worden automatisch gematcht met de *GBIF Backbone Taxonomy* [@gbifsecretariat2024] via het **rgbif**-pakket [@chamberlain2025].
    * Taxa die niet automatisch herkend worden en verzamelgroepen (bv. Veldmuis/Aardmuis), worden manueel toegewezen (beperkt aantal).
 
 5. **Finale nabewerking**
