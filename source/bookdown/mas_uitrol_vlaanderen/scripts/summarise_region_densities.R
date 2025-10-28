@@ -103,7 +103,8 @@ summarise_region_densities <- function( # nolint: cyclocomp_linter
         "In %s waren de hoogste densiteiten in %s, gevolgd door %s.",
         year_label,
         regional_text[1],
-        paste(regional_text[-1], collapse = ", ")
+        gsub("\\sbroedparen per 100 ha", "",
+             paste(regional_text[-1], collapse = ", "))
       )
     }
 
