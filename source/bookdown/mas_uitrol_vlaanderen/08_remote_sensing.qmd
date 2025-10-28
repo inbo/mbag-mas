@@ -300,8 +300,8 @@ par(op)
 #| label: fig-raster-indices
 #| fig-cap: "Rasterbeelden van landbouwpercelen rond telpunt Ol_12833.8 van
 #|  02-03-2024 tot en met 20-07-2024.
-#|  A. NDVI: een lagere waarde betekend minder bedekking.
-#|  B. BSI: een hogere waarde betekend minder bedekking."
+#|  **A.** NDVI: een lagere waarde betekend minder bedekking.
+#|  **B.** BSI: een hogere waarde betekend minder bedekking."
 #| fig-height: 12.5
 #| fig-width: 8
 #-----------------------------
@@ -428,8 +428,8 @@ Voor BSI: `r trend_summary$bsi`
 #| label: fig-tijdsreeks-trend
 #| fig-cap: "Tijdsreeks van landbouwpercelen rond telpunt Ol_12833.8 van
 #|  1 februari tot en met 1 september.
-#|  A. NDVI: overgang naakte bodem onder een waarde van 0.3.
-#|  B. BSI: overgang naakte bodem boven een waarde van 0.021."
+#|  **A.** NDVI: overgang naakte bodem onder een waarde van 0.3.
+#|  **B.** BSI: overgang naakte bodem boven een waarde van 0.021."
 #| fig-height: 12.5
 #| fig-width: 8
 # Create plots
