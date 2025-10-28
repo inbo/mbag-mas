@@ -24,8 +24,8 @@
 #' insert between includes. Options: `"newpage"`, `"clearpage"`.
 #' Defaults to `NULL` (no page breaks).
 #' @param template Optional path to the QMD template used to generate
-#' the child files. If provided, its modification time is inserted as a
-#' hidden timestamp comment to trigger Quarto rebuilds when updated.
+#' the child files. Its modification time and sourced dependencies will be
+#' tracked.
 #' @param quiet Logical; if `TRUE`, suppresses messages.
 #'
 #' @return Invisibly returns the modified lines of the QMD file.
