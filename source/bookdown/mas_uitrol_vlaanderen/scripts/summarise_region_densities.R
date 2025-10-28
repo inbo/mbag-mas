@@ -43,7 +43,7 @@ summarise_region_densities <- function( # nolint: cyclocomp_linter
 
   # Parse species
   spec <- tolower(unique(data$species))
-  quantity_type <- ifelse(spec %in% tolower(roofvogels_f()),
+  quantity_type <- ifelse(spec %in% tolower(roofvogels_f()), # nolint: object_usage_linter
                           "individuen", "broedparen")
 
   years <- sort(unique(data$year))
