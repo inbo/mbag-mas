@@ -68,6 +68,11 @@ det_prob_df <- tar_read_ds("detection_probabilities", params$species,
   select(-species) %>%
   replace(is.na(.), "-")
 
+if (params$species %in% exclude_2023) {
+  det_prob_df <- det_prob_df %>%
+    filter(year != 2023)
+}
+
 detprob_cap <- paste0("Geschatte detectiekansen ", params$species, ".")
 ```
 
