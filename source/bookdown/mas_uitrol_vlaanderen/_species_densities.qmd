@@ -35,6 +35,7 @@ store <- file.path(mbag_dir,
 
 # Source functions
 source(file.path(mbag_dir, "source", "R", "tar_read_ds.R"))
+source(file.path(mbag_dir, "source", "R", "predatoren_f.R"))
 source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
 source(file.path("scripts", "summarise_detection_patterns.R"))
 source(file.path("scripts", "summarise_stratum_densities.R"))
@@ -45,6 +46,13 @@ source(file.path("scripts", "summarise_region_densities.R"))
 # To make it easier
 params <- NULL
 params$species <- "{{species}}"
+
+# Define quantity type
+quantity_type <- ifelse(
+  tolower(unique(params$species)) %in% tolower(roofvogels_f()),
+  "individuen",
+  "broedparen"
+)
 
 # Species results not 2023
 exclude_2023 <- c("Graspieper", "Grutto", "Scholekster", "Wulp")
@@ -171,8 +179,8 @@ if (params$species %in% threshold_vals$species) {
       values =  c(0, 2, 4),
       drop = FALSE
     ) +
-    labs(y = "broedparen / 100 ha", x = "", colour = "Stratum",
-         shape = "Verschil met\nstreefwaarde") +
+    labs(y = paste(quantity_type, "100 ha", sep = " / "), x = "",
+         colour = "Stratum", shape = "Verschil met\nstreefwaarde") +
     facet_wrap(~regio, ncol = 2, scales = "free_x") +
     theme_minimal(base_size = 12) +
     theme(strip.text = element_text(face = "bold"),
@@ -199,7 +207,8 @@ if (params$species %in% threshold_vals$species) {
       linewidth = 0.6
     ) +
     scale_y_continuous(limits = c(0, NA)) +
-    labs(y = "broedparen / 100 ha", x = "", colour = "Stratum") +
+    labs(y = paste(quantity_type, "100 ha", sep = " / "), x = "",
+         colour = "Stratum") +
     facet_wrap(~regio, ncol = 2, scales = "free_x") +
     theme_minimal(base_size = 12) +
     theme(strip.text = element_text(face = "bold"),
@@ -280,7 +289,7 @@ if (params$species %in% threshold_vals$species) {
       drop = FALSE
     ) +
     scale_y_continuous(limits = c(0, NA)) +
-    labs(y = "broedparen / 100 ha", x = "",
+    labs(y = paste(quantity_type, "100 ha", sep = " / "), x = "",
          colour = "Verschil met\nstreefwaarde") +
     facet_wrap(~region, ncol = 2, scales = "free_x") +
     theme_minimal(base_size = 12) +
@@ -296,7 +305,7 @@ if (params$species %in% threshold_vals$species) {
       linewidth = 0.8,
     ) +
     scale_y_continuous(limits = c(0, NA)) +
-    labs(y = "broedparen / 100 ha", x = "") +
+    labs(y = paste(quantity_type, "100 ha", sep = " / "), x = "") +
     facet_wrap(~region, ncol = 2, scales = "free_x") +
     theme_minimal(base_size = 12) +
     theme(strip.text = element_text(face = "bold"))

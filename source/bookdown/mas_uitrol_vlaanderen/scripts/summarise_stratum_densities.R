@@ -54,6 +54,12 @@ summarise_stratum_densities <- function(data, threshold = 1.5) { # nolint: cyclo
     )
   )
 
+  # Parse species
+  spec <- tolower(unique(data$species))
+  quantity_type <- ifelse(spec %in% tolower(roofvogels_f()),
+                          "individuen", "broedparen")
+
+
   years <- sort(unique(data$year))    # all years present
   regions <- sort(unique(data$regio)) # all regions present
 
@@ -189,7 +195,7 @@ summarise_stratum_densities <- function(data, threshold = 1.5) { # nolint: cyclo
     highest_text <- sprintf(
       paste(
         "In %s werd de hoogste dichtheid gevonden in %s in %s, %s SBP",
-        "(%.2f [%.2f–%.2f] broedparen/100 ha)."
+        "(%.2f [%.2f–%.2f]", quantity_type, "per 100 ha)."
       ),
       y, max_row$regio, max_row$openheid, max_row$sbp,
       max_row$estimate, max_row$lcl, max_row$ucl
@@ -202,7 +208,7 @@ summarise_stratum_densities <- function(data, threshold = 1.5) { # nolint: cyclo
       lowest_text <- sprintf(
         paste(
           "De laagste dichtheid in %s werd gevonden in %s in %s, %s SBP",
-          "(%.2f [%.2f–%.2f] broedparen/100 ha)."
+          "(%.2f [%.2f–%.2f]", quantity_type, "per 100 ha)."
         ),
         y, min_row$regio, min_row$openheid, min_row$sbp,
         min_row$estimate, min_row$lcl, min_row$ucl

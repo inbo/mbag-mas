@@ -41,6 +41,11 @@ summarise_region_densities <- function( # nolint: cyclocomp_linter
     )
   )
 
+  # Parse species
+  spec <- tolower(unique(data$species))
+  quantity_type <- ifelse(spec %in% tolower(roofvogels_f()),
+                          "individuen", "broedparen")
+
   years <- sort(unique(data$year))
   regions <- sort(unique(data$region))
 
@@ -81,7 +86,7 @@ summarise_region_densities <- function( # nolint: cyclocomp_linter
 
     # Create regional listing
     regional_text <- apply(df, 1, function(row) {
-      sprintf("%s (%.2f [%.2f–%.2f])",
+      sprintf(paste("%s (%.2f [%.2f–%.2f]", quantity_type, "per 100 ha)"),
               row[["region"]], as.numeric(row[["estimate"]]),
               as.numeric(row[["lcl"]]), as.numeric(row[["ucl"]]))
     })
@@ -107,7 +112,7 @@ summarise_region_densities <- function( # nolint: cyclocomp_linter
       tr <- total_rows[1, ]
       total_text <- sprintf(
         paste("Over heel Vlaanderen bedroeg de densiteit %.2f [%.2f–%.2f]",
-              "broedparen per 100 ha."),
+              quantity_type, "per 100 ha."),
         tr$estimate, tr$lcl, tr$ucl
       )
       year_text <- paste(year_text, total_text)
@@ -133,7 +138,8 @@ summarise_region_densities <- function( # nolint: cyclocomp_linter
         sprintf(
           paste(
             "Als we vergelijken met de streefwaarde van",
-            "@agentschapvoornatuurenbos2021, nl. %s broedparen per 100 ha,",
+            "@agentschapvoornatuurenbos2021, nl. %s",
+            quantity_type, "per 100 ha,",
             "zien we dat alle densiteiten onder de streefwaarde liggen."
           ),
           gsub("\\.", ",", t)
@@ -143,7 +149,8 @@ summarise_region_densities <- function( # nolint: cyclocomp_linter
       # Start threshold section
       threshold_text <- sprintf(
         paste("We vergelijken met de streefwaarde van",
-              "@agentschapvoornatuurenbos2021, nl. %s broedparen per 100 ha."),
+              "@agentschapvoornatuurenbos2021, nl. %s",
+              quantity_type, "per 100 ha."),
         gsub("\\.", ",", t)
       )
       text_parts <- c(text_parts, threshold_text)

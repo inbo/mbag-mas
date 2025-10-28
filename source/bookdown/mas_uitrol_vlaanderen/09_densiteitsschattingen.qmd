@@ -82,7 +82,7 @@ region_sf %>%
 ```
 
 **2. Filter broedcodes**\
-Enkel waarnemingen met een broedcode groter dan nul werden behouden, zodat uitsluitend territoriale en potentieel broedende vogels in rekening worden gebracht.
+Enkel waarnemingen met een broedcode groter dan nul werden behouden, zodat uitsluitend (potentieel) broedende vogels in rekening worden gebracht. Voor torenvalk selecteerden we de data van alle broedcodes.
 
 **3. Filter broedperiodes**\
 Enkel tellingen die volledig binnen de gekende broedperiode van de soort vallen, werden meegenomen. Telperiodes buiten dit venster werden verwijderd.
