@@ -42,7 +42,7 @@ data_path <- file.path(mbag_dir, "data", "remote_sensing")
 
 <!-- spell-check: ignore:start -->
 
-- zie aparte google docµ
+- zie aparte google doc
 
 <!-- spell-check: ignore:end -->
 
@@ -64,7 +64,7 @@ In dit hoofdstuk verkennen we de tijdreeksen van de indicatoren voor naakte bode
 De data werden geanalyseerd in R [@R] met RStudio [@RStudio].
 
 We beschrijven onder andere seizoenspatronen van bedekking op percelen.
-Daarbij onderscheiden we verschillende trends in de evolutie van de indicatorwaarde ten opzichte van hun drempelwaardes (NDVI: naakte bodem onder 0,3; BSI: naakte bodem boven 0.021) (@fig-trend-methods):
+Daarbij onderscheiden we verschillende trends in de evolutie van de indicatorwaarde ten opzichte van hun drempelwaardes (NDVI: naakte bodem onder 0,3; BSI: naakte bodem boven 0,021) (@fig-trend-methods):
 
 - **Altijd onbedekt** – de indicator wijst gedurende de volledige periode, of met hoogstens één tijdstap van bedekking, op weinig vegetatie (onder (NDVI) of boven (BSI) de drempelwaarde)
 - **Altijd bedekt** – de indicator blijft gedurende de volledige periode, of met hoogstens één tijdstap van onbedekking, boven (NDVI) of onder (BSI) de drempelwaarde
