@@ -96,49 +96,48 @@ autoqmd_insert_includes <- function( # nolint: cyclocomp_linter
 }
 
 
-#' Generate dependency timestamp from a QMD/template (fixed and robust)
+#' Generate dependency timestamp from a QMD
 #'
 #' Parse a QMD (via `knitr::purl`), detect `source()` calls (including
 #' `file.path(...)` forms), attempt to evaluate simple assignments that appear
 #' before the first `source()` (so variables become available),
-#' and collect 'mtimes' of the template and any resolved dependency files.
+#' and collect `mtimes` of the file and any dependency files.
 #'
-#' @param template Path to a .qmd or .R template file.
+#' @param file Path to a `.qmd` file.
 #' @param quiet Logical; if TRUE suppresses messages about unresolved sources.
-#' @return A single string: an HTML comment with dependency mtimes, e.g.
+#' @return A single string: an HTML comment with dependency `mtimes`, e.g.
 #'   `<!-- DEPENDENCY-MTIME: template.qmd 2025-10-08 14:30:11 -->`
-#' @export
-autoqmd_dependency_stamp <- function(template = NULL, quiet = FALSE) { # nolint: cyclocomp_linter
-  # If no valid template -> fallback to current time
-  if (is.null(template) || !file.exists(template)) {
+autoqmd_dependency_stamp <- function(file = NULL, quiet = FALSE) { # nolint: cyclocomp_linter
+  # If no valid file -> fallback to current time
+  if (is.null(file) || !file.exists(file)) {
     return(sprintf("<!-- DEPENDENCY-MTIME: %s -->",
                    format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
   }
 
-  # 1) Extract R code from the template (works for QMD / knitr chunks)
+  # 1) Extract R code from the file (works for QMD / knitr chunks)
   tmp_r <- tempfile(fileext = ".R")
-  knitr::purl(template, output = tmp_r, documentation = 0L, quiet = TRUE)
+  knitr::purl(file, output = tmp_r, documentation = 0L, quiet = TRUE)
   lines <- readLines(tmp_r, warn = FALSE)
 
   # 2) Find indices of lines that contain source(
   src_idx <- grep("source\\(", lines)
   if (length(src_idx) == 0) {
-    # No sources found -> return template mtime only
-    mt <- file.info(template)$mtime
-    stamp <- paste0(basename(template), " ", format(mt, "%Y-%m-%d %H:%M:%S"))
+    # No sources found -> return file mtime only
+    mt <- file.info(file)$mtime
+    stamp <- paste0(basename(file), " ", format(mt, "%Y-%m-%d %H:%M:%S"))
     return(sprintf("<!-- DEPENDENCY-MTIME: %s -->", stamp))
   }
 
   # 3) Prepare a restricted environment for safe evaluation
   env <- new.env(parent = baseenv())
-  # provide helpers that are commonly used in templates
+  # provide helpers that are commonly used in files
   env$file.path <- base::file.path
   env$here <- function(...) file.path(...) # minimal here()-like helper
 
   # If rprojroot is available, provide the function directly
   if (requireNamespace("rprojroot", quietly = TRUE)) {
     env$find_root_file <- rprojroot::find_root_file
-    # Some templates call rprojroot::find_root_file(...) explicitly;
+    # Some files call rprojroot::find_root_file(...) explicitly;
     # to allow that exact syntax we don't need to attach the namespace,
     # we will evaluate file expressions like rprojroot::find_root_file(...)
     # below by letting parse/eval handle the :: call (baseenv has '::'
@@ -194,9 +193,9 @@ autoqmd_dependency_stamp <- function(template = NULL, quiet = FALSE) { # nolint:
 
     # res might be relative; try two candidates:
     #  - as given (res)
-    #  - relative to directory of template
+    #  - relative to directory of file
     candidate1 <- res[1]
-    candidate2 <- file.path(dirname(normalizePath(template)), res[1])
+    candidate2 <- file.path(dirname(normalizePath(file)), res[1])
 
     chosen <- NA_character_
     if (!is.na(candidate1) && nzchar(candidate1) && file.exists(candidate1)) {
@@ -206,15 +205,15 @@ autoqmd_dependency_stamp <- function(template = NULL, quiet = FALSE) { # nolint:
       chosen <- normalizePath(candidate2)
     } else {
       if (!quiet) message("Detected source() but file not found: '", res[1],
-                          "' (tried relative to template: '", candidate2, "')")
+                          "' (tried relative to file: '", candidate2, "')")
       next
     }
 
     deps <- c(deps, chosen)
   }
 
-  # 6) Build stamp from template + deps (unique)
-  files_to_track <- unique(c(normalizePath(template), deps))
+  # 6) Build stamp from file + deps (unique)
+  files_to_track <- unique(c(normalizePath(file), deps))
   info <- file.info(files_to_track)
   mtimes <- info$mtime
 
@@ -233,10 +232,10 @@ autoqmd_dependency_stamp <- function(template = NULL, quiet = FALSE) { # nolint:
 }
 
 
-#' Debug function to extract sourced file dependencies from a Quarto template
+#' Debug function to extract sourced file dependencies from a Quarto file
 #'
 #' This helper function is designed for debugging and inspection.
-#' It parses a Quarto (`.qmd`) or R (`.R`) template and lists all files
+#' It parses a Quarto (`.qmd`) file and lists all files
 #' that are sourced within it (via `source()` calls), even when these use
 #' constructions such as `file.path()` or variables defined above the call
 #' (e.g., `mbag_dir <- rprojroot::find_root_file(...)`).
@@ -244,10 +243,10 @@ autoqmd_dependency_stamp <- function(template = NULL, quiet = FALSE) { # nolint:
 #' The function attempts to evaluate simple assignments appearing before the
 #' first `source()` statement, so that variables like `mbag_dir` are available
 #' in the evaluation environment. It then tries to resolve each sourced path
-#' (both absolute and relative to the template directory) and reports which
+#' (both absolute and relative to the file directory) and reports which
 #' files were successfully found.
 #'
-#' @param template Path to the `.qmd` or `.R` template file to inspect.
+#' @param qmd_file Path to a `.qmd` file to inspect.
 #' @param quiet Logical; if `TRUE`, suppresses printed messages.
 #' Default is `FALSE`.
 #'
