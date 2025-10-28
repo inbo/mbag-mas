@@ -24,8 +24,8 @@
 #' insert between includes. Options: `"newpage"`, `"clearpage"`.
 #' Defaults to `NULL` (no page breaks).
 #' @param template Optional path to the QMD template used to generate
-#' the child files. If provided, its modification time is inserted as a
-#' hidden timestamp comment to trigger Quarto rebuilds when updated.
+#' the child files. Its modification time and sourced dependencies will be
+#' tracked.
 #' @param quiet Logical; if `TRUE`, suppresses messages.
 #'
 #' @return Invisibly returns the modified lines of the QMD file.
@@ -54,13 +54,8 @@ autoqmd_insert_includes <- function( # nolint: cyclocomp_linter
     stop("Markers not found or malformed in QMD file: ", qmd_file)
   }
 
-  # Template timestamp comment
-  if (!is.null(template) && file.exists(template)) {
-    template_mtime <- format(file.info(template)$mtime, "%Y-%m-%d %H:%M:%S")
-    timestamp_line <- sprintf("<!-- TEMPLATE-MTIME: %s -->", template_mtime)
-  } else {
-    timestamp_line <- sprintf("<!-- TEMPLATE-MTIME: %s -->", Sys.time())
-  }
+  # Generate dependency timestamp using the helper
+  timestamp_line <- autoqmd_dependency_stamp(template)
 
   # Build child includes
   if (!is.null(page_break)) {
@@ -98,4 +93,238 @@ autoqmd_insert_includes <- function( # nolint: cyclocomp_linter
   }
 
   invisible(lines_new)
+}
+
+
+#' Generate dependency timestamp from a QMD/template (fixed and robust)
+#'
+#' Parse a QMD (via `knitr::purl`), detect `source()` calls (including
+#' `file.path(...)` forms), attempt to evaluate simple assignments that appear
+#' before the first `source()` (so variables become available),
+#' and collect 'mtimes' of the template and any resolved dependency files.
+#'
+#' @param template Path to a .qmd or .R template file.
+#' @param quiet Logical; if TRUE suppresses messages about unresolved sources.
+#' @return A single string: an HTML comment with dependency mtimes, e.g.
+#'   `<!-- DEPENDENCY-MTIME: template.qmd 2025-10-08 14:30:11 -->`
+#' @export
+autoqmd_dependency_stamp <- function(template = NULL, quiet = FALSE) { # nolint: cyclocomp_linter
+  # If no valid template -> fallback to current time
+  if (is.null(template) || !file.exists(template)) {
+    return(sprintf("<!-- DEPENDENCY-MTIME: %s -->",
+                   format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
+  }
+
+  # 1) Extract R code from the template (works for QMD / knitr chunks)
+  tmp_r <- tempfile(fileext = ".R")
+  knitr::purl(template, output = tmp_r, documentation = 0L, quiet = TRUE)
+  lines <- readLines(tmp_r, warn = FALSE)
+
+  # 2) Find indices of lines that contain source(
+  src_idx <- grep("source\\(", lines)
+  if (length(src_idx) == 0) {
+    # No sources found -> return template mtime only
+    mt <- file.info(template)$mtime
+    stamp <- paste0(basename(template), " ", format(mt, "%Y-%m-%d %H:%M:%S"))
+    return(sprintf("<!-- DEPENDENCY-MTIME: %s -->", stamp))
+  }
+
+  # 3) Prepare a restricted environment for safe evaluation
+  env <- new.env(parent = baseenv())
+  # provide helpers that are commonly used in templates
+  env$file.path <- base::file.path
+  env$here <- function(...) file.path(...) # minimal here()-like helper
+
+  # If rprojroot is available, provide the function directly
+  if (requireNamespace("rprojroot", quietly = TRUE)) {
+    env$find_root_file <- rprojroot::find_root_file
+    # Some templates call rprojroot::find_root_file(...) explicitly;
+    # to allow that exact syntax we don't need to attach the namespace,
+    # we will evaluate file expressions like rprojroot::find_root_file(...)
+    # below by letting parse/eval handle the :: call (baseenv has '::'
+    # available).
+  }
+
+  # 4) Attempt to evaluate simple assignments that appear BEFORE the first
+  # source
+  first_src <- min(src_idx)
+  if (first_src > 1) {
+    assign_lines <- lines[seq_len(first_src - 1)]
+    assign_exprs <- try(parse(text = assign_lines), silent = TRUE)
+    if (!inherits(assign_exprs, "try-error")) {
+      for (e in assign_exprs) {
+        # Only evaluate simple assignments (lhs <- rhs). Skip complex constructs
+        if (is.call(e) && identical(e[[1]], as.name("<-"))) {
+          try(eval(e, envir = env), silent = TRUE)
+        }
+      }
+    } else {
+      if (!quiet) message(paste("Could not parse assignment lines before first",
+                                "source(); skipping evaluation of pre-source",
+                                "assignments."))
+    }
+  }
+
+  # 5) For each source() line: parse and try to evaluate the first argument
+  deps <- character(0)
+  for (i in src_idx) {
+    ln <- lines[i]
+    ex <- try(parse(text = ln)[[1]], silent = TRUE)
+    if (inherits(ex, "try-error")) {
+      if (!quiet) message("Could not parse line: ", ln)
+      next
+    }
+
+    # The first arg of source(...) is ex[[2]] (could be a string,
+    # file.path(...), or variable)
+    path_expr <- try(ex[[2]], silent = TRUE)
+    if (inherits(path_expr, "try-error")) {
+      if (!quiet) message("No path expression in: ", ln)
+      next
+    }
+
+    # Try to evaluate the path expression in the prepared env
+    res <- try(eval(path_expr, envir = env), silent = TRUE)
+    if (inherits(res, "try-error") || !is.character(res)) {
+      # If expression uses rprojroot::find_root_file(...) it will evaluate here
+      # if rprojroot available
+      if (!quiet) message("Could not evaluate source() argument in line: ", ln)
+      next
+    }
+
+    # res might be relative; try two candidates:
+    #  - as given (res)
+    #  - relative to directory of template
+    candidate1 <- res[1]
+    candidate2 <- file.path(dirname(normalizePath(template)), res[1])
+
+    chosen <- NA_character_
+    if (!is.na(candidate1) && nzchar(candidate1) && file.exists(candidate1)) {
+      chosen <- normalizePath(candidate1)
+    } else if (!is.na(candidate2) && nzchar(candidate2) &&
+                 file.exists(candidate2)) {
+      chosen <- normalizePath(candidate2)
+    } else {
+      if (!quiet) message("Detected source() but file not found: '", res[1],
+                          "' (tried relative to template: '", candidate2, "')")
+      next
+    }
+
+    deps <- c(deps, chosen)
+  }
+
+  # 6) Build stamp from template + deps (unique)
+  files_to_track <- unique(c(normalizePath(template), deps))
+  info <- file.info(files_to_track)
+  mtimes <- info$mtime
+
+  entries <- vapply(seq_along(files_to_track), function(i) {
+    fn <- basename(files_to_track[i])
+    mt <- mtimes[i]
+    if (is.na(mt)) {
+      paste0(fn, " NA")
+    } else {
+      paste0(fn, " ", format(mt, "%Y-%m-%d %H:%M:%S"))
+    }
+  }, character(1), USE.NAMES = FALSE)
+
+  dep_stamp <- paste(entries, collapse = "; ")
+  sprintf("<!-- DEPENDENCY-MTIME: %s -->", dep_stamp)
+}
+
+
+#' Debug function to extract sourced file dependencies from a Quarto template
+#'
+#' This helper function is designed for debugging and inspection.
+#' It parses a Quarto (`.qmd`) or R (`.R`) template and lists all files
+#' that are sourced within it (via `source()` calls), even when these use
+#' constructions such as `file.path()` or variables defined above the call
+#' (e.g., `mbag_dir <- rprojroot::find_root_file(...)`).
+#'
+#' The function attempts to evaluate simple assignments appearing before the
+#' first `source()` statement, so that variables like `mbag_dir` are available
+#' in the evaluation environment. It then tries to resolve each sourced path
+#' (both absolute and relative to the template directory) and reports which
+#' files were successfully found.
+#'
+#' @param template Path to the `.qmd` or `.R` template file to inspect.
+#' @param quiet Logical; if `TRUE`, suppresses printed messages.
+#' Default is `FALSE`.
+#'
+#' @details
+#' This function is mainly intended to debug and validate dependency tracking
+#' for the `autoqmd_dependency_stamp()` helper. It does **not** return a
+#' Quarto comment or write any files — it only reports paths.
+#'
+#' Evaluation of code is done in a temporary environment with a minimal set
+#' of safe helpers (`file.path`, `rprojroot::find_root_file` if available).
+#' Only simple assignments of the form `x <- expression` before the first
+#' `source()` call are evaluated.
+#'
+#' @return
+#' A character vector of absolute file paths that were successfully resolved
+#' and exist on disk. The function also prints these paths
+#' (unless `quiet = TRUE`).
+debug_detect_sources_in_qmd <- function(qmd_file) { # nolint: cyclocomp_linter
+  if (!file.exists(qmd_file)) stop("QMD bestaat niet: ", qmd_file)
+
+  # 1) purl -> temporary R script
+  tmp_r <- tempfile(fileext = ".R")
+  knitr::purl(qmd_file, output = tmp_r, documentation = 0L, quiet = TRUE)
+
+  # 2) Read lines
+  lines <- readLines(tmp_r, warn = FALSE)
+
+  # 3) Show lines with source(
+  src_lines <- grep("source\\(", lines, value = TRUE)
+  cat("Gevonden source()-regels (uitgedund):\n")
+  if (length(src_lines) == 0) {
+    cat(" - Geen source() calls gevonden in de gepurlde R-code\n")
+    return(invisible(NULL))
+  }
+  print(src_lines)
+
+  # 4) Try to parse and evaluate first arguments in simple env
+  cat("\nPoging om pad-argumenten te extraheren en evalueren:\n")
+  env <- new.env(parent = baseenv())
+  env$file.path <- base::file.path
+  # if simple assignments are above, execute them
+  # heuristic: take first 200 lines or to the first source()
+  idx_first_source <- min(grep("source\\(", lines), length(lines))
+  assign_lines <- lines[seq_len(max(1, idx_first_source - 1))]
+  assign_exprs <- try(parse(text = assign_lines), silent = TRUE)
+  if (!inherits(assign_exprs, "try-error")) {
+    for (e in assign_exprs) {
+      if (is.call(e) && identical(e[[1]], as.name("<-"))) {
+        try(eval(e, envir = env), silent = TRUE)
+      }
+    }
+  }
+
+  # For every source line
+  for (ln in src_lines) {
+    cat("----\nregel: ", ln, "\n")
+    ex <- try(parse(text = ln)[[1]], silent = TRUE)
+    if (inherits(ex, "try-error")) {
+      cat("  parse error\n")
+      next
+    }
+    # ex is call, ex[[1]] should be 'source'
+    path_expr <- try(ex[[2]], silent = TRUE)
+    if (inherits(path_expr, "try-error")) {
+      cat("  geen pad-arg\n")
+      next
+    }
+    res <- try(eval(path_expr, envir = env), silent = TRUE)
+    if (inherits(res, "try-error")) {
+      cat("  evaluatie faalde (mogelijk omdat variabelen ontbreken)\n")
+      cat("  geëvalueerde expr: ")
+      print(path_expr)
+      next
+    }
+    cat("  geëvalueerd pad: ", res, "\n")
+    cat("  bestaat? ", file.exists(res), "\n")
+  }
+
+  invisible(NULL)
 }
