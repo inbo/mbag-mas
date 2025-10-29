@@ -109,11 +109,11 @@ describe_trend_table <- function(
 #--------------------------------------------------------------------
 # Helper function to summarise percentage of bare soil for one indicator
 #--------------------------------------------------------------------
-summarise_bare_soil <- function(data, var, w_vars = NULL) {
+summarise_bare_soil <- function(data, by, w_vars = NULL) {
   require("dplyr")
   require("rlang")
 
-  tot_vars <- c(var, w_vars)
+  tot_vars <- c(by, w_vars)
 
   # Create weights per combination of grouping variables
   weights_df <- data %>%
@@ -122,7 +122,7 @@ summarise_bare_soil <- function(data, var, w_vars = NULL) {
   # Calculate summary statistics
   data %>%
     left_join(weights_df, by = tot_vars) %>%
-    group_by(.data[[var]]) %>%
+    group_by(.data[[by]]) %>%
     summarise(
       min_bs    = min(.data$perc_bare_soil, na.rm = TRUE),
       q25_bs    = ggstats::weighted.quantile(
