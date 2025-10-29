@@ -334,6 +334,7 @@ plot_trend_by_crop <- function(df, order_levels, .f = median, prob = 0.25) {
 #'   Determines the type of boxplot:
 #'   - `"region"`: boxplots per region across years and periods.
 #'   - `"stratum"`: boxplots per stratum across years, with facets by year.
+#' @param w_vars Variables from which to calculate weights.
 plot_bare_soil <- function(df, by, w_vars = NULL) {
   require("dplyr")
   require("ggplot2")
