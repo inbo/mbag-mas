@@ -1,7 +1,19 @@
 # Load functions
 source(file.path("scripts", "autoqmd_cleanup.R"))
 
-autoqmd_finalise <- function(qmd_files, message, child_dirs_rm = NULL) {
+autoqmd_finalise <- function(
+  qmd_files,
+  message = "default",
+  child_dirs_rm = NULL
+) {
+  if (all(message == "default")) {
+    message <- c(
+      "",
+      "> ⚠️ **Note:** The content below is automatically generated",
+      "> during rendering. Do not edit this part manually."
+    )
+  }
+
   # Clean up qmd
   lapply(qmd_files, autoqmd_cleanup, message = message) # nolint: object_usage_linter
 
@@ -26,7 +38,8 @@ msg <- c(
 autoqmd_finalise(
   qmd_files = files,
   message = msg,
-  child_dirs_rm = "spec_files2"
+  child_dirs_rm = c("child_files/spec_files_detection_curves",
+                    "child_files/spec_files_densities_tables")
 )
 
 # Flanders qmd post render
