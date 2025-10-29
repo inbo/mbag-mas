@@ -116,6 +116,15 @@ for (i in seq_along(final_models)) {
       legend.position = "bottom"
     )
 
+  # Make legend smaller in case of many categories
+  if (length(all.vars(as.formula(f))) > 2) {
+    p <- p +
+      theme(
+        legend.text = element_text(size = 6),
+        legend.key.size = unit(0.3, 'cm')
+      )
+  }
+
   # Store the plot in the list
   plots[[i]] <- p
 }
