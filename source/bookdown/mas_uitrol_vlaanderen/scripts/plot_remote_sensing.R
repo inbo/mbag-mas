@@ -379,11 +379,19 @@ plot_bare_soil <- function(df, by, w_vars = NULL) {
         )
 
       # Determine ordering of regio by overall weighted median
-      regio_order <- summary_df %>%
+      regio_order <- df %>%
+        left_join(weights_df, by = tot_vars) %>%
         group_by(.data$regio) %>%
-        summarise(overall_median = mean(.data$median, na.rm = TRUE),
-                  .groups = "drop") %>%
-        arrange(.data$overall_median) %>%
+        summarise(
+          overall_median = ggstats::weighted.median(
+            .data$perc_bare_soil, n, na.rm = TRUE
+          ),
+          overall_mean = weighted.mean(
+            .data$perc_bare_soil, .data$n, na.rm = TRUE
+          ),
+          .groups = "drop"
+        ) %>%
+        arrange(.data$overall_median, .data$overall_mean) %>%
         pull(.data$regio)
 
       # Main plot
@@ -398,8 +406,8 @@ plot_bare_soil <- function(df, by, w_vars = NULL) {
           data = summary_df %>%
             mutate(regio = factor(.data$regio, levels = regio_order)),
           aes(y = .data$median, ymin = .data$q25, ymax = .data$q75),
-          width = 0.2,
-          fatten = 2,
+          width = 0.3,
+          fatten = 1.5,
           color = "black"
         ) +
         labs(
@@ -452,11 +460,19 @@ plot_bare_soil <- function(df, by, w_vars = NULL) {
         )
 
       # Determine ordering of stratum by overall weighted median
-      stratum_order <- summary_df %>%
+      stratum_order <- df %>%
+        left_join(weights_df, by = tot_vars) %>%
         group_by(.data$stratum) %>%
-        summarise(overall_median = mean(.data$median, na.rm = TRUE),
-                  .groups = "drop") %>%
-        arrange(.data$overall_median) %>%
+        summarise(
+          overall_median = ggstats::weighted.median(
+            .data$perc_bare_soil, n, na.rm = TRUE
+          ),
+          overall_mean = weighted.mean(
+            .data$perc_bare_soil, .data$n, na.rm = TRUE
+          ),
+          .groups = "drop"
+        ) %>%
+        arrange(.data$overall_median, .data$overall_mean) %>%
         pull(.data$stratum)
 
       # Main plot — same style as your original
@@ -467,19 +483,14 @@ plot_bare_soil <- function(df, by, w_vars = NULL) {
         ) %>%
         ggplot(aes(x = .data$period, y = .data$perc_bare_soil,
                    fill = .data$stratum)) +
-        geom_violin(
-          aes(weight = .data$n),
-          scale = "width",
-          color = "grey30",
-          alpha = 0.8
-        ) +
+        geom_violin(aes(weight = .data$n), scale = "width") +
         geom_crossbar(
           data = summary_df %>%
             mutate(stratum = factor(.data$stratum, levels = stratum_order)),
           aes(y = .data$median, ymin = .data$q25, ymax = .data$q75,
               group = .data$stratum),
-          width = 0.2,
-          fatten = 2,
+          width = 0.3,
+          fatten = 1.5,
           color = "black",
           fill = "white",
           position = position_dodge(width = 0.9)

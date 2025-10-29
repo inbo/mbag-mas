@@ -140,7 +140,7 @@ summarise_bare_soil <- function(data, by, w_vars = NULL) {
       sd_bs     = sd(.data$perc_bare_soil, na.rm = TRUE),
       .groups = "drop"
     ) %>%
-    arrange(desc(.data$mean_bs))
+    arrange(desc(.data$median_bs), desc(.data$mean_bs))
 }
 
 
@@ -222,8 +222,8 @@ describe_summary_tables <- function(
     if (nrow(summary_df) > 2) {
       sprintf(
         paste(
-          "Het hoogste percentage naakte bodem, gemiddeld over alle jaren",
-          "(%s), is in %s, gevolgd door %s."
+          "Het hoogste percentage naakte bodem, volgens mediaan over alle",
+          "jaren (%s), is in %s, gevolgd door %s."
         ),
         indicator_label,
         var_text[1],
@@ -233,13 +233,13 @@ describe_summary_tables <- function(
       # For two categories, check if means are similar within tolerance
       if (abs(summary_df$mean_bs[1] - summary_df$mean_bs[2]) < tol) {
         sprintf(
-          paste("Het percentage naakte bodem, gemiddeld over alle jaren,",
+          paste("Het percentage naakte bodem, volgens mediaan over alle jaren,",
                 "is gelijkaardig tussen %s en %s (%s)."),
           var_text[1], var_text[2], indicator_label
         )
       } else {
         sprintf(
-          paste("Het percentage naakte bodem, gemiddeld over alle jaren,",
+          paste("Het percentage naakte bodem, volgens mediaan over alle jaren,",
                 "is hoger in %s dan in %s (%s)."),
           var_text[1], var_text[2], indicator_label
         )
@@ -272,8 +272,8 @@ describe_summary_tables <- function(
     if (nrow(ndvi_summary) > 2) {
       out_text <- sprintf(
         paste("De resultaten zijn vergelijkbaar tussen NDVI en BSI.",
-              "Het hoogste percentage naakte bodem, gemiddeld over alle jaren,",
-              "is in %s, gevolgd door %s."),
+              "Het hoogste percentage naakte bodem, volgens mediaan over alle",
+              "jaren, is in %s, gevolgd door %s."),
         var_text[1],
         paste(var_text[-1], collapse = ", ")
       )
@@ -283,13 +283,13 @@ describe_summary_tables <- function(
             abs(bsi_summary$mean_bs[1] - bsi_summary$mean_bs[2]) < tol) {
         out_text <- sprintf(
           paste("De resultaten zijn vergelijkbaar tussen NDVI en BSI.",
-                "Het percentage naakte bodem, gemiddeld over alle jaren,",
+                "Het percentage naakte bodem, volgens mediaan over alle jaren,",
                 "is gelijkaardig tussen %s en %s."),
           var_text[1], var_text[2]
         )
       } else {
         text <- sprintf(
-          paste("Het percentage naakte bodem, gemiddeld over alle jaren,",
+          paste("Het percentage naakte bodem, volgens mediaan over alle jaren,",
                 "is hoger in %s dan in %s."),
           var_text[1],
           paste(var_text[-1], collapse = ", ")
