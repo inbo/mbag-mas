@@ -52,7 +52,7 @@ summarise_region_densities <- function( # nolint: cyclocomp_linter
   # Identify regions that are practically absent across all years
   absent_regions <- regions[sapply(regions, function(r) {
     reg_rows <- data[data$region == r, ]
-    all(reg_rows$estimate == 0 | reg_rows$lcl < 0.1)
+    all(reg_rows$estimate == 0 | reg_rows$lcl < 0.12)
   })]
 
   text_parts <- list()
@@ -71,7 +71,7 @@ summarise_region_densities <- function( # nolint: cyclocomp_linter
     df <- subdata[!subdata$region %in% c("Total", "Vlaanderen"), ]
 
     # Mark presence
-    df <- df[df$estimate > 0 & df$lcl >= 0.1, ]
+    df <- df[!(df$estimate == 0 | df$lcl < 0.12), ]
     if (nrow(df) == 0) {
       return(
         sprintf(

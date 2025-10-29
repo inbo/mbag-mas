@@ -66,7 +66,7 @@ summarise_stratum_densities <- function(data, threshold = 1.5) { # nolint: cyclo
   # Identify regions that are absent in all years
   absent_regions <- regions[sapply(regions, function(reg) {
     reg_rows <- data[data$regio == reg, ]
-    all(reg_rows$estimate == 0 | reg_rows$lcl < 0.1)
+    all(reg_rows$estimate == 0 | reg_rows$lcl < 0.12)
   })]
 
   # Function to summarise OL vs HOL and binnen vs buiten per region for a given
@@ -84,7 +84,7 @@ summarise_stratum_densities <- function(data, threshold = 1.5) { # nolint: cyclo
       }
 
       # Mark strata where species is practically absent
-      df$present <- !(df$estimate == 0 | df$lcl < 0.1)
+      df$present <- !(df$estimate == 0 | df$lcl < 0.12)
       if (all(!df$present)) {
         ol_vs_hol[[reg]] <- bin_vs_bui[[reg]] <- "absent"
         next
