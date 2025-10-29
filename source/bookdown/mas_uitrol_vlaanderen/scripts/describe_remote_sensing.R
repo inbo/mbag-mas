@@ -106,6 +106,44 @@ describe_trend_table <- function(
 }
 
 
+#--------------------------------------------------------------------
+# Helper function to summarise percentage of bare soil for one indicator
+#--------------------------------------------------------------------
+summarise_bare_soil <- function(data, var, w_vars = NULL) {
+  require("dplyr")
+  require("rlang")
+
+  tot_vars <- c(var, w_vars)
+
+  # Create weights per combination of grouping variables
+  weights_df <- data %>%
+    count(across(all_of(tot_vars)), name = "n")
+
+  # Calculate summary statistics
+  data %>%
+    left_join(weights_df, by = tot_vars) %>%
+    group_by(.data[[var]]) %>%
+    summarise(
+      min_bs    = min(.data$perc_bare_soil, na.rm = TRUE),
+      q25_bs    = ggstats::weighted.quantile(
+        .data$perc_bare_soil, .data$n, 0.25, na.rm = TRUE
+      ),
+      median_bs = ggstats::weighted.median(
+        .data$perc_bare_soil, .data$n, na.rm = TRUE
+      ),
+      q75_bs    = ggstats::weighted.quantile(
+        .data$perc_bare_soil, .data$n, 0.75, na.rm = TRUE
+      ),
+      max_bs    = max(.data$perc_bare_soil, na.rm = TRUE),
+      iqr_bs    = q75_bs - q25_bs,
+      mean_bs   = weighted.mean(.data$perc_bare_soil, .data$n, na.rm = TRUE),
+      sd_bs     = sd(.data$perc_bare_soil, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    arrange(desc(.data$mean_bs))
+}
+
+
 #' Describe and compare NDVI and BSI summary tables
 #'
 #' This function produces natural-language descriptions (in Dutch) of
@@ -125,40 +163,25 @@ describe_trend_table <- function(
 #'   `list(ndvi = ndvi_df, bsi = bsi_df)`.
 #' @param var A character string giving the column name to group by (e.g.
 #'  `"habitat"`).
+#' @param w_vars Variables from which to calculate weights.
 #' @param tol Numeric tolerance (default = 0.05) used to decide if two means
 #'   are considered similar between NDVI and BSI or between categories.
 #'
 #' @return A character string containing a Dutch-language description of the
 #'   trends and their similarities or differences between NDVI and BSI.
-describe_summary_tables <- function(summary_data, var, tol = 0.05) {
-  require("dplyr")
-  require("rlang")
+describe_summary_tables <- function(
+  summary_data,
+  var,
+  w_vars = NULL,
+  tol = 0.05
+) {
   require("glue")
-
-  #--------------------------------------------------------------------
-  # Helper function to summarise percentage of bare soil for one indicator
-  #--------------------------------------------------------------------
-  summarise_bare_soil <- function(data, var) {
-    data %>%
-      group_by(.data[[var]]) %>%
-      summarise(
-        min_bs    = min(.data$perc_bare_soil, na.rm = TRUE),
-        q25_bs    = quantile(.data$perc_bare_soil, 0.25, na.rm = TRUE),
-        median_bs = median(.data$perc_bare_soil, na.rm = TRUE),
-        q75_bs    = quantile(.data$perc_bare_soil, 0.75, na.rm = TRUE),
-        max_bs    = max(.data$perc_bare_soil, na.rm = TRUE),
-        mean_bs   = mean(.data$perc_bare_soil, na.rm = TRUE),
-        sd_bs     = sd(.data$perc_bare_soil, na.rm = TRUE),
-        .groups = "drop"
-      ) %>%
-      arrange(desc(.data$mean_bs))
-  }
 
   #--------------------------------------------------------------------
   # Compute summaries for both indicators (NDVI and BSI)
   #--------------------------------------------------------------------
-  ndvi_summary <- summarise_bare_soil(summary_data$ndvi, var)
-  bsi_summary  <- summarise_bare_soil(summary_data$bsi, var)
+  ndvi_summary <- summarise_bare_soil(summary_data$ndvi, var, w_vars)
+  bsi_summary  <- summarise_bare_soil(summary_data$bsi, var, w_vars)
 
   #--------------------------------------------------------------------
   # Helper function to check if NDVI and BSI orders are similar
@@ -186,13 +209,13 @@ describe_summary_tables <- function(summary_data, var, tol = 0.05) {
   # Helper to describe one indicator’s results in natural Dutch
   #--------------------------------------------------------------------
   describe_one <- function(summary_df, indicator_label) {
-    # Format each row as a text snippet with mean, median, and SD
+    # Format each row as a text snippet with mean, median, and IQR
     var_text <- apply(summary_df, 1, function(row) {
-      sprintf("%s (gemiddelde: %.3f, mediaan: %.3f, SD: %.3f)",
+      sprintf("%s (gemiddelde: %.3f, mediaan: %.3f, IQR: %.3f)",
               row[[var]],
               as.numeric(row[["mean_bs"]]),
               as.numeric(row[["median_bs"]]),
-              as.numeric(row[["sd_bs"]]))
+              as.numeric(row[["iqr_bs"]]))
     })
 
     # Construct sentences depending on number of categories
@@ -234,11 +257,11 @@ describe_summary_tables <- function(summary_data, var, tol = 0.05) {
     var_text <- mapply(
       function(n_row, b_row) {
         sprintf(
-          paste("%s (NDVI – gemiddelde: %.3f, mediaan: %.3f, SD: %.3f;",
+          paste("%s (NDVI – gemiddelde: %.3f, mediaan: %.3f, IQR: %.3f;",
                 "BSI – %.3f, %.3f, %.3f)"),
           n_row[[var]],
-          n_row[["mean_bs"]], n_row[["median_bs"]], n_row[["sd_bs"]],
-          b_row[["mean_bs"]], b_row[["median_bs"]], b_row[["sd_bs"]]
+          n_row[["mean_bs"]], n_row[["median_bs"]], n_row[["iqr_bs"]],
+          b_row[["mean_bs"]], b_row[["median_bs"]], b_row[["iqr_bs"]]
         )
       },
       split(ndvi_summary, seq_len(nrow(ndvi_summary))),
