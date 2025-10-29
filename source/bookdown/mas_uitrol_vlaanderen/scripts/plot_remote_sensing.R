@@ -334,44 +334,173 @@ plot_trend_by_crop <- function(df, order_levels, .f = median, prob = 0.25) {
 #'   Determines the type of boxplot:
 #'   - `"region"`: boxplots per region across years and periods.
 #'   - `"stratum"`: boxplots per stratum across years, with facets by year.
-plot_bare_soil <- function(df, by) {
+#' @param w_vars Variables from which to calculate weights.
+plot_bare_soil <- function(df, by, w_vars = NULL) {
   require("dplyr")
   require("ggplot2")
   require("rlang")
 
-  if (by == "region") {
-    df %>%
-      mutate(
-        regio = forcats::fct_reorder(
-          factor(.data$regio),
-          .data$perc_bare_soil,
-          mean
+  if (by == "regio") {
+    if (is.null(w_vars)) {
+      df %>%
+        mutate(
+          regio = forcats::fct_reorder(
+            factor(.data$regio),
+            .data$perc_bare_soil,
+            mean
+          )
+        ) %>%
+        ggplot(aes(x = .data$regio, y = .data$perc_bare_soil)) +
+        geom_boxplot() +
+        labs(x = "", y = "Percentage naakte bodem",
+             subtitle = toupper(unique(df$index))) +
+        facet_grid(year ~ period) +
+        theme_minimal(base_size = 12) +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1),
+              strip.text = element_text(face = "bold"))
+    } else {
+      # Create weights per combination of grouping variables
+      tot_vars <- c(by, w_vars)
+      weights_df <- df %>%
+        count(across(all_of(tot_vars)), name = "n")
+
+      # Compute weighted quantiles per facet
+      summary_df <- df %>%
+        left_join(weights_df, by = tot_vars) %>%
+        group_by(.data$regio, .data$year, .data$period) %>%
+        summarise(
+          q25 = ggstats::weighted.quantile(.data$perc_bare_soil, n, 0.25,
+                                           na.rm = TRUE),
+          median = ggstats::weighted.median(.data$perc_bare_soil, n,
+                                            na.rm = TRUE),
+          q75 = ggstats::weighted.quantile(.data$perc_bare_soil, n, 0.75,
+                                           na.rm = TRUE),
+          .groups = "drop"
         )
-      ) %>%
-      ggplot(aes(x = .data$regio, y = .data$perc_bare_soil)) +
-      geom_boxplot() +
-      labs(x = "", y = "Percentage naakte bodem",
-           subtitle = toupper(unique(df$index))) +
-      facet_grid(year ~ period) +
-      theme_minimal(base_size = 12) +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1),
-            strip.text = element_text(face = "bold"))
+
+      # Determine ordering of regio by overall weighted median
+      regio_order <- df %>%
+        left_join(weights_df, by = tot_vars) %>%
+        group_by(.data$regio) %>%
+        summarise(
+          overall_median = ggstats::weighted.median(
+            .data$perc_bare_soil, n, na.rm = TRUE
+          ),
+          overall_mean = weighted.mean(
+            .data$perc_bare_soil, .data$n, na.rm = TRUE
+          ),
+          .groups = "drop"
+        ) %>%
+        arrange(.data$overall_median, .data$overall_mean) %>%
+        pull(.data$regio)
+
+      # Main plot
+      df %>%
+        left_join(weights_df, by = tot_vars) %>%
+        mutate(
+          regio = factor(.data$regio, levels = regio_order)
+        ) %>%
+        ggplot(aes(x = .data$regio, y = .data$perc_bare_soil)) +
+        geom_violin(aes(weight = .data$n), scale = "width") +
+        geom_crossbar(
+          data = summary_df %>%
+            mutate(regio = factor(.data$regio, levels = regio_order)),
+          aes(y = .data$median, ymin = .data$q25, ymax = .data$q75),
+          width = 0.3,
+          fatten = 1.5,
+          color = "black"
+        ) +
+        labs(
+          x = "",
+          y = "Percentage naakte bodem",
+          subtitle = toupper(unique(df$index))
+        ) +
+        facet_grid(year ~ period) +
+        theme_minimal(base_size = 12) +
+        theme(
+          axis.text.x = element_text(angle = 45, hjust = 1),
+          strip.text = element_text(face = "bold")
+        )
+    }
   } else if (by == "stratum") {
-    df %>%
-      mutate(
-        regio = forcats::fct_reorder(
-          factor(.data$stratum),
-          .data$perc_bare_soil,
-          mean
+    if (is.null(w_vars)) {
+      df %>%
+        mutate(
+          regio = forcats::fct_reorder(
+            factor(.data$stratum),
+            .data$perc_bare_soil,
+            mean
+          )
+        ) %>%
+        ggplot(aes(x = .data$period, y = .data$perc_bare_soil)) +
+        geom_boxplot(aes(fill = .data$stratum)) +
+        facet_wrap(~year, ncol = 1) +
+        labs(x = "", y = "Percentage naakte bodem", fill = "Stratum",
+             subtitle = toupper(unique(df$index))) +
+        theme_minimal(base_size = 12) +
+        theme(strip.text = element_text(face = "bold"))
+    } else {# Create weights per combination of grouping variables
+      # Create weights per combination of grouping variables
+      tot_vars <- c(by, w_vars)
+      weights_df <- df %>%
+        count(across(all_of(tot_vars)), name = "n")
+
+      # Compute weighted quantiles per facet
+      summary_df <- df %>%
+        left_join(weights_df, by = tot_vars) %>%
+        group_by(.data$stratum, .data$period, .data$year) %>%
+        summarise(
+          q25 = ggstats::weighted.quantile(.data$perc_bare_soil, n, 0.25,
+                                           na.rm = TRUE),
+          median = ggstats::weighted.median(.data$perc_bare_soil, n,
+                                            na.rm = TRUE),
+          q75 = ggstats::weighted.quantile(.data$perc_bare_soil, n, 0.75,
+                                           na.rm = TRUE),
+          .groups = "drop"
         )
-      ) %>%
-      ggplot(aes(x = .data$period, y = .data$perc_bare_soil)) +
-      geom_boxplot(aes(fill = .data$stratum)) +
-      facet_wrap(~year, ncol = 1) +
-      labs(x = "", y = "Percentage naakte bodem", fill = "Stratum",
-           subtitle = toupper(unique(df$index))) +
-      theme_minimal(base_size = 12) +
-      theme(strip.text = element_text(face = "bold"))
+
+      # Determine ordering of stratum by overall weighted median
+      stratum_order <- df %>%
+        left_join(weights_df, by = tot_vars) %>%
+        group_by(.data$stratum) %>%
+        summarise(
+          overall_median = ggstats::weighted.median(
+            .data$perc_bare_soil, n, na.rm = TRUE
+          ),
+          overall_mean = weighted.mean(
+            .data$perc_bare_soil, .data$n, na.rm = TRUE
+          ),
+          .groups = "drop"
+        ) %>%
+        arrange(.data$overall_median, .data$overall_mean) %>%
+        pull(.data$stratum)
+
+      # Main plot — same style as your original
+      df %>%
+        left_join(weights_df, by = tot_vars) %>%
+        mutate(
+          stratum = factor(.data$stratum, levels = stratum_order)
+        ) %>%
+        ggplot(aes(x = .data$period, y = .data$perc_bare_soil,
+                   fill = .data$stratum)) +
+        geom_violin(aes(weight = .data$n), scale = "width") +
+        geom_crossbar(
+          data = summary_df %>%
+            mutate(stratum = factor(.data$stratum, levels = stratum_order)),
+          aes(y = .data$median, ymin = .data$q25, ymax = .data$q75,
+              group = .data$stratum),
+          width = 0.3,
+          fatten = 1.5,
+          color = "black",
+          fill = "white",
+          position = position_dodge(width = 0.9)
+        ) +
+        facet_wrap(~year, ncol = 1) +
+        labs(x = "", y = "Percentage naakte bodem", fill = "Stratum",
+             subtitle = toupper(unique(df$index))) +
+        theme_minimal(base_size = 12) +
+        theme(strip.text = element_text(face = "bold"))
+    }
   } else {
     stop("Not implemented! Choose one of 'region' or 'stratum'.")
   }

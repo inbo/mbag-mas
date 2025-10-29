@@ -713,7 +713,7 @@ trend_data$bsi %>%
 
 In tweede plaats bekijken we de trends per landgebruik (gewasgroep). Ook tussen verschillende gewasgroepen zien we verschillen in complexiteit van trends (@fig-trendtype-gewasgroep). Zowel voor NDVI als BSI volgen de trends hoofdzakelijk een eenvoudig patroon in Grasland, Fruit en Noten, Water, Voedergewassen, Houtachtige gewassen, Overige gewassen en Granen, zaden en peulvruchten (bv. altijd bedekt/onbedekt of toename/afname bedekking) en complexere patronen voor Suikerbieten, Maïs, Aardappelen, Groenten, kruiden en sierplanten en Vlas en Hennep (bv. paraboolvormig of complexer). Deze patronen zijn enkel voor BSI in 2022 niet zo opvallend. In andere jaren zien we wel sterke gelijkenis in de verhoudingen van trendtypes per gewasgroep. Net als eerder zien we ook hier dat BSI hogere proporties heeft aan complexere trendtypes.
 
-@fig-trend-gewasgroep-ndvi toont de gemiddelde trends voor NDVI (mediaan en interkwartielbereik) per gewasgroep in meer detail (geordend als in @fig-trendtype-gewasgroep). @fig-trend-gewasgroep-ndvi voor BSI. De trends vertonen voor beide indicatoren gelijkaardig patronen. Ook zijn de patronen per gewasgroep gelijkaardig voor elk jaar. De trendtypes verschillen soms wel tussen de jaren omdat de indexwaarden soms net wel of net niet de drempelwaarde overschrijden.
+@fig-trend-gewasgroep-ndvi toont de gemiddelde trends voor NDVI (mediaan en interkwartielbereik (IQR)) per gewasgroep in meer detail (geordend als in @fig-trendtype-gewasgroep). @fig-trend-gewasgroep-ndvi voor BSI. De trends vertonen voor beide indicatoren gelijkaardig patronen. Ook zijn de patronen per gewasgroep gelijkaardig voor elk jaar. De trendtypes verschillen soms wel tussen de jaren omdat de indexwaarden soms net wel of net niet de drempelwaarde overschrijden.
 
 ```{r}
 #| label: fig-trendtype-gewasgroep
@@ -799,27 +799,30 @@ perc_bare_soil_data <- lapply(vec, function(i) {
 ```
 
 Per telpunt werd het percentage naakte bodem berekend voor elke MAS-telperiode in elk jaar. Meeste patronen zijn gelijkaardig voor berekeningen op basis van NDVI en BSI en zijn gelijkaardig tussen de jaren.
+Berekeningen van statistieken zoals gemiddelden, medianen en kwartielen zijn telkens gebaseerd op gewogen waarden, zodat rekening wordt gehouden met het relatief aantal telpunten per combinatie van regio, openheid en SBP-ligging.
 
 In telperiode vier is het percentage naakte bodem duidelijk lager dan in de ander periodes. `r describe_summary_tables(perc_bare_soil_data, "period_lab")`
 
-Tussen de landbouwregio's zien we kleine verschillen (@fig-baresoil-region). `r describe_summary_tables(perc_bare_soil_data, "regio_lab")`
+Tussen de landbouwregio's zien we kleine verschillen (@fig-baresoil-region). `r describe_summary_tables(perc_bare_soil_data, "regio_lab", c("openheid_klasse", "sbp"))`
 
 In @fig-baresoil-stratum vergelijken we per stratum.
-Voor openheid landschap zien we een verschil. `r describe_summary_tables(perc_bare_soil_data, "openheid_lab")`
-Voor binnen versus buiten SBP-gebied is er geen opvallend verschil. `r describe_summary_tables(perc_bare_soil_data, "sbp_lab")`
+Voor openheid landschap zien we een verschil. `r describe_summary_tables(perc_bare_soil_data, "openheid_lab", c("regio", "sbp"))`
+Voor binnen versus buiten SBP-gebied is er geen opvallend verschil. `r describe_summary_tables(perc_bare_soil_data, "sbp_lab", c("regio", "openheid_klasse"))`
 
 ```{r}
 #| label: fig-baresoil-region
 #| fig-cap: "Verdeling van percentage naakte bodem per telronde per
-#|  landbouwregio per jaar. De regio's zijn gesorteerd volgens gemiddelde
-#|  percentage van laag naar hoog over alle jaren. R1: 01/04–20/04,
-#|  R2: 21/04–10/05, R3: 11/05–10/06, R4: 21/06–15/07."
-#| fig-height: 12.5
+#|  landbouwregio per jaar met aanduiding van de gewogen mediaan en gewogen IQR.
+#|  De regio's zijn gesorteerd volgens de gewogen mediaan over alle jaren en
+#|  telperiodes van laag naar hoog.
+#|  R1: 01/04–20/04, R2: 21/04–10/05, R3: 11/05–10/06, R4: 21/06–15/07."
+#| fig-height: 12
 #| fig-width: 8
 p_baresoil_region <- lapply(
   perc_bare_soil_data,
   plot_bare_soil,
-  by = "region"
+  by = "regio",
+  w_vars = c("openheid_klasse", "sbp")
 )
 
 # Combine plots
@@ -836,14 +839,16 @@ cowplot::plot_grid(
 ```{r}
 #| label: fig-baresoil-stratum
 #| fig-cap: "Verdeling van percentage naakte bodem per telronde per
-#|  stratum per jaar. De strata zijn gesorteerd volgens gemiddelde
-#|  percentage van laag naar hoog over alle jaren."
+#|  stratum per jaar met aanduiding van de gewogen mediaan en gewogen IQR.
+#|  De strata zijn gesorteerd volgens de gewogen mediaan over alle jaren en
+#|  telperiodes van laag naar hoog."
 #| fig-height: 12.5
 #| fig-width: 8
 p_baresoil_stratum <- lapply(
   perc_bare_soil_data,
   plot_bare_soil,
-  by = "stratum"
+  by = "stratum",
+  w_vars = c("regio")
 )
 
 # Combine plots
