@@ -713,7 +713,7 @@ trend_data$bsi %>%
 
 In tweede plaats bekijken we de trends per landgebruik (gewasgroep). Ook tussen verschillende gewasgroepen zien we verschillen in complexiteit van trends (@fig-trendtype-gewasgroep). Zowel voor NDVI als BSI volgen de trends hoofdzakelijk een eenvoudig patroon in Grasland, Fruit en Noten, Water, Voedergewassen, Houtachtige gewassen, Overige gewassen en Granen, zaden en peulvruchten (bv. altijd bedekt/onbedekt of toename/afname bedekking) en complexere patronen voor Suikerbieten, Maïs, Aardappelen, Groenten, kruiden en sierplanten en Vlas en Hennep (bv. paraboolvormig of complexer). Deze patronen zijn enkel voor BSI in 2022 niet zo opvallend. In andere jaren zien we wel sterke gelijkenis in de verhoudingen van trendtypes per gewasgroep. Net als eerder zien we ook hier dat BSI hogere proporties heeft aan complexere trendtypes.
 
-@fig-trend-gewasgroep-ndvi toont de gemiddelde trends voor NDVI (mediaan en interkwartielbereik) per gewasgroep in meer detail (geordend als in @fig-trendtype-gewasgroep). @fig-trend-gewasgroep-ndvi voor BSI. De trends vertonen voor beide indicatoren gelijkaardig patronen. Ook zijn de patronen per gewasgroep gelijkaardig voor elk jaar. De trendtypes verschillen soms wel tussen de jaren omdat de indexwaarden soms net wel of net niet de drempelwaarde overschrijden.
+@fig-trend-gewasgroep-ndvi toont de gemiddelde trends voor NDVI (mediaan en interkwartielbereik (IQR)) per gewasgroep in meer detail (geordend als in @fig-trendtype-gewasgroep). @fig-trend-gewasgroep-ndvi voor BSI. De trends vertonen voor beide indicatoren gelijkaardig patronen. Ook zijn de patronen per gewasgroep gelijkaardig voor elk jaar. De trendtypes verschillen soms wel tussen de jaren omdat de indexwaarden soms net wel of net niet de drempelwaarde overschrijden.
 
 ```{r}
 #| label: fig-trendtype-gewasgroep
@@ -802,11 +802,11 @@ Per telpunt werd het percentage naakte bodem berekend voor elke MAS-telperiode i
 
 In telperiode vier is het percentage naakte bodem duidelijk lager dan in de ander periodes. `r describe_summary_tables(perc_bare_soil_data, "period_lab")`
 
-Tussen de landbouwregio's zien we kleine verschillen (@fig-baresoil-region). `r describe_summary_tables(perc_bare_soil_data, "regio_lab")`
+Tussen de landbouwregio's zien we kleine verschillen (@fig-baresoil-region). `r describe_summary_tables(perc_bare_soil_data, "regio_lab", c("openheid_klasse", "sbp"))`
 
 In @fig-baresoil-stratum vergelijken we per stratum.
-Voor openheid landschap zien we een verschil. `r describe_summary_tables(perc_bare_soil_data, "openheid_lab")`
-Voor binnen versus buiten SBP-gebied is er geen opvallend verschil. `r describe_summary_tables(perc_bare_soil_data, "sbp_lab")`
+Voor openheid landschap zien we een verschil. `r describe_summary_tables(perc_bare_soil_data, "openheid_lab", c("regio", "sbp"))`
+Voor binnen versus buiten SBP-gebied is er geen opvallend verschil. `r describe_summary_tables(perc_bare_soil_data, "sbp_lab", c("regio", "openheid_klasse"))`
 
 ```{r}
 #| label: fig-baresoil-region
