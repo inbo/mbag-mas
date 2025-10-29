@@ -813,8 +813,8 @@ Voor binnen versus buiten SBP-gebied is er geen opvallend verschil. `r describe_
 #| label: fig-baresoil-region
 #| fig-cap: "Verdeling van percentage naakte bodem per telronde per
 #|  landbouwregio per jaar met aanduiding van de gewogen mediaan en gewogen IQR.
-#|  De regio's zijn gesorteerd volgens de gewogen mediaan van laag naar hoog
-#|  gemiddeld over alle jaren en telperiodes.
+#|  De regio's zijn gesorteerd volgens de gewogen mediaan over alle jaren en
+#|  telperiodes van laag naar hoog.
 #|  R1: 01/04–20/04, R2: 21/04–10/05, R3: 11/05–10/06, R4: 21/06–15/07."
 #| fig-height: 12
 #| fig-width: 8
@@ -840,8 +840,8 @@ cowplot::plot_grid(
 #| label: fig-baresoil-stratum
 #| fig-cap: "Verdeling van percentage naakte bodem per telronde per
 #|  stratum per jaar met aanduiding van de gewogen mediaan en gewogen IQR.
-#|  De strata zijn gesorteerd volgens de gewogen mediaan van laag naar hoog
-#|  gemiddeld over alle jaren en telperiodes."
+#|  De strata zijn gesorteerd volgens de gewogen mediaan over alle jaren en
+#|  telperiodes van laag naar hoog."
 #| fig-height: 12.5
 #| fig-width: 8
 p_baresoil_stratum <- lapply(
