@@ -816,7 +816,7 @@ Voor binnen versus buiten SBP-gebied is er geen opvallend verschil. `r describe_
 #|  De regio's zijn gesorteerd volgens de gewogen mediaan van laag naar hoog
 #|  gemiddeld over alle jaren en telperiodes.
 #|  R1: 01/04–20/04, R2: 21/04–10/05, R3: 11/05–10/06, R4: 21/06–15/07."
-#| fig-height: 12.5
+#| fig-height: 12
 #| fig-width: 8
 p_baresoil_region <- lapply(
   perc_bare_soil_data,
