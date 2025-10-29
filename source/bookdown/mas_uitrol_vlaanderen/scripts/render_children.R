@@ -88,33 +88,33 @@ autoqmd_prepare(
   label = gsub("\\s", ".", tolower(species_vec)),
   sci_name = sci_names,
   template = "_species_densities.qmd",
-  child_dir = "spec_files",
+  child_dir = "child_files/spec_files_densiteitsschattingen",
   freeze = "label",
   qmd_file = "09_densiteitsschattingen.qmd",
   page_break = "clearpage",
   quiet = FALSE
 )
 
-# Appendix detection curves
+# Appendix detection curves (not frozen)
 autoqmd_prepare(
   species = species_vec,
   specname_cap = firstup(species_vec),
   specname_low = tolower(species_vec),
   label = gsub("\\s", ".", tolower(species_vec)),
   template = "_species_detectioncurves.qmd",
-  child_dir = "spec_files2",
+  child_dir = "child_files/spec_files_detection_curves",
   qmd_file = "detection_curves.qmd",
   quiet = FALSE
 )
 
-# Appendix density tables
+# Appendix density tables (not frozen)
 autoqmd_prepare(
   species = species_vec,
   specname_cap = firstup(species_vec),
   specname_low = tolower(species_vec),
   label = gsub("\\s", ".", tolower(species_vec)),
   template = "_densities_tables.qmd",
-  child_dir = "spec_files2",
+  child_dir = "child_files/spec_files_densities_tables",
   qmd_file = "densities_tables.qmd",
   page_break = "newpage",
   quiet = FALSE
