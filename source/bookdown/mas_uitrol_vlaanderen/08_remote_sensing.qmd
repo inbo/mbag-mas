@@ -61,6 +61,7 @@ data_path <- file.path(mbag_dir, "data", "remote_sensing")
 ### Data exploratie
 
 In dit hoofdstuk verkennen we de tijdreeksen van de indicatoren voor naakte bodem voor de jaren 2022–2024.
+Dit omdat we nog geen data van 2025 hebben en we zo toch al een 3-jarige tijdsreeks kunnen verkennen.
 De data werden geanalyseerd in R [@R] met RStudio [@RStudio].
 
 We beschrijven onder andere seizoenspatronen van bedekking op percelen.
