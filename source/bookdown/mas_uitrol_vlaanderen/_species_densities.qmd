@@ -57,7 +57,7 @@ quantity_type <- ifelse(
 # Species results not 2023
 exclude_2023 <- c("Graspieper", "Grutto", "Scholekster", "Wulp")
 exclude_msg <- paste(
-  "Voor {{specname_low}} was er niet genoeg data in 2023 voor",
+  "Voor {{specname_low}} waren er niet genoeg data in 2023 voor",
   "correcte berekening van de detectiekans en bijgevolg densiteiten."
 )
 ```
