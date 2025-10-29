@@ -328,7 +328,6 @@ combined
 ### Tijdsreeksen
 
 ```{r}
-#| cache: true
 # Read time series data from CSV
 vec <- c(ndvi = "ndvi", bsi = "bsi")
 time_series_csv <- lapply(vec, function(indicator) {
