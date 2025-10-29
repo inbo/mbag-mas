@@ -148,7 +148,11 @@ summarise_stratum_densities <- function(data, threshold = 1.5) { # nolint: cyclo
 
   # Function to create narrative for a region in a year
   describe_region <- function(region, ol, bin) {
-    if (ol == "absent" && bin == "absent") return(NULL)
+    if (ol == "absent" && bin == "absent") {
+      if (region %in% absent_regions) return(NULL)
+
+      return(sprintf("De soort is praktisch afwezig in %s.", region))
+    }
     desc_ol <- if (ol == "OL") {
       "OL was hoger dan HOL"
     } else if (ol == "HOL") {
