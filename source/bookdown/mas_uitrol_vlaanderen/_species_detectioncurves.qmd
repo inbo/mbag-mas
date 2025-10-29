@@ -121,7 +121,7 @@ for (i in seq_along(final_models)) {
     p <- p +
       theme(
         legend.text = element_text(size = 6),
-        legend.key.size = unit(0.3, 'cm')
+        legend.key.size = unit(0.3, "cm")
       )
   }
 
