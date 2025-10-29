@@ -367,34 +367,37 @@ plot_bare_soil <- function(df, by, w_vars = NULL) {
       # Compute weighted quantiles per facet
       summary_df <- df %>%
         left_join(weights_df, by = tot_vars) %>%
-        group_by(regio, year, period) %>%
+        group_by(.data$regio, .data$year, .data$period) %>%
         summarise(
-          q25 = ggstats::weighted.quantile(perc_bare_soil, n, 0.25, na.rm = TRUE),
-          median = ggstats::weighted.median(perc_bare_soil, n, na.rm = TRUE),
-          q75 = ggstats::weighted.quantile(perc_bare_soil, n, 0.75, na.rm = TRUE),
+          q25 = ggstats::weighted.quantile(.data$perc_bare_soil, n, 0.25,
+                                           na.rm = TRUE),
+          median = ggstats::weighted.median(.data$perc_bare_soil, n,
+                                            na.rm = TRUE),
+          q75 = ggstats::weighted.quantile(.data$perc_bare_soil, n, 0.75,
+                                           na.rm = TRUE),
           .groups = "drop"
         )
 
       # Determine ordering of regio by overall weighted median
       regio_order <- summary_df %>%
-        group_by(regio) %>%
-        summarise(overall_median = mean(median, na.rm = TRUE),
+        group_by(.data$regio) %>%
+        summarise(overall_median = mean(.data$median, na.rm = TRUE),
                   .groups = "drop") %>%
-        arrange(overall_median) %>%
-        pull(regio)
+        arrange(.data$overall_median) %>%
+        pull(.data$regio)
 
       # Main plot
       df %>%
         left_join(weights_df, by = tot_vars) %>%
         mutate(
-          regio = factor(regio, levels = regio_order)
+          regio = factor(.data$regio, levels = regio_order)
         ) %>%
-        ggplot(aes(x = regio, y = perc_bare_soil)) +
-        geom_violin(aes(weight = n), scale = "width") +
+        ggplot(aes(x = .data$regio, y = .data$perc_bare_soil)) +
+        geom_violin(aes(weight = .data$n), scale = "width") +
         geom_crossbar(
           data = summary_df %>%
-            mutate(regio = factor(regio, levels = regio_order)),
-          aes(y = median, ymin = q25, ymax = q75),
+            mutate(regio = factor(.data$regio, levels = regio_order)),
+          aes(y = .data$median, ymin = .data$q25, ymax = .data$q75),
           width = 0.2,
           fatten = 2,
           color = "black"
@@ -437,38 +440,44 @@ plot_bare_soil <- function(df, by, w_vars = NULL) {
       # Compute weighted quantiles per facet
       summary_df <- df %>%
         left_join(weights_df, by = tot_vars) %>%
-        group_by(stratum, period, year) %>%
+        group_by(.data$stratum, .data$period, .data$year) %>%
         summarise(
-          q25 = ggstats::weighted.quantile(perc_bare_soil, n, 0.25, na.rm = TRUE),
-          median = ggstats::weighted.median(perc_bare_soil, n, na.rm = TRUE),
-          q75 = ggstats::weighted.quantile(perc_bare_soil, n, 0.75, na.rm = TRUE),
+          q25 = ggstats::weighted.quantile(.data$perc_bare_soil, n, 0.25,
+                                           na.rm = TRUE),
+          median = ggstats::weighted.median(.data$perc_bare_soil, n,
+                                            na.rm = TRUE),
+          q75 = ggstats::weighted.quantile(.data$perc_bare_soil, n, 0.75,
+                                           na.rm = TRUE),
           .groups = "drop"
         )
 
       # Determine ordering of stratum by overall weighted median
       stratum_order <- summary_df %>%
-        group_by(stratum) %>%
-        summarise(overall_median = mean(median, na.rm = TRUE), .groups = "drop") %>%
-        arrange(overall_median) %>%
-        pull(stratum)
+        group_by(.data$stratum) %>%
+        summarise(overall_median = mean(.data$median, na.rm = TRUE),
+                  .groups = "drop") %>%
+        arrange(.data$overall_median) %>%
+        pull(.data$stratum)
 
       # Main plot — same style as your original
       df %>%
         left_join(weights_df, by = tot_vars) %>%
         mutate(
-          stratum = factor(stratum, levels = stratum_order)
+          stratum = factor(.data$stratum, levels = stratum_order)
         ) %>%
-        ggplot(aes(x = period, y = perc_bare_soil, fill = stratum)) +
+        ggplot(aes(x = .data$period, y = .data$perc_bare_soil,
+                   fill = .data$stratum)) +
         geom_violin(
-          aes(weight = n),
+          aes(weight = .data$n),
           scale = "width",
           color = "grey30",
           alpha = 0.8
         ) +
         geom_crossbar(
           data = summary_df %>%
-            mutate(stratum = factor(stratum, levels = stratum_order)),
-          aes(y = median, ymin = q25, ymax = q75, group = stratum),
+            mutate(stratum = factor(.data$stratum, levels = stratum_order)),
+          aes(y = .data$median, ymin = .data$q25, ymax = .data$q75,
+              group = .data$stratum),
           width = 0.2,
           fatten = 2,
           color = "black",

@@ -135,7 +135,7 @@ summarise_bare_soil <- function(data, by, w_vars = NULL) {
         .data$perc_bare_soil, .data$n, 0.75, na.rm = TRUE
       ),
       max_bs    = max(.data$perc_bare_soil, na.rm = TRUE),
-      iqr_bs    = q75_bs - q25_bs,
+      iqr_bs    = .data$q75_bs - .data$q25_bs,
       mean_bs   = weighted.mean(.data$perc_bare_soil, .data$n, na.rm = TRUE),
       sd_bs     = sd(.data$perc_bare_soil, na.rm = TRUE),
       .groups = "drop"
