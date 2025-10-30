@@ -1,4 +1,8 @@
+<!-- spell-check: ignore:start -->
+
 # Remote sensing indicatoren op basis van optische satelliettijdreeksen {#sec-remote-sensing}
+
+<!-- spell-check: ignore:end -->
 
 ```{r}
 #| include: FALSE
