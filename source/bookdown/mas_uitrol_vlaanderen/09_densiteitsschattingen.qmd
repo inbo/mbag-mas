@@ -1,0 +1,228 @@
+# Densiteitsschattingen van akkervogels {#sec-densiteitsschattingen}
+
+```{r}
+#| include: FALSE
+# set up
+library(knitr)
+opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  out.width = "100%"
+)
+```
+
+```{r}
+# packages
+library(tidyverse)
+library(targets)
+library(sf)
+
+library(INBOtheme)
+theme_set(theme_inbo(transparent = TRUE))
+
+# Conflicts
+conflicted::conflicts_prefer(dplyr::filter)
+conflicted::conflicts_prefer(dplyr::select)
+
+# Paths
+mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
+store <- file.path(
+  mbag_dir, "source", "targets", "distance_sampling", "_targets"
+)
+```
+
+```{r}
+species_list_total <- sort(
+  c(
+    "Boerenzwaluw",
+    "Geelgors",
+    "Gele Kwikstaart",
+    "Grasmus",
+    "Graspieper",
+    "Grutto",
+    "Kievit",
+    "Kneu",
+    "Patrijs",
+    "Ringmus",
+    "Roodborsttapuit",
+    "Scholekster",
+    "Torenvalk",
+    "Veldleeuwerik",
+    "Wulp"
+  )
+)
+```
+
+## Inleiding
+
+Om aantallen van akkervogels in te schatten op basis van MAS-tellingen maken we gebruik van *distance sampling* [@langeraert2025pilot; @roodbergen2011]. Deze methode corrigeert voor het feit dat de kans om een individu waar te nemen afneemt met de afstand tot de waarnemer. Door een detectiefunctie te schatten, kan het aantal niet-gedetecteerde individuen worden ingeschat en worden tellingen omgezet naar correcte abundantie- en densiteitsschattingen waarbij we corrigeren voor de detectiekans. De detectiekans kan verschillend zijn per soort (bv. kleine gecamoufleerde soorten versus grotere opvallende soorten) of per locatie (bv. een meer open versus meer gesloten landschap).
+
+De methode wordt veelvuldig toegepast in vogelmonitoring [@rosenstock2002; @buckland2001; @roodbergen2011] en heeft enkele cruciale aannames: (1) dieren zijn uniform verdeeld ten opzichte van het steekproefdesign, (2) detectiekans is gelijk aan 1 op afstand 0, (3) dieren worden gedetecteerd op hun oorspronkelijke locatie, en (4) afstanden worden foutloos gemeten [@buckland2001].
+
+Het doel van deze analyses is het schatten van densiteiten per stratum (open landschap (OL), half-open landschap (HOL), binnen en buiten SBP-gebied), per landbouwregio en over geheel Vlaanderen. Dit doen we voor elk teljaar. We tonen de resultaten voor de soorten uit bijlage V van de natuurherstelverordening voor Vlaanderen. Het gaat om `r tolower(species_list_total)`. De MAS-methodiek is niet geschikt voor boerenzwaluw omdat deze vaak in grotere aantallen bij landbouwinfrastructuur nestelen. Ook wordt de broedperiode niet goed gedekt door de telrondes. Deze soort wordt niet opgenomen in dit rapport. In 2023 werd enkel nog maar de Leemstreek en de Zandleemstreek bezocht. Voor graspieper, grutto, scholekster en wulp hadden we in dat jaar niet genoeg data om de detectiekans en bijgevolg de densiteiten betrouwbaar te schatten. Voor deze soorten rapporteren we enkel de resultaten vanaf 2024.
+
+## Materiaal en methoden
+### Datavoorbereiding
+
+Voor een correcte toepassing van *distance sampling* werd de dataset eerst gefilterd en voorbereid:
+
+**1. Gebiedslagen voor extrapolatie**\
+Om abundantie- en densiteitsschattingen naar oppervlakte te kunnen extrapoleren, werden gebiedslagen afgebakend per stratum (OL, HOL, binnen/buiten SBP) en per landbouwregio (resp. @tbl-oppervlakte-stratum en @tbl-oppervlakte-regio in @sec-bijlage-densiteiten) op basis van het MAS steekproefkader (de punten van het steekproefkader met buffer van 300 m). Omdat strata elkaar kunnen overlappen binnen een regio, werkten we met twee lagen: (1) strata (@fig-oppervlakte-stratum in @sec-bijlage-densiteiten), en (2) regio’s (@fig-oppervlakte-regio). Schattingen voor Vlaanderen kunnen afgeleid worden uit (2).
+
+```{r}
+#| label: fig-oppervlakte-regio
+#| fig-cap: "Steekproefkader MAS per regio."
+region_sf <- tar_read("region_sf", store = store)
+region_sf %>%
+  ggplot() +
+  geom_sf(aes(fill = regio), colour = alpha("black", 0)) +
+  labs(fill = "") +
+  theme(legend.position = "bottom")
+```
+
+**2. Filter broedcodes**\
+Enkel waarnemingen met een broedcode groter dan nul werden behouden, zodat uitsluitend (potentieel) broedende vogels in rekening worden gebracht. Voor torenvalk selecteerden we de data van alle broedcodes.
+
+**3. Filter broedperiodes**\
+Enkel tellingen die volledig binnen de gekende broedperiode van de soort vallen, werden meegenomen. Telperiodes buiten dit venster werden verwijderd.
+
+*!geef lijst telperiodes per soort!*
+
+**4. Gebruik van aantallen**\
+Voor het fitten van de detectiecurve (en dus het schatten van de detectiekans) gebruikten we alle observaties na bovenstaande filters. Voor het berekenen van abundantie- en densiteitsschattingen namen we enkel het maximum aantal per telpunt over de resterende telperiodes heen. Dit voorkomt overschatting door herhaalde tellingen van dezelfde individuen en we moeten hier dus ook niet voor corrigeren tijdens de analyses. Deze afwegingen werden onderzocht en besproken in het rapport van de pilootfase [@langeraert2025pilot, Paragraaf 4.4.1.4].
+
+### *Distance sampling* methodiek
+
+Binnen het MAS werken we met punttransecten met een telradius $w = 300$ m.
+De gemiddelde detectiekans $p$ binnen deze straal wordt berekend als
+
+<!-- spell-check: ignore:start -->
+
+$$
+p = \int_0^w \frac{2r}{w^2} g(r; \boldsymbol{\theta}) \, dr
+$$
+
+<!-- spell-check: ignore:end -->
+
+met $g(r; \boldsymbol{\theta})$ de detectiefunctie afhankelijk van de gemeten afstanden $r$ en $\boldsymbol{\theta}$ de te schatten parameters (@fig-distance-methode).
+De term $\frac{2r}{w^2}$ corrigeert voor de cirkelvormige oppervlakte rondom het telpunt.
+De gemiddelde detectiekans $p$ is dus de oppervlakte onder de detectiefunctie binnen de telradius. In de resultaten verwijzen we voor de leesbaarheid kortweg naar de detectiekans $p$, waarmee telkens deze gemiddelde detectiekans wordt bedoeld.
+
+```{r}
+#| label: fig-distance-methode
+#| fig-cap: "Methodologie *distance sampling*.
+#|  **A.** Punttransect met radius $w$ en observatie $i$ op afstand $r$.
+#|  **B.** Histogram en detectiecurve gefit op 1000 gesimuleerde datapunten uit
+#|  de half-normale verdeling met parameter $\\sigma = 120$ en afknotafstand
+#|  300 m.
+#|  De oppervlakte onder de curve binnen de rode box is de gemiddelde
+#|  detectiekans $p$."
+#| out.width: "90%"
+knitr::include_graphics(file.path("media", "distance", "methode_distance.png"))
+```
+
+We beschouwen twee veelgebruikte detectiefuncties:
+
+* **Half-normaal:**
+
+<!-- spell-check: ignore:start -->
+
+$$
+g(r) = \exp\left(-\frac{r^2}{2\sigma^2}\right)
+$$
+
+<!-- spell-check: ignore:end -->
+
+* **Hazard-rate:**
+
+<!-- spell-check: ignore:start -->
+
+$$
+g(r) = 1 - \exp\left(-\left(\frac{r}{\sigma}\right)^{-b}\right)
+$$
+
+<!-- spell-check: ignore:end -->
+
+waarbij $\sigma$ (de schaalparameter) eventueel afhankelijk is van covariaten $\mathbf{z}$
+
+De geschatte abundantie in het bemonsterde gebied $a(s)$ van stratum $s$ is
+
+<!-- spell-check: ignore:start -->
+
+$$
+\hat{N}_C(s) = \sum_{i=1}^n \frac{c_i(s)}{\hat{p}(\mathbf{z}_i)}
+$$
+
+<!-- spell-check: ignore:end -->
+
+met $c\_i(s)$ de clustergrootte (in ons geval overal gelijk aan 1) van waarneming $i$. Dit wordt opgeschaald naar de totale oppervlakte $A(s)$ van stratum $s$ als
+
+<!-- spell-check: ignore:start -->
+
+$$
+\hat{N}(s) = \frac{A(s)}{a(s)} \hat{N}_C(s)
+$$
+
+<!-- spell-check: ignore:end -->
+
+en de densiteit volgt als $\hat{N}(s)/A(s)$.
+
+De onzekerheid op de abundantie- en densiteitsschattingen komt van twee origines [@miller2019]:
+
+1.  Detectiefunctie: Onzekerheid in parameterschattingen ($\boldsymbol \theta$)
+2.  Trefkans: Bemonsteringsvariabiliteit als gevolg van verschillen in het aantal waarnemingen per telcirkel
+
+### Modelstructuur en analyse-opzet
+
+De *distance sampling* analyses werden uitgevoerd in R [@R] met RStudio [@RStudio] met behulp van het **Distance**-pakket [@R-Distance; @miller2019].
+Voor elke soort voor elk jaar werd een reeks modellen opgesteld waarin verschillende combinaties van omgevingscovariaten werden getest die mogelijk een invloed hebben op de detectiekans. De volgende modelstructuren werden vergeleken:
+
+* **Zonder covariaten** — een nulmodel waarin de detectiekans enkel afhangt van de afstand tot de waarnemer (`~1`). Indien nodig werden één of twee aanpassingstermen toegevoegd om de fit van de detectiecurve aan de waargenomen afstandsverdeling te verbeteren.
+* **Enkelvoudige covariaten** — modellen met één verklarende variabele:
+
+  * *regio* (landbouwregio),
+  * *sbp* (ligging binnen of buiten SBP-gebied),
+  * *openheid* (open versus half-open landschap).
+* **Combinaties van twee covariaten** — additieve modellen met:
+
+  * *regio + sbp*, <!-- spell-check: ignore -->
+  * *regio + openheid*, <!-- spell-check: ignore -->
+  * *sbp + openheid*. <!-- spell-check: ignore -->
+* **Interacties** — een model met interactie tussen SBP-ligging en openheid (*sbp × openheid*).
+* **Uitgebreide modellen met drie covariaten** — modellen met:
+
+  * *regio + sbp + openheid*, en <!-- spell-check: ignore -->
+  * *regio + sbp × openheid*. <!-- spell-check: ignore -->
+* **Stratummodel** — een model waarin *regio*, *sbp* en *openheid* gecombineerd zijn tot één factor *stratum*.
+  Dit model is vergelijkbaar met een drievoudige interactie tussen de drie variabelen, maar behandelt de Weidestreek als afzonderlijk stratum.
+
+De modelselectie gebeurde op basis van het Akaike-informatiecriterium (AIC).
+Wanneer meerdere modellen een vergelijkbare verklarende kracht hadden (ΔAIC < 2), werd gekozen voor het model met het kleinste aantal parameters.
+De *goodness-of-fit* van elk model werd geëvalueerd met behulp van Q-Q plots en de Cramér–von Mises-toets.
+Het best passende model per soort werd vervolgens gebruikt om de dichtheden te berekenen op twee ruimtelijke niveaus:
+(1) per stratum (combinatie van openheid en SBP-ligging), en
+(2) per landbouwregio en voor geheel Vlaanderen.
+
+De onzekerheid op de schattingen werd berekend met de standaardopties van het **Distance**-pakket.
+Voor de detectiekans ($p$) werden betrouwbaarheidsintervallen berekend op basis van de puntschatting en de standaardfout, onder de assumptie van een bètaverdeling.
+De betrouwbaarheidsintervallen voor de densiteit werden rechtstreeks verkregen uit de **Distance**-analyse en zijn gebaseerd op lognormale verdelingen met een Satterthwaite-correctie voor de vrijheidsgraden [@buckland2001].
+
+## Resultaten {#sec-resultaten-densiteitsschattingen}
+
+In dit hoofdstuk tonen we de resultaten van de *distance sampling* analyses voor de soorten uit bijlage V van de natuurherstelverordening.
+Voor elke soort worden de geschatte detectiekans en densiteit weergegeven, zowel per stratum als per landbouwregio en voor geheel Vlaanderen.
+De resultaten worden per jaar gepresenteerd en voorzien van 95 % betrouwbaarheidsintervallen.
+Een verschil ten opzichte van een streefwaarde wordt als significant beschouwd wanneer het bijhorende betrouwbaarheidsinterval deze streefwaarde niet omvat.
+
+<!-- AUTOGENERATED-START -->
+
+> ⚠️ **Let op:** de inhoud hieronder wordt automatisch
+> gegenereerd tijdens het renderen via `render_children.R`.
+> Pas dit deel niet manueel aan.
+
+<!-- AUTOGENERATED-END -->
+
+## Discussie {#sec-discussie-densiteitsschattingen}
+
+- een reproduceerbare workflow opgebouwd met het **targets**-pakket [@targets-package]

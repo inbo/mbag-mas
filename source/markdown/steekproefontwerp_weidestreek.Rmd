@@ -315,7 +315,11 @@ telcirkels_selectie_landgbrk <- tar_read(telcirkels_selectie_landgebruik,
 
 We gebruiken volgende regel als criterium voor telpunten die in aanmerkingen komen voor wat betreft de samenstelling van het landgebruik in een buffer van 300 m rond het punt:
 
+<!-- spell-check: ignore:start -->
+
 -   Akker + Grasland \> 40% én Grasland + Bos + Struikgewas + Akker \> 50%
+
+<!-- spell-check: ignore:end -->
 
 De gebruikte landgebruikskaart dekt enkel het Vlaamse grondgebied.
 Indien de telcirkel deels in een andere gewest / land gelegen is, zal het landgebruik daar ontbreken.
@@ -883,7 +887,7 @@ Enkele nuttige links:\
 1.  Hard coding
     -   Voeg op einde target toe met argument `TRUE` of `FALSE` om bepaalde bestanden weg te schrijven
     -   Verander argument naar `TRUE` als je finale steekproef wil runnen en zet daarna eventueel terug naar `FALSE`
-    -   Versiecontrole met git (check .gitignore)
+    -   Versiecontrole met git (check `.gitignore`)
 2.  Cloud storage
     -   Amazon of Google
         -   Account?
@@ -892,7 +896,7 @@ Enkele nuttige links:\
     -   Vooral voor grote projecten
 3.  Gittargets
     -   Kan ook voor specifieke objecten: <https://docs.ropensci.org/gittargets/#performance>
-    -   Is het de moeite? Manueel werk --\> waarom niet ineens hard coden? Komt op zelfde neer?
+    -   Is het de moeite? Manueel werk --\> waarom niet ineens hard coden? Komt op zelfde neer? <!-- spell-check: ignore -->
 
 We kiezen voor optie 1. We gebruiken hiervoor de package [git2rdata](https://ropensci.github.io/git2rdata/). 
 De package maakt het opslaan van dataframes onder versiebeheer efficiënter en handiger.

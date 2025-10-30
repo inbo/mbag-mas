@@ -63,11 +63,15 @@ We maken enkele figuren voor de "Dag van de landbouw" te Koksijde (15 september)
 
 Hiervoor vergelijken we punten van het bedrijf Depotter in Wulpen (Nieuwpoort) met de omliggende regio:
 
+<!-- spell-check: ignore:start -->
+
 - Depot2
 - Depot3
 - Depot5
 - Pl_10446.2.18 
 - Pl_10047.1.3
+
+<!-- spell-check: ignore:end -->
 
 versus punten uit Polders OL (binnen plan).
 

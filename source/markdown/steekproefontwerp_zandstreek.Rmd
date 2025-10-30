@@ -57,9 +57,9 @@ Dat bestand kan je openen met de volgende code:
 
 ## Perimeter bepalen
 
-Om de perimeter te bepalen voer je onderstaande code uit in mas_steekproef_za_kp_po.Rproj, na laden van globals in targets_steekproef_za_kp_po.Rmd.
+Om de perimeter te bepalen voer je onderstaande code uit in `mas_steekproef_za_kp_po.Rproj`, na laden van globals in `targets_steekproef_za_kp_po.Rmd`.
 
-De code maakt een intersectie tussen landbouwstreek Zandstreek (heel België) en contour Vlaanderen en voegt deze toe  aan file "za_kp_po_perimeters.gpkg".
+De code maakt een intersectie tussen landbouwstreek Zandstreek (heel België) en contour Vlaanderen en voegt deze toe  aan file `za_kp_po_perimeters.gpkg`.
 
 ```r
 # library(sf)
@@ -372,7 +372,11 @@ telcirkels_selectie_lgb <- tar_read(telcirkels_selectie_landgebruik,
 
 We gebruiken volgende regel als criterium voor telpunten die in aanmerkingen komen voor wat betreft de samenstelling van het landgebruik in een buffer van 300 m rond het punt:
 
+<!-- spell-check: ignore:start -->
+
 -   Akker + Grasland \> 40% én Grasland + Bos + Struikgewas + Akker \> 50%
+
+<!-- spell-check: ignore:end -->
 
 De gebruikte landgebruikskaart dekt enkel het Vlaamse grondgebied.
 Indien de telcirkel deels in een andere gewest / land gelegen is, zal het landgebruik daar ontbreken.
@@ -930,7 +934,7 @@ De eerste bv. 300 (laagste volgnummers) zullen dan de set zijn voor de Zandstree
 Indien een punt uitvalt, kan dit vervangen worden door het eerstvolgende uit de reeks dat nog niet toegewezen werd (het 301ste).
 De methode garandeert dat deze nieuwe set ruimtelijk goed gespreid is en een aselecte steekproef is.
   
-Om te veel overlap te voorkomen binnen eenzelfde stratum, is voor elk punt binnen hetzelfde stratum nagegaan of een punt met grotere sample_order op minder dan 600 m afstand ligt. Als dit het geval is wordt het punt met de lagere sample_order weerhouden. Voor een vergelijking tussen 300 en 600 m thinning, zie steekproefontwerp_leemstreek.Rmd.
+Om te veel overlap te voorkomen binnen eenzelfde stratum, is voor elk punt binnen hetzelfde stratum nagegaan of een punt met grotere sample_order op minder dan 600 m afstand ligt. Als dit het geval is wordt het punt met de lagere sample_order weerhouden. Voor een vergelijking tussen 300 en 600 m thinning, zie `steekproefontwerp_leemstreek.Rmd`.
 
 ```{r trekking}
 steekproef <- tar_read(steekproef_final, store = targets_store) %>%
@@ -949,7 +953,7 @@ Temporeel design:
 
 -   elk punt wordt elk jaar opnieuw bezocht
 
-N.B.: voor de steekproef over Vlaanderen is het best mogelijk dat een ander temporeel design nodig is zoals een 'rotating panel design' of een 'augmented panel design'.
+N.B.: voor de steekproef over Vlaanderen is het best mogelijk dat een ander temporeel design nodig is zoals een *rotating panel design* of een *augmented panel design*.
 
 Kaart van de steekproef:
 
@@ -1115,17 +1119,22 @@ mapview_n(200)
 ## Version control steekproef(kader)
 
 Er zijn verschillende opties voor version control in de `targets` pipeline.
-Enkele nuttige links:\
+Enkele nuttige links:
+
+<!-- spell-check: ignore:start -->
+
 <https://books.ropensci.org/targets/targets.html#return-value>\
 <https://books.ropensci.org/targets/data.html#cloud-storage>\
 <https://books.ropensci.org/targets/data.html#data-version-control>\
 <https://docs.ropensci.org/gittargets/>\
 <https://docs.ropensci.org/gittargets/articles/git.html>
 
+<!-- spell-check: ignore:end -->
+
 1.  Hard coding
     -   Voeg op einde target toe met argument `TRUE` of `FALSE` om bepaalde bestanden weg te schrijven
     -   Verander argument naar `TRUE` als je finale steekproef wil runnen en zet daarna eventueel terug naar `FALSE`
-    -   Versiecontrole met git (check .gitignore)
+    -   Versiecontrole met git (check `.gitignore`)
 2.  Cloud storage
     -   Amazon of Google
         -   Account?
@@ -1134,7 +1143,7 @@ Enkele nuttige links:\
     -   Vooral voor grote projecten
 3.  Gittargets
     -   Kan ook voor specifieke objecten: <https://docs.ropensci.org/gittargets/#performance>
-    -   Is het de moeite? Manueel werk --\> waarom niet ineens hard coden? Komt op zelfde neer?
+    -   Is het de moeite? Manueel werk --\> waarom niet ineens hard coden? Komt op zelfde neer? <!-- spell-check: ignore -->
 
 We kiezen voor optie 1. We gebruiken hiervoor de package [git2rdata](https://ropensci.github.io/git2rdata/). 
 De package maakt het opslaan van dataframes onder versiebeheer efficiënter en handiger.

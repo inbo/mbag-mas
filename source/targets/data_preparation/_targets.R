@@ -37,6 +37,9 @@ lapply(list.files(file.path(target_dir, "R"), full.names = TRUE), source)
 source(file.path(mbag_dir, "source", "R", "predatoren_f.R"))
 source(file.path(mbag_dir, "source", "R", "taxon_mapping.R"))
 
+# Global variables
+publication_year <- 2024
+
 
 # Download MAS pipeline data
 
@@ -68,7 +71,7 @@ list(
     pattern = map(mas_counts_sovon_files),
     iteration = "list"
   ),
-  # Convert Amersfoord to Lambert coordinates
+  # Convert Amersfoort to Lambert coordinates
   tar_target(
     name = crs_pipeline,
     command = amersfoort_to_lambert72(
@@ -173,10 +176,26 @@ list(
       args = c(remove_subspecies_names, make.row.names = FALSE)
     )
   ),
-  # Remove unwanted columns
+  # Remove unwanted columns and set count to 1 for breeding code > 0
   tar_target(
     name = mas_data_clean,
-    command = remove_columns(mas_data_full)
+    command = remove_columns(mas_data_full) %>%
+      mutate(aantal = ifelse(wrntype != "0", 1, aantal))
+  ),
+
+  # Write out distance sampling dataset
+  tar_target(
+    name = distance_data_vlaanderen,
+    command = mas_data_clean %>%
+      st_drop_geometry() %>%
+      select("oid", "plotnaam", "x_plot" = "x_coord", "y_plot" = "y_coord",
+             "x_occ" = "x_lambert", "y_occ" = "y_lambert", "crs",
+             "naam", "aantal", "wrntype", "jaar", "periode_in_jaar",
+             "regio", "openheid_klasse", "sbp", "distance2plot") %>%
+      create_output_csv(
+        file = "distance_data_vlaanderen",
+        path = file.path(mbag_dir, "output", "datasets")
+      )
   ),
 
   # 4. Prepare data for publication on GBIF
@@ -188,7 +207,8 @@ list(
     command = do.call(
       what = rbind.data.frame,
       args = c(crs_pipeline, make.row.names = FALSE)
-    )
+    ) %>%
+      filter(jaar <= publication_year) # !! UP TILL THIS YEAR !!
   ),
   # Add non-MAS data to MAS data for GBIF publication
   # Column is_mas_sample indicates whether the observation is part of the
@@ -196,7 +216,8 @@ list(
   tar_target(
     name = complete_data_gbif_raw,
     command = rbind_all_mas_data(
-      sample_data = mas_data_clean,
+      sample_data = mas_data_clean %>%
+        filter(jaar <= publication_year), # !! UP TILL THIS YEAR !!
       extra_data = complete_data_crs
     )
   ),
@@ -240,11 +261,11 @@ list(
     command = map_taxa_manual(
       taxonomy_df = taxon_mapping,
       manual_taxon_list = list(
+        "Krakeend" = 9362027,                   # species
         "Huismuis (zoogdier)" = 7429082,        # species
-        "Barmsijs (Grote of Kleine)" = 6782561, # genus
+        "Barmsijs (Grote of Kleine)" = 5231630, # species
         "Veldmuis/Aardmuis" = 2438591,          # genus
         "Wezel/Hermelijn" = 2433922,            # genus
-        "groene kikker-complex" = 2426629,      # genus
         "rat spec." = 2439223,                  # genus
         "spitsmuis spec." = 5534                # family
       ),
@@ -253,22 +274,63 @@ list(
                    "species", "authorship", "rank", "key")
     )
   ),
+  # Add species aggregates
+  tar_target(
+    name = map_species_aggregates,
+    command = add_species_aggregates(
+      taxonomy_df = manual_taxon_mapping,
+      manual_taxon_list = list(
+        "Barmsijs (Grote of Kleine)" = "Acanthis flammea flammea/cabaret",
+        "Veldmuis/Aardmuis" = "Microtus arvalis/agrestis",
+        "Wezel/Hermelijn" = "Mustela nivalis/erminea",
+        "rat spec." = "Rattus norvegicus/rattus"
+      ),
+      vernacular_name_col = "dwc_vernacularName"
+    )
+  ),
   # Join taxon names and sort columns
   tar_target(
     name = dwc_mapping_final,
     command = finalise_dwc_df(
       data_df = darwincore_mapping,
-      taxonomy_df = manual_taxon_mapping
+      taxonomy_df = map_species_aggregates
     )
   ),
-  # Write out GBIF dataset
+
+  # Blur data
   tar_target(
-    name = create_dwc_csv,
-    command = create_output_csv(
-      x = dwc_mapping_final,
-      file = "mas_data_vlaanderen",
-      suffix_by = "year",
-      path = file.path(mbag_dir, "output", "datasets")
+    name = dwc_mapping_final_blurred,
+    command = blur_occurrences(
+      occ_df = dwc_mapping_final,
+      utm_grid_path = file.path(mbag_dir, "data", "utm_roosters", "utm5_vl.shp")
+    )
+  ),
+
+  # Write out GBIF datasets
+  # Split datasets
+  tar_target(
+    name = split_datasets,
+    command = split_dwc_event_occ(dwc_mapping_final)
+  ),
+  tar_target(
+    name = split_datasets_blurred,
+    command = split_dwc_event_occ(dwc_mapping_final_blurred)
+  ),
+  # Write datasets
+  tar_target(
+    name = create_ipt_csv,
+    command = write_ipt_csv(
+      split_list = split_datasets,
+      path = file.path(mbag_dir, "output", "datasets", publication_year),
+      suffix = "_mas"
+    )
+  ),
+  tar_target(
+    name = create_ipt_csv_blurred,
+    command = write_ipt_csv(
+      split_list = split_datasets_blurred,
+      path = file.path(mbag_dir, "output", "datasets", publication_year),
+      suffix = "_blur_mas"
     )
   )
 )

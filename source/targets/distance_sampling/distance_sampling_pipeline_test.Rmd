@@ -1,0 +1,865 @@
+---
+title: "Distance sampling targets pipeline"
+author: "Ward Langeraert"
+date: "`r Sys.Date()`"
+output:
+  bookdown::html_document2:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+# set up
+library(knitr)
+opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  out.width = "100%"
+)
+opts_knit$set(root.dir = here::here())
+```
+
+```{r}
+# packages
+library(tidyverse)
+library(sf)
+library(targets)
+library(Distance)
+
+library(INBOtheme)
+theme_set(theme_inbo(transparent = TRUE))
+
+# Conflicts
+conflicted::conflicts_prefer(dplyr::filter)
+conflicted::conflicts_prefer(dplyr::select)
+
+# Paths
+mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
+targets_store <- file.path(mbag_dir, "source", "targets", "distance_sampling",
+                           "_targets")
+
+# Source functions
+source(file.path(mbag_dir, "source", "R", "tar_read_ds.R"))
+source(file.path(mbag_dir, "source", "R", "plot_pdf_per_cat.R"))
+source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
+```
+
+# Doel
+
+```{r}
+distance_data <- tar_read("distance_data")
+year_list <- 2023:max(distance_data$jaar)
+```
+
+# Densiteitsschattingen
+## Methoden
+
+## Veldleeuwerik
+### Data exploratie
+
+```{r}
+params <- NULL
+params$species <- "Veldleeuwerik"
+params$year <- 2024
+```
+
+We selecteren de gefilterde data broedcode > 0 en binnen broedseizoen.
+
+```{r}
+filtered_distance_df <- tar_read_ds("filtered_breeding_date", params$species)
+```
+
+We kijken naar het aantal broedparen per regio per broedcode.
+
+```{r}
+filtered_distance_df %>%
+  filter(jaar == params$year) %>%
+  ggplot(aes(x = periode_in_jaar, fill = factor(wrntype))) +
+  geom_bar() +
+  facet_wrap(~regio, scales = "free") +
+  labs(x = "Telperiode", y = "Aantal broedparen", fill = "Broedcode",
+       title = params$year)
+```
+
+We kijken naar het aantal broedparen per stratum.
+
+```{r}
+filtered_distance_df %>%
+  filter(jaar == params$year) %>%
+  mutate(strat = paste(openheid_klasse, sbp, sep = " - ")) %>%
+  ggplot(aes(x = periode_in_jaar, fill = strat)) +
+  geom_bar() +
+  facet_wrap(~regio, scales = "free") +
+  labs(x = "Telperiode", y = "Aantal broedparen", fill = "Stratum",
+       title = params$year)
+```
+
+We kijken naar de verdeling van de afstanden.
+
+```{r}
+filtered_distance_df %>%
+  filter(jaar == params$year) %>%
+  mutate(strat = paste(openheid_klasse, sbp, sep = " - ")) %>%
+  ggplot(aes(x = distance2plot, fill = strat)) +
+  geom_histogram() +
+  facet_wrap(~regio, scales = "free") +
+  labs(x = "Afstand (m)", y = "Aantal broedparen", fill = "Stratum",
+       title = params$year)
+```
+
+We selecteren het maximum aantal individuen per telpunt.
+
+```{r}
+obs_table <- tar_read_ds("obs_table", params$species) %>%
+  filter(year == params$year)
+sample_table <- tar_read_ds("sample_table")
+
+# Get maxima observations from filtered dataset
+maxima_presences <- filtered_distance_df  %>%
+  filter(jaar == params$year) %>%
+  filter(oid %in% obs_table$object) %>%
+  group_by(plotnaam, jaar, regio, openheid_klasse, sbp, stratum) %>%
+  summarise(aantal = sum(aantal), .groups = "drop")
+
+# Add zeroes
+zeroes_df <- sample_table %>%
+  select("Sample.Label", "Region.Label") %>%
+  mutate(year = params$year) %>%
+  filter(
+    if (params$year == 2023) {
+      year == params$year & grepl("^Zandleem|^Leem", Region.Label)
+    } else {
+      year == params$year
+    }
+  ) %>%
+  select(
+    "plotnaam" = "Sample.Label", "jaar" = "year", "stratum" = "Region.Label"
+  ) %>%
+  anti_join(maxima_presences, by = join_by(plotnaam, jaar, stratum)) %>%
+  separate(stratum, into = c("regio", "openheid_klasse", "sbp")) %>%
+  mutate(
+    aantal = 0,
+    stratum = ifelse(
+      regio == "Weidestreek",
+      "Weidestreek",
+      paste(regio, openheid_klasse, sbp, sep = " - ")
+    )
+  )
+
+# Bind presences and zeroes
+maxima_df <- maxima_presences %>%
+  bind_rows(zeroes_df)
+```
+
+We kijken naar de maxima per stratum.
+
+```{r}
+maxima_df %>%
+  ggplot(aes(x = openheid_klasse, y = aantal, colour = sbp)) +
+  geom_boxplot() +
+  labs(x = "", y = "Aantal broedparen per telpunt\n(maximum over telperiodes)",
+       title = params$year) +
+  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 100, by = 2)) +
+  facet_wrap(~regio, ncol = 2, scales = "free")
+```
+
+We berekenen de abundanties en densiteiten zoals bij distance sampling, zonder detectiekans in rekening te brengen.
+
+```{r}
+# Visited surface area
+a_df <- maxima_df %>%
+  group_by(jaar, regio, openheid_klasse, sbp) %>%
+  summarise(np = n_distinct(plotnaam),
+            sample_area = (300 * 300 * pi * np) / 10^6,
+            .groups = "drop") %>%
+  rename("openheid" = "openheid_klasse")
+
+# Counted breeding pairs
+nc_df <- maxima_df %>%
+  group_by(jaar, regio, openheid_klasse, sbp) %>%
+  summarise(nc = sum(aantal), .groups = "drop") %>%
+  rename("openheid" = "openheid_klasse")
+
+# Total surface area
+area_table_stratum <- tar_read("region_table")
+area_table_stratum <- area_table_stratum %>%
+  separate(Region.Label, into = c("regio", "openheid", "sbp"),
+           sep = " - ") %>%
+  rename("area" = "Area")
+area_table_region <- tar_read("region_table_region")
+area_table_region <- area_table_region %>%
+  rename("regio" = "Region.Label", "area" = "Area")
+```
+
+**Stratumniveau**
+
+We berekenen per stratum.
+
+```{r}
+nc_df %>%
+  left_join(a_df, by = join_by(jaar, regio, openheid, sbp)) %>%
+  left_join(area_table_stratum, by = join_by(regio, openheid, sbp)) %>%
+  rowwise() %>%
+  mutate(
+    abundantie = (area / sample_area) * nc,
+    densiteit = nc / sample_area
+  ) %>%
+  arrange(jaar, regio, openheid, sbp) %>%
+  select(jaar, regio, openheid, sbp, abundantie, densiteit) %>%
+  kable(digits = 3)
+```
+
+**Regioniveau**
+
+We bekijken dit ook per regio.
+
+```{r}
+nc_regio <- nc_df %>%
+  left_join(a_df, by = join_by(jaar, regio, openheid, sbp)) %>%
+  group_by(jaar, regio) %>%
+  summarise(
+    nc = sum(nc),
+    sample_area = sum(sample_area),
+    .groups = "drop"
+  ) %>%
+  left_join(area_table_region, by = join_by(regio)) %>%
+  mutate(
+    abundantie = (area / sample_area) * nc,
+    densiteit = nc / sample_area
+  ) %>%
+  arrange(jaar, regio) %>%
+  select(jaar, regio, abundantie, densiteit)
+
+nc_regio %>%
+  kable(digits = 3)
+```
+
+De totale schatting voor Vlaanderen:
+
+```{r}
+tibble(
+  jaar = params$year,
+  regio = "Total",
+  abundantie = sum(nc_regio$abundantie)
+) %>%
+  mutate(densiteit = abundantie / sum(area_table_region$area)) %>%
+  filter(regio == "Total") %>%
+  kable(digits = 3)
+```
+
+> We controleren even of dit hetzelfde is als verderop (met detectiekans):
+
+```{r}
+detection_probabilities <- tar_read_ds("detection_probabilities",
+                                       params$species)
+detection_probabilities %>%
+  filter(year == params$year) %>%
+  select(-species, -year) %>%
+  select(where(function(x) !any(is.na(x)))) %>% # Remove NA columns
+  relocate("estimate_p", "se_p", "ll_beta", "ul_beta", .after = last_col()) %>%
+  kable(digits = 3)
+```
+
+**Stratumniveau**
+
+We berekenen per stratum.
+
+```{r, message=FALSE}
+nc_df %>%
+  left_join(detection_probabilities) %>%
+  mutate(nc = nc / estimate_p) %>%
+  left_join(a_df, by = join_by(jaar, regio, openheid, sbp)) %>%
+  left_join(area_table_stratum, by = join_by(regio, openheid, sbp)) %>%
+  rowwise() %>%
+  mutate(
+    abundantie = (area / sample_area) * nc,
+    densiteit = nc / sample_area
+  ) %>%
+  arrange(jaar, regio, openheid, sbp) %>%
+  select(jaar, regio, openheid, sbp, abundantie, densiteit) %>%
+  kable(digits = 3)
+```
+
+**Regioniveau**
+
+We bekijken dit ook per regio.
+
+```{r}
+nc_regio <- nc_df %>%
+  left_join(detection_probabilities) %>%
+  mutate(nc = nc / estimate_p) %>%
+  left_join(a_df, by = join_by(jaar, regio, openheid, sbp)) %>%
+  group_by(jaar, regio) %>%
+  summarise(
+    nc = sum(nc),
+    sample_area = sum(sample_area),
+    .groups = "drop"
+  ) %>%
+  left_join(area_table_region, by = join_by(regio)) %>%
+  mutate(
+    abundantie = (area / sample_area) * nc,
+    densiteit = nc / sample_area
+  ) %>%
+  arrange(jaar, regio) %>%
+  select(jaar, regio, abundantie, densiteit)
+
+nc_regio %>%
+  filter(regio != "Total") %>%
+  kable(digits = 3)
+```
+
+De totale schatting voor Vlaanderen:
+
+```{r}
+tibble(
+  jaar = params$year,
+  regio = "Total",
+  abundantie = sum(nc_regio$abundantie)
+) %>%
+  mutate(densiteit = abundantie / sum(area_table_region$area)) %>%
+  filter(regio == "Total") %>%
+  kable(digits = 3)
+```
+
+> Deze zijn exact hetzelfde als de schattingen op basis van Distance package. Zier verder.
+
+### Model selectie
+
+```{r}
+final_model <- tar_read_ds("model_selection", params$species, 2024)
+f <- final_model$ddf$ds$aux$ddfobj$scale$formula
+key <- ifelse(
+  final_model$ddf$ds$aux$ddfobj$type == "hn",
+  "half-normal",
+  "hazard-rate"
+)
+```
+
+We selecteren het model met de `r key` sleutelfunctie en formule `r f`.
+
+```{r}
+tar_read_ds("aic_comparison", params$species, 2024) %>%
+  select(-species, -year) %>%
+  filter(`Delta AIC` <= 10) %>% # only show low AIC models
+  kable(digits = 3)
+```
+
+### Model fit
+
+We kijken naar de model fit van het finale model.
+
+```{r}
+par(mfrow = c(1, 2))
+gof_ds(final_model)
+plot(final_model, pdf = TRUE, showpoints = TRUE)
+par(mfrow = c(1, 1))
+```
+
+```r
+plot_pdf_per_cat(final_model)
+```
+
+The detectiecurve(s) zien er uit als volgt. De stippellijn duidt de gemiddelde detectiecurve aan.
+
+```{r}
+plot_detection_curve(
+  final_model,
+  show_data = TRUE,
+  plot_average_fit = TRUE,
+  plot_covariate_fit = TRUE
+) +
+  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 100, by = 0.25)) +
+  labs(x = "Distance (m)", y = "Detection probability") +
+  theme_minimal() +
+  theme(
+    legend.background = element_rect(fill = "white", color = "darkgrey"),
+    legend.margin = margin(6, 6, 6, 6),
+    legend.position = "bottom"
+  )
+```
+
+### Resultaten
+
+Detectiekansen:
+
+```{r}
+tar_read_ds("detection_probabilities", params$species) %>%
+  filter(year == params$year) %>%
+  select(-species, -year) %>%
+  select(where(function(x) !any(is.na(x)))) %>% # Remove NA columns
+  relocate("estimate_p", "se_p", "ll_beta", "ul_beta", .after = last_col()) %>%
+  kable(digits = 3)
+```
+
+#### Stratum
+
+Abundanties:
+
+```{r}
+abundances_stratum_target <- tar_read_ds("abundances_stratum", params$species)
+abundances_stratum <- abundances_stratum_target %>%
+  filter(
+    if (params$year == 2023) {
+      year == params$year & grepl("^Zandleem|^Leem", Label)
+    } else {
+      year == params$year
+    }
+  ) %>%
+  select(-species, -year) %>%
+  rename("stratum" = "Label", "estimate" = "Estimate")
+abundances_stratum %>%
+  kable(digits = 3)
+```
+
+Densiteiten:
+
+```{r}
+densities_stratum_target <- tar_read_ds("densities_stratum", params$species)
+densities_stratum <- densities_stratum_target %>%
+  filter(
+    if (params$year == 2023) {
+      year == params$year & grepl("^Zandleem|^Leem", Label)
+    } else {
+      year == params$year
+    }
+  ) %>%
+  select(-species, -year) %>%
+  rename("stratum" = "Label", "estimate" = "Estimate")
+densities_stratum %>%
+  kable(digits = 3)
+```
+
+```{r}
+densities_stratum %>%
+  separate(stratum, into = c("regio", "openheid", "sbp"), sep = " - ") %>%
+  mutate(stratum = paste(openheid, sbp, sep = " - ")) %>%
+  ggplot(aes(x = openheid, y = estimate, colour = sbp)) +
+  geom_point(position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = lcl, ymax = ucl),
+    width = 0.2,
+    position = position_dodge(width = 0.5)
+  ) +
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(y = "breeding pairs / 100 ha", x = "") +
+  facet_wrap(~regio, ncol = 2, scales = "free")
+```
+
+Densiteiten over de jaren heen:
+
+```{r}
+densities_stratum_target %>%
+  filter(
+    year == 2023 & grepl("^Zandleem|^Leem", Label) | year != 2023
+  ) %>%
+  rename("stratum" = "Label", "estimate" = "Estimate") %>%
+  filter(stratum != "Total") %>%
+  separate(stratum, into = c("regio", "openheid", "sbp"), sep = " - ") %>%
+  mutate(stratum = paste(openheid, sbp, sep = " - ")) %>%
+  ggplot(aes(x = year, y = estimate, colour = stratum)) +
+  geom_point(position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = lcl, ymax = ucl),
+    width = 0.2,
+    position = position_dodge(width = 0.5)
+  ) +
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(y = "breeding pairs / 100 ha", x = "") +
+  facet_wrap(~regio, ncol = 2, scales = "free")
+```
+
+#### Regio
+
+Abundanties:
+
+```{r}
+abundances_region_target <- tar_read_ds("abundances_region", params$species)
+abundances_region <- abundances_region_target %>%
+  filter(
+    if (params$year == 2023) {
+      year == params$year & grepl("^Zandleem|^Leem", Label)
+    } else {
+      year == params$year
+    }
+  ) %>%
+  select(-species, -year) %>%
+  rename("region" = "Label", "estimate" = "Estimate")
+abundances_region %>%
+  kable(digits = 3)
+```
+
+Densiteiten:
+
+```{r}
+densities_region_target <- tar_read_ds("densities_region", params$species)
+densities_region <- densities_region_target %>%
+  filter(
+    if (params$year == 2023) {
+      year == params$year & grepl("^Zandleem|^Leem", Label)
+    } else {
+      year == params$year
+    }
+  ) %>%
+  select(-species, -year) %>%
+  rename("region" = "Label", "estimate" = "Estimate")
+densities_region %>%
+  kable(digits = 3)
+```
+
+```{r}
+densities_region %>%
+  filter(region != "Total") %>%
+  ggplot(aes(x = region, y = estimate)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = lcl, ymax = ucl), width = 0.2, linewidth = 1) +
+  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 100, 2)) +
+  labs(y = "breeding pairs / 100 ha", x = "")
+```
+
+Densiteiten over de jaren heen:
+
+```{r}
+densities_region_target %>%
+  filter(
+    year == 2023 & grepl("^Zandleem|^Leem", Label) | year != 2023
+  ) %>%
+  rename("region" = "Label", "estimate" = "Estimate") %>%
+  filter(region != "Total") %>%
+  ggplot(aes(x = year, y = estimate)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = lcl, ymax = ucl),
+    width = 0.2,
+  ) +
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(y = "breeding pairs / 100 ha", x = "") +
+  facet_wrap(~region, ncol = 2, scales = "free")
+```
+
+# Spatiale predicties
+## Veldleeuwerik - 2023
+
+```{r}
+params$year <- 2024
+params$species <- "Roodborsttapuit"
+```
+
+We bereiden de data voor.
+
+> We houden er nu geen rekening mee dat een plot soms niet bezocht is, we zetten het aantal gewoon op 0! Dat is niet ok!
+
+```{r}
+filtered_distance_df <- tar_read_ds("filtered_breeding_date", params$species)
+# Presences
+presences_2023 <- filtered_distance_df %>%
+  filter(jaar == params$year) %>%
+  group_by(
+    plotnaam, x_plot, y_plot, periode_in_jaar, regio, openheid_klasse, sbp,
+    stratum
+  ) %>%
+  summarise(count = sum(aantal), .groups = "drop") %>%
+  select(
+    count, plotnaam, periode_in_jaar, regio, openheid_klasse, sbp, stratum,
+    x_plot, y_plot
+  )
+
+# Add zeroes
+design <- tar_read("design")
+zeroes_2023 <- design %>%
+  mutate(year = params$year) %>%
+  filter(
+    if (params$year == 2023) {
+      year == params$year & grepl("^Zandleem|^Leem", regio)
+    } else {
+      year == params$year
+    }
+  ) %>%
+  select(
+    "plotnaam" = "pointid", "regio", "openheid_klasse", "sbp",
+    "x_plot" = "x_coord", "y_plot" = "y_coord"
+  ) %>%
+  expand_grid(periode_in_jaar = paste0("R", 1:4)) %>%
+  anti_join(
+    presences_2023,
+    by = join_by(
+      plotnaam, regio, openheid_klasse, sbp, x_plot, y_plot, periode_in_jaar
+    )
+  ) %>%
+  mutate(
+    count = 0,
+    stratum = ifelse(
+      regio == "Weidestreek",
+      "Weidestreek",
+      paste(regio, openheid_klasse, sbp, sep = " - ")
+    )
+  ) %>%
+  select(
+    count, plotnaam, periode_in_jaar, regio, openheid_klasse, sbp, stratum,
+    x_plot, y_plot
+  )
+
+# Bind datasets together
+count_data_2023 <- bind_rows(presences_2023, zeroes_2023) %>%
+  mutate(plotnaam = factor(plotnaam))
+```
+
+```{r}
+count_data_2023 %>%
+  count(count, stratum) %>%
+  ggplot(aes(x = count, y = n)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~stratum, ncol = 2, scales = "free")
+```
+
+### Selecteer responsdistributie
+
+```{r}
+library(mgcv)
+```
+
+Poisson:
+
+```{r}
+# Thin plate regression spline (isotropic)
+m1 <- gam(count ~ stratum + periode_in_jaar + s(x_plot, y_plot, bs = "tp") +
+            s(plotnaam, bs = "re"),
+          data = count_data_2023, family = poisson())
+```
+
+```{r}
+par(mfrow = c(2, 2))
+gam.check(m1)
+par(mfrow = c(1, 1))
+
+vis.gam(m1)
+```
+
+```{r}
+library(DHARMa)
+```
+
+
+```{r}
+sim_out <- simulateResiduals(m1, plot = TRUE, n = 1000)
+sim_out
+simulation_out2 <- recalculateResiduals(
+  sim_out,
+  group = count_data_2023$plotnaam
+)
+plot(simulation_out2, quantreg = FALSE)
+
+testOutliers(sim_out, type = "boot")
+```
+
+```{r}
+rsd <- residuals(m1, type = "deviance")
+gam_res <- gam(
+  rsd ~ s(x_plot, y_plot, bs = "tp") - 1,
+  data = count_data_2023,
+  select = TRUE
+)
+gam_res
+```
+
+
+```{r}
+m2 <- gam(count ~ stratum + periode_in_jaar + s(x_plot, y_plot, bs = "tp") +
+            s(plotnaam, bs = "re"),
+          data = count_data_2023, family = ziP())
+simulateResiduals(m2, plot = TRUE, n = 1000)
+```
+
+```{r}
+library(glmmTMB)
+fit_glmmtmb <- glmmTMB(
+  count ~ stratum + periode_in_jaar + s(x_plot, y_plot, bs = "tp") +
+    (1 | plotnaam),
+  data = count_data_2023,
+  family = poisson()
+)
+
+performance::check_model(fit_glmmtmb)
+performance::check_overdispersion(fit_glmmtmb)
+performance::check_zeroinflation(fit_glmmtmb)
+
+performance::check_model(fit_glmmtmb, check = "pp_check")
+performance::check_model(fit_glmmtmb, check = "qq")
+
+performance::check_predictions(fit_glmmtmb, check_range = TRUE)
+```
+
+
+
+```{r}
+library(brms)
+# MCMC parameters
+nchains <- 3           # number of chains
+niter <- 2500          # number of iterations (incl. burn-in)
+burnin <- 500          # number of initial samples to discard (burn-in)
+nparallel <- nchains   # number of cores used for parallel computing
+thinning <- 2          # thinning
+
+test <- brm(
+  formula = count ~ stratum + periode_in_jaar + s(x_plot, y_plot, bs = "tp") +
+    (1 | plotnaam),
+  data = count_data_2023,
+  family = poisson(),
+  chains = nchains,
+  warmup = burnin,
+  iter = niter,
+  cores = nparallel,
+  thin = thinning
+)
+```
+
+
+### Selecteer spatiale spline
+#### Anisotropie
+
+```{r}
+# Tensor product smooth (anisotropic)
+m_te <- gam(
+  count ~ stratum + periode_in_jaar + te(x_plot, y_plot) +
+    s(plotnaam, bs = "re"),
+  data = count_data_2023,
+  family = poisson()
+)
+```
+
+
+```{r}
+par(mfrow = c(2, 2))
+gam.check(m_te)
+par(mfrow = c(1, 1))
+```
+
+```{r}
+AIC(m1, m_te)
+```
+
+```{r}
+m_gp <- gam(
+  count ~ stratum + periode_in_jaar + s(x_plot, y_plot, bs = "gp", m = 3) +
+    s(plotnaam, bs = "re"),
+  data = count_data_2023,
+  family = poisson()
+)
+```
+
+```{r}
+par(mfrow = c(2, 2))
+gam.check(m_gp)
+par(mfrow = c(1, 1))
+```
+
+
+#### Maximum aantal basisdimensies
+
+### Model fit
+
+### Predicties
+
+```{r}
+prediction_hexgrid_total <- tar_read("prediction_hexgrid")[[1]]
+prediction_hexgrid <- prediction_hexgrid_total %>%
+  filter(stratum %in% unique(count_data_2023$stratum)) %>%
+  expand_grid(periode_in_jaar = paste0("R", 1:4)) %>%
+  st_as_sf()
+
+mapview::mapview(distinct(prediction_hexgrid, stratum, geometry),
+                 zcol = "stratum",
+                 layer = "stratum")
+```
+
+
+```{r}
+preds <- predict(
+  fit_glmmtmb,
+  newdata = prediction_hexgrid %>%
+    mutate(plotnaam = NA),
+  type = "response"
+)
+```
+
+```{r}
+detection_probabilities <- tar_read_ds("detection_probabilities",
+                                       params$species)
+detprob_2023 <- detection_probabilities %>%
+  filter(year == params$year) %>%
+  select(where(function(x) !any(is.na(x))))
+if ("openheid" %in% colnames(detprob_2023)) {
+  detprob_2023 <- detprob_2023 %>%
+    rename(openheid_klasse = openheid)
+}
+```
+
+
+```{r}
+pred_dens <- cbind(prediction_hexgrid, preds) %>%
+  group_by(plotnaam, regio, openheid_klasse, sbp, stratum, geometry) %>%
+  summarise(pred = max(preds), .groups = "drop") %>%
+  left_join(detprob_2023) %>%
+  mutate(
+    cirkelopp = pi * 300^2,
+    ha_100 = 10^6,
+    offset = (estimate_p * cirkelopp) / ha_100,
+    pred_abu = pred / estimate_p,
+    pred_dens = pred / offset
+  )
+```
+
+```{r}
+ggplot(pred_dens) +
+  geom_sf(aes(fill = pred_dens), colour = alpha("white", 0)) +
+  scale_fill_gradientn(colours = rainbow(5), limits = c(0, NA)) +
+  coord_sf(crs = 31370) +
+  labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha") +
+  theme(legend.position = "bottom")
+```
+
+```{r}
+pred_dens %>%
+  mutate(x = st_coordinates(st_centroid(geometry))[, 1],
+         y = st_coordinates(st_centroid(geometry))[, 2]) %>%
+  ggplot() +
+  geom_raster(aes(x = x, y = y, fill = pred_dens), colour = alpha("white", 0),
+              interpolate = TRUE) +
+  scale_fill_gradientn(colours = rainbow(5), limits = c(0, NA)) +
+  coord_sf(crs = 31370) +
+  labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha") +
+  theme(legend.position = "bottom")
+```
+
+
+```{r}
+ggplot(pred_dens) +
+  geom_sf(aes(fill = pred_dens), colour = alpha("white", 0)) +
+  scale_fill_gradientn(
+    colours = c("#FF0000", "black", "#0066FF", "#CC00FF"),
+    values = scales::rescale(
+      c(min(pred_dens$pred_dens, na.rm = TRUE),
+        mean(pred_dens$pred_dens, na.rm = TRUE),
+        mean(pred_dens$pred_dens, na.rm = TRUE) +
+          0.2 * diff(range(pred_dens$pred_dens, na.rm = TRUE)),
+        max(pred_dens$pred_dens, na.rm = TRUE)
+      ),
+    )
+  ) +
+  coord_sf(crs = 31370) +
+  labs(x = "", y = "", fill = "Aantal broedparen\nper 100 ha") +
+  theme(legend.position = "bottom")
+```
+
+checks:
+
+```{r}
+pred_dens %>%
+  st_drop_geometry() %>%
+  group_by(regio) %>%
+  summarise(
+    total_abundance = sum(pred_abu),
+    total_density = sum(pred_dens) / n()
+  )
+```

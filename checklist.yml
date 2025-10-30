@@ -19,7 +19,20 @@ spelling:
   ignore:
   - .github
   - LICENSE.md
+  - source/bookdown/mas_uitrol_vlaanderen/LICENSE.md
   - source/targets/mas_steekproef_weidestreek/targets_steekproef_weidestreek.Rmd
   - source/targets/mas_steekproef_za_kp_po/targets_steekproef_za_kp_po.Rmd
   - source/R
   - data
+  other:
+    en-GB:
+    - source/targets/data_preparation/R/anonymise_observers.R
+    - source/bookdown/mas_uitrol_vlaanderen/00_abstract.Rmd
+    - source/bookdown/mas_uitrol_vlaanderen/scripts/autoqmd_cleanup.R
+    - source/bookdown/mas_uitrol_vlaanderen/scripts/autoqmd_generate_children.R
+    - source/bookdown/mas_uitrol_vlaanderen/scripts/autoqmd_insert_includes.R
+    - source/bookdown/mas_uitrol_vlaanderen/scripts/describe_remote_sensing.R
+    - source/bookdown/mas_uitrol_vlaanderen/scripts/plot_remote_sensing.R
+    - source/bookdown/mas_uitrol_vlaanderen/scripts/summarise_detection_patterns.R
+    - source/bookdown/mas_uitrol_vlaanderen/scripts/summarise_region_densities.R
+    - source/bookdown/mas_uitrol_vlaanderen/scripts/summarise_stratum_densities.R

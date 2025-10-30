@@ -1,0 +1,125 @@
+---
+execute:
+  freeze: false
+---
+# Bijlagen bij densiteitsschattingen akkervogels {#sec-bijlage-densiteiten}
+
+Bijlagen bij @sec-densiteitsschattingen. In 2023 werden enkel nog maar de Leemstreek en de Zandleemstreek bezocht. Voor Graspieper, Grutto, Scholekster en Wulp hadden we in dat jaar niet genoeg data om de detectiekans en bijgevolg de densiteiten betrouwbaar te schatten. Voor deze soorten rapporteren we enkel de resultaten vanaf 2024. Schattingen voor de Weidestreek zijn enkel beschikbaar op regioniveau en niet op stratumniveau.
+
+```{r}
+#| include: FALSE
+# set up
+library(knitr)
+opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  out.width = "100%"
+)
+```
+
+```{r}
+# packages
+library(tidyverse)
+library(targets)
+library(sf)
+library(patchwork)
+
+library(INBOtheme)
+theme_set(theme_inbo(transparent = TRUE))
+
+# Conflicts
+conflicted::conflicts_prefer(dplyr::filter)
+conflicted::conflicts_prefer(dplyr::select)
+
+# Paths
+mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
+store <- file.path(
+  mbag_dir, "source", "targets", "distance_sampling", "_targets"
+)
+```
+
+## Oppervlaktes steekproefkader {#sec-oppervlaktes-steekproefkader}
+
+```{r}
+#| label: tbl-oppervlakte-stratum
+#| tbl-cap: "Oppervlakte steekproefkader per stratum."
+strata_sf <- tar_read("strata_sf", store = store)
+strata_sf %>%
+  st_drop_geometry() %>%
+  arrange(regio, openheid, sbp) %>%
+  rename("oppervlakte (km²)" = "Area") %>%
+  kable(digits = 3)
+```
+
+```{r}
+#| label: fig-oppervlakte-stratum
+#| fig-cap: "Steekproefkader MAS per stratum. Binnen regio's kan er overlap zijn
+#|  tussen strata."
+#| fig-width: 8
+#| fig-height: 10
+# Split data by region
+plots <- strata_sf %>%
+  mutate(stratum = paste(openheid, sbp, sep = " - ")) %>%
+  split(.$regio) %>%
+  lapply(function(d) {
+    ggplot(d) +
+      geom_sf(aes(fill = stratum), colour = alpha("black", 0)) +
+      labs(title = unique(d$regio), fill = "") +
+      theme_minimal() +
+      theme(
+        plot.title = element_text(hjust = 0.5),
+        legend.position = "none",
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank()
+      )
+  })
+
+# Identify which are the wide regions
+wide_regions <- c("Zandleemstreek", "Leemstreek")
+
+# Split into two groups
+plots_narrow <- plots[setdiff(names(plots), wide_regions)]
+plots_wide   <- plots[wide_regions]
+
+# Combine them:
+top_row  <- wrap_plots(plots_narrow, ncol = 2)
+bottom_row <- wrap_plots(plots_wide, ncol = 1)
+
+final_plot <- top_row / bottom_row + plot_layout(guides = "collect")
+
+final_plot &
+  theme(legend.position = "bottom")
+```
+
+\newpage
+
+```{r}
+#| label: tbl-oppervlakte-regio
+#| tbl-cap: "Oppervlakte steekproefkader per regio."
+region_sf <- tar_read("region_sf", store = store)
+region_sf %>%
+  st_drop_geometry() %>%
+  mutate(`totale oppervlakte (km²)` = sum(Area)) %>%
+  arrange(regio) %>%
+  rename("oppervlakte (km²)" = "Area") %>%
+  kable(digits = 3)
+```
+
+```{r}
+#| fig-cap: "Steekproefkader MAS per regio."
+region_sf %>%
+  ggplot() +
+  geom_sf(aes(fill = regio), colour = alpha("black", 0)) +
+  labs(fill = "") +
+  theme(legend.position = "bottom")
+```
+
+\newpage
+
+{{< include detection_curves.qmd >}}
+
+\newpage
+
+{{< include densities_tables.qmd >}}

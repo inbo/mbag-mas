@@ -89,13 +89,13 @@ taxon_core <- raw_data
 
 ## Ruimtelijke verwerking
 
-- We verwijderen de Amersfoord coördinaten
+- We verwijderen de Amersfoort coördinaten
 - We zetten de Lambert coördinaten om naar WGS 84 decimale coördinaten
 - We behouden de Lambert coördinaten als verbatim coördinaten
 
 ```{r}
 taxon_core <- taxon_core %>%
-  # Remove Amersfoord coordinates
+  # Remove Amersfoort coordinates
   select(
     -"raw_x_amersfoord",
     -"raw_y_amersfoord"
@@ -127,8 +127,8 @@ Meestal ontbreken ze in `raw_data`.
 ```{r}
 taxon_core <- taxon_core %>%
   mutate(
-    dwc_type                 = "??",
-    dwc_datasetID            = "??",
+    dwc_type                 = "Event",
+    # dwc_datasetID            = NA, # doi after first publication
     dwc_language             = "en",
     dwc_license              = paste0("http://creativecommons.org/",
                                       "publicdomain/zero/1.0/"),
@@ -138,13 +138,12 @@ taxon_core <- taxon_core %>%
                                       "Forest (INBO)"),
     dwc_accessRights         = "http://www.inbo.be/en/norms-for-data-use",
     dwc_institutionCode      = "INBO",
-    dwc_datasetName          = "??",
     dwc_collectionCode       = "MAS",
     dwc_kingdom              = "Animalia",
     dwc_nomenclaturalCode    = "ICZN",
     dwc_eventType            = "Survey",
-    dwc_samplingProtocol     = "??",
-    dwc_samplingEffort       = "??",
+    dwc_samplingProtocol     = "Point count in 300 m radius",
+    dwc_samplingEffort       = "10 minutes",
     dwc_continent            = "Europe",
     dwc_country              = "Belgium",
     dwc_stateProvince        = "Flanders",
@@ -155,14 +154,18 @@ taxon_core <- taxon_core %>%
 
 **Vragen**
 
+<!-- spell-check: ignore:start -->
+> Beantwoord door Stijn Cooleman
+
 - Wat vul ik in voor volgende termen?
-  - `dwc_type`
-  - `dwc_datasetID`
-  - `dwc_datasetName`
-  - `dwc_samplingProtocol`
-  - `dwc_samplingEffort`
-- Is `dwc_language = "en"` ok?
-- Is `dwc_eventType = "Survey"` ok?
+  - `dwc_type` --> "Event" is geschikt volgens https://dwc.tdwg.org/list/#dc_type
+  - `dwc_datasetID` --> doi van de dataset is hiervoor geschikt, maar pas gekend na eerste publicatie en registratie van de dataset via de GBIF IPT. Dus dit is een waarde die doorgaans pas vanaf de eerste herpublicatie invulbaar is
+  - `dwc_datasetName` --> optioneel dataveld (wordt vaak niet ingevuld, gezien de redundante herhaling van de datasetnaam die al getoond wordt rechtsboven op iedere GBIF occurrence webpage)
+  - `dwc_samplingProtocol` --> "Point count" is een van de beste waarden om hierin te mappen volgens mij (grotendeels obv m'n tellingen op het terrein) voor het MAS-project, in lijn met andere voorbeelden via https://dwc.tdwg.org/list/#dwc_samplingProtocol
+  - `dwc_samplingEffort` --> "10 minutes" is een van de beste waarden om hierin te mappen volgens mij (obv m'n tellingen op het terrein) voor het MAS-project, in lijn met andere voorbeelden via https://dwc.tdwg.org/list/#dwc_samplingEffort
+- Is `dwc_language = "en"` ok? --> ok
+- Is `dwc_eventType = "Survey"` ok? --> ok
+<!-- spell-check: ignore:end -->
 
 ## Ongewijzigde waarden
 
@@ -190,14 +193,27 @@ taxon_core <- taxon_core %>%
 
 **Vragen**
 
+<!-- spell-check: ignore:start -->
 -  Ok dat `dwc_varbatimBehavior` de Nederlandstalige beschrijving is? De Engelstalige beschrijving wordt in de volgende sectie onder `dwc_behavior` aangemaakt. Of mag de Nederlandse beschrijving dan weg?
+
+> Stijn: ja, idd. als de Engelstalige beschrijvingen voor gedragingen/broedcodes in dwc_behavior gegeven is, dan wordt de Nederlandstalige beschrijving in een verbatim dataveld redundant, althans in GBIF. 
+NB: dwc_behavior is geprefereerd boven dwc_occurrenceRemarks:
+the dwc-mapping of the breeding indicative behaviors or evidences seems to be assigned to two different data fields in the initial GBIF publication of waarnemingen.be bird data:
+*dwc:behavior e.g. singing (https://www.gbif.org/occurrence/2262112345), alarming, transporting feed or faeces (https://www.gbif.org/occurrence/2262151951)
+*dwc:occurrenceRemarks e.g. adult in territory, occupied nest with eggs (https://www.gbif.org/occurrence/2262103881), occupied nest with young
+In my opinion, the latter terms should be consistently mapped to dwc:behavior.
+
 -  Wat is het verschil tussen `dwc_individualCount` en `dwc_organismQuantity`? Voorlopig gebruiken we `organismQuantity` voor aantallen en `organismQuantityType = individuals` wanneer broedcode gelijk aan 0 en `organismQuantityType = breeding pairs` wanneer broedcode > 0. In geval van broedcode > 0 moet `organismQuantity` eigenlijk gelijk zijn aan 1.
+
+> Stijn: perfect, in dit geval, gezien de standaardwijze van data-input via Avimap per territorium (niet per individu)
+
+<!-- spell-check: ignore:end -->
 
 ## Gewijzigde waarden
 
 Gewijzigde waarden worden gebruikt voor Darwin Core-termen waarvoor de inhoud in `raw_data` als basis wordt gebruikt, maar deze moet worden gestandaardiseerd. Dit geldt voor Darwin Core-termen waarvoor we een vocabulaire gebruiken of waar we willen transformeren voor de duidelijkheid of om duidelijke fouten te corrigeren.
 
-- We creëren een `dwc_occurrenceID` en een `dwc_occurrenceID`
+- We creëren een `dwc_occurrenceID` en een `dwc_eventID`
 - We voegen `dwc_class` toe o.b.v. de `soortgrp`
 - We voegen `dwc_occurrenceStatus` toe o.b.v. de `dwc_organismQuantity` 
 - We voegen `dwc_behavior` toe als Engelse vertaling van `dwc_varbatimBehavior`
@@ -262,7 +278,7 @@ taxon_core <- taxon_core %>%
 # Nabewerking
 ## Taxon matching
 
-De soortcodes in `dwc_taxonID` zijn avimapcodes.
+De soortcodes in `dwc_taxonID` zijn Avimap-codes.
 We kunnen enkel matchen op de Nederlandstalige soortnamen in `dwc_vernacularName`.
 Dit doen we via aangepaste code van in [deze gist](https://gist.github.com/damianooldoni/3fa9cc1ffa67377a9757df097d48d19f).
 Een voorbeeldje:
@@ -293,7 +309,7 @@ example_df <- tibble(
 example_df
 ```
 
-We zijn niet tevreden met eerste beste match, maar gaan met een specifieke regex door meerdere vernacular names zoeken (Gele Kwikstaart zal bv. niet met Grote Gele Kwikstaart matchen en Merel zal bv. ook niet met Indische Merel matchen).
+We zijn niet tevreden met eerste beste match, maar gaan met een specifieke regex door meerdere namen zoeken (Gele Kwikstaart zal bv. niet met Grote Gele Kwikstaart matchen en Merel zal bv. ook niet met Indische Merel matchen).
 We nemen de default limit (100).
 
 ```{r}
@@ -372,7 +388,7 @@ species_matching_mas %>%
 ```
 
 Nu hebben we namen voor alle taxa.
-Enkel voor "Veldmuis/Aardmuis", "rat spec." en "spitsmuis spec." niet.
+Enkel voor `"Veldmuis/Aardmuis"`, `"rat spec."` en `"spitsmuis spec."` niet.
 Deze moeten we manueel mappen:
 
 ```{r}
@@ -423,6 +439,13 @@ manual_taxa_df %>%
   kable()
 ```
 
+<!-- spell-check: ignore:start -->
+> Stijn: dit is idd. een optie. een andere optie is meer gedetailleerd beide wetenschappelijke namen bijkomend samenvoegen in dwc_verbatimIdentification, of eventueel in dwc_scientificName, als 'species aggregate' als dwc_taxonRank kan (zoals in enkele meetnetten.be-datasets)
+er zijn namelijk meer dan deze 2 soorten Microtus muizen mogelijk in Vlaanderen volgens https://waarnemingen.be/search/?q=Microtus
+Bijv.: taxonRank = "species aggregate" voor scientificName = "Myotis mystacinus/brandtii" (2 verschillende, op elkaar gelijkende soorten, o.a. https://waarnemingen.be/species/373/) : https://www.gbif.org/species/180180210/verbatim
+
+<!-- spell-check: ignore:end -->
+
 We voeren de finale mapping uit om alle kolommen van interesse te bekomen.
 
 ```{r}
@@ -470,7 +493,7 @@ taxon_core <- species_matching_mas2 %>%
   )
 ```
 
-We vergelijken met de soortenlijst die we van sovon doorkregen.
+We vergelijken met de soortenlijst die we van Sovon doorkregen.
 
 ```{r}
 soorten_wet_mas <- read_csv2(file.path("data", "SOVON", "soorten_wet_mas.csv"))
@@ -489,7 +512,7 @@ test_wet_names <- species_matching_mas2 %>%
   select(-"groepnr")
 ```
 
-De volgende soorten zijn niet in de lijst van sovon aanwezig:
+De volgende soorten zijn niet in de lijst van Sovon aanwezig:
 
 ```{r}
 missing_soorten_wet_mas <- test_wet_names %>%
@@ -503,7 +526,7 @@ missing_soorten_wet_mas %>%
   kable()
 ```
 
-Hoe zit het met de wetenschappelijke namen van onze functie en van de lijst van sovon.
+Hoe zit het met de wetenschappelijke namen van onze functie en van de lijst van Sovon.
 Komen deze overeen?
 
 ```{r}
@@ -542,7 +565,7 @@ sort(colnames(taxon_core)[grepl("^raw\\_", colnames(taxon_core))])
   - `raw_sbp` --> Overlap steekproefkader zenodo?
   - `raw_openheid_klasse` --> Overlap steekproefkader zenodo?
   - `raw_regio` --> Overlap steekproefkader zenodo?
-  - `raw_periode_in_jaar`: 1 van 4 telperiodes
+  - `raw_periode_in_jaar`: 1 van 4 telperiodes --> optioneel laat dit temporele dataveld toe om alle tellingen (events) in een jaar te groeperen per telperiode (als `parentEvent`)
   - `raw_status_teller`: is de waarnemer een professional of een vrijwilliger?
 - Kan hier nog iets mee gedaan worden?
   - `raw_doy`: day of year sinds januari
@@ -561,7 +584,7 @@ taxon_core_final <- taxon_core %>%
 # Select and sort columns
 col_order <- c(
   "type", "language", "license", "publisher", "rightsHolder", "accessRights",
-  "datasetID", "collectionCode", "institutionCode", "datasetName",
+  # "datasetID", "collectionCode", "institutionCode",
   "basisOfRecord", "eventType", "eventID",
   "occurrenceID", "recordedBy", "organismQuantity",
   "organismQuantityType", "occurrenceStatus", "behavior", "varbatimBehavior",

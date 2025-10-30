@@ -13,6 +13,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 De MAS-data worden geïmporteerd van de Sovon WFS-server via [QGIS](https://qgis.org/).
 
+<!-- spell-check: ignore:start -->
+
 1.  Een account aanmaken via <https://www.vogelatlas.be/user/newuser>
 
     1.  Rechten aanvragen via Sovon voor gebruik van de WFS
@@ -38,6 +40,8 @@ De MAS-data worden geïmporteerd van de Sovon WFS-server via [QGIS](https://qgis
     5.  Wijzig het Coördinaten Referentiesysteem naar EPSG:28992
     6.  Klik op 'Toevoegen' onderaan in het dialoogvenster
         -   Indien QGIS vraagt de toe te voegen items te selecteren, selecteer je de laag 'ms:viewpoints' en klik je op 'Lagen toevoegen'
+        
+<!-- spell-check: ignore:end -->
 
 Nu worden alle data waar je toegang toe hebt gedownload (dit kan even duren).
 Dit zijn de waarnemingen van de MAS-tellingen in Vlaanderen.
@@ -45,6 +49,8 @@ Dit zijn de waarnemingen van de MAS-tellingen in Vlaanderen.
 ## Exporteren en lokalisatie van de data
 
 Wanneer alle data gedownload zijn, kan je deze laag exporteren:
+
+<!-- spell-check: ignore:start -->
 
 1.  Zorg dat alle data zichtbaar zijn in de view van QGIS
 
@@ -60,6 +66,8 @@ Wanneer alle data gedownload zijn, kan je deze laag exporteren:
 
 3.  De finale export die je wilt gebruiken voor data preparatie en verdere analyses, sla je op in een folder met als naam `JAAR` onder `mbag-mas/source/targets/data_preparation/data`.
     Elke folder mag slechts 1 bestand hebben met de data van dat jaar (zie verder).
+    
+<!-- spell-check: ignore:end -->
 
 ## Verwerking van de data 
 

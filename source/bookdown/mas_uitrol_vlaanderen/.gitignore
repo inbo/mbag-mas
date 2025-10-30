@@ -1,0 +1,10 @@
+/\.quarto
+/\.Rproj.user
+/*\.eps
+/*\.pdf
+/*\.sty
+/*\.tex
+_freeze
+site_libs
+
+/.quarto/
