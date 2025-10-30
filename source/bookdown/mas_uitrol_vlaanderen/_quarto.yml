@@ -54,6 +54,12 @@ flandersqmd:
     orcid: "0009-0006-0433-7593"
     affiliation: "Instituut voor Natuur- en Bosonderzoek (INBO)"
   - name:
+      given: "Stien"
+      family: "Heremans"
+    email: "stien.heremans@inbo.be"
+    orcid: "0000-0002-5356-1093"
+    affiliation: "Instituut voor Natuur- en Bosonderzoek (INBO)"
+  - name:
       given: "Hans"
       family: "Van Calster"
     email: "hans.vancalster@inbo.be"

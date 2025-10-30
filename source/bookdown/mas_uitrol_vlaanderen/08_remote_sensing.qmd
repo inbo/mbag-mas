@@ -199,7 +199,7 @@ plots <- tibble(
 rast_ndvi_list <- apply(plots, 1, function(row) {
   # Create file path
   plotnaam <- row[["plotnaam"]]
-  file_name <- paste("multiband_raster_ndvi", plotnaam, "sg.tif", sep = "_")
+  file_name <- paste("multiband_raster_ndvi", plotnaam, "sg_v1.tif", sep = "_")
 
   # Read tif file
   raster <- rast(file.path(data_path, file_name))
@@ -213,7 +213,7 @@ names(rast_ndvi_list) <- plots$plotnaam
 rast_bsi_list <- apply(plots, 1, function(row) {
   # Create file path
   plotnaam <- row[["plotnaam"]]
-  file_name <- paste("multiband_raster_bsi", plotnaam, "sg.tif", sep = "_")
+  file_name <- paste("multiband_raster_bsi", plotnaam, "sg_v1.tif", sep = "_")
 
   # Read tif file
   raster <- rast(file.path(data_path, file_name))
@@ -331,7 +331,7 @@ combined
 # Read time series data from CSV
 vec <- c(ndvi = "ndvi", bsi = "bsi")
 time_series_csv <- lapply(vec, function(indicator) {
-  file_name <- paste0("time_series_mas_", indicator, ".csv")
+  file_name <- paste0("time_series_mas_", indicator, "_v2.csv")
   path <- file.path(data_path, file_name)
 
   read_csv(path, show_col_types = FALSE)[, -1]
@@ -560,7 +560,7 @@ Bovenstaande resultaten geven (1) geen duidelijke vergelijking in trends of comp
 
 We maken daarom in eerste plaats een vergelijking tussen de trends in van NDVI en BSI (@fig-trend-pairwise). Er vallen twee patronen op:
 
-1. Voor 2023 en 2024 tonen de waardes van NDVI en BSI meestal dezelfde trend doorheen de tijd. Dit is niet zo voor 2022 waar de trends iets vaker verschillen tussen beide indicatortypes.
+1. Voor 2023 en 2024 tonen de waardes van NDVI en BSI meestal dezelfde trend doorheen de tijd. Dit is niet zo voor 2022 waar de trends ongeveer even vaak dezelfde zijn als verschillen tussen beide indicatortypes.
 2. Als de trends verschillen tussen de types, heeft BSI vaker complexe trends dan NDVI. Dit patroon is extra opvallend voor 2022.
 
 ```{r}
@@ -710,7 +710,7 @@ trend_data$bsi %>%
   arrange(prop_complexity)
 ```
 
-In tweede plaats bekijken we de trends per landgebruik (gewasgroep). Ook tussen verschillende gewasgroepen zien we verschillen in complexiteit van trends (@fig-trendtype-gewasgroep). Zowel voor NDVI als BSI volgen de trends hoofdzakelijk een eenvoudig patroon in Grasland, Fruit en Noten, Water, Voedergewassen, Houtachtige gewassen, Overige gewassen en Granen, zaden en peulvruchten (bv. altijd bedekt/onbedekt of toename/afname bedekking) en complexere patronen voor Suikerbieten, Maïs, Aardappelen, Groenten, kruiden en sierplanten en Vlas en Hennep (bv. paraboolvormig of complexer). Deze patronen zijn enkel voor BSI in 2022 niet zo opvallend. In andere jaren zien we wel sterke gelijkenis in de verhoudingen van trendtypes per gewasgroep. Net als eerder zien we ook hier dat BSI hogere proporties heeft aan complexere trendtypes.
+In tweede plaats bekijken we de trends per landgebruik (gewasgroep). Ook tussen verschillende gewasgroepen zien we verschillen in complexiteit van trends (@fig-trendtype-gewasgroep). Zowel voor NDVI als BSI volgen de trends hoofdzakelijk een eenvoudig patroon in Grasland, Fruit en Noten, Water, Houtachtige gewassen, Voedergewassen, Overige gewassen en Granen, zaden en peulvruchten (bv. altijd bedekt/onbedekt of toename/afname bedekking) en complexere patronen voor Suikerbieten, Maïs, Groenten, kruiden en sierplanten, Aardappelen en Vlas en Hennep (bv. paraboolvormig of complexer). Deze patronen zijn enkel voor BSI in 2022 niet zo opvallend. In andere jaren zien we wel sterke gelijkenis in de verhoudingen van trendtypes per gewasgroep. Net als eerder zien we ook hier dat BSI hogere proporties heeft aan complexere trendtypes.
 
 @fig-trend-gewasgroep-ndvi toont de gemiddelde trends voor NDVI (mediaan en interkwartielbereik (IQR)) per gewasgroep in meer detail (geordend als in @fig-trendtype-gewasgroep). @fig-trend-gewasgroep-ndvi voor BSI. De trends vertonen voor beide indicatoren gelijkaardig patronen. Ook zijn de patronen per gewasgroep gelijkaardig voor elk jaar. De trendtypes verschillen soms wel tussen de jaren omdat de indexwaarden soms net wel of net niet de drempelwaarde overschrijden.
 
@@ -773,7 +773,7 @@ sample_df <- sample %>%
 read_bare_soil_year <- function(year, index) {
   file_path <- file.path(
     data_path,
-    paste0("bare_soil_analysis_mas_", index, "_", year, "_v1.csv")
+    paste0("bare_soil_analysis_mas_", index, "_", year, "_v2.csv")
   )
   file <- readr::read_csv(file_path, show_col_types = FALSE)[, -1]
   names(file) <- c("pointid", "year", "period", "perc_bare_soil")
@@ -798,6 +798,7 @@ perc_bare_soil_data <- lapply(vec, function(i) {
 ```
 
 Per telpunt werd het percentage naakte bodem berekend voor elke MAS-telperiode in elk jaar. Meeste patronen zijn gelijkaardig voor berekeningen op basis van NDVI en BSI en zijn gelijkaardig tussen de jaren.
+Over het algemeen zien we wel dat de percentages hoger liggen o.b.v. BSI dan o.b.v. NDVI.
 Berekeningen van statistieken zoals gemiddelden, medianen en kwartielen zijn telkens gebaseerd op gewogen waarden, zodat rekening wordt gehouden met het relatief aantal telpunten per combinatie van regio, openheid en SBP-ligging.
 
 In telperiode vier is het percentage naakte bodem duidelijk lager dan in de ander periodes. `r describe_summary_tables(perc_bare_soil_data, "period_lab")`
@@ -806,7 +807,7 @@ Tussen de landbouwregio's zien we kleine verschillen (@fig-baresoil-region). `r 
 
 In @fig-baresoil-stratum vergelijken we per stratum.
 Voor openheid landschap zien we een verschil. `r describe_summary_tables(perc_bare_soil_data, "openheid_lab", c("regio", "sbp"))`
-Voor binnen versus buiten SBP-gebied is er geen opvallend verschil. `r describe_summary_tables(perc_bare_soil_data, "sbp_lab", c("regio", "openheid_klasse"))`
+Voor binnen versus buiten SBP-gebied zien we een verschil. `r describe_summary_tables(perc_bare_soil_data, "sbp_lab", c("regio", "openheid_klasse"))`
 
 ```{r}
 #| label: fig-baresoil-region
