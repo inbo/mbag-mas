@@ -1,4 +1,4 @@
-# Remote sensing indicatoren op basis van optische satelliettijdsreeksen {#sec-remote-sensing}
+# Remote sensing indicatoren op basis van optische satelliettijdreeksen {#sec-remote-sensing}
 
 ```{r}
 #| include: FALSE
@@ -61,7 +61,7 @@ data_path <- file.path(mbag_dir, "data", "remote_sensing")
 ### Data exploratie
 
 In dit hoofdstuk verkennen we de tijdreeksen van de indicatoren voor naakte bodem voor de jaren 2022–2024.
-Dit omdat we nog geen data van 2025 hebben en we zo toch al een 3-jarige tijdsreeks kunnen verkennen.
+Dit omdat we nog geen data van 2025 hebben en we zo toch al een 3-jarige tijdreeks kunnen verkennen.
 De data werden geanalyseerd in R [@R] met RStudio [@RStudio].
 
 We beschrijven onder andere seizoenspatronen van bedekking op percelen.
@@ -76,8 +76,8 @@ Daarbij onderscheiden we verschillende trends in de evolutie van de indicatorwaa
 - **Omgekeerde parabool** – eerst een afname, daarna een toename in bedekking (bedekt → onbedekt → bedekt), met een voldoende lange fase van bedekking
 - **Complex patroon** – andere, meer complexe reeksen met meerdere wisselingen tussen bedekt en onbedekt
 
-Merk op dat deze trendindeling afhankelijk is van de lengte van de tijdsreeks en van de gekozen drempelwaarde voor naakte bodem.
-Een tijdsreeks kan bijvoorbeeld een parabolisch verloop vertonen, maar net onder de drempelwaarde blijven, waardoor ze in onze interpretatie als een constant patroon wordt beschouwd.
+Merk op dat deze trendindeling afhankelijk is van de lengte van de tijdreeks en van de gekozen drempelwaarde voor naakte bodem.
+Een tijdreeks kan bijvoorbeeld een parabolisch verloop vertonen, maar net onder de drempelwaarde blijven, waardoor ze in onze interpretatie als een constant patroon wordt beschouwd.
 Het gaat om een eerste manier om de temporele dynamiek en complexiteit van de bedekkingsindicatoren te beschrijven, als opstap naar latere, meer verklarende analyses bijvoorbeeld in relatie tot de aanwezigheid van akkervogels of andere variabelen.
 Deze verkenning brengt enkel de variabiliteit en complexiteit van de indicatorwaarden in kaart doorheen de tijd.
 
@@ -325,7 +325,7 @@ combined <- cowplot::plot_grid(
 combined
 ```
 
-### Tijdsreeksen
+### Tijdreeksen
 
 ```{r}
 # Read time series data from CSV
@@ -419,15 +419,15 @@ trend_summary <- lapply(time_series_data, function(df) {
 })
 ```
 
-Voor elk landbouwperceel krijgen we tijdsreeksen van NDVI en BSI waarden. @fig-tijdsreeks-trend toont de tijdsreeksen voor telpunt Ol_12833.8. De verschillende percelen tonen duidelijk verschillende trends doorheen het jaar.
+Voor elk landbouwperceel krijgen we tijdreeksen van NDVI en BSI waarden. @fig-tijdreeks-trend toont de tijdreeksen voor telpunt Ol_12833.8. De verschillende percelen tonen duidelijk verschillende trends doorheen het jaar.
 
 Voor NDVI: `r trend_summary$ndvi`
 
 Voor BSI: `r trend_summary$bsi`
 
 ```{r}
-#| label: fig-tijdsreeks-trend
-#| fig-cap: "Tijdsreeks van landbouwpercelen rond telpunt Ol_12833.8 van
+#| label: fig-tijdreeks-trend
+#| fig-cap: "Tijdreeks van landbouwpercelen rond telpunt Ol_12833.8 van
 #|  1 februari tot en met 1 september.
 #|  **A.** NDVI: overgang naakte bodem onder een waarde van 0.3.
 #|  **B.** BSI: overgang naakte bodem boven een waarde van 0.021."

@@ -62,7 +62,7 @@ Het resultaat is een opgeschoonde, analyseklare dataset die consistent is over a
 
 ## Voorbereiding op datapublicatie {#sec-stap-3}
 
-De finale dataset wordt klaargemaakt voor publicatie op het Global Biodiversity Information Facility (GBIF) via stap 3 in @fig-analyse-kader. De gegevens van 2018–2025 zullen worden gepubliceerd tegen eind 2025, met jaarlijkse updates na kwaliteitscontrole van elk nieuwe teljaar. Publicatie vereist omzetting naar het Darwin Core-formaat ([https://dwc.tdwg.org/](https://dwc.tdwg.org/)), inclusief correcte soortnamen en gestandaardiseerde kolommen.
+De finale dataset wordt klaargemaakt voor publicatie op het Global Biodiversity Information Facility (GBIF) via stap 3 in @fig-analyse-kader. De gegevens van 2018–2025 zullen worden gepubliceerd tegen eind 2025, met jaarlijkse updates na kwaliteitscontrole van elk nieuw teljaar. Publicatie vereist omzetting naar het Darwin Core-formaat ([https://dwc.tdwg.org/](https://dwc.tdwg.org/)), inclusief correcte soortnamen en gestandaardiseerde kolommen.
 
 1. **Voorbereiding dataset**
 
@@ -137,7 +137,7 @@ Ten opzichte van het pilootproject zijn er enkele belangrijke uitbreidingen voor
 
 * **Toegenomen temporele resolutie**: waar mogelijk geven we voorkeur aan jaar-specifieke kaartlagen (bv. landbouwgebruiksgegevens of beheermonitoring), zodat we veranderingen doorheen de tijd expliciet kunnen meenemen in de analyse.
 * **Waarnemingsniveau in plaats van enkel telpuntniveau**: naast het berekenen van variabelen op telcirkel- of telpuntniveau (zoals het aandeel akkerrand binnen de 300 m radius), verzamelen we ook fijnschalige informatie op waarnemingsniveau (bv. of een individu daadwerkelijk in een akkerrand werd gezien). <!-- spell-check: ignore -->
-* **Gebruik van remote sensing**: we verkennen hoe gedetailleerde *remote sensing* producten kunnen bijdragen aan een nauwkeuriger karakterisering van de landgebruikssituatie op het moment van de telling. In tegenstelling tot administratieve perceelsinformatie bieden satellietbeelden een objectieve momentopname van de effectieve toestand ter plaatse. Zo kan een perceel dat administratief als 'maïs' is aangeduid, in werkelijkheid nog braak liggen tijdens het broedseizoen. Het meenemen van zulke actuele informatie is essentieel om ecologische relaties correct te modelleren. In @sec-remote-sensing focussen we op tijdsreeksen van indicatoren voor naakte bodem op telpuntlocaties.
+* **Gebruik van remote sensing**: we verkennen hoe gedetailleerde *remote sensing* producten kunnen bijdragen aan een nauwkeuriger karakterisering van de landgebruikssituatie op het moment van de telling. In tegenstelling tot administratieve perceelsinformatie bieden satellietbeelden een objectieve momentopname van de effectieve toestand ter plaatse. Zo kan een perceel dat administratief als 'maïs' is aangeduid, in werkelijkheid nog braak liggen tijdens het broedseizoen. Het meenemen van zulke actuele informatie is essentieel om ecologische relaties correct te modelleren. In @sec-remote-sensing focussen we op tijdreeksen van indicatoren voor naakte bodem op telpuntlocaties.
 
 De selectie, ontwikkeling en verwerking van deze verklarende variabelen ligt niet definitief vast. Ze kunnen verder evolueren in functie van nieuwe onderzoeksnoden, beleidsvragen of technologische ontwikkelingen binnen de looptijd van het meetnet.
 
@@ -157,24 +157,24 @@ De uit de detectieanalyse afgeleide detectiekansen kunnen vervolgens worden gebr
 3. **Relaties met verklarende variabelen**
 
 De verkregen dichtheden en abundantiegegevens kunnen worden gekoppeld aan verklarende variabelen om inzicht te krijgen in de factoren die de aanwezigheid en trend van soorten bepalen. Dit maakt het mogelijk om de effectiviteit van specifieke beheermaatregelen te kwantificeren, rekening houdend met omgevingskenmerken zoals teeltstructuur of landschapselementen. Analyses onderscheiden enerzijds prioritaire gebieden (SBP-gebieden) van controlegebieden, en anderzijds variatie binnen telcirkels op basis van variabelen zoals oppervlakte aan beheermaatregelen of dominante hoofdteelten.
-Deze variabelen kunnen zowel ruimtelijk als temporeel variëren (@sec-stap-4), waardoor de verklarende kracht van de analyses zal toenemen naarmate langere tijdsreeksen beschikbaar komen.
+Deze variabelen kunnen zowel ruimtelijk als temporeel variëren (@sec-stap-4), waardoor de verklarende kracht van de analyses zal toenemen naarmate langere tijdreeksen beschikbaar komen.
 
 4. **Trendanalyses van soorten**
 
 Naast gerichte analyses per gebied of maatregel kunnen ook jaarlijkse indexwaarden per soort worden berekend om trends in de tijd te volgen. Deze trends kunnen op een hoger niveau worden samengevat in multisoortenindices, die een geïntegreerde maat bieden voor veranderingen in agrobiodiversiteit. De methodiek sluit aan bij die van de Algemene Broedvogelmonitoring Vlaanderen (ABV) [@onkelinx2025abv].
-Een vergelijking met ABV werd reeds besproken in het rapport van de pilootfase [@langeraert2025pilot, paragraaf 6.2], waarin werd aanbevolen om beide meetnetten gedurende minstens vijf jaar parallel op te volgen en de tijdsreeksen periodiek te vergelijken.
+Een vergelijking met ABV werd reeds besproken in het rapport van de pilootfase [@langeraert2025pilot, paragraaf 6.2], waarin werd aanbevolen om beide meetnetten gedurende minstens vijf jaar parallel op te volgen en de tijdreeksen periodiek te vergelijken.
 
 5. **Toekomstige mogelijkheden en verkennend onderzoek**
 
 De hierboven beschreven analyses vormen het kernkader voor beleids- en beheermonitoring op macro- en mesoschaal. Tegelijk kunnen de resultaten signalen opleveren voor aanvullend, verklarend onderzoek op microniveau. Dergelijk verkennend onderzoek richt zich typisch op specifieke kennishiaten of hypothesen, bijvoorbeeld om lokale oorzaken van trends of beheerresponsen nader te onderzoeken. Dit gebeurt doorgaans op kleine schaal, gedurende één of enkele jaren, en kan worden aangevuld met aanvullende gegevensbronnen (zoals veldmetingen, *remote sensing* of agrarische beheergegevens). Zo vormt het MAS niet enkel een monitoringsinstrument, maar ook een onderbouw voor gerichte, hypothesegedreven ecologische studies binnen het landbouwgebied van Vlaanderen.
 
-6. **Belang van continuïteit en langere tijdsreeksen**
+6. **Belang van continuïteit en langere tijdreeksen**
 
 De kracht van het MAS ligt in de combinatie van een gestandaardiseerd telprotocol, een reproduceerbare verwerkingsworkflow en een geïntegreerd analysekader dat zowel beleids- als beheervragen kan beantwoorden. Zoals beschreven in @sec-stap-4 winnen de verklarende variabelen aan waarde naarmate ze over meerdere jaren beschikbaar zijn, waardoor temporele veranderingen in landbouwgebruik en beheer expliciet kunnen worden meegenomen in de analyses.
 
 De reproduceerbare workflow, opgebouwd met het **targets**-pakket (@sec-analysekader), maakt het bovendien mogelijk om jaarlijks nieuwe tellingen efficiënt en op identieke wijze te verwerken. Hierdoor kunnen de analyses na elke meetronde automatisch worden herhaald met minimale inspanning en zonder verlies aan transparantie of vergelijkbaarheid.
 
-Langdurige continuïteit van het meetnet is daarbij essentieel. Pas na meerdere jaren aan opeenvolgende tellingen kunnen robuuste populatietrends worden vastgesteld en kunnen effecten van beleids- en beheeringrepen met voldoende statistische zekerheid worden geëvalueerd. Een blijvende investering in het MAS is dus niet enkel nodig om de opgebouwde tijdsreeksen te behouden, maar ook om de wetenschappelijke onderbouwing van het landbouw- en natuurbeleid in Vlaanderen structureel te versterken.
+Langdurige continuïteit van het meetnet is daarbij essentieel. Pas na meerdere jaren aan opeenvolgende tellingen kunnen robuuste populatietrends worden vastgesteld en kunnen effecten van beleids- en beheeringrepen met voldoende statistische zekerheid worden geëvalueerd. Een blijvende investering in het MAS is dus niet enkel nodig om de opgebouwde tijdreeksen te behouden, maar ook om de wetenschappelijke onderbouwing van het landbouw- en natuurbeleid in Vlaanderen structureel te versterken.
 
 ```{r}
 #| label: fig-analyse-kader
