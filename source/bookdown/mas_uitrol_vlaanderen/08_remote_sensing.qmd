@@ -199,7 +199,7 @@ plots <- tibble(
 rast_ndvi_list <- apply(plots, 1, function(row) {
   # Create file path
   plotnaam <- row[["plotnaam"]]
-  file_name <- paste("multiband_raster_ndvi", plotnaam, "sg.tif", sep = "_")
+  file_name <- paste("multiband_raster_ndvi", plotnaam, "sg_v1.tif", sep = "_")
 
   # Read tif file
   raster <- rast(file.path(data_path, file_name))
@@ -213,7 +213,7 @@ names(rast_ndvi_list) <- plots$plotnaam
 rast_bsi_list <- apply(plots, 1, function(row) {
   # Create file path
   plotnaam <- row[["plotnaam"]]
-  file_name <- paste("multiband_raster_bsi", plotnaam, "sg.tif", sep = "_")
+  file_name <- paste("multiband_raster_bsi", plotnaam, "sg_v1.tif", sep = "_")
 
   # Read tif file
   raster <- rast(file.path(data_path, file_name))
@@ -331,7 +331,7 @@ combined
 # Read time series data from CSV
 vec <- c(ndvi = "ndvi", bsi = "bsi")
 time_series_csv <- lapply(vec, function(indicator) {
-  file_name <- paste0("time_series_mas_", indicator, ".csv")
+  file_name <- paste0("time_series_mas_", indicator, "_v2.csv")
   path <- file.path(data_path, file_name)
 
   read_csv(path, show_col_types = FALSE)[, -1]
@@ -773,7 +773,7 @@ sample_df <- sample %>%
 read_bare_soil_year <- function(year, index) {
   file_path <- file.path(
     data_path,
-    paste0("bare_soil_analysis_mas_", index, "_", year, "_v1.csv")
+    paste0("bare_soil_analysis_mas_", index, "_", year, "_v2.csv")
   )
   file <- readr::read_csv(file_path, show_col_types = FALSE)[, -1]
   names(file) <- c("pointid", "year", "period", "perc_bare_soil")
