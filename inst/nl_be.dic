@@ -23,8 +23,6 @@
 4x
 6x
 72-stelsel
-ΔAIC
-️
 Abundanties
 Akaike-informatiecriterium
 Akkervogelgemeenschappen
@@ -172,8 +170,8 @@ SBP-doelrealisatie
 SBP-gebied
 SBP-gebieden
 SBP-ligging
-SBP’s
 SBPs
+SBP’s
 SOVON
 Satterthwaite-correctie
 Saxicola
@@ -229,8 +227,6 @@ anisotropie
 arquata
 arvensis
 augmented
-bètaverdeling
-bètaverdelingen
 bedekt/onbedekt
 beheerresponsen
 beleids
@@ -247,13 +243,14 @@ breeding
 brms
 bru
 buteo
+bètaverdeling
+bètaverdelingen
 calandra
 cannabina
 canopy
 centroïden
 cf
 citrinella
-coördinaten'
 coding
 commit-hashes
 confidence
@@ -261,6 +258,7 @@ confounding
 control
 covariantiematrix
 covariaten
+coördinaten'
 crex
 cricetus
 cumulative
@@ -403,6 +401,7 @@ rotating
 rubicola
 sampelen
 sampling'
+satelliettijdreeksen
 sbp
 sci
 size
@@ -482,3 +481,5 @@ zenodo
 zero-inflated
 zero-inflatie
 ziet/zien
+ΔAIC
+️
