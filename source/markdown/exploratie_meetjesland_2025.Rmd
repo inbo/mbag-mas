@@ -1,0 +1,385 @@
+---
+title: "Data exploratie Meetjesland 2025"
+author: "Ward Langeraert"
+date: "`r Sys.Date()`"
+output:
+  bookdown::html_document2:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../../output/rapporten/markdown/2025") })
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+# set up
+library(knitr)
+opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  out.width = "100%"
+)
+opts_knit$set(root.dir = here::here())
+```
+
+```{r, results='hide', warning=FALSE, message=FALSE}
+# packages
+library(tidyverse)
+library(sf)
+library(mapview)
+library(targets)
+library(here)
+
+library(INBOtheme)
+theme_set(theme_inbo(transparent = TRUE))
+
+# Conflicts
+conflicted::conflicts_prefer(dplyr::filter)
+conflicted::conflicts_prefer(dplyr::select)
+
+# Paths
+mbag_dir <- here::here()
+target_dir <- here::here("source", "targets", "data_preparation")
+targets_store <- here::here("source", "targets", "data_preparation", "_targets")
+
+media_folder <- here::here("media", "meetjesland2025")
+dir.create(media_folder, showWarnings = FALSE)
+
+devices <- c("pdf", "png")
+
+# Source
+source(here::here("source", "R", "tar_read_sf.R"))
+source(here::here("source", "R", "save_figure.R"))
+source(here::here("source", "R", "predatoren_f.R"))
+lapply(list.files(file.path(target_dir, "R"), full.names = TRUE), source)
+```
+
+# Doel
+
+We maken enkele figuren voor de Vogelwerkgroep van Noord-Oost-Vlaanderen.
+Telgegevens uit het Meetjesland zouden perfect aansluiten bij hun interesse en werkingsgebied.
+
+# Data inlezen
+
+We lezen in de MBAG MAS data van het Meetjesland.
+We selecteren enkel vogels.
+
+```{r}
+meetjesland_ids <- c(
+  "Zn_27368.2","Zn_28344.4","Zn_43166.6","Zn_85913.2","Zn_27311.3","Zn_45128",
+  "Zn_36374.2.2","Zn_39483.6","Zn_47695.5","Zn_31427.6","Zn_14270.6","Zn_27351.2.2",
+  "Zn_35868.3","Zn_79775","Zn_34183.2","Zn_18867.12","Zn_94077.1","Zn_18968.1",
+  "Zn_29251.2.1","Zn_94538.2","Zn_36463.8","Zn_84988.5","Zn_84422.5","Zn_37804",
+  "Zn_32289","Zn_84420.4","Zn_12515.2.2","Zn_35845.6","Zn_97745.6","Zn_18968.2.3",
+  "Zn_35843.1.46","Zn_11800.5.4","Zn_103891.3","Zn_29252.7","Zn_89511.5","Zn_12514",
+  "Schoolhoeve1","Schoolhoeve2","Schoolhoeve3","Schoolhoeve4"
+)
+
+r1_start <- "04-01"
+r1_stop <- "04-20"
+r2_start <- "04-21"
+r2_stop <- "05-10"
+r3_start <- "05-11"
+r3_stop <- "06-10"
+r4_start <- "06-21"
+r4_stop <- "07-15"
+
+# Select Meetjesland data
+mas_data_clean <- tar_read("mas_data_clean", store = targets_store)
+mas_data_meetjesland <- mas_data_clean %>%
+  filter(plotnaam %in% meetjesland_ids,
+         soortgrp == 2) %>%
+  mutate(sbp_lab = paste(sbp, "SBP-gebied"))
+```
+
+# Exploratie
+## Enkele cijfers
+
+```{r}
+mas_data_meetjesland_2024 <- mas_data_meetjesland %>%
+  st_drop_geometry() %>%
+  filter(jaar == 2024)
+
+mas_data_meetjesland_2025 <- mas_data_meetjesland %>%
+  st_drop_geometry() %>%
+  filter(jaar == 2025)
+```
+
+2024:
+In totaal zijn `r nrow(mas_data_meetjesland_2024)` waarnemingen gedaan. Er werden in totaal `r length(unique(mas_data_meetjesland_2024$naam))` verschillende soorten vogels gezien.
+
+2025:
+In totaal zijn `r nrow(mas_data_meetjesland_2025)` waarnemingen gedaan. Er werden in totaal `r length(unique(mas_data_meetjesland_2025$naam))` verschillende soorten vogels gezien.
+
+```{r}
+mas_data_meetjesland %>%
+  st_drop_geometry() %>%
+  group_by(regio, jaar) %>%
+  mutate(aantal_soorten_regiojaar = n_distinct(naam)) %>%
+  group_by(regio, jaar, openheid_klasse, sbp) %>%
+  mutate(
+    aantal_waarnemingen = n_distinct(oid),
+    aantal_telpunten = n_distinct(plotid),
+    aantal_soorten_stratum = n_distinct(naam)
+  ) %>%
+  ungroup() %>%
+  distinct(
+    regio, jaar, openheid = openheid_klasse, sbp, aantal_waarnemingen, aantal_telpunten,
+    aantal_soorten_stratum, aantal_soorten_regiojaar
+  ) %>%
+  arrange(regio, jaar, openheid, sbp) %>%
+  kable()
+```
+
+Waar liggen de waarnemingen?
+
+```{r}
+mas_data_meetjesland %>%
+  mutate(jaar = factor(jaar)) %>%
+  mapview(zcol = "jaar", burst = TRUE)
+```
+
+Dit zijn de top 5 tellingen met de meeste waarnemingen in 2024:
+
+```{r}
+mas_data_meetjesland_2024 %>%
+  count(plotnaam, regio, datum, waarnemer, name = "aantal_waarnemingen") %>%
+  slice_max(aantal_waarnemingen, n = 5) %>%
+  kable()
+```
+
+Dit zijn de top 5 tellingen met de meeste waarnemingen in 2025:
+
+```{r}
+mas_data_meetjesland_2025 %>%
+  count(plotnaam, regio, datum, waarnemer, name = "aantal_waarnemingen") %>%
+  slice_max(aantal_waarnemingen, n = 5) %>%
+  kable()
+```
+
+Dit zijn de top 5 tellingen met de meeste soorten in 2024:
+
+```{r}
+mas_data_meetjesland_2024 %>%
+  group_by(plotnaam, regio, datum, waarnemer) %>%
+  summarise(aantal_soorten = n_distinct(naam),
+            .groups = "drop") %>%
+  slice_max(aantal_soorten, n = 5) %>%
+  kable()
+```
+
+Dit zijn de top 5 tellingen met de meeste soorten in 2025:
+
+```{r}
+mas_data_meetjesland_2025 %>%
+  group_by(plotnaam, regio, datum, waarnemer) %>%
+  summarise(aantal_soorten = n_distinct(naam),
+            .groups = "drop") %>%
+  slice_max(aantal_soorten, n = 5) %>%
+  kable()
+```
+
+## Enkele figuren
+
+```{r}
+mas_data_meetjesland <- st_drop_geometry(mas_data_meetjesland)
+```
+
+We kijken naar de verdeling van het aantal soorten per telpunt.
+
+```{r}
+p <- mas_data_meetjesland %>%
+  group_by(regio, openheid_klasse, sbp_lab, jaar, periode_in_jaar, plotnaam) %>%
+  summarise(n = n_distinct(naam), .groups = "drop") %>%
+  ggplot(aes(x = periode_in_jaar, y = n, fill = factor(jaar))) +
+  geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
+  geom_boxplot() +
+  labs(x = "Telperiode", y = "Aantal soorten per telpunt", fill = "Jaar")
+
+save_figure(p, here(media_folder, "soorten_vogels_meetjesland"), devices,
+  dpi = 300, width = 8, height = 6
+)
+
+p
+```
+
+Per stratum:
+
+```{r}
+p <- mas_data_meetjesland %>%
+  group_by(regio, openheid_klasse, sbp_lab, jaar, periode_in_jaar, plotnaam) %>%
+  summarise(n = n_distinct(naam), .groups = "drop") %>%
+  ggplot(aes(x = periode_in_jaar, y = n, fill = factor(jaar))) +
+  geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
+  geom_boxplot() +
+  facet_grid(openheid_klasse ~ sbp_lab) +
+  labs(x = "Telperiode", y = "Aantal soorten per telpunt", fill = "Jaar")
+
+save_figure(p, here(media_folder, "soorten_vogels_meetjesland_stratum"), devices,
+  dpi = 300, width = 8, height = 6
+)
+
+p
+```
+
+We kijken naar de verdeling van het aantal waarnemingen per telpunt.
+
+```{r}
+p <- mas_data_meetjesland %>%
+  count(regio, openheid_klasse, sbp_lab, jaar, periode_in_jaar, plotnaam) %>%
+  ggplot(aes(x = periode_in_jaar, y = n, fill = factor(jaar))) +
+  geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
+  geom_boxplot() +
+  labs(x = "Telperiode", y = "Aantal waarnemingen per telpunt", fill = "Jaar")
+
+save_figure(p, here(media_folder, "waarnemingen_vogels_meetjesland"), devices,
+  dpi = 300, width = 8, height = 6
+)
+
+p
+```
+
+Per stratum:
+
+```{r}
+p <- mas_data_meetjesland %>%
+  count(regio, openheid_klasse, sbp_lab, jaar, periode_in_jaar, plotnaam) %>%
+  ggplot(aes(x = periode_in_jaar, y = n, fill = factor(jaar))) +
+  geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
+  geom_boxplot() +
+  facet_grid(openheid_klasse ~ sbp_lab) +
+  labs(x = "Telperiode", y = "Aantal waarnemingen per telpunt", fill = "Jaar")
+
+save_figure(p, here(media_folder, "waarnemingen_vogels_meetjesland_stratum"), devices,
+  dpi = 300, width = 8, height = 6
+)
+
+p
+```
+
+We visualiseren hoe het aantal soorten toeneemt over de periodes voor de verschillende jaren.
+
+```{r}
+# Calculate the cumulative number of species over time for each year
+cum_aantal_spec <- mas_data_meetjesland %>%
+  st_drop_geometry() %>%
+  group_by(jaar, naam) %>%
+  filter(datum == min(datum)) %>%
+  slice(1) %>% # takes the first occurrence if there is a tie
+  ungroup() %>%
+  group_by(jaar, datum) %>%
+  summarise(
+    n_spec = n_distinct(naam),
+    .groups = "drop"
+  ) %>%
+  group_by(jaar) %>%
+  arrange(datum) %>%
+  mutate(cum_sum = cumsum(n_spec)) %>%
+  ungroup() %>%
+  mutate(
+    datum_md = as.Date(format(datum, "2000-%m-%d"))  # always year = 2000
+  )
+
+make_md <- function(x) as.Date(paste0("2000-", x))
+
+r1_start_md <- make_md(r1_start)
+r1_stop_md  <- make_md(r1_stop)
+r2_start_md <- make_md(r2_start)
+r2_stop_md  <- make_md(r2_stop)
+r3_start_md <- make_md(r3_start)
+r3_stop_md  <- make_md(r3_stop)
+r4_start_md <- make_md(r4_start)
+r4_stop_md  <- make_md(r4_stop)
+
+# Create plot per jaar
+cum_p1 <- cum_aantal_spec %>%
+  ggplot(aes(x = datum_md, y = cum_sum, colour = factor(jaar))) +
+  annotate("rect", xmin = r1_start_md, xmax = r1_stop_md, ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+  annotate("text", x = r1_start_md + (r1_stop_md - r1_start_md) / 2, y = 0,
+           label = "R1", vjust = -1) +
+
+  annotate("rect", xmin = r2_start_md, xmax = r2_stop_md, ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+  annotate("text", x = r2_start_md + (r2_stop_md - r2_start_md) / 2, y = 0,
+           label = "R2", vjust = -1) +
+
+  annotate("rect", xmin = r3_start_md, xmax = r3_stop_md, ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+  annotate("text", x = r3_start_md + (r3_stop_md - r3_start_md) / 2, y = 0,
+           label = "R3", vjust = -1) +
+
+  annotate("rect", xmin = r4_start_md, xmax = r4_stop_md, ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+  annotate("text", x = r4_start_md + (r4_stop_md - r4_start_md) / 2, y = 0,
+           label = "R4", vjust = -1) +
+  geom_line(linewidth = 1) +
+  scale_x_date(date_labels = "%b", date_breaks = "1 month") +
+  labs(x = "", y = "Totaal aantal soorten", colour = "Jaar") +
+  theme(legend.position = "bottom")
+```
+
+```{r}
+# Calculate the cumulative number of species over time for each stratum
+cum_aantal_spec_strat <- mas_data_meetjesland %>%
+ mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
+  group_by(jaar, stratum, naam) %>%
+  filter(datum == min(datum)) %>%
+  slice(1) %>% # takes the first occurrence if there is a tie
+  ungroup() %>%
+  group_by(jaar, stratum, datum) %>%
+  summarise(
+    n_spec = n_distinct(naam),
+    .groups = "drop"
+  ) %>%
+  group_by(jaar, stratum) %>%
+  arrange(datum) %>%
+  mutate(cum_sum = cumsum(n_spec)) %>%
+  ungroup() %>%
+  mutate(
+    datum_md = as.Date(format(datum, "2000-%m-%d"))  # always year = 2000
+  )
+
+# Create plot per stratum
+cum_p2 <- cum_aantal_spec_strat %>%
+  mutate(stratum = factor(stratum, levels = c(
+    "HOL", "OL", "HOL - binnen", "HOL - buiten", "OL - binnen", "OL - buiten"
+  ))) %>%
+  ggplot(aes(x = datum_md, y = cum_sum, colour = stratum)) +
+  # Add shade for counting periods
+  annotate("rect", xmin = r1_start_md, xmax = r1_stop_md, ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+  annotate("text", x = r1_start_md + (r1_stop_md - r1_start_md) / 2, y = 0,
+           label = "R1", vjust = -1) +
+
+  annotate("rect", xmin = r2_start_md, xmax = r2_stop_md, ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+  annotate("text", x = r2_start_md + (r2_stop_md - r2_start_md) / 2, y = 0,
+           label = "R2", vjust = -1) +
+
+  annotate("rect", xmin = r3_start_md, xmax = r3_stop_md, ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+  annotate("text", x = r3_start_md + (r3_stop_md - r3_start_md) / 2, y = 0,
+           label = "R3", vjust = -1) +
+
+  annotate("rect", xmin = r4_start_md, xmax = r4_stop_md, ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+  annotate("text", x = r4_start_md + (r4_stop_md - r4_start_md) / 2, y = 0,
+           label = "R4", vjust = -1) +
+  # Add line
+  geom_line(linewidth = 1) +
+  facet_wrap(~jaar) +
+  labs(x = "", y = "Totaal aantal soorten", colour = "Stratum") +
+  theme(legend.position = "bottom")
+
+# Combine cumulative species plots
+p <- gridExtra::grid.arrange(cum_p1, cum_p2)
+
+save_figure(p, here(media_folder, "cum_soorten_vogels_meetjesland"), devices,
+  dpi = 300, width = 8, height = 8
+)
+```
