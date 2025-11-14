@@ -70,13 +70,14 @@ We selecteren enkel vogels.
 
 ```{r}
 meetjesland_ids <- c(
-  "Zn_27368.2","Zn_28344.4","Zn_43166.6","Zn_85913.2","Zn_27311.3","Zn_45128",
-  "Zn_36374.2.2","Zn_39483.6","Zn_47695.5","Zn_31427.6","Zn_14270.6","Zn_27351.2.2",
-  "Zn_35868.3","Zn_79775","Zn_34183.2","Zn_18867.12","Zn_94077.1","Zn_18968.1",
-  "Zn_29251.2.1","Zn_94538.2","Zn_36463.8","Zn_84988.5","Zn_84422.5","Zn_37804",
-  "Zn_32289","Zn_84420.4","Zn_12515.2.2","Zn_35845.6","Zn_97745.6","Zn_18968.2.3",
-  "Zn_35843.1.46","Zn_11800.5.4","Zn_103891.3","Zn_29252.7","Zn_89511.5","Zn_12514",
-  "Schoolhoeve1","Schoolhoeve2","Schoolhoeve3","Schoolhoeve4"
+  "Zn_27368.2", "Zn_28344.4", "Zn_43166.6", "Zn_85913.2", "Zn_27311.3",
+  "Zn_45128", "Zn_36374.2.2", "Zn_39483.6", "Zn_47695.5", "Zn_31427.6",
+  "Zn_14270.6", "Zn_27351.2.2", "Zn_35868.3", "Zn_79775", "Zn_34183.2",
+  "Zn_18867.12", "Zn_94077.1", "Zn_18968.1", "Zn_29251.2.1", "Zn_94538.2",
+  "Zn_36463.8", "Zn_84988.5", "Zn_84422.5", "Zn_37804", "Zn_32289",
+  "Zn_84420.4", "Zn_12515.2.2", "Zn_35845.6", "Zn_97745.6", "Zn_18968.2.3",
+  "Zn_35843.1.46", "Zn_11800.5.4", "Zn_103891.3", "Zn_29252.7", "Zn_89511.5",
+  "Zn_12514", "Schoolhoeve1", "Schoolhoeve2", "Schoolhoeve3", "Schoolhoeve4"
 )
 
 r1_start <- "04-01"
@@ -128,8 +129,8 @@ mas_data_meetjesland %>%
   ) %>%
   ungroup() %>%
   distinct(
-    regio, jaar, openheid = openheid_klasse, sbp, aantal_waarnemingen, aantal_telpunten,
-    aantal_soorten_stratum, aantal_soorten_regiojaar
+    regio, jaar, openheid = openheid_klasse, sbp, aantal_waarnemingen,
+    aantal_telpunten, aantal_soorten_stratum, aantal_soorten_regiojaar
   ) %>%
   arrange(regio, jaar, openheid, sbp) %>%
   kable()
@@ -219,9 +220,8 @@ p <- mas_data_meetjesland %>%
   facet_grid(openheid_klasse ~ sbp_lab) +
   labs(x = "Telperiode", y = "Aantal soorten per telpunt", fill = "Jaar")
 
-save_figure(p, here(media_folder, "soorten_vogels_meetjesland_stratum"), devices,
-  dpi = 300, width = 8, height = 6
-)
+save_figure(p, here(media_folder, "soorten_vogels_meetjesland_stratum"),
+            devices, dpi = 300, width = 8, height = 6)
 
 p
 ```
@@ -254,9 +254,8 @@ p <- mas_data_meetjesland %>%
   facet_grid(openheid_klasse ~ sbp_lab) +
   labs(x = "Telperiode", y = "Aantal waarnemingen per telpunt", fill = "Jaar")
 
-save_figure(p, here(media_folder, "waarnemingen_vogels_meetjesland_stratum"), devices,
-  dpi = 300, width = 8, height = 6
-)
+save_figure(p, here(media_folder, "waarnemingen_vogels_meetjesland_stratum"),
+            devices, dpi = 300, width = 8, height = 6)
 
 p
 ```
@@ -266,7 +265,6 @@ We visualiseren hoe het aantal soorten toeneemt over de periodes voor de verschi
 ```{r}
 # Calculate the cumulative number of species over time for each year
 cum_aantal_spec <- mas_data_meetjesland %>%
-  st_drop_geometry() %>%
   group_by(jaar, naam) %>%
   filter(datum == min(datum)) %>%
   slice(1) %>% # takes the first occurrence if there is a tie
@@ -326,7 +324,7 @@ cum_p1 <- cum_aantal_spec %>%
 ```{r}
 # Calculate the cumulative number of species over time for each stratum
 cum_aantal_spec_strat <- mas_data_meetjesland %>%
- mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
+  mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
   group_by(jaar, stratum, naam) %>%
   filter(datum == min(datum)) %>%
   slice(1) %>% # takes the first occurrence if there is a tie
@@ -382,4 +380,367 @@ p <- gridExtra::grid.arrange(cum_p1, cum_p2)
 save_figure(p, here(media_folder, "cum_soorten_vogels_meetjesland"), devices,
   dpi = 300, width = 8, height = 8
 )
+```
+
+# Vergelijken relatieve frequenties
+
+Voor elke soort kunnen we de relatieve frequentie ($P$) berekenen als de proportie telpunten waarin de soort aanwezig is per telperiode, stratum en regio.
+Een relatieve frequentie van 0,5 wil dus zeggen dat de soort in 50 % van de telpunten gezien is.
+
+$$
+P = \sum_{i=1}^{N} I(n_i > 0) / N
+$$
+
+Waarbij $N$ het totaal aantal telpunten is in een bepaalde telperiode, stratum en regio en $n_i$ het aantal individuen van de beschouwde soort waargenomen aan telpunt $i$.
+$I(\cdot)$ is de indicatorfunctie die 1 geeft als $n_i > 0$ en 0 anderzijds.
+We selecteerden enkel waarnemingen met broedcode groter dan nul.
+Voor roofvogels hielden we geen rekening met broedcode, omdat we voor deze soorten meer algemeen geïnteresseerd zijn in predatiedruk op de akkervogels.
+
+```{r}
+mas_data_meetjesland <- mas_data_meetjesland %>%
+  mutate(periode = paste(periode_in_jaar, jaar, sep = "-"),
+         stratum = paste(openheid_klasse, sbp, sep = " - "))
+
+# Define goal species
+doelsoorten <- c(
+  "Veldleeuwerik",
+  "Gele Kwikstaart",
+  "Geelgors",
+  "Kievit",
+  "Grasmus",
+  "Witte Kwikstaart",
+  "Ringmus",
+  "Kwartel",
+  "Kneu",
+  "Torenvalk"
+)
+```
+
+```{r}
+library(ggtext)
+highlight <- function(x, pat, color = "black", family = "") {
+  ifelse(x %in% pat,
+    glue::glue("<b style='font-family:{family}; color:{color}'>{x}</b>"),
+    x
+  )
+}
+```
+
+```{r}
+# Get design to add absences
+bezoekenlijst_2024 <- mas_data_meetjesland %>%
+  st_drop_geometry() %>%
+  distinct(regio, jaar, stratum, plotnaam, periode_in_jaar)
+
+# Calculate relative frequencies
+# We want a number for each bird species for each region, stratum, period
+relfreqs_vogels <- mas_data_meetjesland %>%
+  st_drop_geometry() %>%
+  # Only keep breeding birds except for predators
+  filter(ifelse(naam %in% roofvogels_f(), wrntype >= 0L, wrntype > 0L)) %>%
+  # Number of individuals per species per plot
+  group_by(regio, plotnaam, jaar, stratum, periode_in_jaar, naam) %>%
+  summarise(
+    totaal_aantal = sum(aantal),
+    .groups = "drop"
+  ) %>%
+  pivot_wider(
+    names_from = naam,
+    values_from = totaal_aantal,
+    values_fill = list(totaal_aantal = 0)
+  ) %>%
+  # Add absences
+  full_join(bezoekenlijst_2024,
+    by = join_by(
+      regio, plotnaam, jaar, stratum,
+      periode_in_jaar
+    )
+  ) %>%
+  replace(is.na(.), 0) %>%
+  mutate(jaar = factor(jaar)) %>%
+  # Calculate relative frequency for all species and pivot back to long format
+  group_by(jaar, periode_in_jaar, regio, stratum) %>%
+  summarise(
+    across(
+      .cols = where(~ is.numeric(.x) && min(.x) == 0),
+      .fns = ~ sum(.x > 0) / n()
+    ),
+    n = n(),
+    .groups = "drop"
+  ) %>%
+  pivot_longer(
+    cols = where(is.double),
+    names_to = "naam",
+    values_to = "relfreq"
+  ) %>%
+  distinct()
+```
+
+Overzicht van relatieve frequenties van de 20 meest frequente soorten (of doelsoorten) in een bepaald jaar (gewogen gemiddelde per stratum). We nemen een gemiddelde over de jaren.
+
+```{r}
+relfreq_vogels_regio <- relfreqs_vogels %>%
+  # Calculate frequency per year, per period as a weighted average
+  group_by(jaar, periode_in_jaar, naam) %>%
+  summarise(gemiddelde_freq = weighted.mean(relfreq, n)) %>%
+  ungroup() %>%
+  # Calculate frequency per year as unweighted average
+  group_by(jaar, naam) %>%
+  summarise(gemiddelde_freq = mean(gemiddelde_freq)) %>%
+  ungroup() %>%
+  # Calc order var
+  group_by(naam) %>%
+  mutate(order_var = mean(gemiddelde_freq)) %>%
+  ungroup() %>%
+  mutate(naam = reorder(naam, order_var,
+    decreasing = FALSE
+  )) %>%
+  pivot_wider(
+    names_from = "jaar",
+    values_from = "gemiddelde_freq"
+  ) %>%
+  select(naam, `2024`, `2025`,
+         gemiddelde = order_var) %>%
+  arrange(desc(gemiddelde)) %>%
+  rownames_to_column(var = "rang") %>%
+  mutate(rang = as.numeric(rang))
+
+# Get 20 most frequent species or goal species
+relfreq_vogels_regio %>%
+  filter(rang <= 20 | naam %in% doelsoorten) %>%
+  kable(digits = 3)
+```
+
+```{r}
+# Calculate relative frequency per region per period as weighted mean
+freq_to_plot <- relfreqs_vogels %>%
+  group_by(jaar, periode_in_jaar, naam) %>%
+  summarise(gemiddelde_freq = weighted.mean(relfreq, n)) %>%
+  ungroup() %>%
+  group_by(jaar, naam) %>%
+  mutate(order_var = mean(gemiddelde_freq)) %>%
+  ungroup() %>%
+  # Retrieve 20 most common species + goal species
+  mutate(naam = reorder(naam, order_var,
+    decreasing = FALSE
+  )) %>%
+  filter(as.numeric(naam) > length(unique(naam)) - 20 | naam %in% doelsoorten)
+
+p <- freq_to_plot %>%
+  ggplot() +
+  geom_vline(xintercept = 0, alpha = 0.2, linetype = "dashed") +
+  geom_hline(
+    yintercept = length(unique(freq_to_plot$naam)) - 20 + 0.5,
+    alpha = 0.2, linetype = "dashed"
+  ) +
+  geom_point(aes(x = gemiddelde_freq, y = naam, colour = jaar),
+    size = 1, position = position_dodge(width = 0.3)
+  ) +
+  labs(y = "", x = "Relatieve frequentie", colour = "Jaar") +
+  scale_y_discrete(labels = function(x) highlight(x, doelsoorten, "red")) +
+  theme(
+    legend.position = "top",
+    axis.text = element_text(size = 8),
+    axis.text.y = element_markdown(),
+    panel.spacing = unit(0.7, "lines")
+  ) +
+  guides(colour = guide_legend(override.aes = list(size = 2)))
+
+save_figure(p, here(media_folder, "vogelfreqs_meetjesland"), devices,
+  dpi = 300, width = 8, height = 6
+)
+
+p
+```
+
+## Openheid landschap
+
+We vergelijken soorten van half-open en open landschap.
+Top 10 van soorten die in termen van verschil in relatieve frequentie van voorkomen meer voorkomen in HOL en in OL.
+Boxplots op basis van verschil voor elke telperiode per jaar per soort ($n$ = 8).
+Doelsoorten zijn in rood aangeduid.
+
+```{r}
+# Calculate relative frequency per region per period as weighted mean
+# Calculate difference between regions
+relfreq_diff_openheid <- relfreqs_vogels %>%
+  separate(stratum, into = c("openheid_klasse", "sbp")) %>%
+  mutate(periode = paste(periode_in_jaar, jaar, sep = " - ")) %>%
+  group_by(openheid_klasse, periode, naam) %>%
+  summarise(gemiddelde_freq = weighted.mean(relfreq, n)) %>%
+  ungroup() %>%
+  pivot_wider(
+    names_from = openheid_klasse,
+    values_from = gemiddelde_freq,
+    values_fill = 0
+  ) %>%
+  mutate(
+    verschilfreq = HOL - OL
+  ) %>%
+  # Retrieve 20 most common species IN BOTH DIRECTIONS + goal species
+  mutate(naam = reorder(naam, verschilfreq,
+    FUN = "mean",
+    decreasing = FALSE
+  )) %>%
+  filter(as.numeric(naam) > length(unique(naam)) - 10 | as.numeric(naam) <= 10 |
+           naam %in% doelsoorten)
+
+p <- relfreq_diff_openheid %>%
+  ggplot() +
+  geom_vline(
+    xintercept = 0,
+    colour = "lightgrey"
+  ) +
+  geom_hline(
+    yintercept = c(
+      10.5,
+      length(unique(relfreq_diff_openheid$naam)) - 10 + 0.5
+    ),
+    alpha = 0.2, linetype = "dashed"
+  ) +
+  geom_boxplot(aes(x = verschilfreq, y = naam)) +
+  labs(y = "", x = "Verschil in relatieve frequentie") +
+  scale_y_discrete(labels = function(x) highlight(x, doelsoorten, "red")) +
+  coord_cartesian(xlim = c(
+    0 - 0.5,
+    0 + 0.75
+  )) +
+  scale_x_continuous(breaks = seq(-1, 1, 0.2)) +
+  theme(
+    legend.position = "top",
+    axis.text = element_text(size = 8),
+    axis.text.y = element_markdown(),
+    panel.spacing = unit(1.2, "lines")
+  ) +
+  guides(colour = guide_legend(override.aes = list(size = 3))) +
+  # Add arrows to indicate direction commonness in regions
+  annotate("segment",
+    x = c(0.75),
+    y = c(length(unique(relfreq_diff_openheid$naam)) - 10 + 1),
+    xend = c(0.75),
+    yend = c(length(unique(relfreq_diff_openheid$naam)) - 10 + 3),
+    arrow = arrow(type = "closed", length = unit(0.015, "npc")),
+    colour = "black"
+  ) +
+  annotate("segment",
+    x = c(0.75),
+    y = c(10.5 - 0.5),
+    xend = c(0.75),
+    yend = c(10.5 - 2.5),
+    arrow = arrow(type = "closed", length = unit(0.015, "npc")),
+    colour = "black"
+  ) +
+  annotate("text",
+    label = c("Half-open landschap"),
+    x = c(0.75 + 0.03),
+    y = c(length(unique(relfreq_diff_openheid$naam)) - 10 + 1),
+    size = 3, hjust = "left", colour = "black", angle = 90
+  ) +
+  annotate("text",
+    label = c("Open landschap"),
+    x = c(0.75 + 0.03),
+    y = c(10.5 - 0.5),
+    size = 3, hjust = "right", colour = "black", angle = 90
+  )
+
+save_figure(p, here(media_folder, "vogelfreqs_diff_openheid"), devices,
+  dpi = 300, width = 8, height = 6
+)
+
+p
+```
+
+## SBP-gebied
+
+We vergelijken soorten van binnen versus buiten SBP-gebied.
+Top 10 van soorten die in termen van verschil in relatieve frequentie van voorkomen meer voorkomen binnen SBP-gebied en buiten SBP-gebied.
+
+```{r}
+# Calculate relative frequency per region per period as weighted mean
+# Calculate difference between regions
+relfreq_diff_sbp <- relfreqs_vogels %>%
+  separate(stratum, into = c("openheid_klasse", "sbp")) %>%
+  mutate(periode = paste(periode_in_jaar, jaar, sep = " - ")) %>%
+  group_by(sbp, periode, naam) %>%
+  summarise(gemiddelde_freq = weighted.mean(relfreq, n)) %>%
+  ungroup() %>%
+  pivot_wider(
+    names_from = sbp,
+    values_from = gemiddelde_freq,
+    values_fill = 0
+  ) %>%
+  mutate(
+    verschilfreq = binnen - buiten
+  ) %>%
+  # Retrieve 20 most common species IN BOTH DIRECTIONS + goal species
+  mutate(naam = reorder(naam, verschilfreq,
+    FUN = "mean",
+    decreasing = FALSE
+  )) %>%
+  filter(as.numeric(naam) > length(unique(naam)) - 10 | as.numeric(naam) <= 10 |
+           naam %in% doelsoorten)
+
+p <- relfreq_diff_sbp %>%
+  ggplot() +
+  geom_vline(
+    xintercept = 0,
+    colour = "lightgrey"
+  ) +
+  geom_hline(
+    yintercept = c(
+      10.5,
+      length(unique(relfreq_diff_sbp$naam)) - 10 + 0.5
+    ),
+    alpha = 0.2, linetype = "dashed"
+  ) +
+  geom_boxplot(aes(x = verschilfreq, y = naam)) +
+  labs(y = "", x = "Verschil in relatieve frequentie") +
+  scale_y_discrete(labels = function(x) highlight(x, doelsoorten, "red")) +
+  coord_cartesian(xlim = c(
+    0 - 0.34,
+    0 + 0.45
+  )) +
+  scale_x_continuous(breaks = seq(-1, 1, 0.2)) +
+  theme(
+    legend.position = "top",
+    axis.text = element_text(size = 8),
+    axis.text.y = element_markdown(),
+    panel.spacing = unit(1.2, "lines")
+  ) +
+  guides(colour = guide_legend(override.aes = list(size = 3))) +
+  # Add arrows to indicate direction commonness in regions
+  annotate("segment",
+    x = c(0.45),
+    y = c(length(unique(relfreq_diff_sbp$naam)) - 10 + 1),
+    xend = c(0.45),
+    yend = c(length(unique(relfreq_diff_sbp$naam)) - 10 + 3),
+    arrow = arrow(type = "closed", length = unit(0.015, "npc")),
+    colour = "black"
+  ) +
+  annotate("segment",
+    x = c(0.45),
+    y = c(10.5 - 0.5),
+    xend = c(0.45),
+    yend = c(10.5 - 2.5),
+    arrow = arrow(type = "closed", length = unit(0.015, "npc")),
+    colour = "black"
+  ) +
+  annotate("text",
+    label = c("binnen SBP-gebied"),
+    x = c(0.45 + 0.03),
+    y = c(length(unique(relfreq_diff_sbp$naam)) - 10 + 1),
+    size = 3, hjust = "left", colour = "black", angle = 90
+  ) +
+  annotate("text",
+    label = c("buiten SBP-gebied"),
+    x = c(0.45 + 0.03),
+    y = c(10.5 - 0.5),
+    size = 3, hjust = "right", colour = "black", angle = 90
+  )
+
+save_figure(p, here(media_folder, "vogelfreqs_diff_sbp"), devices,
+  dpi = 300, width = 8, height = 6
+)
+
+p
 ```
