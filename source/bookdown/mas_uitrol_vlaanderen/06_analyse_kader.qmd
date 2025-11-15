@@ -40,7 +40,7 @@ Details over de export en verwerking van de tellingen uit de Sovon-databank zijn
 
 ## Data opschonen en voorbereiden {#sec-stap-2}
 
-Na het verzamelen van de tellingen wordt de ruwe data geschoond en voorbereid voor analyse (stap 2 in @fig-analyse-kader). Deze verwerkingsstappen verlopen volledig geautomatiseerd via een **targets**-workflow [@targets-package].
+Na het verzamelen van de tellingen wordt de ruwe data geschoond en voorbereid voor analyse (stap 2 in @fig-analyse-kader).
 
 1. **Coördinatenconversie**
 
@@ -50,7 +50,7 @@ Na het verzamelen van de tellingen wordt de ruwe data geschoond en voorbereid vo
 
    * Enkel tellingen op telpunten die behoren tot de getrokken steekproef.
    * Enkel waarnemingen binnen de officiële telperiodes.
-   * Enkel soorten binnen de telcirkel (max. 300 m vanaf het telpunt).
+   * Enkel waarnemingen binnen de telcirkel (max. 300 m vanaf het telpunt).
    * Enkel waarnemingen van vogels of zoogdieren.
 
 3. **Selectie en aggregatie**
@@ -103,7 +103,7 @@ De finale dataset wordt klaargemaakt voor publicatie op het Global Biodiversity 
 
    * Selectie van relevante kolommen.
    * Standaardisatie van kolomvolgorde voor publicatie.
-   * Opsplitsing in (1) een op aanvraag beschikbare gedetailleerde dataset, en (2) een vervaagde openbare dataset voor GBIF-publicatie:
+   * Opsplitsing in (A) een op aanvraag beschikbare gedetailleerde dataset, en (B) een vervaagde openbare dataset voor GBIF-publicatie:
 
 A. Gedetailleerde dataset (beschikbaar op aanvraag):
 
@@ -135,7 +135,7 @@ De verzameling en verkenning van verklarende variabelen werd eerder toegelicht i
 
 Ten opzichte van het pilootproject zijn er enkele belangrijke uitbreidingen voor MAS Vlaanderen:
 
-* **Toegenomen temporele resolutie**: waar mogelijk geven we voorkeur aan jaar-specifieke kaartlagen (bv. landbouwgebruiksgegevens of beheermonitoring), zodat we veranderingen doorheen de tijd expliciet kunnen meenemen in de analyse.
+* **Toegenomen temporele resolutie**: waar mogelijk geven we voorkeur aan jaar-specifieke kaartlagen (bv. landbouwgebruiksgegevens of beheerovereenkomsten), zodat we veranderingen doorheen de tijd expliciet kunnen meenemen in de analyse.
 * **Waarnemingsniveau in plaats van enkel telpuntniveau**: naast het berekenen van variabelen op telcirkel- of telpuntniveau (zoals het aandeel akkerrand binnen de 300 m radius), verzamelen we ook fijnschalige informatie op waarnemingsniveau (bv. of een individu daadwerkelijk in een akkerrand werd gezien). <!-- spell-check: ignore -->
 * **Gebruik van remote sensing**: we verkennen hoe gedetailleerde *remote sensing* producten kunnen bijdragen aan een nauwkeuriger karakterisering van de landgebruikssituatie op het moment van de telling. In tegenstelling tot administratieve perceelsinformatie bieden satellietbeelden een objectieve momentopname van de effectieve toestand ter plaatse. Zo kan een perceel dat administratief als 'maïs' is aangeduid, in werkelijkheid nog braak liggen tijdens het broedseizoen. Het meenemen van zulke actuele informatie is essentieel om ecologische relaties correct te modelleren. In @sec-remote-sensing focussen we op tijdreeksen van indicatoren voor naakte bodem op telpuntlocaties.
 
@@ -152,7 +152,7 @@ De resulterende detectiecorrecties worden gebruikt om densiteiten te schatten pe
 
 2. **Ruimtelijke modellering en verspreidingskaarten**
 
-De uit de detectieanalyse afgeleide detectiekansen kunnen vervolgens worden gebruikt voor spatiale modellen om voorspellende verspreidingskaarten te maken die de ruimtelijke patronen in de relatieve abundantie of dichtheid van doelsoorten weergeven. Deze kaarten kunnen worden gebruikt om effecten van beheer of identificatie van kerngebieden visueel te evalueren.
+De uit de detectieanalyse afgeleide detectiekansen kunnen vervolgens worden gebruikt voor spatiale modellen om verspreidingskaarten te maken die de ruimtelijke patronen in de relatieve abundantie of dichtheid van doelsoorten weergeven. Deze kaarten kunnen worden gebruikt om effecten van beheer of identificatie van kerngebieden visueel te evalueren.
 
 3. **Relaties met verklarende variabelen**
 
