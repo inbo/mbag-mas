@@ -6,9 +6,116 @@
 
 - Ward enkele cijfers/tabellen van aantal tellers, telpunten elk jaar
 
+<!-- spell-check: ignore:end -->
+
 ## Vrijwilligerswerking
 
-- Nicolas, Simon, Johannes over vrijwilligerswerking
+Binnen het Meetnet Agrarische Soorten wordt ook een beroep gedaan op vrijwilligers, voornamelijk om MAS-tellingen uit te voeren. In dit hoofdstuk bespreken we de meerwaarde van vrijwilligers binnen het MAS, hoe de vrijwilligerswerving aangepakt werd en de vrijwilligerswerking gecoördineerd werd, geven een stand van zaken anno 2025 en bekijken de evolutie van de vrijwilligersaantallen doorheen de looptijd van het meetnet. We sluiten af met onze visie op vrijwilligerswerking. 
+
+### De meerwaarde van citizen science
+Burgerwetenschap biedt meerdere voordelen voor de verschillende partijen: niet alleen voor kennisinstellingen zoals het INBO, maar ook voor de vrijwilligers zelf. Een belangrijke drijfveer van vrijwilligers om mee te werken aan citizen science, is een bijdrage leveren aan de uiteindelijke bescherming van de gemonitorde soort(en), gebieden of de natuur in het algemeen. Burgerwetenschappers verwachten daarnaast dat de door hen aangeleverde data nuttig besteed wordt voor het behalen van doelen die in de lijn liggen van hun motieven om aan wetenschap bij te dragen. Citizen science vormt voor hen een zinvolle vrijetijdsbesteding. 
+
+Kennisinstellingen zijn om meerdere redenen gebaat bij de bijdrage van burgerwetenschappers. Een hoger aantal waarnemers levert data aan, citizen science verkleint de kloof tussen burgers en wetenschap en de inzet van vrijwilligers kan eveneens een manier zijn om de kosten voor monitoring te drukken. 
+
+Een goede professionele begeleiding en ondersteuning vanuit de kennisinstelling zijn daarbij cruciaal om citizen science-projecten goed te laten functioneren. Burgerwetenschappers moeten bijvoorbeeld vaak over een zekere kennis van het onderzoeksobject beschikken. De kennisinstelling hoort hierbij in te schatten of de kennis van de burgerwetenschapper toereikend is om kwaliteitsvolle data aan te leveren voor het onderzoek in kwestie. Dankzij terugkoppeling, feedback en het delen van resultaten vermijdt de kennisinstelling bovendien dat burgerwetenschappers onvolledige of incorrecte monitoring uitvoeren of afhaken.
+
+De voordelen van vrijwilligersinzet bij het MAS zijn onder andere het creëren van een wisselwerking tussen het INBO en burgers, een verhoogde maatschappelijke betrokkenheid bij het MAS, kostenefficiëntie, enz. In dit hoofdstuk bespreken we hoe we de vrijwilligerswerking en \-werving aangepakt hebben.
+
+### Vrijwilligerswerving \- algemene aanpak
+De vrijwilligerswerving gebeurde op uiteenlopende manieren, die we hieronder bespreken. 
+
+De vrijwilligerscoördinatoren hielden voorafgaand aan het telseizoen **presentaties en lezingen**, vnl. bij natuurverenigingen, om MAS bij hun leden bekend te maken. Daarbij lag de focus op vogelwerkgroepen. Deze doelgroep is reeds nauw betrokken bij natuurstudie, vandaar het initiatief om ons meetnet bij hen te presenteren. In de presentaties stelden we het Meetnet Agrarische Soorten voor, lichtten we ons (vanaf 2024 uitgevoerde) diepgaander onderzoek naar drie akkervogelsoorten toe en deden we een oproep om als vrijwilliger aan MAS deel te nemen.
+
+**Akkervogelexcursies** voor de leden van natuurorganisaties vormden een tweede manier om vrijwilligers bij het MAS te betrekken.
+Excursies waren een goede manier om in het veld de meerwaarde van bepaalde beheerovereenkomsten, beschermings- en bijvoederacties en monitoring te tonen.
+
+Vertegenwoordiging op **natuurstudiedagen**, zowel door de onderzoeker als door de onderzoeksmedewerkers, vormde een derde manier om vrijwilligers bij het MAS te betrekken. Tijdens de studiedagen hielden we lezingen of postersessies.
+
+Tot slot zetten we in op **publicaties en communicatiekanalen** om potentiële vrijwilligers bij het MAS te betrekken: 
+
+* **Website**
+
+In het najaar van 2024 werkten we een eigen website uit: [inbo.be/mas](https://www.vlaanderen.be/inbo/het-meetnet-agrarische-soorten-mas/wat-is-het-meetnet-agrarische-soorten/). De website bevat een voorstelling van het Meetnet Agrarische Soorten, licht ons diepgaander onderzoek toe, geeft de werkwijze van MAS-tellingen beknopt weer, bevat een aanmeldformulier en klassieke rubrieken zoals ‘Nieuws en activiteiten’, ‘Contact’ en ‘Partners’. De site is sinds 8 november 2024 online en werd sindsdien 844 keer bekeken (tot midden augustus 2025).
+
+* **YouTubefilmpje**
+
+In de zomer van 2024 namen we een filmpje op waarin we onze vrijwilligerswerking toelichtten en een oproep lanceerden om vanaf 2025 mee te doen met MAS. Het filmpje werd begin november 2024 op YouTube gepubliceerd en ook gedeeld op de algemene INBO-Facebookpagina, wat voor verschillende aanmeldingen van nieuwe vrijwilligers zorgde. Het YouTubefilmpje werd zo’n 250 keer bekeken.
+
+* **INBO-Vogelnieuws 37**
+
+We verzorgden een bijdrage van zes pagina’s aan het INBO Vogelnieuws \- editie 37\. Deze publicatie wordt jaarlijks online verspreid en bereikt op die manier ook potentiële MAS-tellers.
+
+* **Artikels**
+
+Naast de bovenvermelde eigen communicatiekanalen publiceerden we ook enkele artikels in regionale natuurtijdschriften om een breder publiek te bereiken. Daarbij probeerden we te focussen op regio’s waar we op termijn de inzet van extra vrijwilligers konden gebruiken.
+
+### Vrijwilligerscoördinatie doorheen de looptijd van het meetnet
+
+#### Vrijwilligerscoördinatie tijdens de MAS-pilot (2022-2023)
+
+Uit de poule van het MAS‐meetnet dat in 2017 opgestart was in het kader van het soortbeschermingsprogramma grauwe kiekendief, konden we de meeste vrijwilligers verder motiveren om vanaf 2022 deel te nemen aan tellingen voor het MAS-pilootproject. Dat is een voordeel dat niet bij alle telprojecten gegarandeerd is, en het gaat niet zomaar: we anticipeerden op de aantrekkelijkheid van de tellingen, waarbij het voor vrijwilligers vooral loont om te gaan tellen in gebieden waar nog veel vogels te zien zijn, en waar veel maatregelen genomen worden om ze te beschermen. Tellingen in controlegebieden achtten we minder aantrekkelijk. Waar nodig werd daarin geopteerd om tellingen te laten uitvoeren door betaalde werkkrachten. Dat aandeel aan betaalde werkkrachten kan instaan voor een continuïteit, waarbij meetpunten jaarlijks geteld worden, en eventueel flexibel ingesprongen kan worden bij het wegvallen of opgeven van vrijwillige tellers. 
+
+Het oorspronkelijke doel was om tijdens de twee pilootjaren na te gaan of het MAS over heel Vlaanderen uitgerold kon worden. Al in 2022 werd duidelijk dat het toevoegen van een extra landbouwstreek in 2023 haalbaar zou zijn, wat de beoogde stap naar een volledige uitrol over Vlaanderen in 2024 zou verkleinen. Het vooropgestelde percentage van 5% vrijwillig getelde telpunten werd in 2022 namelijk al ruimschoots overschreden.
+
+#### Vrijwilligerscoördinatie MAS Vlaanderen (2024-2025)
+
+Sinds 2024 werken we met twee MAS-vrijwilligerscoördinatoren, die elk een regio voor hun rekening nemen.
+De denkbeeldige lijn Antwerpen-Brussel vormt daarbij de scheidingslijn tussen ‘regio oost’ en ‘regio west’.
+
+Vanaf 2024 werd bijkomend broedsuccesonderzoek aan drie doelsoorten, namelijk grauwe gors, geelgors en veldleeuwerik, binnen of in de onmiddellijke nabijheid van een MAS-cirkel uitgevoerd. Aanleidingen om dit onderzoek te kunnen opstarten, zijn waarnemingen van nestindicerend gedrag, zoals transport van nestmateriaal, voedsel of ontlasting. Omwille van het hoge aantal vrijwilligers en hun aanwezigheid in het veld tijdens het uitvoeren van hun tellingen, werd er besloten om hen bij dit onderzoeksluik te betrekken door hen te vragen om nestindicerend gedrag te melden aan de coördinatoren. Dit verhoogde de betrokkenheid en efficiëntie in beide richtingen.
+
+Na het telseizoen 2024 zetten we extra in op vrijwilligerswerving om nog meer telpunten aan vrijwilligers te kunnen toebedelen. Daarbij hanteren we het principe dat vrijwilligers bij de keuze van hun telpunten voorrang krijgen op INBO-medewerkers of andere professionele tellers. Voorwaarde is wel dat ze minstens een vijftal telpunten voor hun rekening nemen, tenzij het om geïsoleerde telpunten(clusters) gaat. Meer dan tien punten per teller werden enkel toegekend op initiatief van de vrijwilliger zelf. 
+
+Niet eender welke vogelkijker komt in aanmerking als MAS-teller. Om de kwaliteit van de tellingen te bewaken, beoordeelden we of de kandidaten in voldoende mate in staat zijn om akkervogels op zicht en geluid te herkennen. Waar dat niet het geval was, zochten we vanaf het seizoen 2025 een hoofdteller bij wie de kandidaat als medeteller kon aansluiten tijdens de tellingen. Door de waarnemingen in te voeren, konden tien medetellers wel degelijk een bijdrage leveren aan het MAS en tegelijkertijd hun kennis vergroten.
+
+### Begeleiding van MAS-tellers \- stand van zaken eind 2025
+
+#### Communicatiekanalen met MAS-tellers
+
+Zowel vrijwillige als professionele MAS-tellers bereikten we vnl. met onze nieuwsbrief en WhatsApp-groepen:
+
+De **nieuwsbrief** dient als communicatiemiddel om het telseizoen aan te kondigen en af te sluiten, om evenementen zoals de seizoensafsluiter of een webinar aan te kondigen, maar ook om de tellers te herinneren aan de naderende deadline van de vier telrondes. Jaarlijks versturen we een tiental nieuwsbrieven. Vanaf begin 2025 schakelden we over op een nieuwsbrief in de huisstijl van INBO. De nieuwsbrief is niet enkel voor bestaande tellers bestemd, want geïnteresseerden kunnen ze te allen tijde lezen via de rubriek ‘Nieuws en activiteiten’ op onze website. 
+
+Een tweede belangrijk communicatiekanaal zijn de **WhatsApp-groepen**, waartoe enkel bestaande MAS-tellers behoren. We delen de MAS-tellers in groepen per landbouwstreek in. Via deze groepen sturen we herinneringen aan de datumgrenzen, communiceren we praktische info of geven we updates. De tellers kunnen er ook hun vragen of bijzondere waarnemingen in kwijt. Een andere meerwaarde van dit communicatiemiddel is dat we hiermee meldingen van voedselvluchten binnenkrijgen, wat een grote meerwaarde vormt voor ons diepgaander onderzoek naar het foerageergedrag en het broedsucces van drie doelsoorten.
+
+#### Opleiding voor MAS-tellers
+
+Nieuwe en bestaande MAS-tellers verdienen goede begeleiding om optimaal voorbereid tellingen te kunnen uitvoeren. De opleiding verloopt op de volgende manieren: 
+
+Ten eerste stomen we hen klaar voor het telseizoen via **opleidingsmomenten**, bestemd voor vnl. nieuwe vrijwilligers of reeds bestaande deelnemers die nood hebben aan een opfrissing.
+Dankzij de timing, kort voor de start van de tellingen, verzekeren we een maximale doorstroming van de (via de nieuwsbrieven verspreide) telrichtlijnen en de bijbehorende nuances omtrent het tellen en correct registreren van de aanwezige soorten.
+Tijdens de opleidingsmomenten worden de broedcodes toegelicht, voeren de vrijwilligers een proeftelling uit en vindt aansluitend een evaluatiemoment plaats. We verzekeren daarmee ook tijd voor een-op-een momenten en een kwalitatieve begeleiding tijdens de oefensessies.
+
+Kort voor de start van de telseizoenen (1 april) organiseren we eveneens **webinars** voor vrijwilligers. De webinar is zo telkens opgevat dat de aangemelde vrijwilligers klaargestoomd worden voor het telseizoen: we overlopen o.a. het telprotocol, besteden aandacht aan de broedcodes en staan stil bij praktische vragen van vrijwilligers. Wie het webinar niet live kan bijwonen, kan de opname herbekijken.
+
+#### Terugkomdag voor MAS-tellers
+
+Als bedanking voor hun inzet organiseren we jaarlijks een **seizoensafsluiter** voor alle MAS-tellers. Tijdens zo’n seizoensafsluiter voorzien we lezingen over uiteenlopende akkervogelgerelateerde thema’s, een lunch en een akkervogelexcursie. 
+
+### Evolutie van de vrijwilligersaantallen
+Naast MAS Vlaanderen lopen er nog twee gelijkaardige telprojecten op een kleinere schaal: Plan Leeuwerik (ook MAS Bilzen genaamd) en MAS Linkerscheldeoever.
+
+* Bij Plan Leeuwerik, waar een zestigtal telpunten geconcentreerd binnen een afgebakend projectgebied in regio Bilzen geteld worden, was er overlap tussen de telpunten van beide projecten. Gezien de kruisbestuiving tussen beide projecten kunnen we hier spreken van een gedeeld gedragen vrijwilligerswerking met de andere trekkers van dit project. 
+
+* Op de Linkerscheldeoever worden MAS-tellingen uitgevoerd in het kader van het Dubbel Doel-project. Een tiental telpunten wordt door INBO-medewerkers geteld, maar voor het resterende veertigtal telpunten wordt een beroep gedaan op vrijwilligers. De vrijwilligerscoördinatie gebeurt door Natuurpunt Waasland-Noord in samenwerking met INBO. INBO staat ook in voor de administratieve ondersteuning aan vrijwilligers, zoals het toebedelen van telpunten in Avimap. Daarnaast voeren sommige tellers voor zowel MAS Vlaanderen als MAS Linkerscheldeoever tellingen uit.
+
+Vrijwillig getelde telpunten die exclusief tot deze telprojecten en niet tot MAS Vlaanderen behoren, worden buiten beschouwing gelaten in de berekening van het aantal vrijwillig getelde telpunten en het aantal vrijwilligers. 
+
+In het tweede jaar van de MAS‐pilootstudie (2022‐2023), die in de Oostelijke Leemstreek en in de Moeren plaatsvond, werd MAS uitgerold naar de Zandleemstreek. Bij de opstart van het MAS werd 5% vrijwillig getelde punten beoogd, maar dit percentage werd toen al overschreden. We mikten op 10% vrijwillig getelde punten tegen 2023 en op een termijn van vijf jaar werd een groei naar 25% beoogd. De grotere inzet op vrijwilligerswerving leidde daadwerkelijk tot een toename van het aantal deelnemende vrijwilligers. 
+
+We laten de hierboven vermelde medetellers verder buiten beschouwing bij de bespreking van de vrijwilligersaantallen. Ook de tellers die enkel telpunten tellen voor MAS Bilzen en MAS Linkerscheldeoever, worden niet meegenomen in de berekening. Zo klokten we in 2025 af op 97 vrijwillige hoofdtellers, die samen 651 van de 1607 telpunten voor hun rekening namen. Dit komt neer op 40,5% van de telpunten.
+
+### Visie op MAS-vrijwilligerswerking
+
+Monitoring in landbouwgebied ligt bij vrijwilligers enigszins moeilijker dan in natuurgebieden, maar heel wat mensen engageren zich graag wanneer hun inspanningen kunnen leiden tot een beter behoud of betere bescherming van de gemonitorde soorten en hun leefgebied. Het presenteren van afnemende trends van verschillende soorten akkervogels vormt daarbij vaak een eyeopener. Bovendien kan MAS een extra bijdrage leveren aan het verkleinen van de kloof tussen landbouw en natuur.
+
+Hoewel heel wat meetnetten moeite ondervinden om vrijwilligers te vinden en te behouden voor het uitvoeren van monitoring, bleek er nog onbenut potentieel om nieuwe tellers bij het MAS te betrekken. Gerichte en proactieve communicatie naar bijvoorbeeld vogelwerkgoepen of voormalige Broedvogelatlas-tellers toe kon nieuwe tellers enthousiasmeren om mee te doen.
+
+Even belangrijk is terugkoppeling naar bestaande tellers om de uitval beperkt te houden en zo continuïteit te verzekeren. Met het oog op betrouwbare data trachten we immers maximaal dezelfde tellers op dezelfde telpunten te behouden. We luisterden naar hun noden, bedenkingen en verwachtingen. Daarbij werd duidelijk dat de motivaties om MAS-tellingen uit te voeren en de bijbehorende verwachtingen divers zijn, gaande van ‘een bijdrage leveren aan akkervogelonderzoek’ tot ‘interesse hebben in cijfers, conclusies en perspectieven m.b.t. akkervogels’. De meeste tellers verwachten immers resultaten te zien in ruil voor hun inspanningen.
+
+We beschouwen vrijwilligerswerking als tweerichtingsverkeer. Het vergt jaarrond een inspanning, niet enkel in de aanloop naar of tijdens het telseizoen. Onze seizoensafsluiter, akkervogelwandelingen, slaapplaatstellingen van blauwe kiekendief in de winter en dergelijke initiatieven kaderen in deze jaarrondaanpak. Hiervoor werd dan ook voldoende werktijd voorzien. Deze aanpak resulteerde in een heel beperkte uitval van vrijwilligers: tussen de telseizoenen 2024 en 2025 ging het om slechts vier personen.
+
+<!-- spell-check: ignore:start -->
 
 ## Verkennende analyses
 
