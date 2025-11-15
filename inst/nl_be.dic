@@ -120,6 +120,7 @@ Log-Gaussian
 MAS-data
 MAS-meetnet
 MAS-methodiek
+MAS-pilootproject
 MAS-pilootstudie
 MAS-punten
 MAS-tellingen
@@ -127,8 +128,10 @@ MAS-telperiode
 MAS-telprotocol
 MAS-telpunten
 MBAG
+MBAG-project
 Mapping
 Maps
+Maps-kaart
 Matkop
 Meetnetontwerp
 Mises
@@ -145,8 +148,10 @@ Negatief-binomiale
 Numenius
 OL
 OLA
+OSM-data
 Occurrence
 Ol
+OpenStreetMap-data
 Parus
 Perdix
 Poecile
@@ -166,9 +171,11 @@ Roodkopklauwier
 SB
 SBP
 SBP's
+SBP-beschermingsmaatregelen
 SBP-doelrealisatie
 SBP-gebied
 SBP-gebieden
+SBP-lagen
 SBP-ligging
 SBPs
 SBP’s
@@ -303,6 +310,7 @@ highway
 hoogresolutiegegevens
 hurdle
 hypothesegedreven
+inbo.be/mbag
 indicatorfunctie
 indicatorsoorten
 indicatortypes
