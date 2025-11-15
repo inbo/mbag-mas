@@ -94,7 +94,7 @@ Voor het fitten van de detectiecurve (en dus het schatten van de detectiekans) g
 
 ### *Distance sampling* methodiek
 
-Binnen het MAS werken we met punttransecten met een telradius $w = 300$ m.
+Binnen het MAS werken we met punttransecten (= telcirkels) met een telradius $w = 300$ m.
 De gemiddelde detectiekans $p$ binnen deze straal wordt berekend als
 
 <!-- spell-check: ignore:start -->
@@ -112,7 +112,7 @@ De gemiddelde detectiekans $p$ is dus de oppervlakte onder de detectiefunctie bi
 ```{r}
 #| label: fig-distance-methode
 #| fig-cap: "Methodologie *distance sampling*.
-#|  **A.** Punttransect met radius $w$ en observatie $i$ op afstand $r$.
+#|  **A.** Telcirkel met radius $w$ en observatie $i$ op afstand $r$.
 #|  **B.** Histogram en detectiecurve gefit op 1000 gesimuleerde datapunten uit
 #|  de half-normale verdeling met parameter $\\sigma = 120$ en afknotafstand
 #|  300 m.
