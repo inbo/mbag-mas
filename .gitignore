@@ -25,6 +25,8 @@
 *.tex
 *.pdf
 *.png
+*.jpg
+*.jpeg
 *.cpg
 *.sbn
 *.sbx
