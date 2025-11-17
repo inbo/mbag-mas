@@ -10,7 +10,7 @@ split_dwc_event_occ <- function(df) {
     "verbatimSRS", "decimalLatitude", "decimalLongitude",
     "geodeticDatum", "coordinateUncertaintyInMeters",
     # For blurred dataset
-    "informationWithheld", "dataGeneralizations", "georeferenceRemarks"
+    "dataGeneralizations", "georeferenceRemarks"
   )
 
   # All remaining DwC terms go to occurrence file

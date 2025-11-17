@@ -99,11 +99,6 @@ blur_occurrences <- function(
         .data$coordinateUncertaintyInMeters
       ),
       # Create new columns
-      informationWithheld = if_else(
-        .data$is_blurred,
-        "original locations available upon request",
-        ""
-      ),
       dataGeneralizations = if_else(
         .data$is_blurred,
         paste0("UTM ", .data$spat_res, " km"),
