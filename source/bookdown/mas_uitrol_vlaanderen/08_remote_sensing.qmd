@@ -50,17 +50,67 @@ data_path <- file.path(mbag_dir, "data", "remote_sensing")
 
 <!-- spell-check: ignore:end -->
 
+Het doel van de analyse is om de aanwezigheid van naakte bodem te karakteriseren op landbouwpercelen rond MAS-telpunten gedurende de verschillende telperiodes. Dit deden we aan de hand van twee verschillende remote sensing-gebaseerde indicatoren, gebruik makend van optische satelliettijdsreeksen per landbouwperceel. De analyse is beschikbaar op GitHub [@VanpouckeHeremans_2025_MbagXee].
+
 ## Methodiek
+### Databronnen en selectie van landbouwpercelen
 
-<!-- spell-check: ignore:start -->
+Om een tijdreeks per landbouwperceel te bekomen, werd gebruikgemaakt van de verzamelaanvraag, die jaarlijks wordt gepubliceerd en alle landbouwpercelen in Vlaanderen omvat [@landbouwgebruikspercelen]. Voor de analyse werden enkel die percelen geselecteerd die overlappen met een buffer van 300 m rond het telpunt (@fig-clipped-percelen). Percelen die in de verzamelaanvraag de klasse ‘Landbouwinfrastructuur’ kregen, werden uitgesloten, aangezien enkel percelen met teelten relevant zijn voor deze analyse. Ook percelen onder een beheerovereenkomst (informatie afkomstig van de VLM, niet publiek beschikbaar) werden verwijderd, omdat we specifiek geïnteresseerd zijn in teelten en niet in beheerde elementen zoals akkerranden of andere beheerstroken.
 
-- zie aparte google doc
+De tijdreeksen per perceel werden vervolgens berekend door het spectrale signaal te aggregeren over het volledige perceel, ook wanneer dat perceel slechts gedeeltelijk binnen de 300 m-buffer rond het telpunt viel. Deze perceelsgebaseerde (object-based) aanpak zorgt voor een stabieler signaal dan een pixelgebaseerde benadering.
 
-<!-- spell-check: ignore:end -->
+```{r}
+#| label: fig-clipped-percelen
+#| fig.cap: "Landbouwpercelen rond telpunt Ol_12833.8, de volledige percelen
+#|  (groen) en de percelen geclipt naar het deel dat binnen een straal van 300 m
+#|  ligt (geel)."
+#| out.width: "80%"
+include_graphics(file.path("media", "remote_sensing_methods",
+                           "clipped_landbouwgebruikspercelen.png"))
+```
 
-### Data
+### Satellietdata, preprocessing en tijdreeksopbouw
 
-### Berekening naakte bodem
+
+
+```{r}
+#| label: fig-cloud-masking
+#| fig.cap: "Voorbeeld van een *cloud mask* op een Sentinel-2 beeld
+#|  [@Skakun_2017_LandsatSentinelWinterCrops]."
+include_graphics(file.path("media", "remote_sensing_methods",
+                           "cloud_masking.jpg"))
+```
+
+Op de gemaskeerde beelden werden vervolgens twee spectrale indices berekend, door combinaties te maken van de verschillende banden uit de Sentinel-2 beelden.
+Spectrale indices worden vaak gebruikt om specifieke informatie uit verschillende banden te extraheren en samen te vatten [@JonesVaughan_2010_RemoteSensingVegetation].
+Bovendien verminderen ze de invloed van externe factoren, zoals bijvoorbeeld de non-uniforme lichtomstandigheden en atmosferische samenstelling in het beeld.
+Twee spectrale indices werden berekend, namelijk de Normalized Difference Vegetation Index (NDVI) en de Bare Soil Index (BSI) [@Mzid_2021_BareSoil].
+De formules worden hieronder gegeven:
+
+$$
+\mathrm{NDVI} = \frac{NIR - RED}{NIR + RED}
+$$
+
+$$
+\mathrm{NDVI}_{\text{Sentinel-2}} = \frac{B08 - B04}{B08 + B04}
+$$
+
+\hline
+
+$$
+\mathrm{BSI} = \frac{(SWIR + RED) - (NIR + BLUE)}{(SWIR + RED) + (NIR + BLUE)}
+$$
+
+$$
+\mathrm{BSI}_{\text{Sentinel-2}} =
+\frac{(B11 + B04) - (B08 + B02)}{(B11 + B04) + (B08 + B02)}
+$$
+
+Waarbij *BLUE*, *RED*, *NIR* en *SWIR* duiden op de gebruikte spectrale zones, respectievelijk blauw, rood, nabij-infrarood en korte-golf-infrarood, en overeenstemmen met respectievelijk **B02**, **B04**, **B08** en **B11** van Sentinel-2. De waarden van de NDVI variëren tussen -1 en 1, hoge positieve waarden komen overeen met gezonde vegetatie, negatieve waarden komen overeen met oppervlaktes bedekt met  wolken (werden wel gemaskeerd), sneeuw en water. Positieve waarden dichter bij 0 kunnen dan weer wijzen op de vegetatie onder stress, heel schaars aanwezige vegetatie of afwezigheid van vegetatie. De waarden van de BSI variëren ook tussen -1 en 1, waarbij sterk positieve waarden wijzen op de aanwezigheid van onbedekte bodem en negatieve waarden op aanwezigheid vegetatie wijzen [@Mzid_2021_BareSoil; @Rikimaru_2002_TropicalForestDensity]. De BSI toont onderscheid tussen de verschillende gradaties van onbedekte bodem, terwijl de NDVI juist meer onderscheid maakt tussen verschillende gradaties van vegetatie.
+
+
+
+### Classificatie en berekening van de indicator ‘naakte bodem’
 
 ### Data exploratie
 
