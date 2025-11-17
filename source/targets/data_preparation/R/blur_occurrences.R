@@ -54,9 +54,11 @@ blur_occurrences <- function(
     filter(
       # Blur nesting information for duration of blur_years
       (grepl("nest", .data$verbatimBehavior, ignore.case = TRUE) &
+         !(tolower(.data$vernacularName) %in% tolower(vulnerable_species)) &
          .data$eventDate >= blur_date) |
-        # Blur all information of vulnerable_species
-        tolower(.data$vernacularName) %in% tolower(vulnerable_species)
+        # Blur nest information of vulnerable_species
+        (grepl("nest", .data$verbatimBehavior, ignore.case = TRUE) &
+           tolower(.data$vernacularName) %in% tolower(vulnerable_species))
     ) %>%
     st_join(utm_grid, join = st_within, left = FALSE) %>%
     st_drop_geometry() %>%
