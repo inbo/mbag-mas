@@ -91,6 +91,8 @@ Bovendien verminderen ze de invloed van externe factoren, zoals bijvoorbeeld de 
 Twee spectrale indices werden berekend, namelijk de Normalized Difference Vegetation Index (NDVI) en de Bare Soil Index (BSI) [@Mzid_2021_BareSoil].
 De formules worden hieronder gegeven:
 
+<!-- spell-check: ignore:start -->
+
 $$
 \mathrm{NDVI} = \frac{NIR - RED}{NIR + RED}
 $$
@@ -110,7 +112,9 @@ $$
 \frac{(B11 + B04) - (B08 + B02)}{(B11 + B04) + (B08 + B02)}
 $$
 
-Waarbij *BLUE*, *RED*, *NIR* en *SWIR* duiden op de gebruikte spectrale zones, respectievelijk blauw, rood, nabij-infrarood en korte-golf-infrarood, en overeenstemmen met respectievelijk **B02**, **B04**, **B08** en **B11** van Sentinel-2. De waarden van de NDVI variëren tussen -1 en 1, hoge positieve waarden komen overeen met gezonde vegetatie, negatieve waarden komen overeen met oppervlaktes bedekt met  wolken (werden wel gemaskeerd), sneeuw en water. Positieve waarden dichter bij 0 kunnen dan weer wijzen op de vegetatie onder stress, heel schaars aanwezige vegetatie of afwezigheid van vegetatie. De waarden van de BSI variëren ook tussen -1 en 1, waarbij sterk positieve waarden wijzen op de aanwezigheid van onbedekte bodem en negatieve waarden op aanwezigheid vegetatie wijzen [@Mzid_2021_BareSoil; @Rikimaru_2002_TropicalForestDensity]. De BSI toont onderscheid tussen de verschillende gradaties van onbedekte bodem, terwijl de NDVI juist meer onderscheid maakt tussen verschillende gradaties van vegetatie.
+<!-- spell-check: ignore:end -->
+
+Waarbij $BLUE$, $RED$, $NIR$ en $SWIR$ duiden op de gebruikte spectrale zones, respectievelijk blauw, rood, nabij-infrarood en korte-golf-infrarood, en overeenstemmen met respectievelijk $B02$, $B04$, $B08$ en $B11$ van Sentinel-2. De waarden van de NDVI variëren tussen -1 en 1, hoge positieve waarden komen overeen met gezonde vegetatie, negatieve waarden komen overeen met oppervlaktes bedekt met  wolken (werden wel gemaskeerd), sneeuw en water. Positieve waarden dichter bij 0 kunnen dan weer wijzen op de vegetatie onder stress, heel schaars aanwezige vegetatie of afwezigheid van vegetatie. De waarden van de BSI variëren ook tussen -1 en 1, waarbij sterk positieve waarden wijzen op de aanwezigheid van onbedekte bodem en negatieve waarden op aanwezigheid vegetatie wijzen [@Mzid_2021_BareSoil; @Rikimaru_2002_TropicalForestDensity]. De BSI toont onderscheid tussen de verschillende gradaties van onbedekte bodem, terwijl de NDVI juist meer onderscheid maakt tussen verschillende gradaties van vegetatie.
 
 ...
 

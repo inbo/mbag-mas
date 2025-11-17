@@ -20,6 +20,7 @@
 2x
 301ste
 3x
+400x400m
 4x
 6x
 72-stelsel
@@ -45,6 +46,7 @@ Beta
 Biodiversity
 Bootstrapping
 Bosonderzoek
+Braaten
 Bravington
 Broedvogelatlas-tellers
 Buteo
@@ -59,6 +61,7 @@ ChatGPT
 Chi-kwadraattoetsingsgrootheid
 Citizen
 Contact’
+Copernicus-programma
 Core
 Core-formaat
 Core-termen
@@ -75,10 +78,12 @@ DTM
 Datasetgrootte
 Density
 Depotter
+Difference
 Distance
 Doel-project
 Duinen/Weidestreek
 DwC
+Earth
 Emberiza
 Facility
 Fixed
@@ -88,6 +93,7 @@ GAMs
 GBIF-dataset
 GBIF-publicatie
 GBIF.org
+GEE
 GL
 GLB
 GLMM
@@ -121,6 +127,7 @@ Kiekendief'
 Lambert-
 Lambert-coördinaten
 Lambert72
+Landbouwinfrastructuur’
 Langeraert
 Latham
 Limosa
@@ -158,10 +165,12 @@ NDVI
 NDVI-
 NHW
 NHW-rapportage
+NIR
 Natuur-
 Natuurherstelwet
 Negatief-binomiaal
 Negatief-binomiale
+Normalized
 Numenius
 OL
 OLA
@@ -198,8 +207,11 @@ SBP-ligging
 SBPs
 SBP’s
 SOVON
+SWIR
 Satterthwaite-correctie
 Saxicola
+Sentinel-2
+Soil
 Sovon
 Sovon-codes
 Sovon-databank
@@ -220,6 +232,7 @@ Tweedie
 UTM-hokken
 Union
 Vanellus
+Vegetation
 Veldmuis/Aardmuis
 Version
 WFS-server
@@ -273,6 +286,7 @@ bijvoederacties
 binnen/buiten
 biogeografische
 birds
+bodem’
 bootstrap
 bootstrapping
 branch
@@ -291,6 +305,7 @@ centroïden
 cf
 citizen
 citrinella
+cloud-gebaseerd
 coding
 commit-hashes
 confidence
@@ -363,6 +378,8 @@ jachtregelmentering
 kansdichtheidsfunctieplots
 km-hok
 km-hokken
+korte-golf-infrarood
+kortegolf-infrarood
 kwantielresiduen
 landbouw-
 landbouwstratum
@@ -377,9 +394,11 @@ linkfunctie
 ll'en
 log-likelihood
 longitude
+m-buffer
 manual
 mapping
 markdown
+masking
 medeteller
 medetellers
 mesoschaal
@@ -391,16 +410,22 @@ montanus
 moving
 multipolygon
 multisoortenindices
+multispectrale
 multivariate
+nabij-infrarood
 nestindicatief
 nestindicerend
 niet-gedetecteerde
 niet-kerend
+non-uniforme
 nulmodel
 nultellingen
+object-based
+object-gebaseerde
 occurrence
 omgevingscovariaten
 onbedekking
+onbedekt’
 onderdispersie
 onderzoeksnoden
 onvertekende
@@ -413,12 +438,14 @@ opvalllende
 ostralegus
 paraboolvormig
 penalizatie
+perceelsgebaseerde
 perceelsgebonden
 perceelsgrootte
 perceelsinformatie
 perdix
 pilootfase
 pipeline
+pixel-gebaseerde
 pointid
 pointids
 polygon
@@ -438,6 +465,7 @@ pygargus
 rastercel
 rechtsreeks
 referentiestratum
+reflectantie
 regex
 regio-openheid-sbp
 renv
@@ -447,6 +475,7 @@ reserveset
 rgbif
 rotating
 rubicola
+s2cloudless
 sampelen
 sampling'
 satelliettijdreeksen
@@ -454,6 +483,7 @@ sbp
 sci
 science
 science-projecten
+sensing-gebaseerde
 size
 smooth
 smoother
@@ -511,6 +541,8 @@ toestandmonitoring
 topographic
 truncated
 turtur
+uitgemiddeld
+uitgemiddelde
 uitmiddeling
 uncut
 union
@@ -537,5 +569,6 @@ zenodo
 zero-inflated
 zero-inflatie
 ziet/zien
+zonsynchrone
 ΔAIC
 ️
