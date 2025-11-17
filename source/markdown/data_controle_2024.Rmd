@@ -1707,11 +1707,10 @@ Ziet er over het algemeen ok uit.
   - Kwetsbare soorten: Grauwe kiekendief, Bruine kiekendief, Patrijs, Kwartelkoning
   - Vervagen (UTM 5 km)
     - broedcodes 4-5 alle soorten --> opheffing na 2 jaar
-    - kwetsbare soorten alle waarnemingen --> opheffing nooit
+    - broedcodes 4-5 kwetsbare soorten --> opheffing nooit
   - Embargo
-    - data kwetsbare soorten niet vrijgeven voor 2 jaar (telkens vanaf 1 januari)
+    - data broedcodes 4-5 kwetsbare soorten niet vrijgeven voor 2 jaar (telkens vanaf 1 januari)
   - Nieuwe kolommen in vervaagde dataset
-    - `informationWithheld`: "original locations available upon request" <!-- spell-check: ignore -->
     - `dataGeneralizations`: "UTM 5 km"
     - `georeferenceRemarks`: "coordinates are centroid of used grid square" <!-- spell-check: ignore -->
 - Opsplitsen in "event" en "occurrence" datasets
