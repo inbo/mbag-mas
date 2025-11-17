@@ -121,7 +121,8 @@ blur_occurrences <- function(
 
   occ_out <- occ_blurred %>%
     filter(
-      !(tolower(.data$vernacularName) %in% tolower(vulnerable_species) &
+      !(grepl("nest", .data$verbatimBehavior, ignore.case = TRUE) &
+          tolower(.data$vernacularName) %in% tolower(vulnerable_species) &
           .data$eventDate >= embargo_date)
     )
 
