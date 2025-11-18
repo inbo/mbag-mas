@@ -128,7 +128,7 @@ In dit hoofdstuk verkennen we de tijdreeksen van de indicatoren voor naakte bode
 Dit omdat we nog geen data van 2025 hebben en we zo toch al een 3-jarige tijdreeks kunnen verkennen.
 De data werden geanalyseerd in R [@R] met RStudio [@RStudio].
 
-We beschrijven onder andere seizoenspatronen van bedekking op percelen.
+We beschrijven onder andere seizoenspatronen van bedekking op percelen per jaar.
 Daarbij onderscheiden we verschillende trends in de evolutie van de indicatorwaarde ten opzichte van hun drempelwaardes (NDVI: naakte bodem onder 0,3; BSI: naakte bodem boven 0,021) (@fig-trend-methods):
 
 - **Altijd onbedekt** – de indicator wijst gedurende de volledige periode, of met hoogstens één tijdstap van bedekking, op weinig vegetatie (onder (NDVI) of boven (BSI) de drempelwaarde)
@@ -398,7 +398,7 @@ combined <- cowplot::plot_grid(
 combined
 ```
 
-### Tijdreeksen
+### Tijdreeksen per landbouwperceel
 
 ```{r}
 # Read time series data from CSV
@@ -631,7 +631,7 @@ trend_data <- lapply(time_series_data_full, function(df) {
 We willen patronen onderzoeken voor alle percelen over alle MAS-telpunten.
 Bovenstaande resultaten geven (1) geen duidelijke vergelijking in trends of complexiteit tussen de twee types indicatoren: NDVI en BSI, en (2) het is niet duidelijk of percelen met dezelfde trend ook eenzelfde landgebruik hebben.
 
-We maken daarom in eerste plaats een vergelijking tussen de trends in van NDVI en BSI (@fig-trend-pairwise). Er vallen twee patronen op:
+We maken daarom in eerste plaats een vergelijking tussen de trends van NDVI en BSI (@fig-trend-pairwise). Er vallen twee patronen op:
 
 1. Voor 2023 en 2024 tonen de waardes van NDVI en BSI meestal dezelfde trend doorheen de tijd. Dit is niet zo voor 2022 waar de trends ongeveer even vaak dezelfde zijn als verschillen tussen beide indicatortypes.
 2. Als de trends verschillen tussen de types, heeft BSI vaker complexe trends dan NDVI. Dit patroon is extra opvallend voor 2022.
@@ -639,7 +639,10 @@ We maken daarom in eerste plaats een vergelijking tussen de trends in van NDVI e
 ```{r}
 #| label: fig-trend-pairwise
 #| fig-cap: "Vergelijking van trends in indicatorwaarden van BSI ten opzichte
-#|  van NDVI per jaar. Opgesplitst volgens verschil in complexiteit."
+#|  van NDVI per jaar. Opgesplitst volgens verschil in complexiteit.
+#|  Aantallen zijn aantal trends per categorie met relatieve proportie tussen
+#|  haakjes. Totale proporties per rij en kolom worden respectievelijk in
+#|  rij- en kolomtitels weergegeven."
 # Prepare pairwise trends table
 pairwise_trends <- bind_rows(trend_data) %>%
   pivot_wider(id_cols = c("pointid", "ref_id", "year"),
@@ -785,7 +788,7 @@ trend_data$bsi %>%
 
 In tweede plaats bekijken we de trends per landgebruik (gewasgroep). Ook tussen verschillende gewasgroepen zien we verschillen in complexiteit van trends (@fig-trendtype-gewasgroep). Zowel voor NDVI als BSI volgen de trends hoofdzakelijk een eenvoudig patroon in Grasland, Fruit en Noten, Water, Houtachtige gewassen, Voedergewassen, Overige gewassen en Granen, zaden en peulvruchten (bv. altijd bedekt/onbedekt of toename/afname bedekking) en complexere patronen voor Suikerbieten, Maïs, Groenten, kruiden en sierplanten, Aardappelen en Vlas en Hennep (bv. paraboolvormig of complexer). Deze patronen zijn enkel voor BSI in 2022 niet zo opvallend. In andere jaren zien we wel sterke gelijkenis in de verhoudingen van trendtypes per gewasgroep. Net als eerder zien we ook hier dat BSI hogere proporties heeft aan complexere trendtypes.
 
-@fig-trend-gewasgroep-ndvi toont de gemiddelde trends voor NDVI (mediaan en interkwartielbereik (IQR)) per gewasgroep in meer detail (geordend als in @fig-trendtype-gewasgroep). @fig-trend-gewasgroep-ndvi voor BSI. De trends vertonen voor beide indicatoren gelijkaardig patronen. Ook zijn de patronen per gewasgroep gelijkaardig voor elk jaar. De trendtypes verschillen soms wel tussen de jaren omdat de indexwaarden soms net wel of net niet de drempelwaarde overschrijden.
+@fig-trend-gewasgroep-ndvi toont de gemiddelde trends voor NDVI (mediaan en interkwartielbereik (IQR)) per gewasgroep in meer detail (geordend als in @fig-trendtype-gewasgroep). @fig-trend-gewasgroep-bsi voor BSI. De trends vertonen voor beide indicatoren gelijkaardig patronen. Ook zijn de patronen per gewasgroep gelijkaardig voor elk jaar. De trendtypes verschillen soms wel tussen de jaren omdat de indexwaarden soms net wel of net niet de drempelwaarde overschrijden.
 
 ```{r}
 #| label: fig-trendtype-gewasgroep
@@ -833,7 +836,7 @@ plot_trend_by_crop(
 )
 ```
 
-### Naakte bodem per telpunt
+### Naakte bodem per telcirkel
 
 ```{r}
 # Read sample information
@@ -870,7 +873,7 @@ perc_bare_soil_data <- lapply(vec, function(i) {
 })
 ```
 
-Per telpunt werd het percentage naakte bodem berekend voor elke MAS-telperiode in elk jaar. Meeste patronen zijn gelijkaardig voor berekeningen op basis van NDVI en BSI en zijn gelijkaardig tussen de jaren.
+Per telcirkel werd het percentage naakte bodem berekend op basis van de overlappende percelen voor elke MAS-telperiode in elk jaar. Meeste patronen zijn gelijkaardig voor berekeningen op basis van NDVI en BSI en zijn gelijkaardig tussen de jaren.
 Over het algemeen zien we wel dat de percentages hoger liggen o.b.v. BSI dan o.b.v. NDVI.
 Berekeningen van statistieken zoals gemiddelden, medianen en kwartielen zijn telkens gebaseerd op gewogen waarden, zodat rekening wordt gehouden met het relatief aantal telpunten per combinatie van regio, openheid en SBP-ligging.
 
@@ -885,7 +888,8 @@ Voor binnen versus buiten SBP-gebied zien we een verschil. `r describe_summary_t
 ```{r}
 #| label: fig-baresoil-region
 #| fig-cap: "Verdeling van percentage naakte bodem per telronde per
-#|  landbouwregio per jaar met aanduiding van de gewogen mediaan en gewogen IQR.
+#|  landbouwregio per jaar (blauwe lijn) met aanduiding van de gewogen mediaan
+#|  en gewogen IQR (box).
 #|  De regio's zijn gesorteerd volgens de gewogen mediaan over alle jaren en
 #|  telperiodes van laag naar hoog.
 #|  R1: 01/04–20/04, R2: 21/04–10/05, R3: 11/05–10/06, R4: 21/06–15/07."
@@ -912,7 +916,8 @@ cowplot::plot_grid(
 ```{r}
 #| label: fig-baresoil-stratum
 #| fig-cap: "Verdeling van percentage naakte bodem per telronde per
-#|  stratum per jaar met aanduiding van de gewogen mediaan en gewogen IQR.
+#|  stratum per jaar (blauwe lijn) met aanduiding van de gewogen mediaan en
+#|  gewogen IQR (box).
 #|  De strata zijn gesorteerd volgens de gewogen mediaan over alle jaren en
 #|  telperiodes van laag naar hoog."
 #| fig-height: 12.5
