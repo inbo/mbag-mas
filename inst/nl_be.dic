@@ -209,6 +209,7 @@ SBP’s
 SOVON
 SWIR
 Satterthwaite-correctie
+Savitzky-Golay
 Saxicola
 Sentinel-2
 Soil
@@ -334,10 +335,12 @@ exclusiecriterium
 exclusiekaart
 exclusielaag
 fields
+filling
 final
 fixed
 flava
 formulatie
+gaps
 gefitte
 generalized
 git2rdata
@@ -493,6 +496,7 @@ spatiaal
 spatiale
 specname
 spline
+spline-interpolatie
 splines
 statistical
 ste

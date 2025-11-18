@@ -101,7 +101,7 @@ $$
 \mathrm{NDVI}_{\text{Sentinel-2}} = \frac{B08 - B04}{B08 + B04}
 $$
 
-\hline
+\
 
 $$
 \mathrm{BSI} = \frac{(SWIR + RED) - (NIR + BLUE)}{(SWIR + RED) + (NIR + BLUE)}
@@ -116,7 +116,7 @@ $$
 
 Waarbij $BLUE$, $RED$, $NIR$ en $SWIR$ duiden op de gebruikte spectrale zones, respectievelijk blauw, rood, nabij-infrarood en korte-golf-infrarood, en overeenstemmen met respectievelijk $B02$, $B04$, $B08$ en $B11$ van Sentinel-2. De waarden van de NDVI variëren tussen -1 en 1, hoge positieve waarden komen overeen met gezonde vegetatie, negatieve waarden komen overeen met oppervlaktes bedekt met  wolken (werden wel gemaskeerd), sneeuw en water. Positieve waarden dichter bij 0 kunnen dan weer wijzen op de vegetatie onder stress, heel schaars aanwezige vegetatie of afwezigheid van vegetatie. De waarden van de BSI variëren ook tussen -1 en 1, waarbij sterk positieve waarden wijzen op de aanwezigheid van onbedekte bodem en negatieve waarden op aanwezigheid vegetatie wijzen [@Mzid_2021_BareSoil; @Rikimaru_2002_TropicalForestDensity]. De BSI toont onderscheid tussen de verschillende gradaties van onbedekte bodem, terwijl de NDVI juist meer onderscheid maakt tussen verschillende gradaties van vegetatie.
 
-...
+Omdat het maskeren van wolken leidt tot gaten (*gaps*) in de tijdreeksen van de spectrale indices, werd er tussen twee tijdstippen lineair geïnterpoleerd, ook wel *gap filling* genoemd. Omdat er zich ook wolken aan het begin of einde van een tijdreeks kunnen voordoen, werd de tijdreeks voldoende breed rond de studieperiode genomen, zodat ook dan interpolatie mogelijk is. Deze temporeel geïnterpoleerde tijdreeksen voor de originele opnamedatums werden vervolgens omgezet naar tijdreeksen met een vaste frequentie van 10 dagen door middel van een spline-interpolatie van de eerste orde. Als laatste stap werd een Savitzky-Golay filter toegepast met een vensterbreedte van 5 datapunten en een polynoom van de tweede graad (kwadratisch), met als doel de overige ruis in de tijdreeks eruit te filteren [@JonssonEklundh_2004_TIMESAT].
 
 ### Classificatie en berekening van de indicator ‘naakte bodem’
 
@@ -139,11 +139,6 @@ Daarbij onderscheiden we verschillende trends in de evolutie van de indicatorwaa
 (onbedekt → bedekt → onbedekt), met een voldoende lange fase van bedekking (minstens 2 tijdstappen)
 - **Omgekeerde parabool** – eerst een afname, daarna een toename in bedekking (bedekt → onbedekt → bedekt), met een voldoende lange fase van bedekking
 - **Complex patroon** – andere, meer complexe reeksen met meerdere wisselingen tussen bedekt en onbedekt
-
-Merk op dat deze trendindeling afhankelijk is van de lengte van de tijdreeks en van de gekozen drempelwaarde voor naakte bodem.
-Een tijdreeks kan bijvoorbeeld een parabolisch verloop vertonen, maar net onder de drempelwaarde blijven, waardoor ze in onze interpretatie als een constant patroon wordt beschouwd.
-Het gaat om een eerste manier om de temporele dynamiek en complexiteit van de bedekkingsindicatoren te beschrijven, als opstap naar latere, meer verklarende analyses bijvoorbeeld in relatie tot de aanwezigheid van akkervogels of andere variabelen.
-Deze verkenning brengt enkel de variabiliteit en complexiteit van de indicatorwaarden in kaart doorheen de tijd.
 
 ```{r}
 #| label: fig-trend-methods
@@ -245,6 +240,11 @@ ggplot(example_subset, aes(x = monthday_date, y = indicator, group = trend)) +
            size = 2.5, fontface = "italic", hjust = "left", vjust = "bottom")
 ```
 
+Merk op dat deze trendindeling afhankelijk is van de lengte van de tijdreeks en van de gekozen drempelwaarde voor naakte bodem.
+Een tijdreeks kan bijvoorbeeld een parabolisch verloop vertonen, maar net onder de drempelwaarde blijven, waardoor ze in onze interpretatie als een constant patroon wordt beschouwd.
+Het gaat om een eerste manier om de temporele dynamiek en complexiteit van de bedekkingsindicatoren te beschrijven, als opstap naar latere, meer verklarende analyses bijvoorbeeld in relatie tot de aanwezigheid van akkervogels of andere variabelen.
+Deze verkenning brengt enkel de variabiliteit en complexiteit van de indicatorwaarden in kaart doorheen de tijd.
+
 ## Resultaten {#sec-remote-sensing-resultaten}
 ### Rasterlagen
 
@@ -259,14 +259,22 @@ plots <- tibble(
   sbp = rep(c("binnen", "buiten"), 2)
 )
 
+dates_vec <- seq.Date(
+  from = as.Date("2024-02-01"),
+  to   = as.Date("2024-08-29"),
+  by   = "10 days"
+) %>%
+  as.character()
+
 # Get NDVI rasters
 rast_ndvi_list <- apply(plots, 1, function(row) {
   # Create file path
   plotnaam <- row[["plotnaam"]]
-  file_name <- paste("multiband_raster_ndvi", plotnaam, "sg_v1.tif", sep = "_")
+  file_name <- paste("multiband_raster_ndvi", plotnaam, "sg.tif", sep = "_")
 
   # Read tif file
   raster <- rast(file.path(data_path, file_name))
+  names(raster) <- dates_vec
 
   # Select date range
   raster[[grepl("^2024-0[^12]", names(raster))]]
@@ -277,10 +285,11 @@ names(rast_ndvi_list) <- plots$plotnaam
 rast_bsi_list <- apply(plots, 1, function(row) {
   # Create file path
   plotnaam <- row[["plotnaam"]]
-  file_name <- paste("multiband_raster_bsi", plotnaam, "sg_v1.tif", sep = "_")
+  file_name <- paste("multiband_raster_bsi", plotnaam, "sg.tif", sep = "_")
 
   # Read tif file
   raster <- rast(file.path(data_path, file_name))
+  names(raster) <- dates_vec
 
   # Select date range
   raster[[grepl("^2024-0[^12]", names(raster))]]
