@@ -81,6 +81,7 @@ Praktisch werd de Python API van Google Earth Engine (GEE) gebruikt om Sentinel-
 #| label: fig-cloud-masking
 #| fig.cap: "Voorbeeld van een *cloud mask* op een Sentinel-2 beeld
 #|  [@Skakun_2017_LandsatSentinelWinterCrops]."
+#| out.width: "80%"
 include_graphics(file.path("media", "remote_sensing_methods",
                            "cloud_masking.jpg"))
 ```
@@ -274,7 +275,7 @@ rast_ndvi_list <- apply(plots, 1, function(row) {
 
   # Read tif file
   raster <- rast(file.path(data_path, file_name))
-  names(raster) <- dates_vec
+  if (names(raster)[1] == "0") names(raster) <- dates_vec
 
   # Select date range
   raster[[grepl("^2024-0[^12]", names(raster))]]
@@ -289,7 +290,7 @@ rast_bsi_list <- apply(plots, 1, function(row) {
 
   # Read tif file
   raster <- rast(file.path(data_path, file_name))
-  names(raster) <- dates_vec
+  if (names(raster)[1] == "0") names(raster) <- dates_vec
 
   # Select date range
   raster[[grepl("^2024-0[^12]", names(raster))]]
