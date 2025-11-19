@@ -1009,21 +1009,6 @@ mas_data_full %>%
                       "hoge_aantallen_broedcodes_2025.csv"))
 ```
 
-Manueel passen we alle aantallen voor broedcode > 0 manueel aan naar 1.
-
-```{r}
-mas_data_full %>%
-  st_drop_geometry() %>%
-  filter(aantal > 1,
-         wrntype > 0) %>%
-  count(wrntype, aantal, name = "aantal keer in dataset") %>%
-  rename(
-    "broedcode" = "wrntype",
-    "aantal vogels" = aantal
-  ) %>%
-  kable()
-```
-
 # Controle data publicatie
 
 taxon_data
