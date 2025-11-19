@@ -1419,20 +1419,27 @@ mas_data_full %>%
 ```
 
 We schrijven de data met broedcodes > 0 met een hoger aantal dan 1 weg.
+We doen dit per jaar.
 
 ```{r}
-mas_data_clean %>%
+write_breeding_codes <- mas_data_full %>%
   st_drop_geometry() %>%
   filter(aantal > 1,
          wrntype > 0) %>%
+  select(-"broedcode") %>%
   rename("broedcode" = "wrntype") %>%
   select(
     "oid", "plotnaam", "x_lambert", "y_lambert", "datum",
     "periode_in_jaar", "jaar", "naam", "aantal", "broedcode", "waarnemer"
   ) %>%
-  arrange(waarnemer, aantal, datum) %>%
-  write_csv(file.path(mbag_dir, "output", "data_controle",
-                      "hoge_aantallen_broedcodes.csv"))
+  arrange(waarnemer, aantal, datum)
+
+for (j in sort(unique(write_breeding_codes$jaar))) {
+  write_breeding_codes %>%
+    filter(jaar == j) %>%
+    write_csv(file.path(mbag_dir, "output", "data_controle",
+                        paste0("hoge_aantallen_broedcodes_", j, ".csv")))
+}
 ```
 
 Manueel passen we alle aantallen voor broedcode > 0 manueel aan naar 1.
