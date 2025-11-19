@@ -155,6 +155,10 @@ modified_mapping <- function(data_df) {
             0.1 * .data$raw_distance2plot
           )
         ),
+      dwc_coordinateUncertaintyInMeters = round(
+        .data$dwc_coordinateUncertaintyInMeters,
+        digits = 1
+      ),
       dwc_organismQuantityType = case_when(
         .data$raw_wrntype %in% c("0", "1") ~ "individual",
         .data$raw_wrntype %in% c("2") ~ "pair",
