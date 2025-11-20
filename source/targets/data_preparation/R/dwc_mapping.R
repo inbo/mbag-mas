@@ -102,17 +102,26 @@ modified_mapping <- function(data_df) {
   require("dplyr")
 
   out_df <- data_df %>%
+    arrange(.data$dwc_eventDate) %>%
+    group_by(.data$dwc_eventDate, .data$dwc_locationID) %>%
+    mutate(
+      # create a key for the coordinate pair
+      coord_key = paste(.data$dwc_verbatimLatitude, .data$dwc_verbatimLongitude,
+                        sep = "_"),
+      # match() against unique() returns 1,2,... in order of first appearance
+      event_suffix = formatC(match(.data$coord_key, unique(.data$coord_key)),
+                             width = 3, flag = "0")
+    ) %>%
+    ungroup() %>%
     mutate(
       # Add IDs
       dwc_occurrenceID = paste("MBAG", "MAS", .data$raw_oid, sep = ":"),
-      dwc_parentEventID = ifelse(
-        is.na(.data$raw_periode_in_jaar),
-        "",
-        paste("MBAG", "MAS", .data$dwc_year, .data$raw_periode_in_jaar,
-              sep = ":")
+      dwc_parentEventID = paste(
+        "MBAG", "MAS", .data$dwc_eventDate,
+        gsub("\\s", ".", .data$dwc_locationID), sep = ":"
       ),
       dwc_eventID = paste(
-        "MBAG", "MAS", .data$dwc_eventDate, .data$dwc_locationID, sep = ":"
+        .data$dwc_parentEventID, .data$event_suffix, sep = ":"
       ),
       # Taxonomic information
       dwc_class = ifelse(.data$raw_soortgrp == 2, "Aves", "Mammalia"),
@@ -179,7 +188,9 @@ modified_mapping <- function(data_df) {
     select(
       -"raw_oid",
       -"raw_soortgrp",
-      -"raw_wrntype"
+      -"raw_wrntype",
+      -"coord_key",
+      -"event_suffix"
     )
 
   return(out_df)
