@@ -38,7 +38,7 @@ source(file.path(mbag_dir, "source", "R", "predatoren_f.R"))
 source(file.path(mbag_dir, "source", "R", "taxon_mapping.R"))
 
 # Global variables
-publication_year <- 2024
+publication_year <- 2025
 
 
 # Download MAS pipeline data
