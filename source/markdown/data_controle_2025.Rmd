@@ -1067,6 +1067,253 @@ mas_data_full %>%
 
 # Controle data publicatie
 
-taxon_data
+De finale dataset wordt verder in de pipeline klaar gemaakt voor publicatie op GBIF.
 
-> na data controle 2024
+## Dataset preparatie
+
+- We verwijderen kolommen gerelateerd aan steekproef
+- We voegen de finale data samen met MAS data die buiten MBAG vallen
+  - De kolom `occurrenceRemarks` duidt aan of ze bij MBAG - MAS horen of niet
+
+## Darwin Core mapping
+
+- Ruimtelijke verwerking
+  - We verwijderen de Amersfoord coördinaten
+  - We zetten de Lambert coördinaten om naar WGS 84 decimale coördinaten (afronden op 6 cijfers na de komma ~ precisie 10 cm)
+  - We behouden de Lambert coördinaten als verbatim coördinaten (afronden op 1 cijfer na de komma ~ precisie 10 cm)
+- Mappen van statische waarden
+  - Statische waarden worden gebruikt voor Darwin Core-termen die dezelfde waarde nodig hebben voor alle records
+  - Meestal ontbreken ze in de input data
+- Mappen van ongewijzigde waarden
+  - Ongewijzigde waarden worden gebruikt voor Darwin Core-termen waarvan de inhoud een exacte kopie is van het overeenkomstige veld in de input data
+- Mappen van gewijzigde waarden
+  - Gewijzigde waarden worden gebruikt voor Darwin Core-termen waarvoor de inhoud in de input data als basis wordt gebruikt, maar deze moet worden gestandaardiseerd. Dit geldt voor Darwin Core-termen waarvoor we een vocabulaire gebruiken of waar we willen transformeren voor de duidelijkheid of om duidelijke fouten te corrigeren.
+  - `taxonID` zijn euring codes voor vogels en sovon codes voor zoogdieren. Voor vogels maken we ze `euring:xxxxx` en voor zoogdieren houden we de code van sovon.
+  - Voor `coordinateUncertaintyInMeters` nemen we 10 meter tenzij de afstand meer dan 100 m is, dan nemen we een tiende van de afstand.
+  - We anonimiseren de namen van de tellers
+  - Voor gedrag vullen we de volgende waarden in:
+
+<!-- spell-check: ignore:start -->
+
+| brc | behavior | organismQuantityType | lifeStage |
+| ----- | :---- | :---- | :---- |
+| 0 | Individual or group not bound to a location | individual |  |
+| 1 | Adult individual in breeding habitat | individual | adult |
+| 2 | Pair in breeding habitat | pair | adult |
+| 3 | Territorial behaviour | territorium | adult |
+| 4 | Nest-indicating behaviour | territorium | adult |
+| 5 | Nest discovery | nest | adult |
+
+<!-- spell-check: ignore:end -->
+
+> zie `controles data_controle_2024.Rmd`
+
+## Taxon matching
+
+- We matchen de Nederlandstalige soortnamen met de [GBIF backbone taxonomy](https://www.gbif.org/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c)
+- Sommige taxa moeten manueel gematcht worden
+  - Verzamelgroepen moeten extra kolommen krijgen
+
+We controleren eerst de lijst van soorten die automatisch zijn gematcht (taxon_mapping).
+
+```{r}
+taxon_data <- tar_read("taxon_mapping", store = targets_store)
+
+taxon_data %>%
+  filter(!is.na(scientificName)) %>%
+  bind_rows(filter(taxon_data, is.na(scientificName))) %>%
+  select(dwc_vernacularName, dwc_class, family, scientificName, rank, key) %>%
+  kable()
+```
+
+Matching ziet er op het eerste zicht goed uit.
+
+> Voor Krakeend moeten we het manueel op soortniveau zetten.
+
+Enkel voor `r taxon_data$dwc_vernacularName[is.na(taxon_data$scientificName)]` niet.
+Deze moeten we manueel mappen (manual_taxon_mapping).
+
+```{r}
+manual_taxon_data <- tar_read("manual_taxon_mapping", store = targets_store)
+
+manual_taxon_data %>%
+  filter(dwc_vernacularName %in%
+           taxon_data$dwc_vernacularName[is.na(taxon_data$scientificName)] |
+           dwc_vernacularName == "Krakeend") %>%
+  select(dwc_vernacularName, dwc_class, family, genus, species, scientificName,
+         rank, key) %>%
+  arrange(dwc_vernacularName) %>%
+  kable()
+```
+
+Voor sommige soorten kunnen we zgn. "aggregate species" maken.
+
+```{r}
+species_agg_data <- tar_read("map_species_aggregates", store = targets_store)
+
+species_agg_data %>%
+  filter(dwc_vernacularName %in%
+           taxon_data$dwc_vernacularName[is.na(taxon_data$scientificName)] |
+           dwc_vernacularName == "Krakeend") %>%
+  select(dwc_vernacularName, dwc_class, family, genus, species, scientificName,
+         rank, key, verbatimIdentification, identificationQualifier,
+         verbatimTaxonRank) %>%
+  arrange(dwc_vernacularName) %>%
+  kable()
+```
+
+## Nabewerking en finale datasets
+
+- Selectie relevante kolommen
+- Sorteren van kolommen en rijen
+- Opsplitsen in open en vervaagde datasets
+  - Kwetsbare soorten: Grauwe kiekendief, Bruine kiekendief, Patrijs, Kwartelkoning
+  - Vervagen (UTM 5 km)
+    - broedcodes 4-5 alle soorten --> opheffing na 2 jaar
+    - broedcodes 4-5 kwetsbare soorten --> opheffing nooit
+  - Embargo
+    - data broedcodes 4-5 kwetsbare soorten niet vrijgeven voor 2 jaar (telkens vanaf 1 januari)
+  - Nieuwe kolommen in vervaagde dataset
+    - `dataGeneralizations`: "UTM 5 km"
+    - `georeferenceRemarks`: "coordinates are centroid of used grid square" <!-- spell-check: ignore -->
+- Opsplitsen in "event" en "occurrence" datasets
+
+Na DwC mapping bekomen we de finale dataset.
+
+Hoe ziet de dataset er uit?
+
+```{r}
+dwc_mapping_final <- tar_read("dwc_mapping_final",
+                              store = targets_store)
+
+glimpse(dwc_mapping_final)
+```
+
+> ok
+
+Vervaging:
+
+```{r}
+dwc_mapping_final_blurred <- tar_read("dwc_mapping_final_blurred",
+                                      store = targets_store)
+```
+
+We have 2 more columns.
+
+```{r}
+setdiff(names(dwc_mapping_final_blurred), names(dwc_mapping_final))
+```
+
+> ok
+
+```{r}
+vulnerable_species <- c("Grauwe Kiekendief", "Bruine Kiekendief", "Patrijs",
+                        "Kwartelkoning")
+embargo_date <- as_date(paste(year(Sys.time()) - 2, 1, 1, "-"))
+
+# 1 Check: all broedcode 4–5 occurrences are blurred within last 2 years
+# after embargo
+check_broed_full <- dwc_mapping_final %>%
+  filter(grepl("nest", verbatimBehavior, ignore.case = TRUE),
+         !tolower(vernacularName) %in% tolower(vulnerable_species),
+         eventDate >= embargo_date) %>%
+  left_join(dwc_mapping_final_blurred, by = "occurrenceID",
+            suffix = c("_orig", "_blurred")) %>%
+  mutate(
+    blurred = (verbatimLatitude_orig != verbatimLatitude_blurred |
+                 verbatimLongitude_orig != verbatimLongitude_blurred) &
+      (decimalLatitude_orig != decimalLatitude_blurred |
+         decimalLongitude_orig != decimalLongitude_blurred)
+  )
+
+broed_summary <- check_broed_full %>%
+  summarise(
+    total = n(),
+    blurred = sum(blurred, na.rm = TRUE),
+    ok = total == blurred
+  )
+
+# 2 Check: all broedcode 4–5 occurrences of vulnerable species are blurred
+# before embargo
+check_vuln_full <- dwc_mapping_final %>%
+  filter(grepl("nest", verbatimBehavior, ignore.case = TRUE),
+         tolower(vernacularName) %in% tolower(vulnerable_species),
+         eventDate < embargo_date) %>%
+  left_join(dwc_mapping_final_blurred, by = "occurrenceID",
+            suffix = c("_orig", "_blurred")) %>%
+  mutate(
+    blurred = verbatimLatitude_orig != verbatimLatitude_blurred &
+      verbatimLongitude_orig != verbatimLongitude_blurred &
+      decimalLatitude_orig != decimalLatitude_blurred &
+      decimalLongitude_orig != decimalLongitude_blurred
+  )
+
+vuln_summary <- check_vuln_full %>%
+  summarise(
+    total = n(),
+    blurred = sum(blurred, na.rm = TRUE),
+    ok = total == blurred
+  )
+
+# 3 Check: all vulnerable species (blurred set) are older than 2 years
+check_vuln_old_full <- dwc_mapping_final_blurred %>%
+  filter(grepl("nest", verbatimBehavior, ignore.case = TRUE),
+         tolower(vernacularName) %in% tolower(vulnerable_species),
+         eventDate >= embargo_date)
+
+vuln_old_summary <- check_vuln_old_full %>%
+  summarise(
+    total = n(),
+    ok = total == 0
+  )
+
+# Combine results into one summary data frame
+blur_embargo_summary <- tibble::tibble(
+  check = c(
+    "Broedcodes 4–5 vervaagd (≤2 jaar oud)",
+    "Kwetsbare soorten vervaagd",
+    "Kwetsbare soorten ouder dan 2 jaar"
+  ),
+  total = c(broed_summary$total, vuln_summary$total, vuln_old_summary$total),
+  passed = c(broed_summary$blurred, vuln_summary$blurred, 0),
+  ok = c(broed_summary$ok, vuln_summary$ok, vuln_old_summary$ok)
+)
+
+blur_embargo_summary %>%
+  kable()
+```
+
+Alle waarnemingen met broedcodes 4-5 moeten 2 jaar vervaagd zijn.
+
+```{r}
+check_broed_full %>%
+  filter(!blurred | is.na(blurred)) %>%
+  select(naam = vernacularName_orig, year = year_orig,
+         contains("latitude"), contains("longitude")) %>%
+  nrow() == 0
+```
+
+> ok
+
+Alle waarnemingen van kwetsbare soorten moeten vervaagd zijn.
+
+```{r}
+check_vuln_full %>%
+  filter(!blurred | is.na(blurred)) %>%
+  select(naam = vernacularName_orig, year = year_orig,
+         contains("latitude"), contains("longitude")) %>%
+  nrow() == 0
+```
+
+> ok
+
+Alle waarnemingen van kwetsbare soorten moeten ouder dan twee jaar zijn.
+
+```{r}
+check_vuln_old_full %>%
+  select(naam = vernacularName, year,
+         contains("latitude"), contains("longitude")) %>%
+  nrow() == 0
+```
+
+> ok
