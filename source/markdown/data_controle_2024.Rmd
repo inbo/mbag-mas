@@ -1771,11 +1771,13 @@ dwc_mapping_final_blurred <- tar_read("dwc_mapping_final_blurred",
                                       store = targets_store)
 ```
 
-We have 3 more columns.
+We have 2 more columns.
 
 ```{r}
 setdiff(names(dwc_mapping_final_blurred), names(dwc_mapping_final))
 ```
+
+> ok
 
 ```{r}
 vulnerable_species <- c("Grauwe Kiekendief", "Bruine Kiekendief", "Patrijs",
@@ -1783,6 +1785,7 @@ vulnerable_species <- c("Grauwe Kiekendief", "Bruine Kiekendief", "Patrijs",
 embargo_date <- as_date(paste(year(Sys.time()) - 2, 1, 1, "-"))
 
 # 1 Check: all broedcode 4–5 occurrences are blurred within last 2 years
+# after embargo
 check_broed_full <- dwc_mapping_final %>%
   filter(grepl("nest", verbatimBehavior, ignore.case = TRUE),
          !tolower(vernacularName) %in% tolower(vulnerable_species),
@@ -1790,10 +1793,10 @@ check_broed_full <- dwc_mapping_final %>%
   left_join(dwc_mapping_final_blurred, by = "occurrenceID",
             suffix = c("_orig", "_blurred")) %>%
   mutate(
-    blurred = verbatimLatitude_orig != verbatimLatitude_blurred &
-      verbatimLongitude_orig != verbatimLongitude_blurred &
-      decimalLatitude_orig != decimalLatitude_blurred &
-      decimalLongitude_orig != decimalLongitude_blurred
+    blurred = (verbatimLatitude_orig != verbatimLatitude_blurred |
+                 verbatimLongitude_orig != verbatimLongitude_blurred) &
+      (decimalLatitude_orig != decimalLatitude_blurred |
+         decimalLongitude_orig != decimalLongitude_blurred)
   )
 
 broed_summary <- check_broed_full %>%
@@ -1803,9 +1806,11 @@ broed_summary <- check_broed_full %>%
     ok = total == blurred
   )
 
-# 2 Check: all vulnerable species are blurred
+# 2 Check: all broedcode 4–5 occurrences of vulnerable species are blurred
+# before embargo
 check_vuln_full <- dwc_mapping_final %>%
-  filter(tolower(vernacularName) %in% tolower(vulnerable_species),
+  filter(grepl("nest", verbatimBehavior, ignore.case = TRUE),
+         tolower(vernacularName) %in% tolower(vulnerable_species),
          eventDate < embargo_date) %>%
   left_join(dwc_mapping_final_blurred, by = "occurrenceID",
             suffix = c("_orig", "_blurred")) %>%
@@ -1825,7 +1830,8 @@ vuln_summary <- check_vuln_full %>%
 
 # 3 Check: all vulnerable species (blurred set) are older than 2 years
 check_vuln_old_full <- dwc_mapping_final_blurred %>%
-  filter(tolower(vernacularName) %in% tolower(vulnerable_species),
+  filter(grepl("nest", verbatimBehavior, ignore.case = TRUE),
+         tolower(vernacularName) %in% tolower(vulnerable_species),
          eventDate >= embargo_date)
 
 vuln_old_summary <- check_vuln_old_full %>%
@@ -1857,10 +1863,10 @@ check_broed_full %>%
   filter(!blurred | is.na(blurred)) %>%
   select(naam = vernacularName_orig, year = year_orig,
          contains("latitude"), contains("longitude")) %>%
-  kable()
+  nrow() == 0
 ```
 
-> De eerste waarneming ligt toevallig op dezelfde `decimalLatitude` en de tweede op dezelfde `verbatimLatitude`. Waarom bij eerste `verbatimLatitude` niet en in tweede `decimalLatitude` niet? Dit is omwille van de projectie.
+> ok
 
 Alle waarnemingen van kwetsbare soorten moeten vervaagd zijn.
 
