@@ -137,6 +137,7 @@ modified_mapping <- function(data_df) {
       # Observation information
       dwc_occurrenceStatus = ifelse(.data$dwc_organismQuantity > 0,
                                     "Present", "Absent"),
+      dwc_recordNumber = paste("MAS-brc", .data$raw_wrntype, sep = ":"),
       dwc_behavior = case_when(
         .data$dwc_verbatimBehavior == "Territoriaal gedrag" ~
           "Territorial behaviour",
@@ -342,7 +343,7 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
     # --- Occurrence ---
     "recordedBy",
     "organismQuantity", "organismQuantityType", "lifeStage",
-    "occurrenceStatus", "behavior", "verbatimBehavior",
+    "occurrenceStatus", "behavior", "verbatimBehavior", "recordNumber",
     "occurrenceRemarks",
 
     # --- Location ---
