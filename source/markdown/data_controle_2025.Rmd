@@ -156,28 +156,84 @@ obs_per_year %>%
 Zijn alle telpunten in elke telperiode geteld?
 
 ```{r}
-select_time_periods %>%
+uncounted_df <- select_time_periods %>%
   st_drop_geometry() %>%
   mutate(aantal_periodes = n_distinct(periode_in_jaar), .by = "plotnaam") %>%
   mutate(datum = make_date(jaar, maand, dag)) %>%
   filter(aantal_periodes < 4) %>%
   arrange(aantal_periodes, plotnaam, datum) %>%
-  distinct(plotnaam, regio, waarnemer = waarneme, datum, aantal_periodes) %>%
+  distinct(plotnaam, regio, waarnemer = waarneme, datum, aantal_periodes)
+
+uncounted_df %>%
   kable()
 ```
 
 > Wat is er gebeurt?
 
+```{r}
+# Read visits
+avimap_visits <- st_read(
+  file.path("data", "SOVON", "Sovon_avimap_601_0_MAS_Vlaanderen_20251119.gpkg"),
+  layer = "avimap_visits"
+)
+avimap_plots <- st_read(
+  file.path("data", "SOVON", "Sovon_avimap_601_0_MAS_Vlaanderen_20251119.gpkg"),
+  layer = "avimap_plots"
+) %>%
+  st_drop_geometry() %>%
+  select(plotid, pointid = plotname)
+
+# Select year and from MAS sample
+avimap_visits_y <- avimap_visits %>%
+  filter(jaar == 2025) %>%
+  select(plotid, observer, jaar, month, day) %>%
+  left_join(avimap_plots, by = join_by(plotid)) %>%
+  inner_join(sample, by = join_by(pointid)) %>%
+  mutate(
+    datum = ymd(paste(.data$jaar, .data$month, .data$day, sep = "-")),
+    periode_in_jaar = case_when(
+      datum %within% interval(
+        ymd(paste(jaar, "04-01", sep = "-")),
+        ymd(paste(jaar, "04-20", sep = "-"))
+      ) ~ "R1",
+      datum %within% interval(
+        ymd(paste(jaar, "04-21", sep = "-")),
+        ymd(paste(jaar, "05-10", sep = "-"))
+      ) ~ "R2",
+      datum %within% interval(
+        ymd(paste(jaar, "05-11", sep = "-")),
+        ymd(paste(jaar, "06-10", sep = "-"))
+      ) ~ "R3",
+      datum %within% interval(
+        ymd(paste(jaar, "06-21", sep = "-")),
+        ymd(paste(jaar, "07-15", sep = "-"))
+      ) ~ "R4"
+    )
+  )
+
+avimap_visits_y %>%
+  filter(pointid %in% unique(uncounted_df$plotnaam)) %>%
+  select(plotnaam = pointid, datum, periode_in_jaar) %>%
+  arrange(plotnaam, datum) %>%
+  mutate(aantal_periodes = n(),
+         is_na = ifelse(is.na(periode_in_jaar), TRUE, ""),
+         .by = "plotnaam") %>%
+  kable()
+```
+
 <!-- spell-check: ignore:start -->
 
-- Ol_18064.5: nultellingen
-- Zn_56194.1.1: nultellingen
 - Km_21470.1.4: nultelling
 - Ol_1585.1: nultelling
+- Ol_18064.5: nultellingen
 - Ol_6671.7: nultelling
 - Pl_8493.1.5: misverstand met vrijwilliger (oefentelling op dit punt in maart); nultelling toegevoegd door admin SDST00
 - VL0273: nultelling
 - VL0584: kwijt... wordt nagevraagd bij SOVON
+- VL0587:
+- VL0590:
+
+- Zn_56194.1.1: nultellingen
 - Zn_8668.9: correct ingevoerd door freelancer; geen telling in derde ronde
 
 <!-- spell-check: ignore:end -->
