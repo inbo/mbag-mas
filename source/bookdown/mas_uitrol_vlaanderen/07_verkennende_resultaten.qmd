@@ -43,15 +43,26 @@ sample <- tar_read("sample", store = store)
 avimap_visits <- st_read(
   file.path(mbag_dir, "data", "SOVON",
             "Sovon_avimap_601_0_MAS_Vlaanderen_20251119.gpkg"),
-  layer = "avimap_visits"
+  layer = "avimap_visits",
+  quiet = TRUE
 )
 avimap_plots <- st_read(
   file.path(mbag_dir, "data", "SOVON",
             "Sovon_avimap_601_0_MAS_Vlaanderen_20251119.gpkg"),
-  layer = "avimap_plots"
+  layer = "avimap_plots",
+  quiet = TRUE
 ) %>%
   st_drop_geometry() %>%
   select(plotid, pointid = plotname)
+
+r1_start <- "04-01"
+r1_stop <- "04-20"
+r2_start <- "04-21"
+r2_stop <- "05-10"
+r3_start <- "05-11"
+r3_stop <- "06-10"
+r4_start <- "06-21"
+r4_stop <- "07-15"
 
 # Select year and from MAS sample
 avimap_visits_y <- avimap_visits %>%
@@ -63,20 +74,20 @@ avimap_visits_y <- avimap_visits %>%
     datum = ymd(paste(.data$jaar, .data$month, .data$day, sep = "-")),
     periode_in_jaar = case_when(
       datum %within% interval(
-        ymd(paste(jaar, "04-01", sep = "-")),
-        ymd(paste(jaar, "04-20", sep = "-"))
+        ymd(paste(jaar, r1_start, sep = "-")),
+        ymd(paste(jaar, r1_stop, sep = "-"))
       ) ~ "R1",
       datum %within% interval(
-        ymd(paste(jaar, "04-21", sep = "-")),
-        ymd(paste(jaar, "05-10", sep = "-"))
+        ymd(paste(jaar, r2_start, sep = "-")),
+        ymd(paste(jaar, r2_stop, sep = "-"))
       ) ~ "R2",
       datum %within% interval(
-        ymd(paste(jaar, "05-11", sep = "-")),
-        ymd(paste(jaar, "06-10", sep = "-"))
+        ymd(paste(jaar, r3_start, sep = "-")),
+        ymd(paste(jaar, r3_stop, sep = "-"))
       ) ~ "R3",
       datum %within% interval(
-        ymd(paste(jaar, "06-21", sep = "-")),
-        ymd(paste(jaar, "07-15", sep = "-"))
+        ymd(paste(jaar, r4_start, sep = "-")),
+        ymd(paste(jaar, r4_stop, sep = "-"))
       ) ~ "R4"
     )
   ) %>%
@@ -117,7 +128,7 @@ tot_summary_obs <- mas_data_clean %>%
   )
 ```
 
-In totaal werd in kader van het MAS Vlaanderen sinds 2023 `r tot_summary_visits$tellingen` gedaan op `r tot_summary_visits$telpunten` verschillende telpunten door `r tot_summary_visits$tellers` verschillende tellers. Er werden in totaal `r tot_summary_obs$waarnemingen[1]` waarnemingen gedaan van `r tot_summary_obs$soorten[1]` verschillende soorten vogels en `r tot_summary_obs$waarnemingen[2]` waarnemingen van `r tot_summary_obs$soorten[2]` verschillende soorten zoogdieren (en `r tot_summary_obs$waarnemingen[3]` waarnemingen van `r tot_summary_obs$soorten[3]` verzamelgroepen). Voor verdere resultaten beschouwen we enkel vogels (@tbl-aantallen-jaar, @tbl-aantallen-jaarregio).
+In totaal werd in kader van het MAS Vlaanderen `r tot_summary_visits$tellingen` tellingen gedaan sinds 2023 op `r tot_summary_visits$telpunten` verschillende telpunten door `r tot_summary_visits$tellers` verschillende tellers. Er werden in totaal `r tot_summary_obs$waarnemingen[1]` waarnemingen gedaan van `r tot_summary_obs$soorten[1]` verschillende soorten vogels en `r tot_summary_obs$waarnemingen[2]` waarnemingen van `r tot_summary_obs$soorten[2]` verschillende soorten zoogdieren (en `r tot_summary_obs$waarnemingen[3]` waarnemingen van `r tot_summary_obs$soorten[3]` verzamelgroepen). Voor verdere resultaten beschouwen we enkel vogels (@tbl-aantallen-jaar, @tbl-aantallen-jaarregio).
 
 ```{r}
 # Birds only
@@ -242,7 +253,7 @@ Zowel voor het aantal waarnemingen als voor het aantal soorten zijn de gemiddeld
 #| label: fig-boxplot-aantallen
 #| fig-cap: "Spreiding van het aantal waarnemingen(**A.**) en soorten (**B.**)
 #|  per telling (telpunt per telperiode per jaar) als boxplots."
-#| fig-height: 12.5
+#| fig-height: 12
 #| fig-width: 8
 # Shared ordering of regions based on observation counts
 regio_order <- mas_data_clean %>%
@@ -261,7 +272,9 @@ p_obs <- mas_data_clean %>%
   geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
   geom_boxplot() +
   facet_grid(rows = "jaar") +
-  labs(x = "Telperiode", y = "Aantal waarnemingen per telpunt", fill = "Regio")
+  labs(x = "Telperiode", y = "Aantal waarnemingen\nper telpunt",
+       fill = "Regio") +
+  theme(legend.position = "bottom")
 
 p_spec <- mas_data_clean %>%
   group_by(regio, jaar, periode_in_jaar, plotnaam) %>%
@@ -271,7 +284,8 @@ p_spec <- mas_data_clean %>%
   geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
   geom_boxplot() +
   facet_grid(rows = "jaar") +
-  labs(x = "Telperiode", y = "Aantal soorten per telpunt", fill = "Regio")
+  labs(x = "Telperiode", y = "Aantal soorten\nper telpunt", fill = "Regio") +
+  theme(legend.position = "bottom")
 
 # 1. Extract the shared legend (keep it vertical)
 legend_shared <- cowplot::get_legend(p_obs)
@@ -280,6 +294,8 @@ legend_shared <- cowplot::get_legend(p_obs)
 p_obs2 <- p_obs +
   theme_minimal(base_size = 12) +
   theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
     legend.position = "none",
     strip.text = element_text(face = "bold")
   )
@@ -303,12 +319,93 @@ plots_combined <- cowplot::plot_grid(
 # 4. Add the shared legend to the right of both
 final_plot <- cowplot::plot_grid(
   plots_combined, legend_shared,
-  ncol = 2,
-  rel_widths = c(1, 0.3)  # adjust legend width
+  nrow = 2,
+  rel_heights = c(1, 0.3)  # adjust legend width
 )
 
 # 5. Display final figure
 final_plot
+```
+
+@fig-cumspec toont het cumulatief aantal vogelsoorten dat per regio werd waargenomen gedurende de verschillende telperiodes binnen een jaar (enkel waarnemingen met broedcode > 0).
+De lijnen geven het totaal aantal waargenomen soorten weer, terwijl de verticale streepjes (|) de dagelijkse toename van nieuwe soorten illustreren.
+
+Het patroon van de streepjes laat zien dat de meeste nieuwe soorten vooral aan het begin van het telseizoen werden waargenomen (R1 en R2). In latere perioden (R3 en R4) zijn de streepjes lichter en minder frequent, wat aangeeft dat er in deze fasen weinig nieuwe soorten aan de cumulatieve telling werden toegevoegd. Dit suggereert dat het merendeel van de soorten vroeg in het seizoen wordt geregistreerd.
+
+De verschillende regio's volgen over het algemeen vergelijkbare patronen. In de Weidestreek worden telkens duidelijk minder soorten waargenomen, wat samenhangt met het relatief kleine oppervlak van deze regio. De onderlinge posities van de curves van de andere regio's verschillen tussen de jaren, waardoor er geen eenduidige conclusies over deze verschillen kunnen worden getrokken.
+
+```{r}
+#| label: fig-cumspec
+#| fig-cap: "Cumulatief aantal vogelsoorten die wordt waargenomen per regio
+#|  tijdens de verschillende telperioden. De lijnen tonen het cumulatief aantal
+#|  soorten, de verticale streepjes (|) geven de dagelijkse toename weer."
+#| fig-height: 8
+#| fig-width: 8
+# Calculate the cumulative number of species over time for each agricultural
+# region
+cum_aantal_spec <- mas_data_clean %>%
+  filter(wrntype != "0") %>%
+  group_by(jaar, regio, naam) %>%
+  filter(datum == min(datum)) %>%
+  slice(1) %>% # takes the first occurrence if there is a tie
+  ungroup() %>%
+  group_by(jaar, regio, datum) %>%
+  summarise(
+    n_spec = n_distinct(naam),
+    .groups = "drop"
+  ) %>%
+  group_by(jaar, regio) %>%
+  arrange(datum) %>%
+  mutate(cum_sum = cumsum(n_spec)) %>%
+  ungroup() %>%
+  mutate(
+    datum_md = as.Date(format(datum, "2000-%m-%d"))  # always year = 2000
+  )
+
+make_md <- function(x) as.Date(paste0("2000-", x))
+
+r1_start_md <- make_md(r1_start)
+r1_stop_md  <- make_md(r1_stop)
+r2_start_md <- make_md(r2_start)
+r2_stop_md  <- make_md(r2_stop)
+r3_start_md <- make_md(r3_start)
+r3_stop_md  <- make_md(r3_stop)
+r4_start_md <- make_md(r4_start)
+r4_stop_md  <- make_md(r4_stop)
+
+# Create plot per region
+cum_aantal_spec %>%
+  ggplot(aes(x = datum_md, y = cum_sum, colour = regio)) +
+  # Add shade for counting periods
+  annotate("rect", xmin = r1_start_md, xmax = r1_stop_md, ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+  annotate("text", x = r1_start_md + (r1_stop_md - r1_start_md) / 2, y = 0,
+           label = "R1", vjust = -1) +
+
+  annotate("rect", xmin = r2_start_md, xmax = r2_stop_md, ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+  annotate("text", x = r2_start_md + (r2_stop_md - r2_start_md) / 2, y = 0,
+           label = "R2", vjust = -1) +
+
+  annotate("rect", xmin = r3_start_md, xmax = r3_stop_md, ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+  annotate("text", x = r3_start_md + (r3_stop_md - r3_start_md) / 2, y = 0,
+           label = "R3", vjust = -1) +
+
+  annotate("rect", xmin = r4_start_md, xmax = r4_stop_md, ymin = 0, ymax = Inf,
+           alpha = 0.2) +
+  annotate("text", x = r4_start_md + (r4_stop_md - r4_start_md) / 2, y = 0,
+           label = "R4", vjust = -1) +
+  # Add line
+  geom_line(linewidth = 1) +
+  geom_text(aes(label = "|", alpha = n_spec), colour = "black", vjust = 0.25,
+            size = 3) +
+  scale_alpha_continuous(trans = "log1p", range = c(0.3, 1), guide = "none") +
+  facet_grid(rows = "jaar") +
+  labs(x = "", y = "Totaal aantal soorten", colour = "Regio") +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "bottom",
+        strip.text = element_text(face = "bold"))
 ```
 
 ## Vrijwilligerswerking
