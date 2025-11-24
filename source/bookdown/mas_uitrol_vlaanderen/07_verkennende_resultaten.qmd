@@ -1,12 +1,187 @@
 # Veldwerk en verkennende resultaten {#sec-verk-resultaten}
 
-<!-- spell-check: ignore:start -->
+```{r}
+#| include: FALSE
+# set up
+library(knitr)
+opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+```{r}
+# packages
+library(tidyverse)
+library(targets)
+library(sf)
+
+library(INBOtheme)
+theme_set(theme_inbo(transparent = TRUE))
+
+# Conflicts
+conflicted::conflicts_prefer(dplyr::filter)
+conflicted::conflicts_prefer(dplyr::select)
+
+# Paths
+mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
+store <- file.path(
+  mbag_dir, "source", "targets", "data_preparation", "_targets"
+)
+```
 
 ## Overzicht veldwerk
 
 - Ward enkele cijfers/tabellen van aantal tellers, telpunten elk jaar
 
-<!-- spell-check: ignore:end -->
+```{r}
+# Read sample
+sample <- tar_read("sample", store = store)
+
+# Read visits
+avimap_visits <- st_read(
+  file.path(mbag_dir, "data", "SOVON",
+            "Sovon_avimap_601_0_MAS_Vlaanderen_20251119.gpkg"),
+  layer = "avimap_visits"
+)
+avimap_plots <- st_read(
+  file.path(mbag_dir, "data", "SOVON",
+            "Sovon_avimap_601_0_MAS_Vlaanderen_20251119.gpkg"),
+  layer = "avimap_plots"
+) %>%
+  st_drop_geometry() %>%
+  select(plotid, pointid = plotname)
+
+# Select year and from MAS sample
+avimap_visits_y <- avimap_visits %>%
+  filter(jaar %in% 2023:2025) %>%
+  select(plotid, observer, jaar, month, day) %>%
+  left_join(avimap_plots, by = join_by(plotid)) %>%
+  inner_join(sample, by = join_by(pointid)) %>%
+  mutate(
+    datum = ymd(paste(.data$jaar, .data$month, .data$day, sep = "-")),
+    periode_in_jaar = case_when(
+      datum %within% interval(
+        ymd(paste(jaar, "04-01", sep = "-")),
+        ymd(paste(jaar, "04-20", sep = "-"))
+      ) ~ "R1",
+      datum %within% interval(
+        ymd(paste(jaar, "04-21", sep = "-")),
+        ymd(paste(jaar, "05-10", sep = "-"))
+      ) ~ "R2",
+      datum %within% interval(
+        ymd(paste(jaar, "05-11", sep = "-")),
+        ymd(paste(jaar, "06-10", sep = "-"))
+      ) ~ "R3",
+      datum %within% interval(
+        ymd(paste(jaar, "06-21", sep = "-")),
+        ymd(paste(jaar, "07-15", sep = "-"))
+      ) ~ "R4"
+    )
+  ) %>%
+  filter(!is.na(periode_in_jaar),
+         !(jaar == 2023 & !grepl("leemstreek$", regio))) %>%
+  mutate(
+    regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
+  ) %>%
+  select("plotnaam" = "pointid", "regio", "openheid" = "openheid_klasse",
+         "sbp", "jaar", "month", "day", "datum", "periode_in_jaar", "observer")
+
+tot_summary_visits <- avimap_visits_y %>%
+  summarise(
+    tellingen = n(),
+    telpunten = n_distinct(plotnaam),
+    tellers = n_distinct(observer)
+  )
+```
+
+```{r}
+mas_data_clean <- tar_read("mas_data_clean", store = store) %>%
+  st_drop_geometry() %>%
+  filter(jaar >= 2023) %>%
+  mutate(
+    regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
+  )
+
+taxon_list <- tar_read("map_species_aggregates", store = store) %>%
+  select(-c("tar_group", "dwc_taxonID")) %>%
+  distinct()
+
+tot_summary_obs <- mas_data_clean %>%
+  left_join(taxon_list, by = join_by("naam" == "dwc_vernacularName")) %>%
+  summarise(
+    waarnemingen = n(),
+    soorten = n_distinct(naam),
+    .by = c("soortgrp", "verbatimTaxonRank")
+  )
+```
+
+In totaal werd in kader van het MAS Vlaanderen sinds 2023 `r tot_summary_visits$tellingen` gedaan op `r tot_summary_visits$telpunten` verschillende telpunten door `r tot_summary_visits$tellers` verschillende tellers. Er werden in totaal `r tot_summary_obs$waarnemingen[1]` waarnemingen gedaan van `r tot_summary_obs$soorten[1]` verschillende soorten vogels en `r tot_summary_obs$waarnemingen[2]` waarnemingen van `r tot_summary_obs$soorten[2]` verschillende soorten zoogdieren (+ `r tot_summary_obs$waarnemingen[3]` waarnememingen van `r tot_summary_obs$soorten[3]` verzamelgroepen). Voor verdere resultaten beschouwen we enkel vogels (@tbl-aantallen-jaar, @tbl-aantallen-jaarregio).
+
+```{r}
+# Summarise visits
+summary_visits_year <- avimap_visits_y %>%
+  summarise(
+    tellingen = n(),
+    telpunten = n_distinct(plotnaam),
+    tellers = n_distinct(observer),
+    .by = "jaar"
+  ) %>%
+  arrange(jaar)
+
+summary_visits_region <- avimap_visits_y %>%
+  summarise(
+    tellingen = n(),
+    telpunten = n_distinct(plotnaam),
+    tellers = n_distinct(observer),
+    .by = c("jaar", "regio")
+  ) %>%
+  arrange(jaar, regio)
+
+# Summarise observations
+summary_obs_year <- mas_data_clean %>%
+  filter(soortgrp == 2) %>%
+  summarise(
+    waarnemingen = n(),
+    individuen = sum(aantal),
+    soorten = n_distinct(naam),
+    .by = "jaar"
+  ) %>%
+  arrange(jaar)
+
+summary_obs_region <- mas_data_clean %>%
+  filter(soortgrp == 2) %>%
+  summarise(
+    waarnemingen = n(),
+    individuen = sum(aantal),
+    soorten = n_distinct(naam),
+    .by = c("jaar", "regio")
+  ) %>%
+  arrange(jaar, regio)
+```
+
+```{r}
+#| label: tbl-aantallen-jaar
+#| tbl-cap: "Inspannings- en waarnemingssamenvatting (enkel vogels) per jaar."
+summary_visits_year %>%
+  left_join(summary_obs_year, by = join_by(jaar)) %>%
+  kable(booktabs = TRUE) %>%
+  kableExtra::kable_styling(latex_options = c("striped")) %>%
+  kableExtra::row_spec(0, bold = TRUE)
+```
+
+
+```{r}
+#| label: tbl-aantallen-jaarregio
+#| tbl-cap: "Inspannings- en waarnemingssamenvatting (enkel vogels) per jaar en regio."
+summary_visits_region %>%
+  left_join(summary_obs_region, by = join_by(jaar, regio)) %>%
+  kable(booktabs = TRUE) %>%
+  kableExtra::kable_styling(latex_options = c("striped")) %>%
+  kableExtra::row_spec(0, bold = TRUE)
+```
+
 
 ## Vrijwilligerswerking
 
