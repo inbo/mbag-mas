@@ -20,6 +20,8 @@ library(sf)
 library(INBOtheme)
 theme_set(theme_inbo(transparent = TRUE))
 
+source(file.path("scripts", "describe_region_stats.R"))
+
 # Conflicts
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::select)
@@ -32,8 +34,6 @@ store <- file.path(
 ```
 
 ## Overzicht veldwerk
-
-- Ward enkele cijfers/tabellen van aantal tellers, telpunten elk jaar
 
 ```{r}
 # Read sample
@@ -117,9 +117,13 @@ tot_summary_obs <- mas_data_clean %>%
   )
 ```
 
-In totaal werd in kader van het MAS Vlaanderen sinds 2023 `r tot_summary_visits$tellingen` gedaan op `r tot_summary_visits$telpunten` verschillende telpunten door `r tot_summary_visits$tellers` verschillende tellers. Er werden in totaal `r tot_summary_obs$waarnemingen[1]` waarnemingen gedaan van `r tot_summary_obs$soorten[1]` verschillende soorten vogels en `r tot_summary_obs$waarnemingen[2]` waarnemingen van `r tot_summary_obs$soorten[2]` verschillende soorten zoogdieren (+ `r tot_summary_obs$waarnemingen[3]` waarnememingen van `r tot_summary_obs$soorten[3]` verzamelgroepen). Voor verdere resultaten beschouwen we enkel vogels (@tbl-aantallen-jaar, @tbl-aantallen-jaarregio).
+In totaal werd in kader van het MAS Vlaanderen sinds 2023 `r tot_summary_visits$tellingen` gedaan op `r tot_summary_visits$telpunten` verschillende telpunten door `r tot_summary_visits$tellers` verschillende tellers. Er werden in totaal `r tot_summary_obs$waarnemingen[1]` waarnemingen gedaan van `r tot_summary_obs$soorten[1]` verschillende soorten vogels en `r tot_summary_obs$waarnemingen[2]` waarnemingen van `r tot_summary_obs$soorten[2]` verschillende soorten zoogdieren (en `r tot_summary_obs$waarnemingen[3]` waarnemingen van `r tot_summary_obs$soorten[3]` verzamelgroepen). Voor verdere resultaten beschouwen we enkel vogels (@tbl-aantallen-jaar, @tbl-aantallen-jaarregio).
 
 ```{r}
+# Birds only
+mas_data_clean <- mas_data_clean %>%
+  filter(soortgrp == 2)
+
 # Summarise visits
 summary_visits_year <- avimap_visits_y %>%
   summarise(
@@ -141,7 +145,6 @@ summary_visits_region <- avimap_visits_y %>%
 
 # Summarise observations
 summary_obs_year <- mas_data_clean %>%
-  filter(soortgrp == 2) %>%
   summarise(
     waarnemingen = n(),
     individuen = sum(aantal),
@@ -151,7 +154,6 @@ summary_obs_year <- mas_data_clean %>%
   arrange(jaar)
 
 summary_obs_region <- mas_data_clean %>%
-  filter(soortgrp == 2) %>%
   summarise(
     waarnemingen = n(),
     individuen = sum(aantal),
@@ -171,10 +173,10 @@ summary_visits_year %>%
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
-
 ```{r}
 #| label: tbl-aantallen-jaarregio
-#| tbl-cap: "Inspannings- en waarnemingssamenvatting (enkel vogels) per jaar en regio."
+#| tbl-cap: "Inspannings- en waarnemingssamenvatting (enkel vogels) per jaar en
+#|  regio."
 summary_visits_region %>%
   left_join(summary_obs_region, by = join_by(jaar, regio)) %>%
   kable(booktabs = TRUE) %>%
@@ -182,6 +184,107 @@ summary_visits_region %>%
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
+```{r}
+# Calculate mean number of observations per location
+obs_per_location <- mas_data_clean %>%
+  group_by(regio, jaar, periode_in_jaar, plotnaam) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  summarise(
+    mean = mean(n),
+    sd = sd(n),
+    median = median(n),
+    iqr = quantile(n, 0.75) - quantile(n, 0.25),
+    .by = "regio"
+  ) %>%
+  arrange(mean)
+
+# Calculate mean number of species per location
+spec_per_location <- mas_data_clean %>%
+  group_by(regio, jaar, periode_in_jaar, plotnaam) %>%
+  summarise(n = n_distinct(naam), .groups = "drop") %>%
+  summarise(
+    mean = mean(n),
+    sd = sd(n),
+    .by = "regio"
+  ) %>%
+  arrange(mean)
+```
+
+`r str_sub(describe_region_stats(obs_per_location, lab = "aantal waarnemingen per telpunt"), end = -2)` (@fig-boxplot-aantallen A).
+`r str_sub(describe_region_stats(spec_per_location, lab = "aantal soorten per telpunt"), end = -2)` (@fig-boxplot-aantallen B).
+
+```{r}
+#| label: fig-boxplot-aantallen
+#| fig-cap: "Spreiding van het aantal waarnemingen(**A.**) en soorten (**B.**)
+#|  per telling (telpunt per telperiode per jaar) als boxplots."
+#| fig-height: 12.5
+#| fig-width: 8
+# Shared ordering of regions based on observation counts
+regio_order <- mas_data_clean %>%
+  group_by(regio, jaar, periode_in_jaar, plotnaam) %>%
+  summarise(n_obs = n(), .groups = "drop") %>%
+  summarise(mean_obs = mean(n_obs), .by = "regio") %>%
+  arrange(mean_obs) %>%
+  pull(regio)
+
+# Make plots
+p_obs <- mas_data_clean %>%
+  group_by(regio, jaar, periode_in_jaar, plotnaam) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  mutate(regio = factor(regio, levels = regio_order)) %>%
+  ggplot(aes(x = periode_in_jaar, y = n, fill = regio)) +
+  geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
+  geom_boxplot() +
+  facet_grid(rows = "jaar") +
+  labs(x = "Telperiode", y = "Aantal waarnemingen per telpunt", fill = "Regio")
+
+p_spec <- mas_data_clean %>%
+  group_by(regio, jaar, periode_in_jaar, plotnaam) %>%
+  summarise(n = n_distinct(naam), .groups = "drop") %>%
+  mutate(regio = factor(regio, levels = regio_order)) %>%
+  ggplot(aes(x = periode_in_jaar, y = n, fill = regio)) +
+  geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
+  geom_boxplot() +
+  facet_grid(rows = "jaar") +
+  labs(x = "Telperiode", y = "Aantal soorten per telpunt", fill = "Regio")
+
+# 1. Extract the shared legend (keep it vertical)
+legend_shared <- cowplot::get_legend(p_obs)
+
+# 2. Remove legends from the individual plots
+p_obs2 <- p_obs +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "none",
+    strip.text = element_text(face = "bold")
+  )
+p_spec2  <- p_spec +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "none",
+    strip.text = element_text(face = "bold")
+  )
+
+# 3. Combine the two plots vertically
+plots_combined <- cowplot::plot_grid(
+  p_obs2, p_spec2,
+  ncol = 1,
+  labels = c("A.", "B."),
+  label_size = 20,
+  label_fontface = "bold",
+  scale = c(0.95, 0.95)
+)
+
+# 4. Add the shared legend to the right of both
+final_plot <- cowplot::plot_grid(
+  plots_combined, legend_shared,
+  ncol = 2,
+  rel_widths = c(1, 0.3)  # adjust legend width
+)
+
+# 5. Display final figure
+final_plot
+```
 
 ## Vrijwilligerswerking
 
