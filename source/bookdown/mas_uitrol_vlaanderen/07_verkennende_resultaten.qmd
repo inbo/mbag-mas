@@ -251,7 +251,7 @@ Zowel voor het aantal waarnemingen als voor het aantal soorten zijn de gemiddeld
 
 ```{r}
 #| label: fig-boxplot-aantallen
-#| fig-cap: "Spreiding van het aantal waarnemingen(**A.**) en soorten (**B.**)
+#| fig-cap: "Spreiding van het aantal waarnemingen(**A**) en soorten (**B**)
 #|  per telling (telpunt per telperiode per jaar) als boxplots."
 #| fig-height: 12
 #| fig-width: 8
@@ -270,9 +270,9 @@ p_obs <- mas_data_clean %>%
   mutate(regio = factor(regio, levels = regio_order)) %>%
   ggplot(aes(x = periode_in_jaar, y = n, fill = regio)) +
   geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
-  geom_boxplot() +
+  geom_boxplot(colour = "black", size = 0.3) +
   facet_grid(rows = "jaar") +
-  labs(x = "Telperiode", y = "Aantal waarnemingen\nper telpunt",
+  labs(x = "Telperiode", y = "Aantal waarnemingen per telpunt",
        fill = "Regio") +
   theme(legend.position = "bottom")
 
@@ -282,9 +282,9 @@ p_spec <- mas_data_clean %>%
   mutate(regio = factor(regio, levels = regio_order)) %>%
   ggplot(aes(x = periode_in_jaar, y = n, fill = regio)) +
   geom_hline(yintercept = 0, alpha = 0.2, linetype = "dashed") +
-  geom_boxplot() +
+  geom_boxplot(colour = "black", size = 0.3) +
   facet_grid(rows = "jaar") +
-  labs(x = "Telperiode", y = "Aantal soorten\nper telpunt", fill = "Regio") +
+  labs(x = "Telperiode", y = "Aantal soorten per telpunt", fill = "Regio") +
   theme(legend.position = "bottom")
 
 # 1. Extract the shared legend (keep it vertical)
@@ -316,11 +316,11 @@ plots_combined <- cowplot::plot_grid(
   scale = c(0.95, 0.95)
 )
 
-# 4. Add the shared legend to the right of both
+# 4. Add the shared legend below
 final_plot <- cowplot::plot_grid(
   plots_combined, legend_shared,
   nrow = 2,
-  rel_heights = c(1, 0.3)  # adjust legend width
+  rel_heights = c(1, 0.2)  # adjust legend heigth
 )
 
 # 5. Display final figure
@@ -397,7 +397,7 @@ cum_aantal_spec %>%
   annotate("text", x = r4_start_md + (r4_stop_md - r4_start_md) / 2, y = 0,
            label = "R4", vjust = -1) +
   # Add line
-  geom_line(linewidth = 1) +
+  geom_line(linewidth = 1.5) +
   geom_text(aes(label = "|", alpha = n_spec), colour = "black", vjust = 0.25,
             size = 3) +
   scale_alpha_continuous(trans = "log1p", range = c(0.3, 1), guide = "none") +
