@@ -1,4 +1,4 @@
-# Veldwerk en verkennende resultaten {#sec-verk-resultaten}
+# Overzicht van het veldwerk {#sec-veldwerk}
 
 ```{r}
 #| include: FALSE
@@ -33,7 +33,7 @@ store <- file.path(
 )
 ```
 
-## Overzicht veldwerk
+## Enkele cijfers
 
 ```{r}
 # Read sample
@@ -253,7 +253,7 @@ Zowel voor het aantal waarnemingen als voor het aantal soorten zijn de gemiddeld
 #| label: fig-boxplot-aantallen
 #| fig-cap: "Spreiding van het aantal waarnemingen(**A**) en soorten (**B**)
 #|  per telling (telpunt per telperiode per jaar) als boxplots."
-#| fig-height: 12
+#| fig-height: 10
 #| fig-width: 8
 # Shared ordering of regions based on observation counts
 regio_order <- mas_data_clean %>%
@@ -514,15 +514,3 @@ Hoewel heel wat meetnetten moeite ondervinden om vrijwilligers te vinden en te b
 Even belangrijk is terugkoppeling naar bestaande tellers om de uitval beperkt te houden en zo continuïteit te verzekeren. Met het oog op betrouwbare data trachten we immers maximaal dezelfde tellers op dezelfde telpunten te behouden. We luisterden naar hun noden, bedenkingen en verwachtingen. Daarbij werd duidelijk dat de motivaties om MAS-tellingen uit te voeren en de bijbehorende verwachtingen divers zijn, gaande van ‘een bijdrage leveren aan akkervogelonderzoek’ tot ‘interesse hebben in cijfers, conclusies en perspectieven m.b.t. akkervogels’. De meeste tellers verwachten immers resultaten te zien in ruil voor hun inspanningen.
 
 We beschouwen vrijwilligerswerking als tweerichtingsverkeer. Het vergt jaarrond een inspanning, niet enkel in de aanloop naar of tijdens het telseizoen. Onze seizoensafsluiter, akkervogelwandelingen, slaapplaatstellingen van blauwe kiekendief in de winter en dergelijke initiatieven kaderen in deze jaarrondaanpak. Hiervoor werd dan ook voldoende werktijd voorzien. Deze aanpak resulteerde in een heel beperkte uitval van vrijwilligers: tussen de telseizoenen 2024 en 2025 ging het om slechts vier personen.
-
-<!-- spell-check: ignore:start -->
-
-## Verkennende analyses
-
-- Ward enkele simpele verkennende analyses
-
-### Data 2023
-
-### Data 2024-2025
-
-<!-- spell-check: ignore:end -->
