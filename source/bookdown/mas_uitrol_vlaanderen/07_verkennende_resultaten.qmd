@@ -198,6 +198,18 @@ obs_per_location <- mas_data_clean %>%
   ) %>%
   arrange(mean)
 
+obs_per_period <- mas_data_clean %>%
+  group_by(regio, jaar, periode_in_jaar, plotnaam) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  summarise(
+    mean = mean(n),
+    sd = sd(n),
+    median = median(n),
+    iqr = quantile(n, 0.75) - quantile(n, 0.25),
+    .by = "periode_in_jaar"
+  ) %>%
+  arrange(periode_in_jaar)
+
 # Calculate mean number of species per location
 spec_per_location <- mas_data_clean %>%
   group_by(regio, jaar, periode_in_jaar, plotnaam) %>%
@@ -208,10 +220,23 @@ spec_per_location <- mas_data_clean %>%
     .by = "regio"
   ) %>%
   arrange(mean)
+
+spec_per_period <- mas_data_clean %>%
+  group_by(regio, jaar, periode_in_jaar, plotnaam) %>%
+  summarise(n = n_distinct(naam), .groups = "drop") %>%
+  summarise(
+    mean = mean(n),
+    sd = sd(n),
+    median = median(n),
+    iqr = quantile(n, 0.75) - quantile(n, 0.25),
+    .by = "periode_in_jaar"
+  ) %>%
+  arrange(periode_in_jaar)
 ```
 
 `r str_sub(describe_region_stats(obs_per_location, lab = "aantal waarnemingen per telpunt"), end = -2)` (@fig-boxplot-aantallen A).
 `r str_sub(describe_region_stats(spec_per_location, lab = "aantal soorten per telpunt"), end = -2)` (@fig-boxplot-aantallen B).
+Zowel voor het aantal waarnemingen als voor het aantal soorten zijn de gemiddelde aantallen in telrondes 1 en 3 gelijkaardig (waarnemingen: R1 - `r round(spec_per_period$mean[1], 2)` met SD van `r round(spec_per_period$sd[1], 2)`, R3 - `r round(spec_per_period$mean[3], 2)` met SD van `r round(spec_per_period$sd[3], 2)`; soorten: R1 - `r round(spec_per_period$mean[1], 2)` met SD van `r round(spec_per_period$sd[1], 2)`, R3 - `r round(spec_per_period$mean[3], 2)` met SD van `r round(spec_per_period$sd[3], 2)`). De gemiddelde aantallen zijn telkens het hoogst in telronde 2 (waarnemingen: `r round(spec_per_period$mean[2], 2)` met SD van `r round(spec_per_period$sd[2], 2)`; soorten: `r round(spec_per_period$mean[2], 2)` met SD van `r round(spec_per_period$sd[2], 2)`) en het laagst in telronde 4 (waarnemingen: `r round(spec_per_period$mean[4], 2)` met SD van `r round(spec_per_period$sd[4], 2)`; soorten: `r round(spec_per_period$mean[4], 2)` met SD van `r round(spec_per_period$sd[4], 2)`).
 
 ```{r}
 #| label: fig-boxplot-aantallen
