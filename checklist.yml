@@ -36,3 +36,4 @@ spelling:
     - source/bookdown/mas_uitrol_vlaanderen/scripts/summarise_detection_patterns.R
     - source/bookdown/mas_uitrol_vlaanderen/scripts/summarise_region_densities.R
     - source/bookdown/mas_uitrol_vlaanderen/scripts/summarise_stratum_densities.R
+    - source/bookdown/mas_uitrol_vlaanderen/scripts/describe_region_stats.R
