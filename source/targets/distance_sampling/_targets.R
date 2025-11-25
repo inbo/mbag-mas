@@ -282,7 +282,8 @@ list(
         "Wulp",
         # MAS Vlaanderen
         "Kwartel",
-        "Witte Kwikstaart"
+        "Witte Kwikstaart",
+        "Haas"
       )
     ),
 
