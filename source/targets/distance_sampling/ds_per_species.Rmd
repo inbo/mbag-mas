@@ -124,7 +124,7 @@ for (i in seq_along(params$years[params$years > 2023])) {
         jaar = y
       )
   }
-  
+
   preds_smooth <- tar_read_ds("model_pred_smooth", params$species, year = y,
                               start_year = 2024)
 

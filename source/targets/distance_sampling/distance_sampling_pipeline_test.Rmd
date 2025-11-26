@@ -981,7 +981,7 @@ pred_dens2 %>%
   geom_raster(aes(x = x, y = y, fill = pred_dens),
               colour = NA, interpolate = TRUE) +
   # Points with size proportional to count
-  geom_point(data = count_df %>% 
+  geom_point(data = count_df %>%
                mutate(x = st_coordinates(geometry)[, 1],
                       y = st_coordinates(geometry)[, 2]),
              aes(x = x, y = y, size = count, fill = count),
