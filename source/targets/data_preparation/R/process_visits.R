@@ -40,7 +40,6 @@ process_visits <- function(visits, sample_points) {
     select(all_of(c(names(visits), "date", "period_count",
                     "regio", "openheid_klasse", "sbp",
                     "x_coord", "y_coord", "crs"))) %>%
-    select(-"plotid") %>%
-    rename("year" = "jaar") %>%
-    arrange(.data$year, .data$pointid, .data$date)
+    rename("plotnaam" = "pointid", "year" = "jaar") %>%
+    arrange(.data$year, .data$plotnaam, .data$date)
 }

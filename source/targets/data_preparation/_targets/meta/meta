@@ -144,8 +144,10 @@ visits_file|stem|b54660b9ff3cb970|daa0eac73f390533|9584eaa1b6741b26|1701782122|C
 visits_raw|stem|cfec2f80ca1acbab|2df2ccb0527761de|dc3449ecfbac3f9e|885036080||t20418.5406241522s|s42544b|42544|qs|local|vector|||0.44||
 plots_raw|stem|da6304dd57c766e3|8c011bc9d50e8818|dc3449ecfbac3f9e|1140618492||t20418.5406259809s|s12583b|12583|qs|local|vector|||0.02||
 visits_full|stem|29c7aa8257316cc6|c7d8be592a05c860|b63950f73b5a37bc|408810546||t20418.5406283405s|s73238b|73238|qs|local|vector|||0||
+visits_mas|stem|b625f08111aabc4a|0ace5eba078a0865|4ab57a3281642389|-714899716||t20418.5617586349s|s81263b|81263|qs|local|vector|||0.24||
+visits_mas_path|stem|7c2730ae6d6d54a9|914778566c48517f|2f5eccb612dea1cb|881559154||t20418.5617643492s|s154b|154|qs|local|vector|||0.27||
 blur_occurrences|function|4244a470afe7b222
-.Random.seed|object|b0dde47fa98a8e14
+.Random.seed|object|af50b0d2ca59ffaf
 anonymise_observers|function|8071276ca572efbb
 select_within_time_periods|function|cef082360b8f88a8
 process_double_counted_data|function|d8970250631fa013
@@ -173,7 +175,7 @@ publication_year|object|bc7018bec7ff711e
 static_mapping|function|ebe8029e62f41997
 finalise_dwc_df|function|fc26a4c7ff9b9344
 mbag_dir|object|07d3b4b81c7eb6b1
-process_visits|function|ec8e86e41b4aa946
+process_visits|function|0dd6c06279d77457
 modified_mapping|function|1794207b37cd29c8
 match_vernacular_name|function|6d739945e8468afe
 predatoren_f|function|e0a123d0ad124cae
@@ -181,5 +183,3 @@ rbind_all_mas_data|function|594bd7f28dee51e8
 dwc_mapping|function|7e20ab223d01d3ab
 map_taxa_from_vernacular|function|c0ed976223f1179c
 add_predator_variables|function|f07989cb34e7b00f
-visits_mas|stem|0f3daebe05d0e529|0ace5eba078a0865|69e125e7b26050c8|-714899716||t20418.5489219903s|s77562b|77562|qs|local|vector|||0.24||
-visits_mas_path|stem|7c2730ae6d6d54a9|914778566c48517f|223ff62112db68cf|881559154||t20418.5489273267s|s154b|154|qs|local|vector|||0.27||
