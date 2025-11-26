@@ -111,6 +111,57 @@ list(
     iteration = "list"
   ),
 
+  # Create visits dataset to potentially add absences
+  # File path
+  tarchetypes::tar_file(
+    name = visits_file,
+    command = file.path(mbag_dir, "data", "SOVON",
+                        "Sovon_avimap_601_0_MAS_Vlaanderen_20251119.gpkg")
+  ),
+  # Get visits
+  tar_target(
+    name = visits_raw,
+    command = sf::st_read(
+      visits_file,
+      layer = "avimap_visits",
+      quiet = TRUE
+    ) %>%
+      select(plotid, observer, jaar, month, day)
+  ),
+  # Get plots
+  tar_target(
+    name = plots_raw,
+    command = sf::st_read(
+      visits_file,
+      layer = "avimap_plots",
+      quiet = TRUE
+    ) %>%
+      sf::st_drop_geometry() %>%
+      select(plotid, pointid = plotname)
+  ),
+  # Join data
+  tar_target(
+    name = visits_full,
+    command = left_join(visits_raw, plots_raw, by = join_by(plotid)) %>%
+      select(plotid, pointid, everything())
+  ),
+  tar_target(
+    name = visits_mas,
+    command = process_visits(
+      visits = visits_full,
+      sample_points = sample
+    )
+  ),
+  tar_target(
+    name = visits_mas_path,
+    command = create_output_csv(
+      visits_mas,
+      file = "bezoekenlijst",
+      path = file.path(mbag_dir, "data", "steekproefkaders"),
+      suffix_by = "year"
+    )
+  ),
+
   # 3. Data selection and preparation steps
 
   # Select data that fall within valid time periods
