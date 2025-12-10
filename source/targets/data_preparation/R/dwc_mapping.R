@@ -287,8 +287,16 @@ add_species_aggregates <- function(
                                       !!!manual_taxon_list)
     ) %>%
     mutate(
-      identificationQualifier = "species aggregate",
-      verbatimTaxonRank = "species aggregate"
+      identificationQualifier = ifelse(
+        is.na(.data$species),
+        "species aggregate",
+        "subspecies aggregate"
+      ),
+      verbatimTaxonRank = ifelse(
+        is.na(.data$species),
+        "species aggregate",
+        "subspecies aggregate"
+      )
     )
 
   # Get other taxa
