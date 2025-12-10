@@ -33,6 +33,7 @@
 4x
 5'
 6x
+Active
 Akkervogelgemeenschappen
 Alauda
 Amersfoord
@@ -42,6 +43,7 @@ Avimap-versie
 BBV
 BO's
 BSCX00
+BY
 Belgium
 Bosonderzoek
 CHM
@@ -169,17 +171,20 @@ WGS
 Westhoekreservaat
 \
 accepted
+actively
 add
 aeroway
 aggregate
 agro-ecologisch
 allocatieproporties
+and
 arquata
 arvensis
 avimap
 avimapcodes
 batching
 beheren'
+being
 beleids
 biogeografische
 birds
@@ -202,6 +207,7 @@ curruca
 cvvi
 day
 design'
+developed
 distance
 double
 dubbelgeteld
@@ -218,6 +224,7 @@ git2rdata
 globals
 groups
 half-open
+has
 height
 highway
 indicatorfunctie
@@ -277,6 +284,7 @@ proffessionele
 publicatieklaar
 puntenset
 rastercel
+reached
 regex
 remove
 replicaten
@@ -292,6 +300,7 @@ soortnamen/auteurs
 sovon
 spatiale
 spec
+stable
 statistical
 ste
 stratificatievariabelen
@@ -322,6 +331,7 @@ toevoegen'
 topographic
 uncut
 union
+usable
 vanellus
 variable
 verbatim
