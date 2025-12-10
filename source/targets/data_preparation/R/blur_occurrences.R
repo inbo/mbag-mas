@@ -38,7 +38,7 @@ blur_occurrences <- function(
         nchar(.data$TAG) == 4 ~ 10,
         TRUE ~ NA_real_
       ),
-      coordinate_uncertainty = sqrt(2 * (.data$spat_res * 1000) ^ 2) / 2
+      coordinate_uncertainty = round(sqrt(2 * (.data$spat_res * 1000) ^ 2) / 2)
     ) %>%
     select("tag" = "TAG", contains("_centroid"), "spat_res",
            "coordinate_uncertainty", "geometry")
