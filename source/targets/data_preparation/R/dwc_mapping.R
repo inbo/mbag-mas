@@ -18,7 +18,7 @@ spatial_mapping <- function(data_df) {
     ) %>%
     # Add CRS
     mutate(
-      dwc_verbatimCoordinateSystem = "BD72 / Belgian Lambert 72",
+      dwc_verbatimCoordinateSystem = "Belgian Lambert 72",
       dwc_verbatimSRS = "EPSG:31370"
     ) %>%
     # Convert to WGS 84 decimal coordinates
