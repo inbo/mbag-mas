@@ -46,8 +46,15 @@ blur_occurrences <- function(
 
 
   # Identify occurrences to blur
-  blur_year <- year(Sys.time()) - blur_years
-  blur_date <- as_date(paste(blur_year, 1, 1, "-"))
+  # Go back blur_years Octobers
+  current_october <- as_date(
+    if (month(Sys.Date()) >= 10) {
+      paste(year(Sys.Date()), "10", "01", sep = "-")
+    } else {
+      paste(year(Sys.Date()) - 1, "10", "01", sep = "-")
+    }
+  )
+  blur_date <- current_october %m-% years(blur_years)
 
   occs_to_blur <- occ_df %>%
     st_as_sf(coords = c("verbatimLongitude", "verbatimLatitude"),
@@ -117,8 +124,8 @@ blur_occurrences <- function(
            -"is_blurred")
 
   # Remove recent occurrences of vulnerable_species
-  embargo_year <- year(Sys.time()) - embargo_years
-  embargo_date <- as_date(paste(embargo_year, 1, 1, "-"))
+  # Go back embargo_years Octobers
+  embargo_date <- current_october %m-% years(embargo_years)
 
   occ_out <- occ_blurred %>%
     filter(
