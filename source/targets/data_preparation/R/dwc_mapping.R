@@ -311,6 +311,8 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
 
   # Join with observations dataset
   taxon_core_final <- taxonomy_df %>%
+    mutate(specificEpithet = gsub("^[a-zA-Z]*\\s", "", .data$species)) %>%
+    select(-"species") %>%
     full_join(
       data_df,
       relationship = "many-to-many",
@@ -348,7 +350,7 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
     # --- Occurrence ---
     "recordedBy",
     "organismQuantity", "organismQuantityType", "lifeStage",
-    "occurrenceStatus", "behavior", "recordNumber",
+    "occurrenceStatus", "behavior", "verbatimBehavior", "recordNumber",
     "occurrenceRemarks",
 
     # --- Location ---
@@ -365,7 +367,7 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
     "taxonID", "scientificName", "scientificNameAuthorship",
     "scientificNameID", "taxonRank", "nomenclaturalCode",
     "verbatimIdentification", "identificationQualifier", "verbatimTaxonRank",
-    "kingdom", "phylum", "class", "order", "family", "genus", "species"
+    "kingdom", "phylum", "class", "order", "family", "genus", "specificEpithet"
   )
   out_df <- out_df[, col_order]
 
