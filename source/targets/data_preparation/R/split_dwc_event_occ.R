@@ -1,4 +1,8 @@
 split_dwc_event_occ <- function(df) {
+  # Remove unnecessary columns
+  df <- df %>%
+    select(-"verbatimBehavior")
+
   # Darwin Core terms suitable for the events file
   event_fields <- c(
     "eventID", "parentEventID", "eventType",
