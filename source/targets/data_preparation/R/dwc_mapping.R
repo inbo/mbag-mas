@@ -48,10 +48,8 @@ static_mapping <- function(data_df) {
       dwc_language             = "en",
       dwc_license              = paste0("http://creativecommons.org/",
                                         "publicdomain/zero/1.0/"),
-      dwc_publisher            = paste0("Research Institute for Nature and",
-                                        "Forest (INBO)"),
-      dwc_rightsHolder         = paste0("Research Institute for Nature and",
-                                        "Forest (INBO)"),
+      dwc_rightsHolder         = paste("Research Institute for Nature and",
+                                       "Forest (INBO)"),
       dwc_accessRights         = "http://www.inbo.be/en/norms-for-data-use",
       dwc_institutionCode      = "INBO",
       dwc_collectionCode       = "MAS",
@@ -335,7 +333,7 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
   # Select and sort columns
   col_order <- c(
     # --- Metadata / Dataset ---
-    "type", "language", "license", "publisher", "rightsHolder", "accessRights",
+    "type", "language", "license", "rightsHolder", "accessRights",
     # "datasetID",
     "collectionCode", "institutionCode",
 
@@ -350,7 +348,7 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
     # --- Occurrence ---
     "recordedBy",
     "organismQuantity", "organismQuantityType", "lifeStage",
-    "occurrenceStatus", "behavior", "verbatimBehavior", "recordNumber",
+    "occurrenceStatus", "behavior", "recordNumber",
     "occurrenceRemarks",
 
     # --- Location ---
