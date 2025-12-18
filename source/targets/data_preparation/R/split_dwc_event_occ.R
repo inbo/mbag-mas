@@ -1,7 +1,6 @@
 split_dwc_event_occ <- function(df) {
   # Remove unnecessary columns
-  df <- df %>%
-    select(-"verbatimBehavior")
+  df <- dplyr::select(df, -"verbatimBehavior")
 
   # Darwin Core terms suitable for the events file
   event_fields <- c(
@@ -22,8 +21,10 @@ split_dwc_event_occ <- function(df) {
   occ_fields <- setdiff(names(df), setdiff(event_fields, "eventID"))
 
   # Select existing columns
-  events_df <- df[, intersect(event_fields, names(df)), drop = FALSE]
-  occ_df    <- df[, intersect(occ_fields,  names(df)), drop = FALSE]
+  events_df <- dplyr::distinct(
+    df[, intersect(event_fields, names(df)), drop = FALSE]
+  )
+  occ_df <- df[, intersect(occ_fields,  names(df)), drop = FALSE]
 
   return(list(events = events_df, occurrences = occ_df))
 }
