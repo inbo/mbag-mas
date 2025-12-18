@@ -123,11 +123,66 @@ blur_occurrences <- function(
     select(-contains("_centroid"), -"coordinate_uncertainty", -"spat_res",
            -"is_blurred")
 
+  # Recalculate event IDs
+  occ_blurred_new <- occ_blurred %>%
+    # Get original event ID suffices
+    rowwise() %>%
+    mutate(
+      original_suffix = gsub(
+        paste0(.data$parentEventID, ":"),
+        "",
+        .data$eventID,
+        fixed = TRUE
+      ),
+      original_suffix = as.integer(sub("^0+", "", .data$original_suffix))
+    ) %>%
+    ungroup() %>%
+    arrange(.data$eventDate) %>%
+    # Regroup by coordinates
+    # Blurred records on same centroids are grouped
+    group_by(.data$eventDate, .data$locationID) %>%
+    mutate(
+      coord_key = paste(
+        .data$verbatimLatitude,
+        .data$verbatimLongitude,
+        sep = "_"
+      )
+    ) %>%
+    ungroup() %>%
+    # New suffices should start from max. of the original
+    group_by(.data$parentEventID) %>%
+    mutate(
+      max_suffix = max(.data$original_suffix, na.rm = TRUE),
+
+      # identify coordinate groups that need a new suffix
+      needs_new = .data$georeferenceRemarks != "",
+
+      # give each *coordinate group* exactly one new number
+      new_group_id = if_else(
+        .data$needs_new,
+        match(.data$coord_key, unique(.data$coord_key[.data$needs_new])),
+        NA_integer_
+      ),
+
+      event_suffix_num = if_else(
+        .data$needs_new,
+        .data$max_suffix + .data$new_group_id,
+        .data$original_suffix
+      )
+    ) %>%
+    ungroup() %>%
+    mutate(
+      event_suffix = formatC(.data$event_suffix_num, width = 3, flag = "0"),
+      eventID = paste(.data$parentEventID, .data$event_suffix, sep = ":")
+    ) %>%
+    select(-"coord_key", -"max_suffix", -"needs_new", -"new_group_id",
+           -"event_suffix_num", -"event_suffix", -"original_suffix")
+
   # Remove recent occurrences of vulnerable_species
   # Go back embargo_years Octobers
   embargo_date <- current_october %m-% years(embargo_years)
 
-  occ_out <- occ_blurred %>%
+  occ_out <- occ_blurred_new %>%
     filter(
       !(grepl("nest", .data$verbatimBehavior, ignore.case = TRUE) &
           tolower(.data$vernacularName) %in% tolower(vulnerable_species) &
