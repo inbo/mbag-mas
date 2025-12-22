@@ -34,7 +34,9 @@
 5'
 6x
 Akkervogelgemeenschappen
+Alauda
 Amersfoord
+Anthus
 Avimap
 Avimap-versie
 BBV
@@ -65,6 +67,7 @@ Digital
 Duinen/Weidestreek
 DwC
 EPSG
+Emberiza
 FVRT02
 Flanders
 GBIF.org
@@ -74,6 +77,7 @@ GVI
 Geule
 Gittargets
 HGL
+Haematopus
 Hazegraspolder
 Homotypic
 Horvitz-Thomson
@@ -85,6 +89,8 @@ KML
 LEVS01
 Langeraert
 Latham
+Limosa
+Linaria
 MAS-data
 MAS-meetnet
 MAS-pilootstudie
@@ -93,17 +99,21 @@ MBAG
 Maaibos
 Matkop
 Meetnetontwerp
+Motacilla
 NHW
 NHW-rapportage
 NOVN00
 Natuur-
 Natuurherstelwet
+Noord-Oost-Vlaanderen
+Numenius
 OGC
 OL
 OLA
 Objecten'
 Ol
 Parus
+Perdix
 Pl
 Poecile
 QGIS
@@ -116,13 +126,16 @@ Repository
 SB
 SBP
 SBP's
+SBP-gebied
 SBPs
 SBP’s
 SOVON
 SQL-query
+Saxicola
 Sovon
 Surface
 Synonym
+Telgegevens
 Telpunt-
 Telrondes
 Terrain
@@ -143,6 +156,7 @@ VL0555
 VL0587
 VL0590
 VL0605
+Vanellus
 Veldmuis/Aardmuis
 Version
 Vl
@@ -158,6 +172,8 @@ add
 aeroway
 agro-ecologisch
 allocatieproporties
+arquata
+arvensis
 avimap
 avimapcodes
 batching
@@ -168,8 +184,10 @@ birds
 branching
 breeding
 calculate
+cannabina
 canopy
 cf
+citrinella
 coden
 coding
 confounders
@@ -189,6 +207,7 @@ dynamic
 exclusiekaart
 exclusielaag
 final
+flava
 gelocaliseerd
 geojson-bestand
 gespecifieerd
@@ -212,6 +231,7 @@ landuse
 layers
 leemstreek.Rmd
 lijn-
+limosa
 ll'en
 lm.Rmd
 lm.Rproj
@@ -231,8 +251,10 @@ onvertekende
 openness
 opgeslaan
 opvalllende
+ostralegus
 overlappen'
 perceelsgrootte
+perdix
 perimeters.gpkg
 periods
 pipeline
@@ -243,6 +265,7 @@ pointids
 points
 polygon
 positive
+pratensis
 pre-MBAG
 predatorvariabele
 probleemtelpunt
@@ -256,6 +279,7 @@ replicaten
 repo
 repository
 reserveset
+rubicola
 sampled
 sbp
 size
@@ -289,10 +313,12 @@ telronde
 telrondes
 tertiare
 thinning
+tinnunculus
 toevoegen'
 topographic
 uncut
 union
+vanellus
 variable
 verbatim
 verderzetting
