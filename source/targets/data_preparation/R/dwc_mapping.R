@@ -18,14 +18,17 @@ spatial_mapping <- function(data_df) {
     ) %>%
     # Add CRS
     mutate(
-      dwc_verbatimCoordinateSystem = "BD72 / Belgian Lambert 72",
+      dwc_verbatimCoordinateSystem = "Belgian Lambert 72",
       dwc_verbatimSRS = "EPSG:31370"
     ) %>%
     # Convert to WGS 84 decimal coordinates
     st_transform(4326) %>%
     mutate(
-      dwc_decimalLatitude = round(st_coordinates(.data$raw_geometry)[, 2], 5),
-      dwc_decimalLongitude = round(st_coordinates(.data$raw_geometry)[, 1], 5),
+      # Round coordinates to 10 cm
+      dwc_verbatimLatitude = round(.data$dwc_verbatimLatitude, 1),
+      dwc_verbatimLongitude = round(.data$dwc_verbatimLongitude, 1),
+      dwc_decimalLatitude = round(st_coordinates(.data$raw_geometry)[, 2], 6),
+      dwc_decimalLongitude = round(st_coordinates(.data$raw_geometry)[, 1], 6),
       dwc_geodeticDatum = "EPSG:4326"
     ) %>%
     st_drop_geometry()
@@ -41,28 +44,26 @@ static_mapping <- function(data_df) {
   out_df <- data_df %>%
     mutate(
       dwc_type                 = "Event",
-      dwc_datasetID            = NA,
+      # dwc_datasetID            = NA, # doi after first publication
       dwc_language             = "en",
       dwc_license              = paste0("http://creativecommons.org/",
                                         "publicdomain/zero/1.0/"),
-      dwc_publisher            = paste0("Research Institute for Nature and",
-                                        "Forest (INBO)"),
-      dwc_rightsHolder         = paste0("Research Institute for Nature and",
-                                        "Forest (INBO)"),
+      dwc_rightsHolder         = paste("Research Institute for Nature and",
+                                       "Forest (INBO)"),
       dwc_accessRights         = "http://www.inbo.be/en/norms-for-data-use",
       dwc_institutionCode      = "INBO",
-      dwc_datasetName          = NA,
       dwc_collectionCode       = "MAS",
       dwc_kingdom              = "Animalia",
       dwc_nomenclaturalCode    = "ICZN",
       dwc_eventType            = "Survey",
-      dwc_samplingProtocol     = "Point count",
+      dwc_samplingProtocol     = "Point count in 300 m radius",
       dwc_samplingEffort       = "10 minutes",
       dwc_continent            = "Europe",
       dwc_country              = "Belgium",
       dwc_stateProvince        = "Flanders",
       dwc_countryCode          = "BE",
-      dwc_basisOfRecord        = "HumanObservation"
+      dwc_basisOfRecord        = "HumanObservation",
+      dwc_identificationVerificationStatus = "validated"
     )
 
   return(out_df)
@@ -84,13 +85,8 @@ unchanged_mapping <- function(data_df) {
       "dwc_recordedBy"         = "raw_waarnemer",
       "dwc_organismQuantity"   = "raw_aantal",
       "dwc_locationID"         = "raw_plotnaam",
-      "dwc_varbatimBehavior"   = "raw_wrntype_omschrijving",
-      "dwc_occurrenceRemarks"  = "raw_opmerk",
-      "dwc_taxonID"            = "raw_soortnr",
-      "dwc_is_mas_sample"         = "raw_is_mas_sample"
-    ) %>%
-    mutate(
-      dwc_identifiedBy = .data$dwc_recordedBy
+      "dwc_verbatimBehavior"   = "raw_wrntype_omschrijving",
+      "dwc_occurrenceRemarks"  = "raw_is_mas_sample"
     )
 
   return(out_df)
@@ -104,26 +100,54 @@ modified_mapping <- function(data_df) {
   require("dplyr")
 
   out_df <- data_df %>%
+    arrange(.data$dwc_eventDate) %>%
+    group_by(.data$dwc_eventDate, .data$dwc_locationID) %>%
     mutate(
-      dwc_occurrenceID = paste0("MBAG:MAS:", .data$raw_oid),
-      dwc_eventID = paste0("MBAG:MAS:",
-                           .data$dwc_eventDate,
-                           .data$dwc_locationID),
+      # create a key for the coordinate pair
+      coord_key = paste(.data$dwc_verbatimLatitude, .data$dwc_verbatimLongitude,
+                        sep = "_"),
+      # match() against unique() returns 1,2,... in order of first appearance
+      event_suffix = formatC(match(.data$coord_key, unique(.data$coord_key)),
+                             width = 3, flag = "0")
+    ) %>%
+    ungroup() %>%
+    mutate(
+      # Add IDs
+      dwc_occurrenceID = paste("MBAG", "MAS", .data$raw_oid, sep = ":"),
+      dwc_parentEventID = paste(
+        "MBAG", "MAS", .data$dwc_eventDate,
+        gsub("\\s", ".", .data$dwc_locationID), sep = ":"
+      ),
+      dwc_eventID = paste(
+        .data$dwc_parentEventID, .data$event_suffix, sep = ":"
+      ),
+      # Taxonomic information
       dwc_class = ifelse(.data$raw_soortgrp == 2, "Aves", "Mammalia"),
+      dwc_taxonID = ifelse(
+        .data$raw_soortgrp == 2,
+        paste(
+          "euring",
+          formatC(.data$raw_soortnr, width = 5, format = "d", flag = "0"),
+          sep = ":"
+        ),
+        as.character(.data$raw_soortnr)
+      ),
+      # Observation information
       dwc_occurrenceStatus = ifelse(.data$dwc_organismQuantity > 0,
                                     "Present", "Absent"),
+      dwc_recordNumber = paste("MAS-brc", .data$raw_wrntype, sep = ":"),
       dwc_behavior = case_when(
-        .data$dwc_varbatimBehavior == "Territoriaal gedrag" ~
-          "Teritorial behaviour",
-        .data$dwc_varbatimBehavior == "Individu of groep niet plaatsgebonden" ~
+        .data$dwc_verbatimBehavior == "Territoriaal gedrag" ~
+          "Territorial behaviour",
+        .data$dwc_verbatimBehavior == "Individu of groep niet plaatsgebonden" ~
           "Individual or group not bound to a location",
-        .data$dwc_varbatimBehavior == "Volwassen individu in broedbiotoop" ~
+        .data$dwc_verbatimBehavior == "Volwassen individu in broedbiotoop" ~
           "Adult individual in breeding habitat",
-        .data$dwc_varbatimBehavior == "Nestvondst" ~
+        .data$dwc_verbatimBehavior == "Nestvondst" ~
           "Nest discovery",
-        .data$dwc_varbatimBehavior == "Nest-aanduidend gedrag" ~
+        .data$dwc_verbatimBehavior == "Nest-aanduidend gedrag" ~
           "Nest-indicating behaviour",
-        .data$dwc_varbatimBehavior == "Paar in broedbiotoop" ~
+        .data$dwc_verbatimBehavior == "Paar in broedbiotoop" ~
           "Pair in breeding habitat"
       ),
       # If the distance is < 100 m --> 10 m
@@ -139,13 +163,32 @@ modified_mapping <- function(data_df) {
             0.1 * .data$raw_distance2plot
           )
         ),
-      dwc_organismQuantityType = ifelse(.data$raw_wrntype == "0",
-                                        "individuals", "breeding pairs")
+      dwc_coordinateUncertaintyInMeters = as.integer(round(
+        .data$dwc_coordinateUncertaintyInMeters
+      )),
+      dwc_organismQuantityType = case_when(
+        .data$raw_wrntype %in% c("0", "1") ~ "individual",
+        .data$raw_wrntype %in% c("2") ~ "pair",
+        .data$raw_wrntype %in% c("3", "4") ~ "territorium",
+        .data$raw_wrntype %in% c("5") ~ "nest"
+      ),
+      dwc_lifeStage = ifelse(.data$raw_wrntype == "0", "", "adult")
+    ) %>%
+    # Anynomise observers
+    anonymise_observers( # nolint: object_usage_linter
+      observer_col = "dwc_recordedBy",
+      lookup_path = file.path("data", "observer_lookup.csv"),
+      prefix = "observer:"
+    ) %>%
+    mutate(
+      dwc_identifiedBy = .data$dwc_recordedBy
     ) %>%
     select(
       -"raw_oid",
       -"raw_soortgrp",
-      -"raw_wrntype"
+      -"raw_wrntype",
+      -"coord_key",
+      -"event_suffix"
     )
 
   return(out_df)
@@ -201,7 +244,8 @@ map_taxa_manual <- function(
       select(all_of(cols_to_get))
   })
   mapped_taxa_df <- do.call(bind_rows, mapped_taxa_list) %>%
-    mutate(!!vernacular_name_col := names(manual_taxon_list))
+    mutate(!!vernacular_name_col := names(manual_taxon_list),
+           across(everything(), trimws))
 
 
   # Add taxon info difficult names
@@ -214,13 +258,50 @@ map_taxa_manual <- function(
     mutate(
       across(
         all_of(setdiff(colnames(mapped_taxa_df), vernacular_name_col)),
-        ~ coalesce(.x, get(paste0(cur_column(), ".df2"))),
+        ~ ifelse(!is.na(get(paste0(cur_column(), ".df2"))),
+                 get(paste0(cur_column(), ".df2")),
+                 .x),
         .names = "{.col}"
       )
     ) %>%
     select(-ends_with(".df2"))
 
   return(out_df)
+}
+
+add_species_aggregates <- function(
+    taxonomy_df,
+    manual_taxon_list,
+    vernacular_name_col = "dwc_vernacularName") {
+  require("dplyr")
+  require("rlang")
+
+  # Get taxa of interest
+  aggregate_taxa_df <- taxonomy_df %>%
+    filter(.data[[vernacular_name_col]] %in% names(manual_taxon_list)) %>%
+    mutate(
+      verbatimIdentification = recode(.data[[vernacular_name_col]],
+                                      !!!manual_taxon_list)
+    ) %>%
+    mutate(
+      identificationQualifier = ifelse(
+        is.na(.data$species),
+        "species aggregate",
+        "subspecies aggregate"
+      ),
+      verbatimTaxonRank = ifelse(
+        is.na(.data$species),
+        "species aggregate",
+        "subspecies aggregate"
+      )
+    )
+
+  # Get other taxa
+  other_taxa_df <- taxonomy_df %>%
+    filter(!.data[[vernacular_name_col]] %in% names(manual_taxon_list))
+
+  # Join datasets
+  return(bind_rows(other_taxa_df, aggregate_taxa_df))
 }
 
 # Finalise DwC data
@@ -230,6 +311,8 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
 
   # Join with observations dataset
   taxon_core_final <- taxonomy_df %>%
+    mutate(specificEpithet = gsub("^[a-zA-Z]*\\s", "", .data$species)) %>%
+    select(-"species") %>%
     full_join(
       data_df,
       relationship = "many-to-many",
@@ -246,24 +329,45 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
   # Remove raw columns
   out_df <- taxon_core_final %>%
     select(-starts_with("raw_")) %>%
-    rename_with(~ gsub("dwc\\_", "", .x))
+    rename_with(~ gsub("dwc\\_", "", .x)) %>%
+    arrange(.data$eventDate, .data$locationID, .data$identifiedBy)
 
   # Select and sort columns
   col_order <- c(
-    "type", "language", "license", "publisher", "rightsHolder", "accessRights",
-    "datasetID", "collectionCode", "institutionCode", "datasetName",
-    "basisOfRecord", "eventType", "eventID", "is_mas_sample",
-    "occurrenceID", "recordedBy", "organismQuantity",
-    "organismQuantityType", "occurrenceStatus", "behavior", "varbatimBehavior",
-    "occurrenceRemarks", "samplingProtocol", "samplingEffort", "eventDate",
-    "day", "month", "year", "continent", "country", "countryCode",
-    "stateProvince", "locationID", "verbatimLatitude", "verbatimLongitude",
-    "verbatimCoordinateSystem", "verbatimSRS", "decimalLatitude",
-    "decimalLongitude", "geodeticDatum", "coordinateUncertaintyInMeters",
-    "identifiedBy", "vernacularName", "taxonID", "scientificName", "kingdom",
-    "phylum", "class", "order", "family", "genus", "species",
-    "scientificNameAuthorship", "scientificNameID", "taxonRank",
-    "nomenclaturalCode"
+    # --- Metadata / Dataset ---
+    "type", "language", "license", "rightsHolder", "accessRights",
+    # "datasetID",
+    "collectionCode", "institutionCode",
+
+    # ---Occurrence Core ---
+    "occurrenceID", "basisOfRecord",
+
+    # --- Event ---
+    "eventID", "parentEventID", "eventType",
+    "samplingProtocol", "samplingEffort", "eventDate",
+    "year", "month", "day",
+
+    # --- Occurrence ---
+    "recordedBy",
+    "organismQuantity", "organismQuantityType", "lifeStage",
+    "occurrenceStatus", "behavior", "verbatimBehavior", "recordNumber",
+    "occurrenceRemarks",
+
+    # --- Location ---
+    "continent", "country", "countryCode", "stateProvince", "locationID",
+    "verbatimLatitude", "verbatimLongitude", "verbatimCoordinateSystem",
+    "verbatimSRS", "decimalLatitude", "decimalLongitude",
+    "geodeticDatum", "coordinateUncertaintyInMeters",
+
+    # --- Identification ---
+    "identifiedBy", "identificationVerificationStatus",
+    "vernacularName",
+
+    # --- Taxonomy ---
+    "taxonID", "scientificName", "scientificNameAuthorship",
+    "scientificNameID", "taxonRank", "nomenclaturalCode",
+    "verbatimIdentification", "identificationQualifier", "verbatimTaxonRank",
+    "kingdom", "phylum", "class", "order", "family", "genus", "specificEpithet"
   )
   out_df <- out_df[, col_order]
 
