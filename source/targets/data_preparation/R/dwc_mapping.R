@@ -150,6 +150,12 @@ modified_mapping <- function(data_df) {
         .data$dwc_verbatimBehavior == "Paar in broedbiotoop" ~
           "Pair in breeding habitat"
       ),
+      # Only for birds
+      dwc_recordNumber = ifelse(dwc_class == "Aves", dwc_recordNumber, NA),
+      dwc_behavior = ifelse(dwc_class == "Aves", dwc_behavior, NA),
+      dwc_verbatimBehavior = ifelse(
+        dwc_class == "Aves", dwc_verbatimBehavior, NA
+      ),
       # If the distance is < 100 m --> 10 m
       # If the distance is >= 100 m --> 0.1 * distance
       # If the distance is unknown --> 30 m (0.1 * 300 m)
