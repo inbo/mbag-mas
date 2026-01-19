@@ -27,6 +27,4 @@ spelling:
     en-GB:
     - source/targets/data_preparation/R/anonymise_observers.R
     - source/targets/data_preparation/R/create_output.R
-pak:
-- STBrinkmann/GVI
-- qsbase/qs
+pak: STBrinkmann/GVI
