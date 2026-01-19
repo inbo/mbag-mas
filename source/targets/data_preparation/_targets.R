@@ -368,11 +368,21 @@ list(
   # Split datasets
   tar_target(
     name = split_datasets,
-    command = split_dwc_event_occ(dwc_mapping_final)
+    command = split_dwc_event_occ(
+      dwc_mapping_final %>%
+        mutate(
+          dynamicProperties = '{"rbac":true,"rbac_allowed":"HIGHRES"}'
+        )
+    )
   ),
   tar_target(
     name = split_datasets_blurred,
-    command = split_dwc_event_occ(dwc_mapping_final_blurred)
+    command = split_dwc_event_occ(
+      dwc_mapping_final_blurred %>%
+        mutate(
+          dynamicProperties = '{"rbac":false,"rbac_allowed":"HIGHRES"}'
+        )
+    )
   ),
   # Write datasets
   tar_target(

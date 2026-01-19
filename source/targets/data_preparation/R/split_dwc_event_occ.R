@@ -11,14 +11,18 @@ split_dwc_event_occ <- function(df) {
     "continent", "country", "countryCode", "stateProvince", "locationID",
     "verbatimLatitude", "verbatimLongitude", "verbatimCoordinateSystem",
     "verbatimSRS", "decimalLatitude", "decimalLongitude",
-    "geodeticDatum", "coordinateUncertaintyInMeters",
+    "geodeticDatum", "coordinateUncertaintyInMeters", "dynamicProperties",
     # For blurred dataset
     "dataGeneralizations", "georeferenceRemarks", "informationWithheld"
   )
 
   # All remaining DwC terms go to occurrence file
   # Include eventID again (to interlink event and occurrence)
-  occ_fields <- setdiff(names(df), setdiff(event_fields, "eventID"))
+  # Include dynamicProperties in both dataframes
+  occ_fields <- setdiff(
+    names(df),
+    setdiff(event_fields, c("eventID", "dynamicProperties"))
+  )
 
   # Select existing columns
   events_df <- dplyr::distinct(
