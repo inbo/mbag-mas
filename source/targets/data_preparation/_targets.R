@@ -352,7 +352,15 @@ list(
     name = dwc_mapping_final_blurred,
     command = blur_occurrences(
       occ_df = dwc_mapping_final,
-      utm_grid_path = file.path(mbag_dir, "data", "utm_roosters", "utm5_vl.shp")
+      utm_grid_path = file.path(
+        mbag_dir, "data", "utm_roosters", "utm5_vl.shp"
+      ),
+      blur_years = 2,
+      embargo_years = 2,
+      vulnerable_birds = c(
+        "Grauwe Kiekendief", "Bruine Kiekendief", "Patrijs", "Kwartelkoning"
+      ),
+      vulnerable_mammals = c("Bever", "Das", "Lynx", "Wolf", "Wilde kat")
     )
   ),
 
