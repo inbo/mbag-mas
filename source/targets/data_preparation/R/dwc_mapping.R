@@ -19,7 +19,7 @@ spatial_mapping <- function(data_df) {
     # Add CRS
     mutate(
       dwc_verbatimCoordinateSystem = "Belgian Lambert 72",
-      dwc_verbatimSRS = "EPSG:31370"
+      dwc_verbatimSRS = "Belgium Date 1972"
     ) %>%
     # Convert to WGS 84 decimal coordinates
     st_transform(4326) %>%
@@ -29,7 +29,7 @@ spatial_mapping <- function(data_df) {
       dwc_verbatimLongitude = round(.data$dwc_verbatimLongitude, 1),
       dwc_decimalLatitude = round(st_coordinates(.data$raw_geometry)[, 2], 6),
       dwc_decimalLongitude = round(st_coordinates(.data$raw_geometry)[, 1], 6),
-      dwc_geodeticDatum = "EPSG:4326"
+      dwc_geodeticDatum = "WGS84"
     ) %>%
     st_drop_geometry()
 
