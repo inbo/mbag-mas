@@ -13,6 +13,7 @@
 'Verbinden'
 'WFS
 'augmented
+'landbouw
 'landbouw-hokken'
 'ms
 'naam'
@@ -70,6 +71,7 @@ Emberiza
 Flanders
 GBIF.org
 GL
+GPKG
 GPKG-bestanden
 GVI
 Geule
@@ -79,6 +81,7 @@ HGL
 Haematopus
 Hazegraspolder
 Homotypic
+Horvitz
 Horvitz-Thomson
 KC
 KLA
@@ -125,8 +128,8 @@ SB
 SBP
 SBP's
 SBP-gebied
-SBP’s
 SBPs
+SBP’s
 SOVON
 SQL-query
 SRMS02
@@ -159,6 +162,7 @@ accepted
 actively
 aeroway
 aggregate
+agro
 agro-ecologisch
 allocatieproporties
 and
@@ -199,6 +203,7 @@ exclusielaag
 final
 flava
 gelocaliseerd
+geojson
 geojson-bestand
 gespecifieerd
 git2rdata
@@ -208,6 +213,7 @@ half-open
 has
 height
 highway
+hokken'
 indicatorfunctie
 indicatorsoorten
 inner
