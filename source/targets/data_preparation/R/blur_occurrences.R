@@ -114,12 +114,17 @@ blur_occurrences <- function(
       # Create new columns
       dataGeneralizations = if_else(
         .data$is_blurred,
-        paste0("UTM ", .data$spat_res, " km"),
+        paste0("UTM ", .data$spat_res, "km"),
         ""
       ),
       georeferenceRemarks = if_else(
         .data$is_blurred,
         "coordinates are centroid of used grid square",
+        ""
+      ),
+      informationWithheld = if_else(
+        .data$is_blurred,
+        "original locations available upon request",
         ""
       )
     ) %>%
