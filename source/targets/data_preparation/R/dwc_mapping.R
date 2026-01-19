@@ -150,12 +150,6 @@ modified_mapping <- function(data_df) {
         .data$dwc_verbatimBehavior == "Paar in broedbiotoop" ~
           "Pair in breeding habitat"
       ),
-      # Only for birds
-      dwc_recordNumber = ifelse(dwc_class == "Aves", dwc_recordNumber, NA),
-      dwc_behavior = ifelse(dwc_class == "Aves", dwc_behavior, NA),
-      dwc_verbatimBehavior = ifelse(
-        dwc_class == "Aves", dwc_verbatimBehavior, NA
-      ),
       # If the distance is < 100 m --> 10 m
       # If the distance is >= 100 m --> 0.1 * distance
       # If the distance is unknown --> 30 m (0.1 * 300 m)
@@ -178,7 +172,23 @@ modified_mapping <- function(data_df) {
         .data$raw_wrntype %in% c("3", "4") ~ "territorium",
         .data$raw_wrntype %in% c("5") ~ "nest"
       ),
-      dwc_lifeStage = ifelse(.data$raw_wrntype == "0", "", "adult")
+      dwc_lifeStage = ifelse(.data$raw_wrntype == "0", "", "adult"),
+      # Only for birds
+      dwc_recordNumber = ifelse(
+        .data$dwc_class == "Aves", .data$dwc_recordNumber, NA
+      ),
+      dwc_behavior = ifelse(
+        .data$dwc_class == "Aves", .data$dwc_behavior, NA
+      ),
+      dwc_verbatimBehavior = ifelse(
+        .data$dwc_class == "Aves", .data$dwc_verbatimBehavior, NA
+      ),
+      dwc_organismQuantityType = ifelse(
+        .data$dwc_class == "Aves", .data$dwc_organismQuantityType, "individual"
+      ),
+      dwc_lifeStage = ifelse(
+        .data$dwc_class == "Aves", .data$dwc_lifeStage, NA
+      )
     ) %>%
     # Anynomise observers
     anonymise_observers( # nolint: object_usage_linter
