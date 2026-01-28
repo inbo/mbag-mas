@@ -43,6 +43,10 @@ static_mapping <- function(data_df) {
 
   out_df <- data_df %>%
     mutate(
+      dwc_datasetName          = paste(
+        "Meetnet Agrarische Soorten - Monitoring of birds and mammals in",
+        "agricultural areas in Flanders, Belgium"
+      ),
       dwc_type                 = "Event",
       dwc_language             = "en",
       dwc_license              = paste0("http://creativecommons.org/",
@@ -350,8 +354,8 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
   # Select and sort columns
   col_order <- c(
     # --- Metadata / Dataset ---
-    "type", "language", "license", "rightsHolder", "accessRights",
-    "collectionCode", "institutionCode", "institutionID",
+    "datasetName", "type", "language", "license", "rightsHolder",
+    "accessRights", "collectionCode", "institutionCode", "institutionID",
 
     # ---Occurrence Core ---
     "occurrenceID", "basisOfRecord",
@@ -389,24 +393,112 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
 }
 
 add_vbp_values <- function(occ_df, blurred) {
+  require("dplyr")
+  require("rlang")
+
   if (blurred) {
-    occ_df %>%
+    out_df <- occ_df %>%
       mutate(
-        dynamicProperties = '{"rbac":false,"rbac_allowed":"LOWRES"}',
-        datasetID = "https://doi.org/10.15468/vzs4wf"
+        # New static values
+        datasetID = "https://doi.org/10.15468/vzs4wf",
+        dynamicProperties = '{"rbac":false,"rbac_allowed":"LOWRES"}'
       )
+
+    # Select and sort columns
+    col_order <- c(
+      # --- Metadata / Dataset ---
+      "datasetID", "datasetName", "type", "language", "license",
+      "rightsHolder", "accessRights", "collectionCode", "institutionCode", "institutionID",
+
+      # --- Occurrence Core ---
+      "occurrenceID", "basisOfRecord",
+
+      # --- Event ---
+      "eventID", "parentEventID", "eventType",
+      "samplingProtocol", "samplingEffort", "eventDate",
+      "year", "month", "day",
+
+      # --- Occurrence ---
+      "recordedBy",
+      "organismQuantity", "organismQuantityType", "lifeStage",
+      "occurrenceStatus", "behavior", "verbatimBehavior", "recordNumber",
+      "occurrenceRemarks", "dynamicProperties",
+
+      # --- Location / Georeference ---
+      "continent", "country", "countryCode", "stateProvince", "locationID",
+      "verbatimLatitude", "verbatimLongitude", "verbatimCoordinateSystem",
+      "verbatimSRS", "decimalLatitude", "decimalLongitude",
+      "geodeticDatum", "coordinateUncertaintyInMeters",
+      "georeferenceRemarks", "dataGeneralizations", "informationWithheld",
+
+      # --- Identification ---
+      "identifiedBy", "identificationVerificationStatus",
+      "verbatimIdentification", "identificationQualifier",
+
+      # --- Taxonomy ---
+      "taxonID", "scientificName", "scientificNameAuthorship",
+      "scientificNameID", "taxonRank", "verbatimTaxonRank", "nomenclaturalCode",
+      "vernacularName",
+      "kingdom", "phylum", "class", "order", "family", "genus",
+      "specificEpithet"
+    )
   } else {
-    occ_df %>%
+    out_df <- occ_df %>%
       mutate(
-        dynamicProperties = '{"rbac":false,"rbac_allowed":"HIGHRES"}',
         # Add SEN in IDs for sensitive dataset
         across(c("occurrenceID", "eventID"),
                ~ sub("MBAG:MAS:", "MBAG:MAS:SEN:", .x)),
+
+        # Change existing static values
+        datasetName = paste(.data$datasetName, "(Hoge resolutie)"),
         license = paste(
           "By accessing this dataset, you agree to use it solely for internal",
           "analysis. You may not reproduce, distribute, or share the data."
         ),
-        accessRights = "only for internal use"
+        accessRights = "only for internal use",
+
+        # New static values
+        dynamicProperties = '{"rbac":false,"rbac_allowed":"HIGHRES"}',
       )
+
+    # Select and sort columns
+    col_order <- c(
+      # --- Metadata / Dataset ---
+      "datasetName", "type", "language", "license", "rightsHolder",
+      "accessRights", "collectionCode", "institutionCode", "institutionID",
+
+      # --- Occurrence Core ---
+      "occurrenceID", "basisOfRecord",
+
+      # --- Event ---
+      "eventID", "parentEventID", "eventType",
+      "samplingProtocol", "samplingEffort", "eventDate",
+      "year", "month", "day",
+
+      # --- Occurrence ---
+      "recordedBy",
+      "organismQuantity", "organismQuantityType", "lifeStage",
+      "occurrenceStatus", "behavior", "verbatimBehavior", "recordNumber",
+      "occurrenceRemarks", "dynamicProperties",
+
+      # --- Location ---
+      "continent", "country", "countryCode", "stateProvince", "locationID",
+      "verbatimLatitude", "verbatimLongitude", "verbatimCoordinateSystem",
+      "verbatimSRS", "decimalLatitude", "decimalLongitude",
+      "geodeticDatum", "coordinateUncertaintyInMeters",
+
+      # --- Identification ---
+      "identifiedBy", "identificationVerificationStatus",
+      "verbatimIdentification", "identificationQualifier",
+
+      # --- Taxonomy ---
+      "taxonID", "scientificName", "scientificNameAuthorship",
+      "scientificNameID", "taxonRank", "verbatimTaxonRank", "nomenclaturalCode",
+      "vernacularName",
+      "kingdom", "phylum", "class", "order", "family", "genus",
+      "specificEpithet"
+    )
   }
+
+  return(out_df[, col_order])
 }
