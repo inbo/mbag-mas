@@ -44,7 +44,6 @@ static_mapping <- function(data_df) {
   out_df <- data_df %>%
     mutate(
       dwc_type                 = "Event",
-      # dwc_datasetID            = NA, # doi after first publication
       dwc_language             = "en",
       dwc_license              = paste0("http://creativecommons.org/",
                                         "publicdomain/zero/1.0/"),
@@ -352,7 +351,6 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
   col_order <- c(
     # --- Metadata / Dataset ---
     "type", "language", "license", "rightsHolder", "accessRights",
-    # "datasetID",
     "collectionCode", "institutionCode", "institutionID",
 
     # ---Occurrence Core ---
@@ -393,7 +391,10 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
 add_vbp_values <- function(occ_df, blurred) {
   if (blurred) {
     occ_df %>%
-      mutate(dynamicProperties = '{"rbac":false,"rbac_allowed":"LOWRES"}')
+      mutate(
+        dynamicProperties = '{"rbac":false,"rbac_allowed":"LOWRES"}',
+        datasetID = "https://doi.org/10.15468/vzs4wf"
+      )
   } else {
     occ_df %>%
       mutate(
