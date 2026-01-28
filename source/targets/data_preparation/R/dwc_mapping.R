@@ -52,6 +52,7 @@ static_mapping <- function(data_df) {
                                        "Forest (INBO)"),
       dwc_accessRights         = "http://www.inbo.be/en/norms-for-data-use",
       dwc_institutionCode      = "INBO",
+      dwc_institutionID        = "https://ror.org/00j54wy13",
       dwc_collectionCode       = "MAS",
       dwc_kingdom              = "Animalia",
       dwc_nomenclaturalCode    = "ICZN",
@@ -353,7 +354,7 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
     # --- Metadata / Dataset ---
     "type", "language", "license", "rightsHolder", "accessRights",
     # "datasetID",
-    "collectionCode", "institutionCode",
+    "collectionCode", "institutionCode", "institutionID",
 
     # ---Occurrence Core ---
     "occurrenceID", "basisOfRecord",
@@ -388,4 +389,19 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
   out_df <- out_df[, col_order]
 
   return(out_df)
+}
+
+add_vbp_values <- function(occ_df, blurred) {
+  if (blurred) {
+    occ_df %>%
+      mutate(dynamicProperties = '{"rbac":false,"rbac_allowed":"LOWRES"}')
+  } else {
+    occ_df %>%
+      mutate(
+        dynamicProperties = '{"rbac":false,"rbac_allowed":"HIGHRES"}',
+        # Add SEN in IDs for sensitive dataset
+        across(c("occurrenceID", "eventID"),
+               ~ sub("MBAG:MAS:", "MBAG:MAS:SEN:", .x))
+      )
+  }
 }
