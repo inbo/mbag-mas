@@ -401,7 +401,11 @@ add_vbp_values <- function(occ_df, blurred) {
         dynamicProperties = '{"rbac":false,"rbac_allowed":"HIGHRES"}',
         # Add SEN in IDs for sensitive dataset
         across(c("occurrenceID", "eventID"),
-               ~ sub("MBAG:MAS:", "MBAG:MAS:SEN:", .x))
+               ~ sub("MBAG:MAS:", "MBAG:MAS:SEN:", .x)),
+        license = paste(
+          "By accessing this dataset, you agree to use it solely for internal",
+          "analysis. You may not reproduce, distribute, or share the data."
+        )
       )
   }
 }
