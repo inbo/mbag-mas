@@ -408,7 +408,8 @@ add_vbp_values <- function(occ_df, blurred) {
     col_order <- c(
       # --- Metadata / Dataset ---
       "datasetID", "datasetName", "type", "language", "license",
-      "rightsHolder", "accessRights", "collectionCode", "institutionCode", "institutionID",
+      "rightsHolder", "accessRights", "collectionCode", "institutionCode",
+      "institutionID",
 
       # --- Occurrence Core ---
       "occurrenceID", "basisOfRecord",
