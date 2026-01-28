@@ -405,7 +405,8 @@ add_vbp_values <- function(occ_df, blurred) {
         license = paste(
           "By accessing this dataset, you agree to use it solely for internal",
           "analysis. You may not reproduce, distribute, or share the data."
-        )
+        ),
+        accessRights = "only for internal use"
       )
   }
 }
