@@ -274,7 +274,8 @@ list(
   # Perform mapping of Darwin Core column names
   tar_target(
     name = darwincore_mapping,
-    command = dwc_mapping(complete_data_gbif_raw)
+    command = dwc_mapping(complete_data_gbif_raw) %>%
+      filter(dwc_occurrenceStatus == "Present")
   ),
   # Get taxon names and split dataframe in groups of `size`
   tarchetypes::tar_group_size(
