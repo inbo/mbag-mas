@@ -365,24 +365,34 @@ list(
     )
   ),
 
+  # Add VBP static values
+  tar_target(
+    name = dwc_dataset_vbp,
+    command = add_vbp_values(
+      occ_df = dwc_mapping_final,
+      blurred = FALSE
+    )
+  ),
+  tar_target(
+    name = dwc_dataset_vbp_blurred,
+    command = add_vbp_values(
+      occ_df = dwc_mapping_final_blurred,
+      blurred = TRUE
+    )
+  ),
+
   # Write out GBIF datasets
   # Split datasets
   tar_target(
     name = split_datasets,
     command = split_dwc_event_occ(
-      dwc_mapping_final %>%
-        mutate(
-          dynamicProperties = '{"rbac":true,"rbac_allowed":"HIGHRES"}'
-        )
+      dwc_dataset_vbp
     )
   ),
   tar_target(
     name = split_datasets_blurred,
     command = split_dwc_event_occ(
-      dwc_mapping_final_blurred %>%
-        mutate(
-          dynamicProperties = '{"rbac":false,"rbac_allowed":"HIGHRES"}'
-        )
+      dwc_dataset_vbp_blurred
     )
   ),
   # Write datasets
@@ -391,7 +401,7 @@ list(
     command = write_ipt_csv(
       split_list = split_datasets,
       path = file.path(mbag_dir, "output", "datasets", publication_year),
-      suffix = "_mas"
+      suffix = "_highres_mas"
     )
   ),
   tar_target(
@@ -399,7 +409,7 @@ list(
     command = write_ipt_csv(
       split_list = split_datasets_blurred,
       path = file.path(mbag_dir, "output", "datasets", publication_year),
-      suffix = "_blur_mas"
+      suffix = "_lowres_mas"
     )
   )
 )

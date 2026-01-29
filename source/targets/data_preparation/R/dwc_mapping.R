@@ -43,15 +43,18 @@ static_mapping <- function(data_df) {
 
   out_df <- data_df %>%
     mutate(
+      dwc_datasetName          = paste(
+        "Meetnet Agrarische Soorten - Monitoring of birds and mammals in",
+        "agricultural areas in Flanders, Belgium"
+      ),
       dwc_type                 = "Event",
-      # dwc_datasetID            = NA, # doi after first publication
       dwc_language             = "en",
       dwc_license              = paste0("http://creativecommons.org/",
                                         "publicdomain/zero/1.0/"),
-      dwc_rightsHolder         = paste("Research Institute for Nature and",
-                                       "Forest (INBO)"),
+      dwc_rightsHolder         = "INBO",
       dwc_accessRights         = "http://www.inbo.be/en/norms-for-data-use",
       dwc_institutionCode      = "INBO",
+      dwc_institutionID        = "https://ror.org/00j54wy13",
       dwc_collectionCode       = "MAS",
       dwc_kingdom              = "Animalia",
       dwc_nomenclaturalCode    = "ICZN",
@@ -351,9 +354,8 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
   # Select and sort columns
   col_order <- c(
     # --- Metadata / Dataset ---
-    "type", "language", "license", "rightsHolder", "accessRights",
-    # "datasetID",
-    "collectionCode", "institutionCode",
+    "datasetName", "type", "language", "license", "rightsHolder",
+    "accessRights", "collectionCode", "institutionCode", "institutionID",
 
     # ---Occurrence Core ---
     "occurrenceID", "basisOfRecord",
@@ -388,4 +390,39 @@ finalise_dwc_df <- function(data_df, taxonomy_df) {
   out_df <- out_df[, col_order]
 
   return(out_df)
+}
+
+add_vbp_values <- function(occ_df, blurred) {
+  require("dplyr")
+  require("rlang")
+
+  if (blurred) {
+    out_df <- occ_df %>%
+      mutate(
+        # New static values
+        datasetID = "https://doi.org/10.15468/vzs4wf",
+        dynamicProperties = '{"rbac":false,"rbac_allowed":"HIGHRES"}'
+      )
+  } else {
+    out_df <- occ_df %>%
+      mutate(
+        # Add SEN in IDs for sensitive dataset
+        across(c("occurrenceID", "eventID"),
+               ~ sub("MBAG:MAS:", "MBAG:MAS:SEN:", .x)),
+
+        # Change existing static values
+        datasetName = paste(.data$datasetName, "(Hoge resolutie)"),
+        license = paste(
+          "By accessing this dataset, you agree to use it solely for internal",
+          "analysis. You may not reproduce, distribute, or share the data."
+        ),
+        accessRights = "only for internal use",
+
+        # New static values
+        dynamicProperties = '{"rbac":true,"rbac_allowed":"HIGHRES"}',
+      )
+  }
+
+  # Select and sort columns
+  return(sort_dwc_cols(out_df)) # nolint: object_usage_linter
 }

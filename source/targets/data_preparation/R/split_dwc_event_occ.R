@@ -2,26 +2,31 @@ split_dwc_event_occ <- function(df) {
   # Remove unnecessary columns
   df <- dplyr::select(df, -"verbatimBehavior")
 
+  # Terms for both datasets
+  double_terms <- c(
+    "eventID", "dynamicProperties", "license", "publisher", "rightsHolder",
+    "accessRights", "institutionID", "datasetName"
+  )
+
   # Darwin Core terms suitable for the events file
   event_fields <- c(
-    "eventID", "parentEventID", "eventType",
-    "type", "language", "license", "publisher", "rightsHolder", "accessRights",
+    double_terms,
+    "parentEventID", "eventType", "type", "language",
     "samplingProtocol", "samplingEffort",
     "eventDate", "year", "month", "day",
     "continent", "country", "countryCode", "stateProvince", "locationID",
     "verbatimLatitude", "verbatimLongitude", "verbatimCoordinateSystem",
     "verbatimSRS", "decimalLatitude", "decimalLongitude",
-    "geodeticDatum", "coordinateUncertaintyInMeters", "dynamicProperties",
+    "geodeticDatum", "coordinateUncertaintyInMeters",
     # For blurred dataset
     "dataGeneralizations", "georeferenceRemarks", "informationWithheld"
   )
 
   # All remaining DwC terms go to occurrence file
-  # Include eventID again (to interlink event and occurrence)
-  # Include dynamicProperties in both dataframes
+  # Include double DwC terms again
   occ_fields <- setdiff(
     names(df),
-    setdiff(event_fields, c("eventID", "dynamicProperties"))
+    setdiff(event_fields, double_terms)
   )
 
   # Select existing columns
@@ -30,5 +35,11 @@ split_dwc_event_occ <- function(df) {
   )
   occ_df <- df[, intersect(occ_fields,  names(df)), drop = FALSE]
 
-  return(list(events = events_df, occurrences = occ_df))
+  # Return list of datasets (sort columns)
+  return(
+    list(
+      events = sort_dwc_cols(events_df),  # nolint: object_usage_linter
+      occurrences = sort_dwc_cols(occ_df) # nolint: object_usage_linter
+    )
+  )
 }
