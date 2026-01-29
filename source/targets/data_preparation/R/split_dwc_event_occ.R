@@ -4,8 +4,8 @@ split_dwc_event_occ <- function(df) {
 
   # Terms for both datasets
   double_terms <- c(
-    "eventID", "dynamicProperties", "license", "publisher", "rightsHolder",
-    "accessRights", "institutionID", "datasetName"
+    "eventID", "dynamicProperties", "license", "rightsHolder",
+    "accessRights", "institutionID", "datasetName", "datasetID"
   )
 
   # Darwin Core terms suitable for the events file
