@@ -401,48 +401,8 @@ add_vbp_values <- function(occ_df, blurred) {
       mutate(
         # New static values
         datasetID = "https://doi.org/10.15468/vzs4wf",
-        dynamicProperties = '{"rbac":false,"rbac_allowed":"LOWRES"}'
+        dynamicProperties = '{"rbac":false,"rbac_allowed":"HIGHRES"}'
       )
-
-    # Select and sort columns
-    col_order <- c(
-      # --- Metadata / Dataset ---
-      "datasetID", "datasetName", "type", "language", "license",
-      "rightsHolder", "accessRights", "collectionCode", "institutionCode",
-      "institutionID",
-
-      # --- Occurrence Core ---
-      "occurrenceID", "basisOfRecord",
-
-      # --- Event ---
-      "eventID", "parentEventID", "eventType",
-      "samplingProtocol", "samplingEffort", "eventDate",
-      "year", "month", "day",
-
-      # --- Occurrence ---
-      "recordedBy",
-      "organismQuantity", "organismQuantityType", "lifeStage",
-      "occurrenceStatus", "behavior", "verbatimBehavior", "recordNumber",
-      "occurrenceRemarks", "dynamicProperties",
-
-      # --- Location / Georeference ---
-      "continent", "country", "countryCode", "stateProvince", "locationID",
-      "verbatimLatitude", "verbatimLongitude", "verbatimCoordinateSystem",
-      "verbatimSRS", "decimalLatitude", "decimalLongitude",
-      "geodeticDatum", "coordinateUncertaintyInMeters",
-      "georeferenceRemarks", "dataGeneralizations", "informationWithheld",
-
-      # --- Identification ---
-      "identifiedBy", "identificationVerificationStatus",
-      "verbatimIdentification", "identificationQualifier",
-
-      # --- Taxonomy ---
-      "taxonID", "scientificName", "scientificNameAuthorship",
-      "scientificNameID", "taxonRank", "verbatimTaxonRank", "nomenclaturalCode",
-      "vernacularName",
-      "kingdom", "phylum", "class", "order", "family", "genus",
-      "specificEpithet"
-    )
   } else {
     out_df <- occ_df %>%
       mutate(
@@ -459,47 +419,10 @@ add_vbp_values <- function(occ_df, blurred) {
         accessRights = "only for internal use",
 
         # New static values
-        dynamicProperties = '{"rbac":false,"rbac_allowed":"HIGHRES"}',
+        dynamicProperties = '{"rbac":true,"rbac_allowed":"HIGHRES"}',
       )
-
-    # Select and sort columns
-    col_order <- c(
-      # --- Metadata / Dataset ---
-      "datasetName", "type", "language", "license", "rightsHolder",
-      "accessRights", "collectionCode", "institutionCode", "institutionID",
-
-      # --- Occurrence Core ---
-      "occurrenceID", "basisOfRecord",
-
-      # --- Event ---
-      "eventID", "parentEventID", "eventType",
-      "samplingProtocol", "samplingEffort", "eventDate",
-      "year", "month", "day",
-
-      # --- Occurrence ---
-      "recordedBy",
-      "organismQuantity", "organismQuantityType", "lifeStage",
-      "occurrenceStatus", "behavior", "verbatimBehavior", "recordNumber",
-      "occurrenceRemarks", "dynamicProperties",
-
-      # --- Location ---
-      "continent", "country", "countryCode", "stateProvince", "locationID",
-      "verbatimLatitude", "verbatimLongitude", "verbatimCoordinateSystem",
-      "verbatimSRS", "decimalLatitude", "decimalLongitude",
-      "geodeticDatum", "coordinateUncertaintyInMeters",
-
-      # --- Identification ---
-      "identifiedBy", "identificationVerificationStatus",
-      "verbatimIdentification", "identificationQualifier",
-
-      # --- Taxonomy ---
-      "taxonID", "scientificName", "scientificNameAuthorship",
-      "scientificNameID", "taxonRank", "verbatimTaxonRank", "nomenclaturalCode",
-      "vernacularName",
-      "kingdom", "phylum", "class", "order", "family", "genus",
-      "specificEpithet"
-    )
   }
 
-  return(out_df[, col_order])
+  # Select and sort columns
+  return(sort_dwc_cols(out_df)) # nolint: object_usage_linter
 }
