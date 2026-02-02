@@ -201,15 +201,10 @@ list(
       command = distance_data %>%
         filter(
           naam %in% species,
-          jaar >= 2023,
+          jaar >= 2022,
         ) %>%
         mutate(
-          regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio),
-          stratum = ifelse(
-            regio == "Weidestreek",
-            "Weidestreek",
-            paste(regio, openheid_klasse, sbp, sep = " - ")
-          )
+          regio = "Bilzen"
         ),
       jaar
     ),
