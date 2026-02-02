@@ -55,53 +55,48 @@ list(
     command = parse_breeding_dates(breeding_dates_raw)
   ),
 
-  # ## Prepare sampling design data
-  # # Read file
-  # tar_file(
-  #   name = full_sample_file,
-  #   command = file.path(mbag_dir, "data", "steekproefkaders",
-  #                       "steekproefkader_mbag_mas.gpkg")
-  # ),
-  # tar_target(
-  #   name = full_sample,
-  #   command = st_read(full_sample_file)
-  # ),
-  # # Calculate area per stratum
-  # tar_target(
-  #   name = strata_sf,
-  #   command = full_sample %>%
-  #     mutate(
-  #       regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
-  #     ) %>%
-  #     st_buffer(dist = 300) %>%
-  #     group_by(regio, "openheid" = openheid_klasse, sbp) %>%
-  #     summarise(geom = st_union(geom)) %>%
-  #     ungroup() %>%
-  #     mutate(Area = as.numeric(st_area(geom)) / 1e6) %>%
-  #     select(regio, openheid, sbp, Area, everything())
-  # ),
-  # # Calculate area per region
-  # tar_target(
-  #   name = region_sf,
-  #   command = full_sample %>%
-  #     mutate(
-  #       regio = "Bilzen"
-  #     ) %>%
-  #     st_buffer(dist = 300) %>%
-  #     group_by(regio) %>%
-  #     summarise(geom = st_union(geom)) %>%
-  #     ungroup() %>%
-  #     mutate(Area = as.numeric(st_area(geom)) / 1e6) %>%
-  #     select(regio, Area, everything())
-  # ),
-  # # Create sampling area object for Flanders
-  # tar_target(
-  #   name = flanders_sf,
-  #   command = full_sample %>%
-  #     st_buffer(dist = 300) %>%
-  #     summarise(geom = st_union(geom)) %>%
-  #     ungroup()
-  # ),
+  ## Prepare sampling design data
+  # Read sampling frame file
+  tar_file(
+    name = full_sample_file,
+    command = file.path(mbag_dir, "data", "steekproefkaders",
+                        "steekproefkader_mbag_mas.gpkg")
+  ),
+  tar_target(
+    name = full_sample,
+    command = st_read(full_sample_file)
+  ),
+  # Read region file
+  tar_file(
+    name = bilzen_file,
+    command = file.path("data", "MAS-zomer-Bilzen.shp")
+  ),
+  tar_target(
+    name = bilzen_sf,
+    command = st_read(bilzen_file) %>%
+      st_zm(drop = TRUE, what = "ZM") %>%
+      st_transform(crs = st_crs(full_sample))
+  ),
+  # Get sampling frame in Bilzen
+  tar_target(
+    name = samples_bilzen,
+    command = st_filter(full_sample, bilzen_sf)
+  ),
+  # Calculate area per region
+  tar_target(
+    name = region_sf,
+    command = samples_bilzen %>%
+      mutate(
+        regio = "Bilzen"
+      ) %>%
+      st_buffer(dist = 300) %>%
+      group_by(regio) %>%
+      summarise(geom = st_union(geom)) %>%
+      ungroup() %>%
+      st_intersection(bilzen_sf) %>%
+      mutate(Area = as.numeric(st_area(geom)) / 1e6) %>%
+      select(regio, Area, everything())
+  ),
 
   ## Prepare design for distance sampling
   # Read design
@@ -116,44 +111,23 @@ list(
         regio = "Bilzen"
       )
   ),
-  # # Prepare distance sampling tables
-  # # Per stratum:
-  # tar_target(
-  #   name = region_table,
-  #   command = strata_sf %>%
-  #     st_drop_geometry() %>%
-  #     mutate(stratum = paste(openheid, sbp, sep = " - ")) %>%
-  #     mutate(Region.Label = paste(regio, openheid, sbp, sep = " - ")) %>%
-  #     select(Region.Label, Area) %>%
-  #     filter(!grepl("^Weidestreek", Region.Label))
-  # ),
-  # tar_target(
-  #   name = sample_table,
-  #   command = design %>%
-  #     distinct(pointid, regio, openheid = openheid_klasse, sbp) %>%
-  #     mutate(
-  #       Region.Label = paste(regio, openheid, sbp, sep = " - "),
-  #       Effort = 1 # assume one visit for maxima
-  #     ) %>%
-  #     select(Sample.Label = pointid, Region.Label, Effort) %>%
-  #     filter(!grepl("^Weidestreek", Region.Label))
-  # ),
-  # # Per region:
-  # tar_target(
-  #   name = region_table_region,
-  #   command = region_sf %>%
-  #     st_drop_geometry() %>%
-  #     select(Region.Label = regio, Area)
-  # ),
-  # tar_target(
-  #   name = sample_table_region,
-  #   command = design %>%
-  #     distinct(pointid, regio, openheid = openheid_klasse, sbp) %>%
-  #     mutate(
-  #       Effort = 1 # assume one visit for maxima
-  #     ) %>%
-  #     select(Sample.Label = pointid, Region.Label = regio, Effort)
-  # ),
+
+  # Prepare distance sampling tables
+  tar_target(
+    name = region_table_region,
+    command = region_sf %>%
+      st_drop_geometry() %>%
+      select(Region.Label = regio, Area)
+  ),
+  tar_target(
+    name = sample_table_region,
+    command = design %>%
+      distinct(pointid, regio, openheid = openheid_klasse, sbp) %>%
+      mutate(
+        Effort = 1 # assume one visit for maxima
+      ) %>%
+      select(Sample.Label = pointid, Region.Label = regio, Effort)
+  ),
 
   # Load occurrence data
   ## Get file paths for each year
