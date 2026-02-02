@@ -421,7 +421,7 @@ list(
     ),
     # Abundances
     tar_target(
-      name = abundances_stratum_list,
+      name = abundances_region_list,
       command = get_individuals_from_ds(
         ds_model = model_selection,
         measure = "abundance"
@@ -434,12 +434,12 @@ list(
       iteration = "list"
     ),
     tar_target(
-      name = abundances_stratum,
-      command = bind_rows(abundances_stratum_list)
+      name = abundances_region,
+      command = bind_rows(abundances_region_list)
     ),
     # Densities
     tar_target(
-      name = densities_stratum_list,
+      name = densities_region_list,
       command = get_individuals_from_ds(
         ds_model = model_selection,
         measure = "dens"
@@ -452,8 +452,8 @@ list(
       iteration = "list"
     ),
     tar_target(
-      name = densities_stratum,
-      command = bind_rows(densities_stratum_list)
+      name = densities_region,
+      command = bind_rows(densities_region_list)
     )
   )
 )
