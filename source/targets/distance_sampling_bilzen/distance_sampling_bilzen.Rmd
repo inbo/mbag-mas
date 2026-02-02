@@ -78,7 +78,16 @@ We selecteren de volgende soorten: `r species_list`.
 # Methoden
 ## Data preparatie
 
+De oorspronkelijke coördinaten in het Nederlandse Amersfoort-referentiesysteem werden getransformeerd naar het Belgische Lambert 72-coördinatenstelsel.
+
+Uit de volledige MAS-dataset werden vervolgens enkel die telpunten geselecteerd die tot het studiegebied Bilzen behoren. Waarnemingen van vóór 2022 werden uitgesloten. Daarna werden enkel waarnemingen behouden die binnen de vooraf gedefinieerde en geldige telperiodes van het monitoringsprotocol vallen.
+
+Voor elke waarneming werd de Euclidische afstand berekend tussen de waargenomen locatie en het middelpunt van het bijbehorende telpunt. Waarnemingen die zich verder dan 300 m van het telpunt bevonden, werden verwijderd, zodat de dataset beperkt bleef tot de effectieve bemonsteringsradius van de puntentellingen.
+
+Vervolgens werd de dataset gefilterd tot waarnemingen van vogels en zoogdieren. Om dubbeltellingen te vermijden, werden waarnemingen afkomstig van tellingen die binnen dezelfde periode meermaals werden uitgevoerd geïdentificeerd en gecorrigeerd. Taxonnamen werden geharmoniseerd door ondersoorten samen te voegen tot het soortniveau, zodat een consistente taxonomische resolutie werd bekomen.
+
 ## Densiteitsschattingen
+
 Voor het berekenen van abundanties en densiteiten maken we gebruik van *distance sampling*.
 Het statistische kader werd uitgebreid besproken in het rapport van het pilootproject ([10.21436/inbor.126766638](https://doi.org/10.21436/inbor.126766638)) en wordt hier niet herhaald.
 In het kort komt het er op neer dat de detectiekans wordt berekend op basis van de afstanden waarop individuen werden gezien.
