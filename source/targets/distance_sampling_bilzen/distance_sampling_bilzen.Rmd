@@ -51,14 +51,12 @@ source(file.path(mbag_dir, "source", "R", "plot_detection_curve.R"))
 
 # Doel
 
-We berekenen de densiteit van akkervogels in Vlaanderen per stratum en landbouwregio door rekening te houden met de detectiekans.
+We berekenen de densiteit van akkervogels in Bilzen door rekening te houden met de detectiekans.
 Dit doen we via 'distance sampling'.
-Ten slotte bouwen we een voorspellend spatiaal model om een verspreidingskaart te maken.
 
 ```{r}
-species_list_total <- sort(
+species_list <- sort(
   c(
-    "Boerenzwaluw",
     "Geelgors",
     "Gele Kwikstaart",
     "Grasmus",
@@ -72,24 +70,17 @@ species_list_total <- sort(
     "Scholekster",
     "Torenvalk",
     "Veldleeuwerik",
-    "Wulp"
+    "Wulp",
+    "Kwartel",
+    "Witte Kwikstaart"
   )
 )
 
 distance_data <- tar_read("distance_data")
-year_list <- 2023:max(distance_data$jaar)
+year_list <- 2022:max(distance_data$jaar)
 ```
 
-We selecteren de soorten uit bijlage V van natuurherstelverordening voor Vlaanderen.
-Het gaat om `r species_list_total`.
-Boerenzwaluw broedt niet tijdens MAS tellingen (slechts gedeeltelijke overlap met R4).
-Deze soort wordt (voorlopig?) niet opgenomen in dit rapport.
-
-```{r}
-species_list <- species_list_total[
-  !species_list_total %in% c("Boerenzwaluw")
-]
-```
+We selecteren de volgende soorten: `r species_list`.
 
 # Densiteitsschattingen
 ## Methoden
