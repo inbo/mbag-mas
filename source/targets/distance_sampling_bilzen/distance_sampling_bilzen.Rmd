@@ -61,17 +61,10 @@ species_list <- sort(
     "Gele Kwikstaart",
     "Grasmus",
     "Graspieper",
-    "Grutto",
-    "Kievit",
     "Kneu",
-    "Patrijs",
     "Ringmus",
-    "Roodborsttapuit",
-    "Scholekster",
     "Torenvalk",
     "Veldleeuwerik",
-    "Wulp",
-    "Kwartel",
     "Witte Kwikstaart"
   )
 )
@@ -98,24 +91,23 @@ In deze paragraaf overlopen we de belangrijkste stappen aan van het analyseproce
 
 **1.** Voorbereiden gebiedslagen voor extrapolatie
 
-We maken een uitspraak over het landbouwgebied in Bilzen:
+We maken een uitspraak over het landbouwgebied in Bilzen (rood):
 
 ```{r}
 region_sf <- tar_read("region_sf")
 region_sf %>%
   st_drop_geometry() %>%
-  mutate(`totale oppervlakte (km²)` = sum(Area)) %>%
+  select("regio", "Area") %>%
   rename("oppervlakte (km²)" = "Area") %>%
   kable(digits = 3)
 ```
 
 ```{r, message=FALSE}
+bilzen_sf <- tar_read("bilzen_sf")
 # Visualisation
-region_sf %>%
-  ggplot() +
-  geom_sf(aes(fill = regio)) +
-  labs(fill = "") +
-  theme(legend.position = "bottom")
+ggplot() +
+  geom_sf(data = bilzen_sf, fill = "cornflowerblue") +
+  geom_sf(data = region_sf, fill = "firebrick")
 ```
 
 **2.** Filter van broedcodes

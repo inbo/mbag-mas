@@ -264,17 +264,10 @@ list(
         "Gele Kwikstaart",
         "Grasmus",
         "Graspieper",
-        "Grutto",
-        "Kievit",
         "Kneu",
-        "Patrijs",
         "Ringmus",
-        "Roodborsttapuit",
-        "Scholekster",
         "Torenvalk",
         "Veldleeuwerik",
-        "Wulp",
-        "Kwartel",
         "Witte Kwikstaart"
       )
     ),
