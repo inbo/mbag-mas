@@ -302,16 +302,10 @@ list(
       name = formulae,
       command = list(
         "~1",
-        "~regio",
         "~sbp",
         "~openheid",
-        "~regio+sbp",
-        "~regio+openheid",
         "~sbp+openheid",
-        "~sbp*openheid",
-        "~regio+sbp+openheid",
-        "regio+sbp*openheid",
-        "stratum" # same as triple interaction except 'Weidestreek' is separate
+        "~sbp*openheid"
       )
     ),
 
