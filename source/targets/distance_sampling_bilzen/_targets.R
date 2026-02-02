@@ -83,7 +83,7 @@ list(
     name = region_sf,
     command = full_sample %>%
       mutate(
-        regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
+        regio = "Bilzen"
       ) %>%
       st_buffer(dist = 300) %>%
       group_by(regio) %>%
@@ -105,14 +105,13 @@ list(
   # Read design
   tar_file(
     name = design_file,
-    command = file.path(mbag_dir, "data", "steekproefkaders",
-                        "steekproef_avimap_mbag_mas.csv")
+    command = file.path("data", "punten_mas_bilzen.csv")
   ),
   tar_target(
     name = design,
     command = read_csv(design_file, show_col_types = FALSE) %>%
       mutate(
-        regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio)
+        regio = "Bilzen"
       )
   ),
   # Prepare distance sampling tables
