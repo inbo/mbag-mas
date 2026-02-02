@@ -23,11 +23,13 @@ tar_option_set(
 
 # Set directory locations
 mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
+target_data_dir <- file.path(mbag_dir, "source", "targets", "data_preparation")
 target_distance_dir <- file.path(mbag_dir, "source", "targets",
                                  "distance_sampling")
 
 # Source custom functions
 tar_source(file.path(target_distance_dir, "R"))
+tar_source(file.path(target_data_dir, "R"))
 source(file.path(mbag_dir, "source", "R", "predatoren_f.R"))
 source(file.path(mbag_dir, "source", "R", "summarize_ds_models2.R"))
 source(file.path(mbag_dir, "source", "R", "beta_fit_params.R"))
@@ -154,23 +156,133 @@ list(
   ),
 
   # Load occurrence data
-  tar_file(
-    name = distance_data_file,
-    command = file.path(mbag_dir, "output", "datasets",
-                        "distance_data_vlaanderen.csv")
+  ## Get file paths for each year
+  tarchetypes::tar_files_input(
+    name = mas_counts_sovon_files,
+    files = paths_to_counts_sovon(
+      proj_path = target_data_dir
+    )
   ),
+  ## Read data from file paths
   tar_target(
-    name = distance_data,
-    command = read_csv(distance_data_file, show_col_types = FALSE)
+    name = mas_counts_sovon,
+    command = sf::st_read(
+      dsn = mas_counts_sovon_files,
+      quiet = TRUE
+    ),
+    pattern = map(mas_counts_sovon_files),
+    iteration = "list"
+  ),
+  ## Convert Amersfoort to Lambert coordinates
+  tar_target(
+    name = crs_pipeline,
+    command = amersfoort_to_lambert72(
+      mas_counts_sovon
+    ),
+    pattern = map(mas_counts_sovon),
+    iteration = "list"
+  ),
+  ## Select locations in MAS data that belong to Bilzen
+  tar_target(
+    name = select_sampled_points,
+    command = join_with_sample(
+      crs_pipeline,
+      design
+    ),
+    pattern = map(crs_pipeline),
+    iteration = "list"
+  ),
+  ## Select data that fall within valid time periods
+  tar_target(
+    name = select_time_periods,
+    command = select_within_time_periods(
+      counts_df = select_sampled_points
+    ),
+    pattern = map(select_sampled_points),
+    iteration = "list"
+  ),
+  ## Calculate distances to observer
+  tar_target(
+    name = calculate_obs_distance,
+    command = calculate_obs_dist(
+      counts_df = select_time_periods
+    ),
+    pattern = map(select_time_periods),
+    iteration = "list"
+  ),
+  ## Select data that fall within the sampling unit circles
+  tar_target(
+    name = select_within_radius,
+    command = calculate_obs_distance %>%
+      filter(.data$distance2plot <= 300),
+    pattern = map(calculate_obs_distance),
+    iteration = "list"
+  ),
+  ## Select data for birds and mammals
+  tar_target(
+    name = select_species_groups,
+    command = dplyr::filter(
+      select_within_radius,
+      soortgrp %in% 1:2
+    ),
+    pattern = map(select_within_radius),
+    iteration = "list"
+  ),
+  ## Remove data from counts that were performed twice within the same period
+  tar_target(
+    name = remove_double_counts,
+    command = process_double_counted_data(
+      counts_df = select_species_groups
+    ),
+    pattern = map(select_species_groups),
+    iteration = "list"
+  ),
+  ## Set all taxon names to species level
+  tar_target(
+    name = remove_subspecies_names,
+    command = adjust_subspecies_names_nl(
+      counts_df = remove_double_counts
+    ),
+    pattern = map(remove_double_counts),
+    iteration = "list"
+  ),
+  ## Stop branching over years, bind all data together
+  tar_target(
+    name = mas_data_full,
+    command = do.call(
+      what = rbind.data.frame,
+      args = c(remove_subspecies_names, make.row.names = FALSE)
+    )
+  ),
+  ## Remove unwanted columns and set count to 1 for breeding code > 0
+  tar_target(
+    name = mas_data_clean,
+    command = remove_columns(mas_data_full) %>%
+      mutate(aantal = ifelse(wrntype != "0", 1, aantal))
   ),
 
-  # Conversion to 100 ha
+  ## Write out distance sampling dataset
+  tar_target(
+    name = distance_data,
+    command = mas_data_clean %>%
+      st_drop_geometry() %>%
+      select("oid", "plotnaam", "x_plot" = "x_coord", "y_plot" = "y_coord",
+             "x_occ" = "x_lambert", "y_occ" = "y_lambert", "crs",
+             "naam", "aantal", "wrntype", "jaar", "periode_in_jaar",
+             "regio", "openheid_klasse", "sbp", "distance2plot")
+  ),
+
+  ## Conversion to 100 ha
   tar_target(
     name = conversion_factor,
     command = Distance::convert_units("meter", NULL, "Square kilometer")
   ),
 
-  ## Static branching over species
+
+  ###################################
+  ## Static branching over species ##
+  ###################################
+
   tar_map(
     # Choose species of interest
     values = list(
