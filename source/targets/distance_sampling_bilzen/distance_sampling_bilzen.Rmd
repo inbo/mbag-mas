@@ -106,16 +106,16 @@ region_sf %>%
 bilzen_sf <- tar_read("bilzen_sf")
 # Visualisation
 mapview::mapview(
-    region_sf,
-    col.regions = "firebrick",
-    layer = "Landbouwgebied"
+  region_sf,
+  col.regions = "firebrick",
+  layer = "Landbouwgebied"
 ) +
   mapview::mapview(
     bilzen_sf,
     col.regions = "black",
     color = "black",
     alpha.regions = 0,
-    lwd = 2 ,
+    lwd = 2,
     layer = "Bilzen"
   )
 ```
