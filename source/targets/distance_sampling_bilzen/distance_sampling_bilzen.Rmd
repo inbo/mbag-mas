@@ -105,9 +105,19 @@ region_sf %>%
 ```{r, message=FALSE}
 bilzen_sf <- tar_read("bilzen_sf")
 # Visualisation
-ggplot() +
-  geom_sf(data = bilzen_sf, fill = "cornflowerblue") +
-  geom_sf(data = region_sf, fill = "firebrick")
+mapview::mapview(
+    region_sf,
+    col.regions = "firebrick",
+    layer = "Landbouwgebied"
+) +
+  mapview::mapview(
+    bilzen_sf,
+    col.regions = "black",
+    color = "black",
+    alpha.regions = 0,
+    lwd = 2 ,
+    layer = "Bilzen"
+  )
 ```
 
 **2.** Filter van broedcodes
