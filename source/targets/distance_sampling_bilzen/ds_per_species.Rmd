@@ -21,7 +21,7 @@ for (y in params$years) {
 
 ### Densiteiten over de jaren
 
-We vergelijken hier de densiteiten over de jaren heen.
+We vergelijken hier de densiteiten over de jaren heen. We vergelijken ook met de densiteiten in de volledige Leemstreek.
 
 ```{r}
 densities_region_target <- tar_read_ds("densities_region", params$species,
@@ -36,13 +36,24 @@ densities_region %>%
 ```{r}
 densities_region_target <- tar_read_ds("densities_region", params$species,
                                        start_year = 2022)
+# Get Leemstreek values
+densities_region_mas <- tar_read_ds(
+  "densities_region", params$species, start_year = 2023,
+  store = file.path(mbag_dir, "source", "targets", "distance_sampling", "_targets")
+)
+densities_region_lm <- densities_region_mas %>%
+  rename("region" = "Label", "estimate" = "Estimate") %>%
+  filter(region == "Leemstreek")
+
+
 densities_region_target %>%
   rename("region" = "Label", "estimate" = "Estimate") %>%
   filter(region != "Total") %>%
-  ggplot(aes(x = year, y = estimate)) +
-  geom_point() +
+  bind_rows(densities_region_lm) %>%
+  ggplot(aes(x = year, y = estimate, colour = region, group = region)) +
+  geom_point(position = position_dodge2(0.75)) +
   geom_errorbar(aes(ymin = lcl, ymax = ucl),
-    width = 0.2,
+    width = 0.5, position = position_dodge(0.75)
   ) +
   scale_y_continuous(limits = c(0, NA)) +
   labs(y = "breeding pairs / 100 ha", x = "")
