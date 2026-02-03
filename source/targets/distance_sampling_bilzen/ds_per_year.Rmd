@@ -119,6 +119,7 @@ Densiteiten:
 densities_region_target <- tar_read_ds("densities_region", params$species,
                                        start_year = 2022)
 densities_region <- densities_region_target %>%
+  filter(year == params$year) %>%
   select(-species, -year) %>%
   rename("region" = "Label", "estimate" = "Estimate")
 densities_region %>%
