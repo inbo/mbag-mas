@@ -39,7 +39,8 @@ densities_region_target <- tar_read_ds("densities_region", params$species,
 # Get Leemstreek values
 densities_region_mas <- tar_read_ds(
   "densities_region", params$species, start_year = 2023,
-  store = file.path(mbag_dir, "source", "targets", "distance_sampling", "_targets")
+  store = file.path(mbag_dir, "source", "targets", "distance_sampling",
+                    "_targets")
 )
 densities_region_lm <- densities_region_mas %>%
   rename("region" = "Label", "estimate" = "Estimate") %>%
