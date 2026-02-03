@@ -18,6 +18,7 @@
 *.kml
 *.csv
 !data/gewasgroepen/*.csv
+!source/targets/distance_sampling_bilzen/data/punten_mas_bilzen.csv
 *.png
 *.shx
 *.xls*
