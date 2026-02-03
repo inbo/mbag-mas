@@ -195,7 +195,7 @@ list(
   tar_target(
     name = select_species_groups,
     command = dplyr::filter(
-      select_time_periods,
+      select_within_radius,
       soortgrp %in% 1:2
     ),
     pattern = map(select_within_radius),
@@ -240,7 +240,7 @@ list(
     command = mas_data_clean %>%
       st_drop_geometry() %>%
       select("oid", "plotnaam", "x_plot" = "x_coord", "y_plot" = "y_coord",
-             "x_occ" = "x_lambert", "y_occ" = "y_lambert", "crs",
+             "x_occ" = "x_lambert", "y_occ" = "y_lambert",
              "naam", "aantal", "wrntype", "jaar", "periode_in_jaar",
              "regio", "openheid_klasse", "sbp", "distance2plot")
   ),
