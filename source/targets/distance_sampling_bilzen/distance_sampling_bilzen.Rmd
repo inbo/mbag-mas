@@ -1,6 +1,6 @@
 ---
 title: "Densiteitsschattingen via distance sampling Bilzen"
-author: "Ward Langeraert"
+author: "Ward Langeraert, Johannes Jansen"
 date: "`r Sys.Date()`"
 output:
   bookdown::html_document2:

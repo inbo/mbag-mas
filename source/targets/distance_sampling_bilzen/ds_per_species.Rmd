@@ -26,6 +26,16 @@ We vergelijken hier de densiteiten over de jaren heen.
 ```{r}
 densities_region_target <- tar_read_ds("densities_region", params$species,
                                        start_year = 2022)
+densities_region <- densities_region_target %>%
+  select(-species, -Label) %>%
+  select("year", "estimate" = "Estimate", everything())
+densities_region %>%
+  kable(digits = 3)
+```
+
+```{r}
+densities_region_target <- tar_read_ds("densities_region", params$species,
+                                       start_year = 2022)
 densities_region_target %>%
   rename("region" = "Label", "estimate" = "Estimate") %>%
   filter(region != "Total") %>%
@@ -35,6 +45,5 @@ densities_region_target %>%
     width = 0.2,
   ) +
   scale_y_continuous(limits = c(0, NA)) +
-  labs(y = "breeding pairs / 100 ha", x = "") +
-  facet_wrap(~region, ncol = 2, scales = "free")
+  labs(y = "breeding pairs / 100 ha", x = "")
 ```

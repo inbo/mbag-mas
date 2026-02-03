@@ -15,7 +15,6 @@ filtered_distance_df %>%
   filter(jaar == params$year) %>%
   ggplot(aes(x = periode_in_jaar, fill = factor(wrntype))) +
   geom_bar() +
-  facet_wrap(~regio, scales = "free") +
   labs(x = "Telperiode", y = "Aantal broedparen", fill = "Broedcode",
        title = params$year)
 ```
@@ -28,7 +27,6 @@ filtered_distance_df %>%
   mutate(strat = paste(openheid_klasse, sbp, sep = " - ")) %>%
   ggplot(aes(x = periode_in_jaar, fill = strat)) +
   geom_bar() +
-  facet_wrap(~regio, scales = "free") +
   labs(x = "Telperiode", y = "Aantal broedparen", fill = "Stratum",
        title = params$year)
 ```
@@ -41,7 +39,6 @@ filtered_distance_df %>%
   mutate(strat = paste(openheid_klasse, sbp, sep = " - ")) %>%
   ggplot(aes(x = distance2plot, fill = strat)) +
   geom_histogram() +
-  facet_wrap(~regio, scales = "free") +
   labs(x = "Afstand (m)", y = "Aantal broedparen", fill = "Stratum",
        title = params$year)
 ```
@@ -80,6 +77,19 @@ plot(final_model, pdf = TRUE, showpoints = TRUE)
 par(mfrow = c(1, 1))
 ```
 
+#### Detectiekansen
+
+Detectiekansen:
+
+```{r}
+tar_read_ds("detection_probabilities", params$species, start_year = 2022) %>%
+  filter(year == params$year) %>%
+  select(-species, -year) %>%
+  select(where(function(x) !any(is.na(x)))) %>% # Remove NA columns
+  relocate("estimate_p", "se_p", "ll_beta", "ul_beta", .after = last_col()) %>%
+  kable(digits = 3)
+```
+
 The detectiecurve(s) ziet/zien er uit als volgt.
 De stippellijn duidt de gemiddelde detectiecurve aan.
 
@@ -98,40 +108,4 @@ plot_detection_curve(
     legend.margin = margin(6, 6, 6, 6),
     legend.position = "bottom"
   )
-```
-
-#### Resultaten
-
-Detectiekansen:
-
-```{r}
-tar_read_ds("detection_probabilities", params$species, start_year = 2022) %>%
-  filter(year == params$year) %>%
-  select(-species, -year) %>%
-  select(where(function(x) !any(is.na(x)))) %>% # Remove NA columns
-  relocate("estimate_p", "se_p", "ll_beta", "ul_beta", .after = last_col()) %>%
-  kable(digits = 3)
-```
-
-Densiteiten:
-
-```{r}
-densities_region_target <- tar_read_ds("densities_region", params$species,
-                                       start_year = 2022)
-densities_region <- densities_region_target %>%
-  filter(year == params$year) %>%
-  select(-species, -year) %>%
-  rename("region" = "Label", "estimate" = "Estimate")
-densities_region %>%
-  kable(digits = 3)
-```
-
-```{r}
-densities_region %>%
-  filter(region != "Total") %>%
-  ggplot(aes(x = region, y = estimate)) +
-  geom_point(size = 3) +
-  geom_errorbar(aes(ymin = lcl, ymax = ucl), width = 0.2, linewidth = 1) +
-  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 100, 2)) +
-  labs(y = "breeding pairs / 100 ha", x = "")
 ```
