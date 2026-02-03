@@ -107,6 +107,10 @@ region_sf %>%
 
 ```{r, message=FALSE}
 bilzen_sf <- tar_read("bilzen_sf")
+design <- tar_read("design")
+design_sf <- st_as_sf(design, coords = c("x_coord", "y_coord"), crs = 31370)
+design_sf_buffered <- st_buffer(design_sf, 300)
+
 # Visualisation
 mapview::mapview(
   region_sf,
@@ -120,7 +124,10 @@ mapview::mapview(
     alpha.regions = 0,
     lwd = 2,
     layer = "Bilzen"
-  )
+  ) +
+  mapview::mapview(design_sf, col.regions = "orange", cex = 2,
+                   layer = "Telpunten") +
+  mapview::mapview(design_sf_buffered, layer = "Telcirkels")
 ```
 
 **2.** Filter van broedcodes
