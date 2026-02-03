@@ -249,204 +249,197 @@ list(
   tar_target(
     name = conversion_factor,
     command = Distance::convert_units("meter", NULL, "Square kilometer")
-  )
+  ),
 
 
   ###################################
   ## Static branching over species ##
   ###################################
 
-  # tar_map(
-  #   # Choose species of interest
-  #   values = list(
-  #     species = c(
-  #       "Geelgors",
-  #       "Gele Kwikstaart",
-  #       "Grasmus",
-  #       "Graspieper",
-  #       "Kneu",
-  #       "Ringmus",
-  #       "Torenvalk",
-  #       "Veldleeuwerik",
-  #       "Witte Kwikstaart"
-  #     )
-  #   ),
-  #
-  #   ## Prepare species occurrence data
-  #   # Select species and group occurrence data by year
-  #   tar_group_by(
-  #     name = distance_data_grouped,
-  #     command = distance_data %>%
-  #       filter(
-  #         naam %in% species,
-  #         jaar >= 2022,
-  #       ) %>%
-  #       mutate(
-  #         regio = "Bilzen"
-  #       ),
-  #     jaar
-  #   ),
-  #   # Filter breeding codes:
-  #   # > 0 for breeding birds
-  #   # all for predators and mammals
-  #   tar_target(
-  #     name = filtered_breeding_code,
-  #     command = distance_data_grouped %>%
-  #       filter(
-  #         (wrntype > 0 & !(naam %in% c("Haas", roofvogels_f()))) |
-  #           naam %in% c("Haas", roofvogels_f())
-  #       ),
-  #     pattern = map(distance_data_grouped)
-  #   ),
-  #   # Filter within breeding dates
-  #   tar_target(
-  #     name = filtered_breeding_date,
-  #     command = filter_breeding_date(
-  #       filtered_breeding_code,
-  #       dates = breeding_dates,
-  #       exception = c("Haas", roofvogels_f())
-  #     ),
-  #     pattern = map(filtered_breeding_code)
-  #   ),
-  #
-  #   ## Prepare distance sampling data
-  #   # Distances
-  #   tar_group_by(
-  #     name = ds_data,
-  #     command = filtered_breeding_date %>%
-  #       select(
-  #         species = naam,
-  #         year = jaar,
-  #         object = oid,
-  #         size = aantal,
-  #         distance = distance2plot,
-  #         openheid = openheid_klasse,
-  #         sbp,
-  #         regio,
-  #         stratum
-  #       ),
-  #     year
-  #   ),
-  #   # Observations
-  #   tar_group_by(
-  #     name = obs_table_region,
-  #     command = filtered_breeding_date %>%
-  #       group_by(periode_in_jaar, plotnaam) %>%
-  #       mutate(n = sum(aantal)) %>%
-  #       group_by(plotnaam) %>%
-  #       slice_max(order_by = n, n = 1) %>%
-  #       slice_max(order_by = periode_in_jaar, n = 1) %>% # To avoid ties
-  #       ungroup() %>%
-  #       select(
-  #         "object" = "oid", "Region.Label" = "regio",
-  #         "Sample.Label" = "plotnaam", "year" = "jaar"
-  #       ),
-  #     year
-  #   ),
-  #
-  #   ## Model specification
-  #   # Get formulas
-  #   tar_target(
-  #     name = formulae,
-  #     command = list(
-  #       "~1",
-  #       "~sbp",
-  #       "~openheid",
-  #       "~sbp+openheid",
-  #       "~sbp*openheid"
-  #     )
-  #   ),
-  #
-  #   # Fit models
-  #   tar_target(
-  #     name = ds_model_fits,
-  #     command = fit_ds_models(
-  #       data = ds_data,
-  #       formulas = formulae,
-  #       keys = c("hn", "hr"),
-  #       # Distance::ds arguments:
-  #       truncation = 300,
-  #       transect = "point",
-  #       dht_group = FALSE,
-  #       convert_units = conversion_factor,
-  #       region_table = region_table_region,
-  #       sample_table = sample_table_region,
-  #       obs_table = obs_table_region
-  #     ),
-  #     pattern = map(ds_data),
-  #     iteration = "list"
-  #   ),
-  #
-  #   ## Model comparison
-  #   # Get model fit measures
-  #   tar_target(
-  #     name = aic_comparison,
-  #     command = summarize_ds_models2(ds_model_fits, output = "plain") %>%
-  #       add_categories(ds_model_fits[!is.na(ds_model_fits)][[1]],
-  #                      c("species", "year")),
-  #     pattern = map(ds_model_fits),
-  #     iteration = "list"
-  #   ),
-  #   # Select model with lowest AIC, within tolerance with lowest nr. of params
-  #   tar_target(
-  #     name = model_selection,
-  #     command = select_ds_models(
-  #       aic_diff = aic_comparison,
-  #       model_list = ds_model_fits,
-  #       aic_tol = 2
-  #     ),
-  #     pattern = map(aic_comparison, ds_model_fits),
-  #     iteration = "list"
-  #   ),
-  #
-  #   ## Get distance sampling results
-  #   # Detection probabilities
-  #   tar_target(
-  #     name = detection_probabilities_list,
-  #     command = get_det_probs(ds_model = model_selection) %>%
-  #       add_categories(model_selection, c("species", "year")),
-  #     pattern = map(model_selection),
-  #     iteration = "list"
-  #   ),
-  #   tar_target(
-  #     name = detection_probabilities,
-  #     command = bind_rows(detection_probabilities_list)
-  #   ),
-  #   # Abundances
-  #   tar_target(
-  #     name = abundances_region_list,
-  #     command = get_individuals_from_ds(
-  #       ds_model = model_selection,
-  #       measure = "abundance"
-  #     ) %>%
-  #       filter(
-  #         Label != "Total"
-  #       ) %>%
-  #       add_categories(model_selection, c("species", "year")),
-  #     pattern = map(model_selection),
-  #     iteration = "list"
-  #   ),
-  #   tar_target(
-  #     name = abundances_region,
-  #     command = bind_rows(abundances_region_list)
-  #   ),
-  #   # Densities
-  #   tar_target(
-  #     name = densities_region_list,
-  #     command = get_individuals_from_ds(
-  #       ds_model = model_selection,
-  #       measure = "dens"
-  #     ) %>%
-  #       filter(
-  #         Label != "Total"
-  #       ) %>%
-  #       add_categories(model_selection, c("species", "year")),
-  #     pattern = map(model_selection),
-  #     iteration = "list"
-  #   ),
-  #   tar_target(
-  #     name = densities_region,
-  #     command = bind_rows(densities_region_list)
-  #   )
-  # )
+  tar_map(
+    # Choose species of interest
+    values = list(
+      species = c(
+        "Geelgors",
+        "Gele Kwikstaart",
+        "Veldleeuwerik"
+      )
+    ),
+
+    ## Prepare species occurrence data
+    # Select species and group occurrence data by year
+    tar_group_by(
+      name = distance_data_grouped,
+      command = distance_data %>%
+        filter(
+          naam %in% species,
+          jaar >= 2022,
+        ) %>%
+        mutate(
+          regio = "Bilzen"
+        ),
+      jaar
+    ),
+    # Filter breeding codes:
+    # > 0 for breeding birds
+    # all for predators and mammals
+    tar_target(
+      name = filtered_breeding_code,
+      command = distance_data_grouped %>%
+        filter(
+          (wrntype > 0 & !(naam %in% c("Haas", roofvogels_f()))) |
+            naam %in% c("Haas", roofvogels_f())
+        ),
+      pattern = map(distance_data_grouped)
+    ),
+    # Filter within breeding dates
+    tar_target(
+      name = filtered_breeding_date,
+      command = filter_breeding_date(
+        filtered_breeding_code,
+        dates = breeding_dates,
+        exception = c("Haas", roofvogels_f())
+      ),
+      pattern = map(filtered_breeding_code)
+    ),
+
+    ## Prepare distance sampling data
+    # Distances
+    tar_group_by(
+      name = ds_data,
+      command = filtered_breeding_date %>%
+        select(
+          species = naam,
+          year = jaar,
+          object = oid,
+          size = aantal,
+          distance = distance2plot,
+          openheid = openheid_klasse,
+          sbp,
+          regio
+        ),
+      year
+    ),
+    # Observations
+    tar_group_by(
+      name = obs_table_region,
+      command = filtered_breeding_date %>%
+        group_by(periode_in_jaar, plotnaam) %>%
+        mutate(n = sum(aantal)) %>%
+        group_by(plotnaam) %>%
+        slice_max(order_by = n, n = 1) %>%
+        slice_max(order_by = periode_in_jaar, n = 1) %>% # To avoid ties
+        ungroup() %>%
+        select(
+          "object" = "oid", "Region.Label" = "regio",
+          "Sample.Label" = "plotnaam", "year" = "jaar"
+        ),
+      year
+    ),
+
+    ## Model specification
+    # Get formulas
+    tar_target(
+      name = formulae,
+      command = list(
+        "~1",
+        "~sbp",
+        "~openheid",
+        "~sbp+openheid",
+        "~sbp*openheid"
+      )
+    ),
+
+    # Fit models
+    tar_target(
+      name = ds_model_fits,
+      command = fit_ds_models(
+        data = ds_data,
+        formulas = formulae,
+        keys = c("hn", "hr"),
+        # Distance::ds arguments:
+        truncation = 300,
+        transect = "point",
+        dht_group = FALSE,
+        convert_units = conversion_factor,
+        region_table = region_table_region,
+        sample_table = sample_table_region,
+        obs_table = obs_table_region
+      ),
+      pattern = map(ds_data),
+      iteration = "list"
+    ),
+
+    ## Model comparison
+    # Get model fit measures
+    tar_target(
+      name = aic_comparison,
+      command = summarize_ds_models2(ds_model_fits, output = "plain") %>%
+        add_categories(ds_model_fits[!is.na(ds_model_fits)][[1]],
+                       c("species", "year")),
+      pattern = map(ds_model_fits),
+      iteration = "list"
+    ),
+    # Select model with lowest AIC, within tolerance with lowest nr. of params
+    tar_target(
+      name = model_selection,
+      command = select_ds_models(
+        aic_diff = aic_comparison,
+        model_list = ds_model_fits,
+        aic_tol = 2
+      ),
+      pattern = map(aic_comparison, ds_model_fits),
+      iteration = "list"
+    ),
+
+    ## Get distance sampling results
+    # Detection probabilities
+    tar_target(
+      name = detection_probabilities_list,
+      command = get_det_probs(ds_model = model_selection) %>%
+        add_categories(model_selection, c("species", "year")),
+      pattern = map(model_selection),
+      iteration = "list"
+    ),
+    tar_target(
+      name = detection_probabilities,
+      command = bind_rows(detection_probabilities_list)
+    ),
+    # Abundances
+    tar_target(
+      name = abundances_region_list,
+      command = get_individuals_from_ds(
+        ds_model = model_selection,
+        measure = "abundance"
+      ) %>%
+        mutate(
+          Label = "Bilzen"
+        ) %>%
+        add_categories(model_selection, c("species", "year")),
+      pattern = map(model_selection),
+      iteration = "list"
+    ),
+    tar_target(
+      name = abundances_region,
+      command = bind_rows(abundances_region_list)
+    ),
+    # Densities
+    tar_target(
+      name = densities_region_list,
+      command = get_individuals_from_ds(
+        ds_model = model_selection,
+        measure = "dens"
+      ) %>%
+        mutate(
+          Label = "Bilzen"
+        ) %>%
+        add_categories(model_selection, c("species", "year")),
+      pattern = map(model_selection),
+      iteration = "list"
+    ),
+    tar_target(
+      name = densities_region,
+      command = bind_rows(densities_region_list)
+    )
+  )
 )
