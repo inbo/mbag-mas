@@ -24,7 +24,8 @@ for (y in params$years) {
 We vergelijken hier de densiteiten over de jaren heen.
 
 ```{r}
-densities_region_target <- tar_read_ds("densities_region", params$species)
+densities_region_target <- tar_read_ds("densities_region", params$species,
+                                       start_year = 2022)
 densities_region_target %>%
   rename("region" = "Label", "estimate" = "Estimate") %>%
   filter(region != "Total") %>%

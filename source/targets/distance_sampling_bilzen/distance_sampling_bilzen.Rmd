@@ -59,13 +59,7 @@ species_list <- sort(
   c(
     "Geelgors",
     "Gele Kwikstaart",
-    "Grasmus",
-    "Graspieper",
-    "Kneu",
-    "Ringmus",
-    "Torenvalk",
-    "Veldleeuwerik",
-    "Witte Kwikstaart"
+    "Veldleeuwerik"
   )
 )
 
@@ -140,6 +134,8 @@ We behouden enkel data van telperiodes die volledig binnen broedperiodes van de 
 ```{r}
 tar_read("breeding_dates") %>%
   filter(soort %in% species_list) %>%
+  select(-"id") %>%
+  distinct() %>%
   kable()
 ```
 
@@ -162,7 +158,7 @@ Voor de densiteitscurve onderzoeken we de fit van zowel de *half-normal* als *ha
 We onderzoeken de afhankelijk van de detectiekans van verschillende variabelen op basis van de volgende formules voor de schaalparameter.
 
 ```{r}
-tar_read_ds("formulae", species = "Veldleeuwerik")
+tar_read_ds("formulae", species = "Veldleeuwerik", start_year = 2022)
 ```
 
 **3.** Stratum- en regiomodellen
