@@ -74,14 +74,19 @@ book:
     left:
     - text: Cover
       file: index.md
-    - text: Aanbevelingen
-      file: aanbevelingen.md
     - text: Inleiding
-      file: inleiding.md
+      file: 02_inleiding.md
+    - text: Methodiek
+      file: 03_methodiek.qmd
+    - text: Schatting simulatieparameters
+      file: 04_schatting_simulatieparameters.qmd
+    - text: Detecteerbare effectgrootte
+      file: 05_detecteerbare_effectgrootte.qmd
   chapters:
   - index.md
-  - abstract.md
-  - aanbevelingen.md
-  - inleiding.md
+  - 02_inleiding.md
+  - 03_methodiek.qmd
+  - 04_schatting_simulatieparameters.qmd
+  - 05_detecteerbare_effectgrootte.qmd
   - referenties.md
 bibliography: references.bib

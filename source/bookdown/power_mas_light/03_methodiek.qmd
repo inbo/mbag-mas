@@ -1,0 +1,281 @@
+# Methodiek {#sec-methodiek}
+
+Alle analyses werden uitgevoerd in R [@R].
+
+De hier beschreven methodiek moet worden beschouwd als een eerste aanzet voor de evaluatie van een mogelijk MAS light. Gezien de beperkte beschikbare tijd werd bewust gekozen voor een relatief eenvoudig simulatie- en analysekader dat de belangrijkste kenmerken van het monitoringsontwerp omvat.
+
+Deze aanpak laat toe om snel een eerste inschatting te maken van de statistische kracht van het voorgestelde meetnet. Indien de resultaten aantonen dat het gewenste effect reeds met ruime zekerheid detecteerbaar is binnen dit eenvoudige kader, kan in een volgende fase een meer realistische simulatie worden uitgewerkt. Omgekeerd geldt dat wanneer de resultaten bij dit eenvoudige model reeds onvoldoende of slechts marginaal zijn, een uitgebreider en realistischer model naar verwachting niet tot gunstigere conclusies zal leiden.
+
+Mogelijke uitbreidingen van het simulatiekader worden besproken in hoofdstuk @sec-methodiek-uitbreidingen.
+
+## Monitoringsontwerp
+
+### Ruimtelijke stratificatie
+
+De steekproef wordt gestratificeerd volgens:
+
+* 6 landbouwstreken;
+* open landschap vs halfopen landschap;
+* binnen vs buiten SBP.
+
+Dit resulteert in:
+
+$$6 \times 2 \times 2 = 24$$
+
+strata.
+
+De strata dienen uitsluitend om een representatieve steekproef van Vlaanderen te verkrijgen.
+Er worden geen afzonderlijke analyses of rapporteringen per stratum uitgevoerd.
+
+### Allocatie van telpunten
+
+Het aantal telpunten per stratum wordt proportioneel verdeeld volgens de oppervlakte van het stratum binnen het steekproefkader.
+Enkel voor binnen en buiten SBP zijn er evenveel punten per stratum en zijn deze onafhankelijk van de oppervlakte (deze gewichten zijn dus 0.5).
+
+Laat:
+
+$$w_h$$
+
+het relatieve oppervlaktegewicht van stratum $h$ voorstellen.
+
+Dan wordt het aantal punten in stratum $h$:
+
+$$n_h = N \times w_h$$
+
+waarbij:
+
+* $N$ = totaal aantal telpunten.
+
+Aangezien we geen uitspraak per stratum willen doen (i.t.t. het originele MAS), is nu enkel het totaal aantal telpunten van interesse.
+Achteraf kan dan via de gewichten berekend worden hoeveel punten in welk stratum terechtkomen.
+
+### Tellingen
+
+Per telpunt:
+
+* 4 bezoeken per jaar;
+* monitoring gedurende 10 jaar.
+
+## Simulatiescenario's
+
+### Totaal aantal telpunten
+
+De volgende scenario's worden in eerste instantie onderzocht:
+
+```r
+n_punten <- c(
+  250,
+  500,
+  750,
+  1000
+)
+```
+
+Deze aantallen kunnen later aangepast worden.
+
+### Referentiesoorten
+
+De analyse wordt uitgevoerd voor alle landbouwvogels op de lijst in Vlaanderen voor de natuurherstelverordening.
+
+| Soort              | Lijst Vlaanderen      | Lijst Wallonië      | Monitoring Vlaanderen |
+|--------------------|-----------------------|---------------------|-----------------------|
+| Boerenzwaluw       | x                     | x                   | ABV + MAS             |
+| Geelgors           | x                     | x                   | ABV + MAS             |
+| Gele kwikstaart    | x                     | x                   | ABV + MAS             |
+| Grasmus            | x                     | x                   | ABV + MAS             |
+| Graspieper         | x                     | x                   | MAS ???               |
+| Grauwe gors        |                       | x                   | BBV (WGG)             |
+| Grauwe klauwier    |                       | x                   | BBV                   |
+| Grutto             | x                     |                     | ???                   |
+| Kievit             | x                     | x                   | ABV + MAS             |
+| Kneu               | x                     | x                   | ABV + MAS             |
+| Patrijs            | x                     | x                   | ABV + MAS             |
+| Ringmus            | x                     | x                   | ABV + MAS             |
+| Roek               |                       | x                   | BBV                   |
+| Roodborsttapuit    | x                     | x                   | ABV + MAS             |
+| Scholekster        | x                     |                     | ABV                   |
+| Spreeuw            |                       | x                   | ABV + MAS             |
+| Torenvalk          | x                     | x                   | ABV + MAS             |
+| Veldleeuwerik      | x                     | x                   | ABV + MAS             |
+| Wulp               | x                     |                     | ???                   |
+| Zomertortel        |                       | x                   | ???                   |
+
+
+Voor elke soort worden volgende parameters geschat uit bestaande monitoringgegevens (zie verder).
+
+## Data-generatieproces
+
+In dit hoofdstuk wordt beschreven hoe synthetische teldata worden gegenereerd.
+
+### Simulatiemodel
+De simulatie gebeurt op het niveau van:
+
+* telpunt;
+* jaar;
+* telperiode.
+
+Elke observatie stelt dus één telling voor op een bepaald telpunt, in een bepaald jaar en tijdens een bepaalde telperiode.
+
+De ware log-dichtheid op telpunt $j$, in jaar $i$ en telperiode $t$ wordt beschreven door:
+
+$$
+\eta_{ijt} = \beta_0 + \beta_1 Jaar_i + \beta_2 SBP_j + \beta_3 (Jaar_i \times SBP_j) +
+u_{punt,j} + u_{periode,it}
+$$
+
+waar:
+
+$$
+u_{punt,j} \sim N(0,\sigma^2_{punt})
+$$
+
+de structurele verschillen tussen telpunten beschrijft, en
+
+$$
+u_{periode,it} \sim N(0,\sigma^2_{periode})
+$$
+
+de variatie tussen telperiodes binnen een bepaald jaar beschrijft.
+
+De verwachte dichtheid wordt vervolgens:
+
+$$
+\mu_{ijt} = \exp(\eta_{ijt})
+$$
+
+De waargenomen tellingen worden gegenereerd uit een negatieve binomiale verdeling:
+
+$$
+y_{ijt} \sim NB(\mu_{ijt}, \theta)
+$$
+
+waarbij ($\theta$) de overdispersieparameter is.
+
+### Implementatie
+
+Random effecten gegenereerd voor zowel de ruimtelijke als temporele component:
+
+```r
+rf_punt <- rnorm(
+  n_punten,
+  sd = sd_punt
+)
+
+rf_periode <- rnorm(
+  n_jaren * n_periodes,
+  sd = sd_periode
+)
+```
+
+Vervolgens wordt voor elke combinatie van telpunt, jaar en telperiode de lineaire predictor berekend:
+
+```r
+eta <-
+  beta0 +
+  beta1 * jaar +
+  beta2 * sbp +
+  beta3 * jaar * sbp +
+  rf_punt[punt] +
+  rf_periode[periode]
+```
+
+waaruit de verwachte abundantie wordt afgeleid:
+
+```r
+mu <- exp(eta)
+```
+
+en de tellingen worden gesimuleerd via:
+
+```r
+y <- rnbinom(
+  n = length(mu),
+  mu = mu,
+  size = theta
+)
+```
+
+Deze gesimuleerde tellingen vormen vervolgens de input voor het analysemodel dat in hoofdstuk 6 wordt beschreven.
+
+### Samenvatting van simulatieparameters
+
+| Parameter      | Betekenis                                        | Rol in simulatie                                | Hoe bepalen                            |
+| -------------- | ------------------------------------------------ | ----------------------------------------------- | -------------------------------------- |
+| **β0**         | Gemiddelde log-densiteit buiten SBP in startjaar | Baseline populatiegrootte                       | Geschat uit bestaande MAS-data   |
+| **β1**         | Jaarlijkse trend buiten SBP                      | Referentietrend (controlegroep)                 | Conservatieve aanname (bv. -1% per jaar) |
+| **β2**         | Verschil SBP vs niet-SBP in startjaar            | Verschil in intercept tussen groepen            | Geschat uit bestaande MAS-data             |
+| **β3**         | Trendverschil SBP vs niet-SBP                    | **Doelparameter (detecteerbaar effect)**        | Gevarieerd in simulaties (startwaarde +1%)             |
+| **σ²_punt**    | Variatie tussen telpunten                        | Ruimtelijke heterogeniteit                      | Geschat uit bestaande MAS-data             |
+| **σ²_periode** | Variatie tussen telperiodes (jaar-specifiek)     | Tijdelijke/detectievariatie tussen meetmomenten | Geschat uit bestaande MAS-data             |
+| **θ**          | Overdispersie (NegBin)                           | Extra Poisson-variatie in tellingen             | Geschat uit bestaande MAS-data             |
+                                          |
+                                          
+*Note to self:*
+- begin densiteit buiten SBP = log(β0)
+- begin densiteit binnen SBP = log(β0 + β2)
+- jaarlijkse trend buiten SBP = log(β1) --> -1%
+- jaarlijkse trend binnen SBP = log(β1 + β3) --> 0%
+
+We starten met een veronderstelling dat soorten buiten SBP een licht negatieve trend hebben en binnen SBP een stabiele trend.
+De analyse zal β3 optimaliseren, maar als er tijd is kunnen we de keuze voor β1 ook veranderen om te zien of dit andere resultaten geeft.
+
+De schatting van de parameters zal gebeuren door het analysemodel te fitten op de MAS-data voor elke referentiesoort.
+
+### Rol van stratificatie
+
+Stratificatie (landbouwstreek × landschap × SBP) wordt gebruikt om telpunten te verdelen volgens oppervlaktegewichten (behalve binnen en buiten SBP worden 50-50 verdeeld), maar heeft geen directe rol in de datageneratie of -analyse.
+
+## Analysemodel
+### Model
+
+De gesimuleerde data worden geanalyseerd met een Generalized Linear Mixed Model (GLMM).
+Het analysemodel is:
+
+
+```r
+glmmTMB(
+  y ~ jaar * sbp +
+    (1 | punt) +
+    (1 | periode),
+  family = nbinom2()
+)
+```
+
+### Parameter van interesse
+
+De centrale toets is of deze parameter verschilt van nul:
+
+```r
+jaar:sbp
+```
+
+Deze parameter meet het verschil in trend tussen SBP en niet-SBP.
+
+## Detecteerbare effectgrootte
+In plaats van een klassieke steekproefgrootteanalyse wordt gewerkt vanuit een vast monitoringsontwerp (scenario's 250–1000 telpunten) en wordt onderzocht welke trendverschillen tussen SBP- en niet-SBP-gebieden met dit ontwerp detecteerbaar zijn.
+De centrale effectparameter is de interactieterm tussen jaar en SBP-status, die het verschil in jaarlijkse log-trend tussen beide groepen beschrijft.
+
+Met behulp van `designpower::find_power()` wordt via simulaties bepaald welke waarde van dit trendverschil nodig is om een vooraf gekozen power (90 %) te bereiken.
+Dit levert de minimum detecteerbare effectgrootte (MDE) op voor elk scenario van het aantal telpunten, en geeft zo direct inzicht in de gevoeligheid van het monitoringsnetwerk.
+
+```r
+find_power(
+  design,                      # initiële designparameters (aantal jaren, telperiodes, sd's ...)
+  design_digits,               # aantal decimalen designparameters (precisie)
+  opti,                        # parameter te optimaliseren (jaar:sbp)
+  sim_power,                   # simulatie functie (genereert data en fit analysemodel, output = p-waarde)
+  power = 0.9,                 # target power
+  alpha = 0.1,                 # significance level
+  filename = "power.duckdb",   # slaat alles op in database (met hashes)
+)
+```
+
+## Mogelijke uitbreidingen van het simulatiekader {#sec-methodiek-uitbreidingen}
+
+De huidige analyse is bewust opgezet als een eerste, vereenvoudigde evaluatie van de detecteerbaarheid van trendverschillen tussen SBP- en niet-SBP-gebieden. Verschillende elementen van de analyse kunnen in een latere fase verder worden onderzocht.
+
+Een eerste uitbreiding betreft het aantal telperiodes per jaar. In de huidige analyse wordt uitgegaan van vier telperiodes, conform het bestaande MAS. In een vervolganalyse kan worden onderzocht in welke mate een reductie naar drie telperiodes de statistische kracht beïnvloedt. Een dergelijke vergelijking is relevant omdat minder bezoeken de veldwerkinspanning en de kosten kunnen verlagen en bovendien beter aansluiten bij het protocol van het Algemene Broedvogelmonitoring (ABV).
+
+Daarnaast kan worden nagegaan of de effecten verschillen tussen open landschap (OL) en halfopen landschap (HOL). In de huidige studie worden beide landschapstypes samengenomen om uitspraken op Vlaams niveau te maximaliseren. Dit vertegenwoordigt het meest gunstige scenario qua steekproefgrootte. Indien zelfs op Vlaams niveau geen voldoende kleine effectgroottes detecteerbaar blijken, is het uitgesloten dat een verdere opsplitsing naar landschapstype wel voldoende statistische kracht zal opleveren.
+
+Ten slotte kunnen ook meer realistische simulatie- en analysemethoden worden onderzocht. Voorbeelden zijn het toelaten van niet-lineaire populatietrends doorheen de tijd. Dergelijke uitbreidingen sluiten doorgaans beter aan bij de biologische realiteit, maar vereisen bijkomende aannames en een grotere modelcomplexiteit. De huidige analyse kan daarom worden beschouwd als een eerste screening van de haalbaarheid, waarna indien nodig meer verfijnde modellen kunnen worden ontwikkeld.
