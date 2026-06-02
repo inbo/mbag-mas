@@ -41,3 +41,7 @@ temp
 *_cache/
 /cache/
 source/markdown/cache
+.positai
+
+# output dir
+output
