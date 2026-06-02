@@ -1,0 +1,445 @@
+################################################################################
+# targets pipeline for distance sampling of Bilzen data                        #
+################################################################################
+
+# Load packages required to define the pipeline
+library(targets)
+library(tarchetypes)
+library(dplyr)
+library(readr)
+library(sf)
+
+conflicted::conflicts_prefer(dplyr::filter)
+
+# Set target options
+tar_option_set(
+  packages = c("tidyverse",
+               "sf"),
+  format = "qs",
+  memory = "transient",
+  garbage_collection = TRUE,
+  workspace_on_error = TRUE
+)
+
+# Set directory locations
+mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
+target_data_dir <- file.path(mbag_dir, "source", "targets", "data_preparation")
+target_distance_dir <- file.path(mbag_dir, "source", "targets",
+                                 "distance_sampling")
+
+# Source custom functions
+tar_source(file.path(target_distance_dir, "R"))
+tar_source(file.path(target_data_dir, "R"))
+source(file.path(mbag_dir, "source", "R", "predatoren_f.R"))
+source(file.path(mbag_dir, "source", "R", "summarize_ds_models2.R"))
+source(file.path(mbag_dir, "source", "R", "beta_fit_params.R"))
+source(file.path(mbag_dir, "source", "R", "berekening_hulpvariabelen.R"))
+
+# Target list
+list(
+  ## Prepare breeding dates data
+  # Read file
+  tar_file(
+    name = breeding_dates_file,
+    command = file.path(mbag_dir, "data", "SOVON",
+                        "Interpretatie_Criteria_Broedvogels_v2.csv")
+  ),
+  tar_target(
+    name = breeding_dates_raw,
+    command = read_csv2(breeding_dates_file,
+                        show_col_types = FALSE)
+  ),
+  # Clean up data
+  tar_target(
+    name = breeding_dates,
+    command = parse_breeding_dates(breeding_dates_raw)
+  ),
+
+  ## Prepare sampling design data
+  # Read sampling frame file
+  tar_file(
+    name = full_sample_file,
+    command = file.path(mbag_dir, "data", "steekproefkaders",
+                        "steekproefkader_mbag_mas.gpkg")
+  ),
+  tar_target(
+    name = full_sample,
+    command = st_read(full_sample_file)
+  ),
+  # Read region file
+  tar_file(
+    name = bilzen_file,
+    command = file.path("data", "MAS-zomer-Bilzen.shp")
+  ),
+  tar_target(
+    name = bilzen_sf,
+    command = st_read(bilzen_file) %>%
+      st_zm(drop = TRUE, what = "ZM") %>%
+      st_transform(crs = st_crs(full_sample))
+  ),
+  # Get sampling frame in Bilzen
+  tar_target(
+    name = samples_bilzen,
+    command = st_filter(full_sample, bilzen_sf)
+  ),
+  # Calculate area per region
+  tar_target(
+    name = region_sf,
+    command = samples_bilzen %>%
+      mutate(
+        regio = "Bilzen"
+      ) %>%
+      st_buffer(dist = 300) %>%
+      group_by(regio) %>%
+      summarise(geom = st_union(geom)) %>%
+      ungroup() %>%
+      st_intersection(bilzen_sf) %>%
+      mutate(Area = as.numeric(st_area(geom)) / 1e6) %>%
+      select(regio, Area, everything())
+  ),
+
+  ## Prepare design for distance sampling
+  # Read design
+  tar_file(
+    name = design_file,
+    command = file.path("data", "punten_mas_bilzen.csv")
+  ),
+  tar_target(
+    name = design,
+    command = read_csv(design_file, show_col_types = FALSE) %>%
+      mutate(
+        regio = "Bilzen"
+      )
+  ),
+
+  # Prepare distance sampling tables
+  tar_target(
+    name = region_table_region,
+    command = region_sf %>%
+      st_drop_geometry() %>%
+      select(Region.Label = regio, Area)
+  ),
+  tar_target(
+    name = sample_table_region,
+    command = design %>%
+      distinct(pointid, regio, openheid = openheid_klasse, sbp) %>%
+      mutate(
+        Effort = 1 # assume one visit for maxima
+      ) %>%
+      select(Sample.Label = pointid, Region.Label = regio, Effort)
+  ),
+
+  # Load occurrence data
+  ## Get file paths for each year
+  tarchetypes::tar_files_input(
+    name = mas_counts_sovon_files,
+    files = paths_to_counts_sovon(
+      proj_path = target_data_dir
+    )
+  ),
+  ## Read data from file paths
+  tar_target(
+    name = mas_counts_sovon,
+    command = sf::st_read(
+      dsn = mas_counts_sovon_files,
+      quiet = TRUE
+    ),
+    pattern = map(mas_counts_sovon_files),
+    iteration = "list"
+  ),
+  ## Convert Amersfoort to Lambert coordinates
+  tar_target(
+    name = crs_pipeline,
+    command = amersfoort_to_lambert72(
+      mas_counts_sovon
+    ),
+    pattern = map(mas_counts_sovon),
+    iteration = "list"
+  ),
+  ## Select locations in MAS data that belong to Bilzen
+  tar_target(
+    name = select_sampled_points,
+    command = crs_pipeline %>%
+      inner_join(design, by =  join_by("plotnaam" == "pointid")) %>%
+      filter(jaar >= 2022),
+    pattern = map(crs_pipeline),
+    iteration = "list"
+  ),
+  ## Select data that fall within valid time periods
+  tar_target(
+    name = select_time_periods,
+    command = select_within_time_periods(
+      counts_df = select_sampled_points
+    ),
+    pattern = map(select_sampled_points),
+    iteration = "list"
+  ),
+  ## Calculate distances to observer
+  tar_target(
+    name = calculate_obs_distance,
+    command = calculate_obs_dist(
+      counts_df = select_time_periods
+    ),
+    pattern = map(select_time_periods),
+    iteration = "list"
+  ),
+  ## Select data that fall within the sampling unit circles
+  tar_target(
+    name = select_within_radius,
+    command = calculate_obs_distance %>%
+      filter(.data$distance2plot <= 300),
+    pattern = map(calculate_obs_distance),
+    iteration = "list"
+  ),
+  ## Select data for birds and mammals
+  tar_target(
+    name = select_species_groups,
+    command = dplyr::filter(
+      select_within_radius,
+      soortgrp %in% 1:2
+    ),
+    pattern = map(select_within_radius),
+    iteration = "list"
+  ),
+  ## Remove data from counts that were performed twice within the same period
+  tar_target(
+    name = remove_double_counts,
+    command = process_double_counted_data(
+      counts_df = select_species_groups
+    ),
+    pattern = map(select_species_groups),
+    iteration = "list"
+  ),
+  ## Set all taxon names to species level
+  tar_target(
+    name = remove_subspecies_names,
+    command = adjust_subspecies_names_nl(
+      counts_df = remove_double_counts
+    ),
+    pattern = map(remove_double_counts),
+    iteration = "list"
+  ),
+  ## Stop branching over years, bind all data together
+  tar_target(
+    name = mas_data_full,
+    command = do.call(
+      what = rbind.data.frame,
+      args = c(remove_subspecies_names, make.row.names = FALSE)
+    )
+  ),
+  ## Remove unwanted columns and set count to 1 for breeding code > 0
+  tar_target(
+    name = mas_data_clean,
+    command = remove_columns(mas_data_full) %>%
+      mutate(aantal = ifelse(wrntype != "0", 1, aantal))
+  ),
+
+  ## Write out distance sampling dataset
+  tar_target(
+    name = distance_data,
+    command = mas_data_clean %>%
+      st_drop_geometry() %>%
+      select("oid", "plotnaam", "x_plot" = "x_coord", "y_plot" = "y_coord",
+             "x_occ" = "x_lambert", "y_occ" = "y_lambert",
+             "naam", "aantal", "wrntype", "jaar", "periode_in_jaar",
+             "regio", "openheid_klasse", "sbp", "distance2plot")
+  ),
+
+  ## Conversion to 100 ha
+  tar_target(
+    name = conversion_factor,
+    command = Distance::convert_units("meter", NULL, "Square kilometer")
+  ),
+
+
+  ###################################
+  ## Static branching over species ##
+  ###################################
+
+  tar_map(
+    # Choose species of interest
+    values = list(
+      species = c(
+        "Geelgors",
+        "Gele Kwikstaart",
+        "Veldleeuwerik"
+      )
+    ),
+
+    ## Prepare species occurrence data
+    # Select species and group occurrence data by year
+    tar_group_by(
+      name = distance_data_grouped,
+      command = distance_data %>%
+        filter(
+          naam %in% species,
+          jaar >= 2022,
+        ) %>%
+        mutate(
+          regio = "Bilzen"
+        ),
+      jaar
+    ),
+    # Filter breeding codes:
+    # > 0 for breeding birds
+    # all for predators and mammals
+    tar_target(
+      name = filtered_breeding_code,
+      command = distance_data_grouped %>%
+        filter(
+          (wrntype > 0 & !(naam %in% c("Haas", roofvogels_f()))) |
+            naam %in% c("Haas", roofvogels_f())
+        ),
+      pattern = map(distance_data_grouped)
+    ),
+    # Filter within breeding dates
+    tar_target(
+      name = filtered_breeding_date,
+      command = filter_breeding_date(
+        filtered_breeding_code,
+        dates = breeding_dates,
+        exception = c("Haas", roofvogels_f())
+      ),
+      pattern = map(filtered_breeding_code)
+    ),
+
+    ## Prepare distance sampling data
+    # Distances
+    tar_group_by(
+      name = ds_data,
+      command = filtered_breeding_date %>%
+        select(
+          species = naam,
+          year = jaar,
+          object = oid,
+          size = aantal,
+          distance = distance2plot,
+          openheid = openheid_klasse,
+          sbp,
+          regio
+        ),
+      year
+    ),
+    # Observations
+    tar_group_by(
+      name = obs_table_region,
+      command = filtered_breeding_date %>%
+        group_by(periode_in_jaar, plotnaam) %>%
+        mutate(n = sum(aantal)) %>%
+        group_by(plotnaam) %>%
+        slice_max(order_by = n, n = 1) %>%
+        slice_max(order_by = periode_in_jaar, n = 1) %>% # To avoid ties
+        ungroup() %>%
+        select(
+          "object" = "oid", "Region.Label" = "regio",
+          "Sample.Label" = "plotnaam", "year" = "jaar"
+        ),
+      year
+    ),
+
+    ## Model specification
+    # Get formulas
+    tar_target(
+      name = formulae,
+      command = list(
+        "~1",
+        "~sbp",
+        "~openheid",
+        "~sbp+openheid",
+        "~sbp*openheid"
+      )
+    ),
+
+    # Fit models
+    tar_target(
+      name = ds_model_fits,
+      command = fit_ds_models(
+        data = ds_data,
+        formulas = formulae,
+        keys = c("hn", "hr"),
+        # Distance::ds arguments:
+        truncation = 300,
+        transect = "point",
+        dht_group = FALSE,
+        convert_units = conversion_factor,
+        region_table = region_table_region,
+        sample_table = sample_table_region,
+        obs_table = obs_table_region
+      ),
+      pattern = map(ds_data),
+      iteration = "list"
+    ),
+
+    ## Model comparison
+    # Get model fit measures
+    tar_target(
+      name = aic_comparison,
+      command = summarize_ds_models2(ds_model_fits, output = "plain") %>%
+        add_categories(ds_model_fits[!is.na(ds_model_fits)][[1]],
+                       c("species", "year")),
+      pattern = map(ds_model_fits),
+      iteration = "list"
+    ),
+    # Select model with lowest AIC, within tolerance with lowest nr. of params
+    tar_target(
+      name = model_selection,
+      command = select_ds_models(
+        aic_diff = aic_comparison,
+        model_list = ds_model_fits,
+        aic_tol = 2
+      ),
+      pattern = map(aic_comparison, ds_model_fits),
+      iteration = "list"
+    ),
+
+    ## Get distance sampling results
+    # Detection probabilities
+    tar_target(
+      name = detection_probabilities_list,
+      command = get_det_probs(ds_model = model_selection) %>%
+        add_categories(model_selection, c("species", "year")),
+      pattern = map(model_selection),
+      iteration = "list"
+    ),
+    tar_target(
+      name = detection_probabilities,
+      command = bind_rows(detection_probabilities_list)
+    ),
+    # Abundances
+    tar_target(
+      name = abundances_region_list,
+      command = get_individuals_from_ds(
+        ds_model = model_selection,
+        measure = "abundance"
+      ) %>%
+        mutate(
+          Label = "Bilzen"
+        ) %>%
+        add_categories(model_selection, c("species", "year")),
+      pattern = map(model_selection),
+      iteration = "list"
+    ),
+    tar_target(
+      name = abundances_region,
+      command = bind_rows(abundances_region_list)
+    ),
+    # Densities
+    tar_target(
+      name = densities_region_list,
+      command = get_individuals_from_ds(
+        ds_model = model_selection,
+        measure = "dens"
+      ) %>%
+        mutate(
+          Label = "Bilzen"
+        ) %>%
+        add_categories(model_selection, c("species", "year")),
+      pattern = map(model_selection),
+      iteration = "list"
+    ),
+    tar_target(
+      name = densities_region,
+      command = bind_rows(densities_region_list)
+    )
+  )
+)

@@ -1,0 +1,61 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+## `r params$species`
+
+```{r, results='asis'}
+for (y in params$years) {
+  params$year <- y
+
+  out <- capture.output({
+    child <- knitr::knit_child(
+      file.path(here::here(), "ds_per_year.Rmd"),
+      envir = knit_global()
+    )
+  })
+  cat(child, sep = "\n")
+}
+```
+
+### Densiteiten over de jaren
+
+We vergelijken hier de densiteiten over de jaren heen. We vergelijken ook met de densiteiten in de volledige Leemstreek.
+
+```{r}
+densities_region_target <- tar_read_ds("densities_region", params$species,
+                                       start_year = 2022)
+densities_region <- densities_region_target %>%
+  select(-species, -Label) %>%
+  select("year", "estimate" = "Estimate", everything())
+densities_region %>%
+  kable(digits = 3)
+```
+
+```{r}
+densities_region_target <- tar_read_ds("densities_region", params$species,
+                                       start_year = 2022)
+# Get Leemstreek values
+densities_region_mas <- tar_read_ds(
+  "densities_region", params$species, start_year = 2023,
+  store = file.path(mbag_dir, "source", "targets", "distance_sampling",
+                    "_targets")
+)
+densities_region_lm <- densities_region_mas %>%
+  rename("region" = "Label", "estimate" = "Estimate") %>%
+  filter(region == "Leemstreek")
+
+
+densities_region_target %>%
+  rename("region" = "Label", "estimate" = "Estimate") %>%
+  filter(region != "Total") %>%
+  bind_rows(densities_region_lm) %>%
+  ggplot(aes(x = year, y = estimate, colour = region, group = region)) +
+  geom_point(position = position_dodge2(0.75)) +
+  geom_errorbar(aes(ymin = lcl, ymax = ucl),
+    width = 0.5, position = position_dodge(0.75)
+  ) +
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(y = "breeding pairs / 100 ha", x = "")
+```

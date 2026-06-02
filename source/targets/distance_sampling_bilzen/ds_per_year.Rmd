@@ -1,0 +1,111 @@
+### `r params$year`
+#### Data exploratie
+
+We selecteren de gefilterde data broedcode > 0 en binnen broedseizoen.
+
+```{r}
+filtered_distance_df <- tar_read_ds("filtered_breeding_date", params$species,
+                                    start_year = 2022)
+```
+
+We kijken naar het aantal broedparen per regio per broedcode.
+
+```{r}
+filtered_distance_df %>%
+  filter(jaar == params$year) %>%
+  ggplot(aes(x = periode_in_jaar, fill = factor(wrntype))) +
+  geom_bar() +
+  labs(x = "Telperiode", y = "Aantal broedparen", fill = "Broedcode",
+       title = params$year)
+```
+
+We kijken naar het aantal broedparen per stratum.
+
+```{r}
+filtered_distance_df %>%
+  filter(jaar == params$year) %>%
+  mutate(strat = paste(openheid_klasse, sbp, sep = " - ")) %>%
+  ggplot(aes(x = periode_in_jaar, fill = strat)) +
+  geom_bar() +
+  labs(x = "Telperiode", y = "Aantal broedparen", fill = "Stratum",
+       title = params$year)
+```
+
+We kijken naar de verdeling van de afstanden.
+
+```{r}
+filtered_distance_df %>%
+  filter(jaar == params$year) %>%
+  mutate(strat = paste(openheid_klasse, sbp, sep = " - ")) %>%
+  ggplot(aes(x = distance2plot, fill = strat)) +
+  geom_histogram() +
+  labs(x = "Afstand (m)", y = "Aantal broedparen", fill = "Stratum",
+       title = params$year)
+```
+
+#### Model selectie
+
+```{r}
+final_model <- tar_read_ds("model_selection", params$species, params$year,
+                           start_year = 2022)
+f <- final_model$ddf$ds$aux$ddfobj$scale$formula
+key <- ifelse(
+  final_model$ddf$ds$aux$ddfobj$type == "hn",
+  "half-normal",
+  "hazard-rate"
+)
+```
+
+We selecteren het model met de `r key` sleutelfunctie en formule `r f`.
+
+```{r}
+tar_read_ds("aic_comparison", params$species, params$year,
+            start_year = 2022) %>%
+  select(-species, -year) %>%
+  filter(`Delta AIC` <= 10) %>% # only show low AIC models
+  kable(digits = 3)
+```
+
+#### Model fit
+
+We kijken naar de model fit van het finale model.
+
+```{r}
+par(mfrow = c(1, 2))
+gof_ds(final_model)
+plot(final_model, pdf = TRUE, showpoints = TRUE)
+par(mfrow = c(1, 1))
+```
+
+#### Detectiekansen
+
+Detectiekansen:
+
+```{r}
+tar_read_ds("detection_probabilities", params$species, start_year = 2022) %>%
+  filter(year == params$year) %>%
+  select(-species, -year) %>%
+  select(where(function(x) !any(is.na(x)))) %>% # Remove NA columns
+  relocate("estimate_p", "se_p", "ll_beta", "ul_beta", .after = last_col()) %>%
+  kable(digits = 3)
+```
+
+The detectiecurve(s) ziet/zien er uit als volgt.
+De stippellijn duidt de gemiddelde detectiecurve aan.
+
+```{r}
+plot_detection_curve(
+  final_model,
+  show_data = TRUE,
+  plot_average_fit = TRUE,
+  plot_covariate_fit = TRUE
+) +
+  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 100, by = 0.25)) +
+  labs(x = "Distance (m)", y = "Detection probability") +
+  theme_minimal() +
+  theme(
+    legend.background = element_rect(fill = "white", color = "darkgrey"),
+    legend.margin = margin(6, 6, 6, 6),
+    legend.position = "bottom"
+  )
+```
