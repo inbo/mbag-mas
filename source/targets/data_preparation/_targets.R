@@ -274,7 +274,8 @@ list(
   # Perform mapping of Darwin Core column names
   tar_target(
     name = darwincore_mapping,
-    command = dwc_mapping(complete_data_gbif_raw)
+    command = dwc_mapping(complete_data_gbif_raw) %>%
+      filter(dwc_occurrenceStatus == "Present")
   ),
   # Get taxon names and split dataframe in groups of `size`
   tarchetypes::tar_group_size(
@@ -352,7 +353,31 @@ list(
     name = dwc_mapping_final_blurred,
     command = blur_occurrences(
       occ_df = dwc_mapping_final,
-      utm_grid_path = file.path(mbag_dir, "data", "utm_roosters", "utm5_vl.shp")
+      utm_grid_path = file.path(
+        mbag_dir, "data", "utm_roosters", "utm5_vl.shp"
+      ),
+      blur_years = 2,
+      embargo_years = 2,
+      vulnerable_birds = c(
+        "Grauwe Kiekendief", "Bruine Kiekendief", "Patrijs", "Kwartelkoning"
+      ),
+      vulnerable_mammals = c("Bever", "Das", "Lynx", "Wolf", "Wilde kat")
+    )
+  ),
+
+  # Add VBP static values
+  tar_target(
+    name = dwc_dataset_vbp,
+    command = add_vbp_values(
+      occ_df = dwc_mapping_final,
+      blurred = FALSE
+    )
+  ),
+  tar_target(
+    name = dwc_dataset_vbp_blurred,
+    command = add_vbp_values(
+      occ_df = dwc_mapping_final_blurred,
+      blurred = TRUE
     )
   ),
 
@@ -360,11 +385,15 @@ list(
   # Split datasets
   tar_target(
     name = split_datasets,
-    command = split_dwc_event_occ(dwc_mapping_final)
+    command = split_dwc_event_occ(
+      dwc_dataset_vbp
+    )
   ),
   tar_target(
     name = split_datasets_blurred,
-    command = split_dwc_event_occ(dwc_mapping_final_blurred)
+    command = split_dwc_event_occ(
+      dwc_dataset_vbp_blurred
+    )
   ),
   # Write datasets
   tar_target(
@@ -372,7 +401,7 @@ list(
     command = write_ipt_csv(
       split_list = split_datasets,
       path = file.path(mbag_dir, "output", "datasets", publication_year),
-      suffix = "_mas"
+      suffix = "_highres_mas"
     )
   ),
   tar_target(
@@ -380,7 +409,7 @@ list(
     command = write_ipt_csv(
       split_list = split_datasets_blurred,
       path = file.path(mbag_dir, "output", "datasets", publication_year),
-      suffix = "_blur_mas"
+      suffix = "_lowres_mas"
     )
   )
 )

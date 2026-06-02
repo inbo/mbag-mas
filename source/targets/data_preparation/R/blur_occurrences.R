@@ -3,8 +3,9 @@ blur_occurrences <- function(
   utm_grid_path,
   blur_years = 2,
   embargo_years = 2,
-  vulnerable_species = c("Grauwe Kiekendief", "Bruine Kiekendief",
-                         "Patrijs", "Kwartelkoning")
+  vulnerable_birds = c("Grauwe Kiekendief", "Bruine Kiekendief",
+                       "Patrijs", "Kwartelkoning"),
+  vulnerable_mammals = c("Bever", "Das", "Wolf", "Lynx", "Wilde kat")
 ) {
   require("sf")
   require("dplyr")
@@ -62,11 +63,13 @@ blur_occurrences <- function(
     filter(
       # Blur nesting information for duration of blur_years
       (grepl("nest", .data$verbatimBehavior, ignore.case = TRUE) &
-         !(tolower(.data$vernacularName) %in% tolower(vulnerable_species)) &
+         !(tolower(.data$vernacularName) %in% tolower(vulnerable_birds)) &
          .data$eventDate >= blur_date) |
-        # Blur nest information of vulnerable_species
+        # Blur nest information of vulnerable_birds
         (grepl("nest", .data$verbatimBehavior, ignore.case = TRUE) &
-           tolower(.data$vernacularName) %in% tolower(vulnerable_species))
+           tolower(.data$vernacularName) %in% tolower(vulnerable_birds)) |
+        # Blur occurrences of vulnerable_mammals
+        (tolower(.data$vernacularName) %in% tolower(vulnerable_mammals))
     ) %>%
     st_join(utm_grid, join = st_within, left = FALSE) %>%
     st_drop_geometry() %>%
@@ -111,12 +114,17 @@ blur_occurrences <- function(
       # Create new columns
       dataGeneralizations = if_else(
         .data$is_blurred,
-        paste0("UTM ", .data$spat_res, " km"),
+        paste0("UTM ", .data$spat_res, "km"),
         ""
       ),
       georeferenceRemarks = if_else(
         .data$is_blurred,
         "coordinates are centroid of used grid square",
+        ""
+      ),
+      informationWithheld = if_else(
+        .data$is_blurred,
+        "original locations available upon request",
         ""
       )
     ) %>%
@@ -178,14 +186,14 @@ blur_occurrences <- function(
     select(-"coord_key", -"max_suffix", -"needs_new", -"new_group_id",
            -"event_suffix_num", -"event_suffix", -"original_suffix")
 
-  # Remove recent occurrences of vulnerable_species
+  # Remove recent occurrences of vulnerable_birds
   # Go back embargo_years Octobers
   embargo_date <- current_october %m-% years(embargo_years)
 
   occ_out <- occ_blurred_new %>%
     filter(
       !(grepl("nest", .data$verbatimBehavior, ignore.case = TRUE) &
-          tolower(.data$vernacularName) %in% tolower(vulnerable_species) &
+          tolower(.data$vernacularName) %in% tolower(vulnerable_birds) &
           .data$eventDate >= embargo_date)
     )
 
