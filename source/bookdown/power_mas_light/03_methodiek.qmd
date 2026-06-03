@@ -323,22 +323,23 @@ De schatting van de parameters zal gebeuren door het analysemodel te fitten op d
 Stratificatie (landbouwstreek × landschap × SBP) wordt gebruikt om telpunten te verdelen volgens oppervlaktegewichten (behalve binnen en buiten SBP worden 50-50 verdeeld), maar heeft geen directe rol in de datageneratie of -analyse.
 
 ## Analysemodel {#sec-analysemodel}
-### Model
 
 De gesimuleerde data worden geanalyseerd met een Generalized Linear Mixed Model (GLMM).
-Het analysemodel is:
+Het analysemodel is
 
+$$
+\eta_{ij} = \beta_0 + \beta_1 Jaar_i + \beta_2 SBP_j + \beta_3 (Jaar_i \times SBP_j) +
+u_{punt,j}
+$$
+
+en fitten we met deze met de **glmmTMB** package [@mcgillycuddy2025glmmTMB; brooks2017glmmTMB]
 
 ```r
 glmmTMB(
-  y ~ jaar * sbp +
-    (1 | punt) +
-    (1 | periode),
+  y ~ jaar * sbp + (1 | punt),
   family = nbinom2()
 )
 ```
-
-### Parameter van interesse
 
 De centrale toets is of deze parameter verschilt van nul:
 
@@ -349,6 +350,7 @@ jaar:sbp
 Deze parameter meet het verschil in trend tussen SBP en niet-SBP.
 
 ## Detecteerbare effectgrootte
+
 In plaats van een klassieke steekproefgrootteanalyse wordt gewerkt vanuit een vast monitoringsontwerp (scenario's 250–1000 telpunten) en wordt onderzocht welke trendverschillen tussen SBP- en niet-SBP-gebieden met dit ontwerp detecteerbaar zijn.
 De centrale effectparameter is de interactieterm tussen jaar en SBP-status, die het verschil in jaarlijkse log-trend tussen beide groepen beschrijft.
 
