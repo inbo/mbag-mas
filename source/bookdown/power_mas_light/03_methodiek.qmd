@@ -113,7 +113,7 @@ n_punten <- c(
 
 Deze aantallen kunnen later aangepast worden.
 
-### Referentiesoorten {#sec-referentiesoorten}
+### Doelsoorten {#sec-doelsoorten}
 
 De analyse wordt uitgevoerd voor alle landbouwvogels op de lijst in Vlaanderen voor de natuurherstelverordening.
 
@@ -189,13 +189,13 @@ corners_up <- tibble::tibble(
   PC1 = c(pc1_min, pc1_max),
   PC2 = c(pc2_max, pc2_max),
   scenario = c("NW (laag PC1, hoog PC2)",
-               "NE (hoog PC1, hoog PC2)")
+               "NO (hoog PC1, hoog PC2)")
 )
 corners_down <- tibble::tibble(
   PC1 = c(pc1_min, pc1_max),
   PC2 = c(pc2_min, pc2_min),
-  scenario = c("SW (laag PC1, laag PC2)",
-               "SE (hoog PC1, laag PC2)")
+  scenario = c("ZW (laag PC1, laag PC2)",
+               "ZO (hoog PC1, laag PC2)")
 )
 
 ggplot(pca_df, aes(PC1, PC2)) +
@@ -316,7 +316,7 @@ Deze gesimuleerde tellingen vormen vervolgens de input voor het analysemodel dat
 We starten met een veronderstelling dat soorten buiten SBP een licht negatieve trend hebben en binnen SBP een stabiele trend.
 De analyse zal β3 optimaliseren, maar als er tijd is kunnen we de keuze voor β1 ook veranderen om te zien of dit andere resultaten geeft.
 
-De schatting van de parameters zal gebeuren door het analysemodel te fitten op de MAS-data voor elke referentiesoort (@sec-referentiesoorten).
+De schatting van de parameters zal gebeuren door het analysemodel te fitten op de MAS-data voor elke referentiesoort (@sec-doelsoorten).
 
 ### Rol van stratificatie
 
@@ -332,7 +332,7 @@ $$
 u_{punt,j}
 $$
 
-en fitten we met deze met de **glmmTMB** package [@mcgillycuddy2025glmmTMB; brooks2017glmmTMB]
+en fitten we met de **glmmTMB** package [@mcgillycuddy2025glmmTMB; @brooks2017glmmTMB]
 
 ```r
 glmmTMB(
@@ -351,29 +351,41 @@ Deze parameter meet het verschil in trend tussen SBP en niet-SBP.
 
 ## Detecteerbare effectgrootte
 
-In plaats van een klassieke steekproefgrootteanalyse wordt gewerkt vanuit een vast monitoringsontwerp (scenario's 250–1000 telpunten) en wordt onderzocht welke trendverschillen tussen SBP- en niet-SBP-gebieden met dit ontwerp detecteerbaar zijn.
+In plaats van een klassieke steekproefgrootteanalyse wordt gewerkt vanuit een vast monitoringsontwerp (scenario's 100-400 telpunten) en wordt onderzocht welke trendverschillen tussen SBP- en niet-SBP-gebieden met dit ontwerp detecteerbaar zijn.
 De centrale effectparameter is de interactieterm tussen jaar en SBP-status, die het verschil in jaarlijkse log-trend tussen beide groepen beschrijft.
 
-Met behulp van `designpower::find_power()` wordt via simulaties bepaald welke waarde van dit trendverschil nodig is om een vooraf gekozen power (90 %) te bereiken.
+Met behulp van de **designpower** package wordt via simulaties bepaald welke waarde van dit trendverschil nodig is om een vooraf gekozen power te bereiken [@onkelinx2026designpower].
 Dit levert de minimum detecteerbare effectgrootte (MDE) op voor elk scenario van het aantal telpunten, en geeft zo direct inzicht in de gevoeligheid van het monitoringsnetwerk.
+We kiezen een power van 0.9 en significantielevel van 0.1.
 
 ```r
 find_power(
-  design,                      # initiële designparameters (aantal jaren, telperiodes, sd's ...)
+  design,                      # initiële designparameters
+                               # (aantal jaren, telperiodes, sd's ...)
   design_digits,               # aantal decimalen designparameters (precisie)
   opti,                        # parameter te optimaliseren (jaar:sbp)
-  sim_power,                   # simulatie functie (genereert data en fit analysemodel, output = p-waarde)
+  sim_power,                   # simulatie functie
+                               # (genereert data en fit analysemodel, output = p-waarde)
   power = 0.9,                 # target power
   alpha = 0.1,                 # significance level
   filename = "power.duckdb",   # slaat alles op in database (met hashes)
 )
 ```
 
+De power is de kans dat je een echt bestaand effect ook daadwerkelijk detecteert.
+Als er echt een verschil is in trend tussen SBP- en niet-SBP-gebieden, dan is de power de kans dat je analyse dat verschil ook als “significant” terugvindt.
+Een power van 0,9 betekent dus 90 % kans om een echt effect te detecteren (of 10 % kans op een vals negatief resultaat (type II-fout; je mist het effect terwijl het er wel is)).
+
+Het significantieniveau ($\alpha$) is de drempel voor hoe snel je een effect als “statistisch significant” beschouwt terwijl het in werkelijkheid niet bestaat.
+Een $\alpha$ van 0.1 betekent dat je een 10% kans op een vals positief resultaat (type I-fout: je concludeert soms ten onrechte dat er een effect is, terwijl er eigenlijk geen is).
+
+Met power = 0.9 en $\alpha$ = 0.1 kiezen we dus voor een ontwerp dat heel gevoelig is (weinig kans om echte trends te missen), maar accepteert wel een relatief ruime foutkans op vals-positieven.
+
 ## Mogelijke uitbreidingen van het simulatiekader {#sec-methodiek-uitbreidingen}
 
 De huidige analyse is bewust opgezet als een eerste, vereenvoudigde evaluatie van de detecteerbaarheid van trendverschillen tussen SBP- en niet-SBP-gebieden. Verschillende elementen van de analyse kunnen in een latere fase verder worden onderzocht.
 
-Een eerste uitbreiding betreft het aantal telperiodes per jaar. In de huidige analyse wordt uitgegaan van vier telperiodes, conform het bestaande MAS. In een vervolganalyse kan worden onderzocht in welke mate een reductie naar drie telperiodes de statistische kracht beïnvloedt. Een dergelijke vergelijking is relevant omdat minder bezoeken de veldwerkinspanning en de kosten kunnen verlagen en bovendien beter aansluiten bij het protocol van het Algemene Broedvogelmonitoring (ABV).
+Een eerste belangrijk punt dat de doelsoorten niet overal in Vlaanderen voorkomen. Als bijvoorbeeld blijkt dat we 400 punten nodig hebben, dan zijn er maar enkele daarvan relevant voor zeldzame soorten zoals de geelgors. Stel dat deze soort in 10 % van het Vlaams landbouwgebied voorkomt, dan hebben we cru gesteld 4,000 telpunten nodig in Vlaanderen om voor deze soort een significant effect te kunnen detecteren. Nu gaan we ervan uit dat alle punten in Vlaanderen relevant zijn. Wanneer de resultaten bij het huidige, eenvoudige model reeds onvoldoende zijn, weten we reeds dat een uitgebreidere steekproef niet tot gunstigere conclusies zal leiden.
 
 Daarnaast kan worden nagegaan of de effecten verschillen tussen open landschap (OL) en halfopen landschap (HOL). In de huidige studie worden beide landschapstypes samengenomen om uitspraken op Vlaams niveau te maximaliseren. Dit vertegenwoordigt het meest gunstige scenario qua steekproefgrootte. Indien zelfs op Vlaams niveau geen voldoende kleine effectgroottes detecteerbaar blijken, is het uitgesloten dat een verdere opsplitsing naar landschapstype wel voldoende statistische kracht zal opleveren.
 
