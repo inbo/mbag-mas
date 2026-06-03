@@ -113,7 +113,7 @@ n_punten <- c(
 
 Deze aantallen kunnen later aangepast worden.
 
-### Referentiesoorten
+### Referentiesoorten {#sec-referentiesoorten}
 
 De analyse wordt uitgevoerd voor alle landbouwvogels op de lijst in Vlaanderen voor de natuurherstelverordening.
 
@@ -229,15 +229,14 @@ De simulatie gebeurt op het niveau van:
 
 * telpunt;
 * jaar;
-* telperiode.
 
-Elke observatie stelt dus één telling voor op een bepaald telpunt, in een bepaald jaar en tijdens een bepaalde telperiode.
+Elke observatie stelt dus één telling voor op een bepaald telpunt in een bepaald jaar. De telperiode wordt niet expliciet gemodelleerd: voor elke soort wordt één representatieve telperiode geselecteerd, namelijk de periode met de hoogste aantallen in de beschikbare monitoringgegevens.
 
-De ware log-dichtheid op telpunt $j$, in jaar $i$ en telperiode $t$ wordt beschreven door:
+De ware log-dichtheid op telpunt $j$ in jaar $i$ wordt beschreven door:
 
 $$
-\eta_{ijt} = \beta_0 + \beta_1 Jaar_i + \beta_2 SBP_j + \beta_3 (Jaar_i \times SBP_j) +
-u_{punt,j} + u_{periode,it}
+\eta_{ij} = \beta_0 + \beta_1 Jaar_i + \beta_2 SBP_j + \beta_3 (Jaar_i \times SBP_j) +
+u_{punt,j}
 $$
 
 waar:
@@ -246,45 +245,34 @@ $$
 u_{punt,j} \sim N(0,\sigma^2_{punt})
 $$
 
-de structurele verschillen tussen telpunten beschrijft, en
-
-$$
-u_{periode,it} \sim N(0,\sigma^2_{periode})
-$$
-
-de variatie tussen telperiodes binnen een bepaald jaar beschrijft.
+de structurele verschillen tussen telpunten beschrijft.
 
 De verwachte dichtheid wordt vervolgens:
 
 $$
-\mu_{ijt} = \exp(\eta_{ijt})
+\mu_{ijt} = \exp(\eta_{ij})
 $$
 
 De waargenomen tellingen worden gegenereerd uit een negatieve binomiale verdeling:
 
 $$
-y_{ijt} \sim NB(\mu_{ijt}, \theta)
+y_{ij} \sim NB(\mu_{ij}, \theta)
 $$
 
 waarbij ($\theta$) de overdispersieparameter is.
 
 ### Implementatie
 
-Random effecten gegenereerd voor zowel de ruimtelijke als temporele component:
+De random effecten voor de ruimtelijke component worden gegenereerd als:
 
 ```r
 rf_punt <- rnorm(
   n_punten,
   sd = sd_punt
 )
-
-rf_periode <- rnorm(
-  n_jaren * n_periodes,
-  sd = sd_periode
-)
 ```
 
-Vervolgens wordt voor elke combinatie van telpunt, jaar en telperiode de lineaire predictor berekend:
+Vervolgens wordt voor elke combinatie van telpunt en jaar de lineaire predictor berekend:
 
 ```r
 eta <-
@@ -292,8 +280,7 @@ eta <-
   beta1 * jaar +
   beta2 * sbp +
   beta3 * jaar * sbp +
-  rf_punt[punt] +
-  rf_periode[periode]
+  rf_punt[punt]
 ```
 
 waaruit de verwachte abundantie wordt afgeleid:
@@ -312,7 +299,7 @@ y <- rnbinom(
 )
 ```
 
-Deze gesimuleerde tellingen vormen vervolgens de input voor het analysemodel dat in hoofdstuk 6 wordt beschreven.
+Deze gesimuleerde tellingen vormen vervolgens de input voor het analysemodel dat in @sec-analysemodel wordt beschreven.
 
 ### Samenvatting van simulatieparameters {#sec-samenvatting-simulatieparameters}
 
@@ -323,26 +310,19 @@ Deze gesimuleerde tellingen vormen vervolgens de input voor het analysemodel dat
 | **β2**         | Verschil SBP vs niet-SBP in startjaar            | Verschil in intercept tussen groepen            | Geschat uit bestaande MAS-data             |
 | **β3**         | Trendverschil SBP vs niet-SBP                    | **Doelparameter (detecteerbaar effect)**        | Gevarieerd in simulaties (startwaarde +1%)             |
 | **σ²_punt**    | Variatie tussen telpunten                        | Ruimtelijke heterogeniteit                      | Geschat uit bestaande MAS-data             |
-| **σ²_periode** | Variatie tussen telperiodes (jaar-specifiek)     | Tijdelijke/detectievariatie tussen meetmomenten | Geschat uit bestaande MAS-data             |
 | **θ**          | Overdispersie (NegBin)                           | Extra Poisson-variatie in tellingen             | Geschat uit bestaande MAS-data             |
                                           |
-                                          
-*Note to self:*
-- begin densiteit buiten SBP = log(β0)
-- begin densiteit binnen SBP = log(β0 + β2)
-- jaarlijkse trend buiten SBP = log(β1) --> -1%
-- jaarlijkse trend binnen SBP = log(β1 + β3) --> 0%
 
 We starten met een veronderstelling dat soorten buiten SBP een licht negatieve trend hebben en binnen SBP een stabiele trend.
 De analyse zal β3 optimaliseren, maar als er tijd is kunnen we de keuze voor β1 ook veranderen om te zien of dit andere resultaten geeft.
 
-De schatting van de parameters zal gebeuren door het analysemodel te fitten op de MAS-data voor elke referentiesoort.
+De schatting van de parameters zal gebeuren door het analysemodel te fitten op de MAS-data voor elke referentiesoort (@sec-referentiesoorten).
 
 ### Rol van stratificatie
 
 Stratificatie (landbouwstreek × landschap × SBP) wordt gebruikt om telpunten te verdelen volgens oppervlaktegewichten (behalve binnen en buiten SBP worden 50-50 verdeeld), maar heeft geen directe rol in de datageneratie of -analyse.
 
-## Analysemodel
+## Analysemodel {#sec-analysemodel}
 ### Model
 
 De gesimuleerde data worden geanalyseerd met een Generalized Linear Mixed Model (GLMM).
