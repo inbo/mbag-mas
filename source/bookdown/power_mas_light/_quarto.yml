@@ -1,8 +1,5 @@
 project:
   type: book
-  preview:
-    port: 4201
-    browser: true
   render:
   - '*.md'
   - '*.qmd'
@@ -10,6 +7,7 @@ project:
   - '!README.md'
   output-dir: ../../../output/rapporten/power_mas_light
   post-render: _extensions/inbo/flandersqmd-book/filters/post_render.R
+
 execute:
   echo: false
   warnings: true
@@ -17,18 +15,24 @@ execute:
   message: true
   freeze: false
   cache: false
+
 format:
-  flandersqmd-book-html: default
   flandersqmd-book-pdf: default
+
 lang: nl-BE
+
 flandersqmd:
   entity: INBO
   level: 2
+  public_report: false
+  colophon: false
+
   title: Poweranalyse voor het meten van de effectiviteit van soortenbeschermingsprogramma’s
-    (SBP) in landbouwgebied van Vlaanderen
+    in landbouwgebied van Vlaanderen
   subtitle: Aanzet tot een vereenvoudigde versie van het Meetnet Agrarische Soorten
     (“MAS light”)
   shorttitle: power-mas-light
+
   author:
   - name:
       given: Ward
@@ -38,6 +42,7 @@ flandersqmd:
     affiliation:
     - Instituut voor Natuur- en Bosonderzoek (INBO)
     corresponding: true
+
   reviewer:
   - name:
       given: Thierry
@@ -46,47 +51,20 @@ flandersqmd:
     orcid: 0000-0001-8804-4216
     affiliation:
     - Instituut voor Natuur- en Bosonderzoek (INBO)
-  rightsholder:
-  - name:
-      given: Instituut voor Natuur- en Bosonderzoek (INBO)
-    email: info@inbo.be
-    ror: 00j54wy13
-  funder:
-  - name:
-      given: Instituut voor Natuur- en Bosonderzoek (INBO)
-    email: info@inbo.be
-    ror: 00j54wy13
-  community: inbo
-  public_report: false
-  colophon: false
-  floatbarrier: section
+
+  year: 2026
+  reportnr: internal
+
+  linenr: false
+  watermark: ONTWERP
+
 book:
-  downloads: pdf
-  open-graph: true
-  body-footer: '{{< footer >}}'
-  navbar:
-    pinned: true
-    right:
-    - icon: mastodon
-      href: https://mastodon.online/&#64;inbo
-    - icon: facebook
-      href: https://www.facebook.com/INBOVlaanderen/
-    left:
-    - text: Cover
-      file: index.md
-    - text: Inleiding
-      file: 02_inleiding.md
-    - text: Methodiek
-      file: 03_methodiek.qmd
-    - text: Schatting simulatieparameters
-      file: 04_schatting_simulatieparameters.qmd
-    - text: Detecteerbare effectgrootte
-      file: 05_detecteerbare_effectgrootte.qmd
   chapters:
-  - 01_samenvatting.md
+  - index.md
   - 02_inleiding.md
   - 03_methodiek.qmd
   - 04_schatting_simulatieparameters.qmd
   - 05_detecteerbare_effectgrootte.qmd
   - referenties.md
+
 bibliography: references.bib
