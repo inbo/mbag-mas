@@ -1,8 +1,1 @@
 # Schatting simulatieparameters {#sec-schatting-simulatieparameters}
-
-*doe dit per soort*
-
-### Schatting van β₀ en β₂
-### Schatting van σ²_punt
-### Schatting van σ²_periode
-### Schatting van θ

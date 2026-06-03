@@ -303,18 +303,17 @@ Deze gesimuleerde tellingen vormen vervolgens de input voor het analysemodel dat
 
 ### Samenvatting van simulatieparameters {#sec-samenvatting-simulatieparameters}
 
-| Parameter      | Betekenis                                        | Rol in simulatie                                | Hoe bepalen                            |
-| -------------- | ------------------------------------------------ | ----------------------------------------------- | -------------------------------------- |
-| **β0**         | Gemiddelde log-densiteit buiten SBP in startjaar | Baseline populatiegrootte                       | Geschat uit bestaande MAS-data   |
-| **β1**         | Jaarlijkse trend buiten SBP                      | Referentietrend (controlegroep)                 | Conservatieve aanname (bv. -1% per jaar) |
-| **β2**         | Verschil SBP vs niet-SBP in startjaar            | Verschil in intercept tussen groepen            | Geschat uit bestaande MAS-data             |
-| **β3**         | Trendverschil SBP vs niet-SBP                    | **Doelparameter (detecteerbaar effect)**        | Gevarieerd in simulaties (startwaarde +1%)             |
-| **σ²_punt**    | Variatie tussen telpunten                        | Ruimtelijke heterogeniteit                      | Geschat uit bestaande MAS-data             |
-| **θ**          | Overdispersie (NegBin)                           | Extra Poisson-variatie in tellingen             | Geschat uit bestaande MAS-data             |
-                                          |
+| Parameter         | Betekenis                                        | Rol in simulatie                             | Hoe bepalen                                |
+| ----------------- | ------------------------------------------------ | -------------------------------------------- | ------------------------------------------ |
+| $\beta_0$         | Gemiddelde log-densiteit buiten SBP in startjaar | Baseline populatiegrootte                    | Geschat uit bestaande MAS-data             |
+| $\beta_1$         | Jaarlijkse trend buiten SBP                      | Referentietrend (controlegroep)              | Conservatieve aanname (bv. -1% per jaar)   |
+| $\beta_2$         | Verschil SBP vs. niet-SBP in startjaar           | Verschil in intercept tussen groepen         | Geschat uit bestaande MAS-data             |
+| $\beta_3$         | Trendverschil SBP vs. niet-SBP                   | **Doelparameter (detecteerbaar effect)       | Gevarieerd in simulaties (startwaarde +1%) |
+| $\sigma^2_{punt}$ | Variatie tussen telpunten                        | Ruimtelijke heterogeniteit                   | Geschat uit bestaande MAS-data             |
+| $\theta$          | Overdispersie (negatief-binomiaal)               | Extra Poisson-variatie in tellingen          | Geschat uit bestaande MAS-data             |
 
 We starten met een veronderstelling dat soorten buiten SBP een licht negatieve trend hebben en binnen SBP een stabiele trend.
-De analyse zal β3 optimaliseren, maar als er tijd is kunnen we de keuze voor β1 ook veranderen om te zien of dit andere resultaten geeft.
+De analyse zal $\beta_3$ optimaliseren, maar als er tijd is kunnen we de keuze voor $\beta_1$ ook veranderen om te zien of dit andere resultaten geeft.
 
 De schatting van de parameters zal gebeuren door het analysemodel te fitten op de MAS-data voor elke referentiesoort (@sec-doelsoorten).
 
@@ -356,7 +355,7 @@ De centrale effectparameter is de interactieterm tussen jaar en SBP-status, die 
 
 Met behulp van de **designpower** package wordt via simulaties bepaald welke waarde van dit trendverschil nodig is om een vooraf gekozen power te bereiken [@onkelinx2026designpower].
 Dit levert de minimum detecteerbare effectgrootte (MDE) op voor elk scenario van het aantal telpunten, en geeft zo direct inzicht in de gevoeligheid van het monitoringsnetwerk.
-We kiezen een power van 0.9 en significantielevel van 0.1.
+We kiezen een power van 0.9 en significantieniveau van 0.1.
 
 ```r
 find_power(
