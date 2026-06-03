@@ -1,3 +1,11 @@
+```{r}
+#| echo: FALSE
+#| warning: FALSE
+#| message: FALSE
+library(knitr)
+library(tidyverse)
+```
+
 # Methodiek {#sec-methodiek}
 
 Alle analyses werden uitgevoerd in R [@R].
@@ -6,55 +14,88 @@ De hier beschreven methodiek moet worden beschouwd als een eerste aanzet voor de
 
 Deze aanpak laat toe om snel een eerste inschatting te maken van de statistische kracht van het voorgestelde meetnet. Indien de resultaten aantonen dat het gewenste effect reeds met ruime zekerheid detecteerbaar is binnen dit eenvoudige kader, kan in een volgende fase een meer realistische simulatie worden uitgewerkt. Omgekeerd geldt dat wanneer de resultaten bij dit eenvoudige model reeds onvoldoende of slechts marginaal zijn, een uitgebreider en realistischer model naar verwachting niet tot gunstigere conclusies zal leiden.
 
-Mogelijke uitbreidingen van het simulatiekader worden besproken in hoofdstuk @sec-methodiek-uitbreidingen.
+Mogelijke uitbreidingen van het simulatiekader worden besproken in @sec-methodiek-uitbreidingen.
 
 ## Monitoringsontwerp
 
+Het ontwerp van het MAS wordt uitgebreid beschreven in @langeraert2025pilot en @jansen2026mas. Voor deze poweranalyse zijn echter slechts enkele elementen van het monitoringsontwerp rechtstreeks relevant. In dit hoofdstuk vatten we daarom beknopt de onderdelen samen die bepalend zijn voor de simulaties en de berekening van de detecteerbare effectgrootte.
+
+### Steekproefkader
+
+Het MAS richt zich op landbouwgebieden in Vlaanderen die potentieel geschikt zijn voor akkervogels. Het steekproefkader werd opgebouwd op basis van de Vlaamse landbouwstreken en omvat uitsluitend locaties in open en halfopen landbouwlandschappen.
+De landbouwregio van de duiden werd niet opgenomen omdat daar zeer weinig potentiële telpunten aanwezig zijn [@jansen2026mas].
+
+De afbakening gebeurde in verschillende stappen, waaronder:
+
+* selectie van open en halfopen landschap;
+* uitsluiting van niet-relevante landgebruiken (onder andere woongebied, industrie, spoorweginfrastructuur en autosnelwegen);
+* selectie van openbare wegen en paden van waaruit tellingen kunnen worden uitgevoerd;
+* filtering op landgebruik binnen de telcirkel;
+* filtering op minimale zichtbaarheid.
+
+Het resultaat is een ruimtelijk expliciete lijst van potentiële telpunten met straal van 300 m die de statistische doelpopulatie van het meetnet zo goed mogelijk benadert.
+
 ### Ruimtelijke stratificatie
 
-De steekproef wordt gestratificeerd volgens:
+Om een representatieve dekking van Vlaanderen te garanderen, werd het steekproefkader gestratificeerd volgens drie factoren:
 
-* 6 landbouwstreken;
-* open landschap vs halfopen landschap;
-* binnen vs buiten SBP.
+* landbouwstreek (6 niveaus);
+* landschapstype (open of halfopen landschap);
+* SBP-status (binnen of buiten soortenbeschermingsprogramma's).
 
 Dit resulteert in:
 
-$$6 \times 2 \times 2 = 24$$
+$$
+6 \times 2 \times 2 = 24
+$$
 
-strata.
+mogelijke strata.
 
-De strata dienen uitsluitend om een representatieve steekproef van Vlaanderen te verkrijgen.
-Er worden geen afzonderlijke analyses of rapporteringen per stratum uitgevoerd.
+De stratificatie werd oorspronkelijk ontwikkeld om uitspraken mogelijk te maken op het niveau van landbouwstreken en landschapstypes. In de huidige studie worden echter uitsluitend uitspraken nagestreefd op Vlaams niveau. De strata dienen daarom enkel om een representatieve steekproef van Vlaanderen samen te stellen en spelen verder geen expliciete rol in de simulaties of analyses.
 
 ### Allocatie van telpunten
 
-Het aantal telpunten per stratum wordt proportioneel verdeeld volgens de oppervlakte van het stratum binnen het steekproefkader.
-Enkel voor binnen en buiten SBP zijn er evenveel punten per stratum en zijn deze onafhankelijk van de oppervlakte (deze gewichten zijn dus 0.5).
+Binnen elk stratum worden telpunten aselect geselecteerd uit het steekproefkader.
 
-Laat:
+Voor deze poweranalyse wordt aangenomen dat het totale aantal telpunten vooraf wordt vastgelegd. Dit totaal wordt vervolgens verdeeld over de landbouwstreek en landschapstype op basis van hun relatieve oppervlakte binnen Vlaanderen. Binnen elke combinatie van landbouwstreek en landschapstype wordt daarbij een gelijke verdeling gehanteerd tussen telpunten binnen en buiten SBP-gebieden.
 
-$$w_h$$
+Een finale steekproefgrootte van 400 punten zal bv. resulteren in 200 punten binnen SBP en 200 buiten SBP. Verdere allocatie in landbouwregio landschapstype gebeurt relatief naar het aantal potentiële telpunten in elk stratum van het steekproefkader (@tbl-gewichten-strata).
 
-het relatieve oppervlaktegewicht van stratum $h$ voorstellen.
+```{r}
+#| label: tbl-gewichten-strata
+#| tbl-cap: "Gewichten per stratum (w)."
+# project root
+file <- file.path("data/steekproefkaders/steekproefkader_mbag_mas.csv")
+projroot <- rprojroot::find_root(rprojroot::has_file(file))
+steekproefkader <- read_csv(file.path(projroot, file),
+                            show_col_types = FALSE) %>%
+  mutate(regio = ifelse(grepl("\\sleemstreek", regio), "Leemstreek", regio))
+totaal <- nrow(steekproefkader)
 
-Dan wordt het aantal punten in stratum $h$:
+steekproefkader %>%
+  mutate(regio = ifelse(grepl("\\sleemstreek", regio), "Leemstreek", regio)) %>%
+  count(regio, openheid_klasse) %>%
+  mutate(prop = n / totaal) %>%
+    tidyr::crossing(
+    sbp = c("binnen", "buiten")
+  ) %>%
+  mutate(
+    prop_sbp = 0.5,
+    prop_final = prop * prop_sbp,
+    `voorbeeld (N = 400)` = prop_final * 400
+  ) %>%
+  select(regio, openheid_klasse, sbp, w = prop_final, `voorbeeld (N = 400)`) %>%
+  arrange(regio, openheid_klasse, sbp) %>%
+  kable(booktabs = TRUE) %>%
+  kableExtra::kable_styling(latex_options = c("striped")) %>%
+  kableExtra::row_spec(0, bold = TRUE)
+```
 
-$$n_h = N \times w_h$$
-
-waarbij:
-
-* $N$ = totaal aantal telpunten.
-
-Aangezien we geen uitspraak per stratum willen doen (i.t.t. het originele MAS), is nu enkel het totaal aantal telpunten van interesse.
-Achteraf kan dan via de gewichten berekend worden hoeveel punten in welk stratum terechtkomen.
+Omdat de analyses uitsluitend op Vlaams niveau gebeuren, is vooral het totale aantal telpunten relevant. De exacte verdeling over de strata kan eventueel achteraf berekend worden op basis van de gewichten als dat relevant is.
 
 ### Tellingen
 
-Per telpunt:
-
-* 4 bezoeken per jaar;
-* monitoring gedurende 10 jaar.
+Per telpunt worden jaarlijks vier telrondes uitgevoerd gedurende een periode van tien jaar.
 
 ## Simulatiescenario's
 
@@ -64,10 +105,9 @@ De volgende scenario's worden in eerste instantie onderzocht:
 
 ```r
 n_punten <- c(
-  250,
-  500,
-  750,
-  1000
+  100,
+  200,
+  400
 )
 ```
 
@@ -101,7 +141,49 @@ De analyse wordt uitgevoerd voor alle landbouwvogels op de lijst in Vlaanderen v
 | Zomertortel        |                       | x                   | ???                   |
 
 
-Voor elke soort worden volgende parameters geschat uit bestaande monitoringgegevens (zie verder).
+Voor elke soort worden de nodige parameters geschat uit bestaande monitoringgegevens (zie @sec-samenvatting-simulatieparameters).
+In plaats van 15 afzonderlijke soorten volledig uit te werken, wordt de variatie tussen soorten benaderd door verschillende parametercombinaties te analyseren Deze parametercombinaties vormen samen een “wolke” van mogelijke soortgedragingen.
+
+Vervolgens wordt deze multidimensionale ruimte samengevat met een principale componentenanalyse (PCA) (@fig-pca-voorbeeld). Dit reduceert de complexe parameterstructuur tot enkele dominante assen die de belangrijkste ecologische verschillen tussen soorten beschrijven. Op basis van deze samenvatting kunnen enkele representatieve scenario’s worden geselecteerd die de volledige variatie goed benaderen.
+
+```{r}
+#| label: fig-pca-voorbeeld
+#| fig-cap: "Illustratie van de reductie van soorten naar een gedeelde parameter-ruimte via PCA (synthetisch voorbeeld)."
+set.seed(123)
+
+species <- paste0("sp_", 1:15)
+n_sim <- 300
+
+sim_species <- function(sp) {
+  tibble(
+    species = sp,
+    beta0 = rnorm(n_sim, runif(1, 1, 3), 0.5),
+    beta1 = rnorm(n_sim, runif(1, -0.03, 0), 0.01),
+    beta2 = rnorm(n_sim, runif(1, -1, 1), 0.3),
+    beta3 = rnorm(n_sim, runif(1, -0.02, 0.02), 0.01),
+    sigma_punt = rgamma(n_sim, 2, runif(1, 0.3, 1)),
+    theta = rgamma(n_sim, 2, runif(1, 0.5, 2))
+  )
+}
+
+sim <- map_dfr(species, sim_species)
+
+species_mean <- sim %>%
+  group_by(species) %>%
+  summarise(across(beta0:theta, mean), .groups = "drop")
+
+pca <- prcomp(species_mean %>% select(-species), scale. = TRUE)
+
+pca_df <- as_tibble(pca$x[,1:2]) %>%
+  mutate(species = species_mean$species)
+
+ggplot(pca_df, aes(PC1, PC2)) +
+  geom_point(size = 3) +
+  geom_text(aes(label = species), vjust = -0.5) +
+  theme_minimal()
+```
+
+De uiteindelijke selectie van scenario’s gebeurt vervolgens op basis van de positie van soorten in deze geobserveerde parameter-ruimte. Hierbij worden representatieve extremen in de PCA-ruimte gekozen, zodat de volledige variatie in detecteerbaarheid, populatiedynamiek en effectgrootte tussen soorten wordt afgedekt met een beperkt aantal simulatiescenario’s.
 
 ## Data-generatieproces
 
@@ -197,7 +279,7 @@ y <- rnbinom(
 
 Deze gesimuleerde tellingen vormen vervolgens de input voor het analysemodel dat in hoofdstuk 6 wordt beschreven.
 
-### Samenvatting van simulatieparameters
+### Samenvatting van simulatieparameters {#sec-samenvatting-simulatieparameters}
 
 | Parameter      | Betekenis                                        | Rol in simulatie                                | Hoe bepalen                            |
 | -------------- | ------------------------------------------------ | ----------------------------------------------- | -------------------------------------- |
