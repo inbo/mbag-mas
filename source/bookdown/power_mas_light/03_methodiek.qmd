@@ -8,7 +8,7 @@ library(tidyverse)
 
 # Methodiek {#sec-methodiek}
 
-Alle analyses werden uitgevoerd in R [@R].
+Alle analyses worden uitgevoerd in R [@R].
 
 De hier beschreven methodiek moet worden beschouwd als een eerste aanzet voor de evaluatie van een mogelijk MAS light. Gezien de beperkte beschikbare tijd werd bewust gekozen voor een relatief eenvoudig simulatie- en analysekader dat de belangrijkste kenmerken van het monitoringsontwerp omvat.
 
@@ -148,7 +148,8 @@ Vervolgens wordt deze multidimensionale ruimte samengevat met een principale com
 
 ```{r}
 #| label: fig-pca-voorbeeld
-#| fig-cap: "Illustratie van de reductie van soorten naar een gedeelde parameter-ruimte via PCA (synthetisch voorbeeld)."
+#| fig-cap: "Illustratie van de reductie van soorten naar een gedeelde parameter-ruimte via PCA
+#|   (synthetisch voorbeeld). De rode hoeken geven vier mogelijke scenario's aan van parameterwaardecombinaties."
 set.seed(123)
 
 species <- paste0("sp_", 1:15)
@@ -177,13 +178,46 @@ pca <- prcomp(species_mean %>% select(-species), scale. = TRUE)
 pca_df <- as_tibble(pca$x[,1:2]) %>%
   mutate(species = species_mean$species)
 
+# bepaal 4 hoekpunten in PCA-ruimte
+pc1_min <- min(pca_df$PC1)
+pc1_max <- max(pca_df$PC1)
+pc2_min <- min(pca_df$PC2)
+pc2_max <- max(pca_df$PC2)
+
+corners_up <- tibble::tibble(
+  PC1 = c(pc1_min, pc1_max),
+  PC2 = c(pc2_max, pc2_max),
+  scenario = c("NW (laag PC1, hoog PC2)",
+               "NE (hoog PC1, hoog PC2)")
+)
+corners_down <- tibble::tibble(
+  PC1 = c(pc1_min, pc1_max),
+  PC2 = c(pc2_min, pc2_min),
+  scenario = c("SW (laag PC1, laag PC2)",
+               "SE (hoog PC1, laag PC2)")
+)
+
 ggplot(pca_df, aes(PC1, PC2)) +
-  geom_point(size = 3) +
-  geom_text(aes(label = species), vjust = -0.5) +
+  geom_point(size = 2) +
+  geom_text(aes(label = species), size = 3, hjust = 1, vjust = -1) +
+
+  # hoekpunten toevoegen
+  geom_point(data = corners_up, aes(PC1, PC2), 
+             color = "red", size = 3, shape = 4) +
+  geom_text(data = corners_up, aes(PC1, PC2, label = scenario),
+            color = "red", vjust = -1.2, size = 2.5) +
+  geom_point(data = corners_down, aes(PC1, PC2), 
+             color = "red", size = 3, shape = 4) +
+  geom_text(data = corners_down, aes(PC1, PC2, label = scenario),
+            color = "red", vjust = 2.2, size = 2.5) +
+
+  scale_x_continuous(expand = expansion(mult = c(0.2, 0.2))) +
+  scale_y_continuous(expand = 0.1) +
   theme_minimal()
 ```
 
 De uiteindelijke selectie van scenario’s gebeurt vervolgens op basis van de positie van soorten in deze geobserveerde parameter-ruimte. Hierbij worden representatieve extremen in de PCA-ruimte gekozen, zodat de volledige variatie in detecteerbaarheid, populatiedynamiek en effectgrootte tussen soorten wordt afgedekt met een beperkt aantal simulatiescenario’s.
+Indien er weinig variatie is tussen alle soorten voor bepaalde parameters kan het ook zijn dat we de scenario's zelf kiezen en we ons niet moeten baseren op de PCA-ruimte.
 
 ## Data-generatieproces
 
