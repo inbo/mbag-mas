@@ -76,7 +76,7 @@ steekproefkader %>%
   mutate(regio = ifelse(grepl("\\sleemstreek", regio), "Leemstreek", regio)) %>%
   count(regio, openheid_klasse) %>%
   mutate(prop = n / totaal) %>%
-    tidyr::crossing(
+  tidyr::crossing(
     sbp = c("binnen", "buiten")
   ) %>%
   mutate(
@@ -148,8 +148,9 @@ Vervolgens wordt deze multidimensionale ruimte samengevat met een principale com
 
 ```{r}
 #| label: fig-pca-voorbeeld
-#| fig-cap: "Illustratie van de reductie van soorten naar een gedeelde parameter-ruimte via PCA
-#|   (synthetisch voorbeeld). De rode hoeken geven vier mogelijke scenario's aan van parameterwaardecombinaties."
+#| fig-cap: "Illustratie van de reductie van soorten naar een gedeelde
+#|  parameter-ruimte via PCA (synthetisch voorbeeld). De rode hoeken geven vier
+#|  mogelijke scenario's aan van parameterwaardecombinaties."
 set.seed(123)
 
 species <- paste0("sp_", 1:15)
@@ -175,7 +176,7 @@ species_mean <- sim %>%
 
 pca <- prcomp(species_mean %>% select(-species), scale. = TRUE)
 
-pca_df <- as_tibble(pca$x[,1:2]) %>%
+pca_df <- as_tibble(pca$x[, 1:2]) %>%
   mutate(species = species_mean$species)
 
 # bepaal 4 hoekpunten in PCA-ruimte
@@ -202,11 +203,11 @@ ggplot(pca_df, aes(PC1, PC2)) +
   geom_text(aes(label = species), size = 3, hjust = 1, vjust = -1) +
 
   # hoekpunten toevoegen
-  geom_point(data = corners_up, aes(PC1, PC2), 
+  geom_point(data = corners_up, aes(PC1, PC2),
              color = "red", size = 3, shape = 4) +
   geom_text(data = corners_up, aes(PC1, PC2, label = scenario),
             color = "red", vjust = -1.2, size = 2.5) +
-  geom_point(data = corners_down, aes(PC1, PC2), 
+  geom_point(data = corners_down, aes(PC1, PC2),
              color = "red", size = 3, shape = 4) +
   geom_text(data = corners_down, aes(PC1, PC2, label = scenario),
             color = "red", vjust = 2.2, size = 2.5) +
