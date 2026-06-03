@@ -1,9 +1,3 @@
----
-toc: false
----
-
-{{< colophon >}}
-
 # Samenvatting {.unnumbered}
 
 <!-- description: start -->

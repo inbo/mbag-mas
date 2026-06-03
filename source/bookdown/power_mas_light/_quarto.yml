@@ -57,8 +57,8 @@ flandersqmd:
     email: info@inbo.be
     ror: 00j54wy13
   community: inbo
-  public_report: true
-  colophon: true
+  public_report: false
+  colophon: false
   floatbarrier: section
 book:
   downloads: pdf
@@ -83,7 +83,7 @@ book:
     - text: Detecteerbare effectgrootte
       file: 05_detecteerbare_effectgrootte.qmd
   chapters:
-  - index.md
+  - 01_samenvatting.md
   - 02_inleiding.md
   - 03_methodiek.qmd
   - 04_schatting_simulatieparameters.qmd
