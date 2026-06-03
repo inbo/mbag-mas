@@ -260,23 +260,31 @@ return {
       if not is_final(meta.flandersqmd) or (not is_empty(meta.flandersqmd.linenr) and meta.flandersqmd.linenr) then
         meta.displaylinenr = 1
       end
-      if is_empty(meta.flandersqmd.doi) then
-        if not is_empty(meta.flandersqmd.reportnr) then
+      -- Determine whether to display the colophon
+      if not is_empty(meta.flandersqmd.colophon) then
+        if meta.flandersqmd.colophon then
           meta.displaycolophon = 1
         else
-          if not is_empty(meta.flandersqmd.colophon) and meta.flandersqmd.colophon then
-            meta.displaycolophon = 1
-          else
-            meta.displaycolophon = 0
-          end
+          meta.displaycolophon = 0
         end
+      else
+        -- default behaviour when colophon is not specified
+        if not is_empty(meta.flandersqmd.doi) or
+           not is_empty(meta.flandersqmd.reportnr) then
+          meta.displaycolophon = 1
+        else
+          meta.displaycolophon = 0
+        end
+      end
+
+      -- Determine public/internal report
+      if is_empty(meta.flandersqmd.doi) then
         if is_empty(meta.flandersqmd.public_report) or meta.flandersqmd.public_report then
           meta.public = 1
         else
           meta.public = 0
         end
       else
-        meta.displaycolophon = 1
         meta.public = 1
       end
       return meta
