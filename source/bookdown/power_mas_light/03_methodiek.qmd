@@ -63,7 +63,8 @@ Een finale steekproefgrootte van 400 punten zal bv. resulteren in 200 punten bin
 
 ```{r}
 #| label: tbl-gewichten-strata
-#| tbl-cap: "Gewichten per stratum (w)."
+#| tbl-cap: "Gewichten per stratum (w) en voorbeeld van aantal punten per
+#|   stratum als de finale steekproefgrootte 400 zou zijn."
 # project root
 file <- file.path("data/steekproefkaders/steekproefkader_mbag_mas.csv")
 projroot <- rprojroot::find_root(rprojroot::has_file(file))
@@ -82,11 +83,11 @@ steekproefkader %>%
   mutate(
     prop_sbp = 0.5,
     prop_final = prop * prop_sbp,
-    `voorbeeld (N = 400)` = prop_final * 400
+    `voorbeeld (N = 400)` = round(prop_final * 400, 1)
   ) %>%
   select(regio, openheid_klasse, sbp, w = prop_final, `voorbeeld (N = 400)`) %>%
   arrange(regio, openheid_klasse, sbp) %>%
-  kable(booktabs = TRUE, digits = 1) %>%
+  kable(booktabs = TRUE, digits = 5) %>%
   kableExtra::kable_styling(latex_options = c("striped")) %>%
   kableExtra::row_spec(0, bold = TRUE)
 ```
