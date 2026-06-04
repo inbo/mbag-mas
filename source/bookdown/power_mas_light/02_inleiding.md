@@ -39,4 +39,4 @@ $$
 
 uit een model waarin de jaarlijkse trend binnen en buiten SBP wordt vergeleken.
 
-Meer specifiek wordt voor verschillende scenario's van het aantal telpunten bepaald welke minimale effectgrootte detecteerbaar is met een statistische power van 90%.
+Meer specifiek wordt voor verschillende scenario's van het aantal telpunten bepaald welke minimale effectgrootte detecteerbaar is met een statistische power van 90 % en een significantieniveau van 0,1.
