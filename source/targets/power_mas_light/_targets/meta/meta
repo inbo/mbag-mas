@@ -1,0 +1,5 @@
+name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
+mbag_dir|object|07d3b4b81c7eb6b1
+target_species|object|c40304cf13074242
+mas_data_clean_file|stem|2ba68ee58032803a|841e8fa6082a21b4|9584eaa1b6741b26|2025333947|C:/R/git_repositories/projecten/mbag-mas/output/datasets/mas_data_clean.csv|t20608.6193174741s|s57754872b|57754872|file|local|vector|||0.86||
+mas_data_clean|stem|f8d219c66cbcfb7c|ba714ce07946deb1|149a12d9cac798c7|-1942276229||t20608.6278691005s|s8434469b|8434469|qs|local|vector|||0.859||
