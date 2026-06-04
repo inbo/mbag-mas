@@ -1,0 +1,21 @@
+---
+title: "Test script berekening simulatieparameters"
+author: "Ward Langeraert"
+date: today
+
+format:
+  html:
+    toc: true
+    toc-depth: 4
+    toc-location: right
+    code-fold: true
+
+editor_options: 
+  chunk_output_type: console
+---
+
+# Doel
+
+Dit test script heeft als doel het berekenen van simulatieparameters op basis van bestaande MAS-data voor 1 soort zodat we deze analyse dan kunnen plakken in de targets pipeline (`_targets.R`) en runnen voor alle soorten via branching.
+
+
