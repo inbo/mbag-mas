@@ -18,4 +18,59 @@ editor_options:
 
 Dit test script heeft als doel het berekenen van simulatieparameters op basis van bestaande MAS-data voor 1 soort zodat we deze analyse dan kunnen plakken in de targets pipeline (`_targets.R`) en runnen voor alle soorten via branching.
 
+```{r}
+# Load packages
+library(targets)
+library(tidyverse)
+library(glmmTMB)
+
+conflicted::conflicts_prefer(dplyr::filter)
+```
+
+# Datapreparatie
+
+We laden de data van de doelsoorten in en selecteren de relevante kolommen.
+We selecteren de data met broedcode groter dan nul.
+
+```{r}
+mas_data_target_sp_raw <- tar_read("mas_data_target_sp")
+mas_data_target_sp <- mas_data_target_sp_raw %>%
+  select("plotnaam", "naam", "aantal", "jaar", "broedcode" = "wrntype", "regio",
+         "openheid_klasse", "sbp", "periode_in_jaar") %>%
+  mutate(regio = ifelse(grepl("\\sleemstreek$", regio),
+                        "Leemstreek", regio)) %>%
+  filter(broedcode > 0) %>%
+  group_by(plotnaam, naam, jaar, regio, openheid_klasse, sbp,
+           periode_in_jaar) %>%
+  summarise(count = sum(.data$aantal), .groups = "drop")
+```
+
+We hebben van de alle landbouwregio's in twee jaar gemonitord en sommige in meerdere jaren.
+De getallen duiden aan in hoeveel telpunten de doelsoorten zijn gezien.
+
+```{r}
+mas_data_target_sp %>%
+  summarise(n = n_distinct(plotnaam), .by = c(jaar, regio)) %>%
+  ggplot(aes(jaar, regio)) +
+  geom_tile() +
+  geom_text(aes(label = n), colour = "white")
+```
+
+# Test case
+
+Als eerste test case kijken we naar de data van de Veldleeuwerik in 2024-2025.
+
+```{r}
+mas_data_veldleeuwerik <- mas_data_target_sp %>%
+  filter(naam == "Veldleeuwerik",
+         jaar %in% 2024:2025)
+```
+
+
+```{r}
+mas_data_veldleeuwerik %>%
+  ggplot(aes(y = count, x = periode_in_jaar)) +
+  geom_boxplot() +
+  facet_grid(rows = vars(jaar), cols = vars(regio))
+```
 
