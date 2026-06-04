@@ -23,7 +23,7 @@ Het ontwerp van het MAS wordt uitgebreid beschreven in @langeraert2025pilot en @
 ### Steekproefkader
 
 Het MAS richt zich op landbouwgebieden in Vlaanderen die potentieel geschikt zijn voor akkervogels. Het steekproefkader werd opgebouwd op basis van de Vlaamse landbouwstreken en omvat uitsluitend locaties in open en halfopen landbouwlandschappen.
-De landbouwregio van de duiden werd niet opgenomen omdat daar zeer weinig potentiële telpunten aanwezig zijn [@jansen2026mas].
+De landbouwregio van de duinen werd niet opgenomen omdat daar zeer weinig potentiële telpunten aanwezig zijn [@jansen2026mas].
 
 De afbakening gebeurde in verschillende stappen, waaronder:
 
@@ -86,7 +86,7 @@ steekproefkader %>%
   ) %>%
   select(regio, openheid_klasse, sbp, w = prop_final, `voorbeeld (N = 400)`) %>%
   arrange(regio, openheid_klasse, sbp) %>%
-  kable(booktabs = TRUE) %>%
+  kable(booktabs = TRUE, digits = 1) %>%
   kableExtra::kable_styling(latex_options = c("striped")) %>%
   kableExtra::row_spec(0, bold = TRUE)
 ```
@@ -142,7 +142,7 @@ De analyse wordt uitgevoerd voor alle landbouwvogels op de lijst in Vlaanderen v
 
 
 Voor elke soort worden de nodige parameters geschat uit bestaande monitoringgegevens (zie @sec-samenvatting-simulatieparameters).
-In plaats van 15 afzonderlijke soorten volledig uit te werken, wordt de variatie tussen soorten benaderd door verschillende parametercombinaties te analyseren Deze parametercombinaties vormen samen een “wolke” van mogelijke soortgedragingen.
+In plaats van 15 afzonderlijke soorten volledig uit te werken, wordt de variatie tussen soorten benaderd door verschillende parametercombinaties te analyseren Deze parametercombinaties vormen samen een “wolk” van mogelijke soortgedragingen.
 
 Vervolgens wordt deze multidimensionale ruimte samengevat met een principale componentenanalyse (PCA) (@fig-pca-voorbeeld). Dit reduceert de complexe parameterstructuur tot enkele dominante assen die de belangrijkste ecologische verschillen tussen soorten beschrijven. Op basis van deze samenvatting kunnen enkele representatieve scenario’s worden geselecteerd die de volledige variatie goed benaderen.
 
