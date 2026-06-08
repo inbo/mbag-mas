@@ -146,6 +146,7 @@ list(
     pattern = map(model_data),
     iteration = "list"
   ),
+
   # Select model
   tar_target(
     name = final_model,
@@ -153,6 +154,7 @@ list(
     pattern = map(species, fit_models),
     iteration = "list"
   ),
+
   # Extract parameters
   tar_target(
     name = parameters,
@@ -168,5 +170,76 @@ list(
   tar_target(
     name = parameters_df,
     command = bind_rows(parameters_df_grouped),
+  ),
+
+  ## Power analysis
+  tar_target(
+    name = scenarios,
+    command = expand.grid(
+      n_telpunten = c(100, 200),
+      n_jaar = 10,
+      beta_1 = c(0),
+      beta_3 = 0.01
+    )
+  ),
+  tar_target(
+    name = species_scenarios,
+    command = tidyr::crossing(
+      parameters_df %>%
+        select("naam", "beta_0", "beta_2", "sigma_punt", "theta"),
+      scenarios
+    )
+  ),
+
+  tar_map(
+    values = list(
+      species = target_species[1:2]
+    ),
+
+    # Go over each row
+    tar_group_size(
+      name = species_scenarios_clean,
+      command = species_scenarios %>%
+        filter(naam == species) %>%
+        select(-"naam"),
+      size = 1
+    ),
+
+    # Prepare design lists
+    tar_target(
+      name = design_list,
+      command = prepare_design(
+        species_scenarios_clean,
+        digits = c(
+          n_jaar = 0,
+          n_telpunten = 0,
+          beta_0 = 2,
+          beta_1 = 3,
+          beta_2 = 3,
+          beta_3 = 3,
+          sigma_punt = 3,
+          theta = 2
+        )
+      ),
+      pattern = map(species_scenarios_clean),
+      iteration = "list"
+    ),
+
+    tar_target(
+      name = detectable_effect,
+      command = designpower::find_power(
+        design = design_list$design[
+          -which(names(design_list$design) == "tar_group")
+        ],
+        design_digits = design_list$digits,
+        opti = "beta_3",
+        sim_power = simulate_mas_data,
+        power = 0.9,
+        alpha = 0.1,
+        filename = "power_mas_light"
+      ),
+      pattern = map(design_list),
+      iteration = "list"
+    )
   )
 )
