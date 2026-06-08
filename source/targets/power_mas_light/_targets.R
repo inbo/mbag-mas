@@ -8,6 +8,7 @@ library(targets)
 library(tarchetypes)
 library(dplyr)
 library(readr)
+library(glmmTMB)
 
 # Set target options
 tar_option_set(
@@ -101,12 +102,71 @@ list(
 
   # Get best counting periods
   tar_target(
-    name = best_periods,
+    name = best_period,
     command = target_sp_pa %>%
       summarise(sum = sum(count), .by = c(year, period_count)) %>%
       summarise(mean_sum = mean(sum), .by = period_count) %>%
       slice_max(mean_sum) %>%
       pull(period_count),
     pattern = map(target_sp_pa)
+  ),
+
+  ## Estimate parameters
+  # Prepare data
+  tar_target(
+    name = model_data,
+    command = target_sp_pa %>%
+      filter(period_count == best_period) %>%
+      mutate(sbp_f = factor(sbp, levels = c("buiten", "binnen")),
+             plotnaam_f = factor(plotnaam),
+             year2 = year - 2024),
+    pattern = map(target_sp_pa, best_period)
+  ),
+  tar_target(
+    name = species,
+    command = unique(model_data$naam),
+    pattern = map(model_data)
+  ),
+
+  # Fit models
+  tar_target(
+    name = fit_models,
+    command = list(
+      poisson = glmmTMB::glmmTMB(
+        count ~ year2 * sbp_f + (1 | plotnaam_f),
+        data = model_data,
+        family = poisson()
+      ),
+      negbin =  glmmTMB::glmmTMB(
+        count ~ year2 * sbp_f + (1 | plotnaam_f),
+        data = model_data,
+        family = nbinom2()
+      )
+    ),
+    pattern = map(model_data),
+    iteration = "list"
+  ),
+  # Select model
+  tar_target(
+    name = final_model,
+    command = c(naam = species, select_model(fit_models)),
+    pattern = map(species, fit_models),
+    iteration = "list"
+  ),
+  # Extract parameters
+  tar_target(
+    name = parameters,
+    command = extract_parameters(final_model$fit),
+    pattern = map(final_model),
+    iteration = "list"
+  ),
+  tar_target(
+    name = parameters_df_grouped,
+    command = data.frame(naam = species, as.data.frame(parameters)),
+    pattern = map(species, parameters)
+  ),
+  tar_target(
+    name = parameters_df,
+    command = bind_rows(parameters_df_grouped),
   )
 )
