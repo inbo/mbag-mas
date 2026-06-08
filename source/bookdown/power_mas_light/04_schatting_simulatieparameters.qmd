@@ -1,1 +1,84 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 # Schatting simulatieparameters {#sec-schatting-simulatieparameters}
+
+```{r}
+#| echo: FALSE
+#| warning: FALSE
+#| message: FALSE
+library(knitr)
+library(targets)
+library(tidyverse)
+```
+
+```{r}
+target_species <- c(
+  "Boerenzwaluw",
+  "Geelgors",
+  "Gele Kwikstaart",
+  "Grasmus",
+  "Graspieper",
+  "Grutto",
+  "Kievit",
+  "Kneu",
+  "Patrijs",
+  "Ringmus",
+  "Roodborsttapuit",
+  "Scholekster",
+  "Torenvalk",
+  "Veldleeuwerik",
+  "Wulp"
+)
+```
+
+In dit hoofdstuk worden de simulatieparameters geschat die als input dienen voor de poweranalyse. Hiervoor wordt gebruikgemaakt van de gegevens uit de jaren 2024 en 2025 voor een selectie van doelsoorten (`r tolower(target_species)`).
+Eerst worden de waarnemingsgegevens ingelezen en gefilterd op de geselecteerde soorten. Enkel broedvogelwaarnemingen worden behouden (broedcode > 0) en per telpunt, jaar en telperiode samengevat tot aantallen. Vervolgens worden afwezigheden toegevoegd op basis van de beschikbare bezoekgegevens.
+Voor elke soort worden de data uit de telperiode geselecteerd waarin gemiddeld de hoogste aantallen worden vastgesteld over beide jaren. Deze periode wordt beschouwd als de meest geschikte periode voor de verdere modellering.
+
+Voor elke soort wordt vervolgens een Generalized Linear Mixed Model (GLMM) opgesteld met het aantal waargenomen individuen als responsvariabele (zie @sec-analysemodel).
+Aangezien telgegevens vaak overdispersie vertonen, worden zowel een Poisson- als een negatieve binomiale verdeling geëvalueerd. Op basis van modelselectie wordt voor elke soort het meest geschikte model gekozen.
+Uit dit eindmodel worden vervolgens de parameters geëxtraheerd die nodig zijn voor de simulaties, waaronder de verwachte aantallen, de variatie tussen telpunten en, indien van toepassing, de mate van overdispersie (zie ook @sec-samenvatting-simulatieparameters).
+
+```{r}
+tar_read_mas <- function(...) {
+  mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
+  store_path <- file.path(mbag_dir, "source", "targets", "power_mas_light",
+                          "_targets")
+  targets::tar_read(..., store = store_path)
+}
+```
+
+## Overzicht parameterschattingen
+
+De geschatte parameters zijn weergegeven in @tbl-est-params.
+
+```{r}
+#| label: tbl-est-params
+#| tbl-cap: "Geschatte parameterwaarden op basis van bestaande data."
+parameters_df <- tar_read_mas("parameters_df")
+parameters_df_selection <- parameters_df %>%
+  select("soort" = "naam", "beta_0", "beta_2", "sigma_punt", "theta")
+parameters_df_selection%>%
+  arrange(soort) %>%
+  kable(booktabs = TRUE, digits = 3) %>%
+  kableExtra::kable_styling(latex_options = c("striped")) %>%
+  kableExtra::row_spec(0, bold = TRUE)
+```
+
+```{r}
+#| label: fig-boxplot-params
+#| fig-cap: "Spreiding geschatte parameterwaarden."
+#| warning: FALSE
+#| fig-height: 5
+parameters_df_selection %>%
+  pivot_longer("beta_0":"theta", names_to = "param") %>%
+  ggplot(aes(x = param, y = value)) +
+  geom_boxplot() +
+  geom_point(position = position_jitter(0.2), size = 1, 
+             colour = "cornflowerblue") +
+  labs(x = "parameter", y = "waarde") +
+  theme_minimal()
+```
