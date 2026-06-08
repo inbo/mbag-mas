@@ -141,6 +141,73 @@ mas_data_veldleeuwerik_full %>%
   arrange(desc(sum))
 ```
 
+```{r}
+mas_data_veldleeuwerik_full %>%
+  summarise(sum = sum(count), .by = c(year, period_count)) %>%
+  summarise(mean_sum = mean(sum), .by = period_count) %>%
+  slice_max(mean_sum) %>%
+  pull(period_count)
+```
+
 ## Model fit
 
+We selecteren de data van telperiode 1.
+
+```{r}
+data <- mas_data_veldleeuwerik_full %>%
+  filter(period_count == "R1") %>%
+  mutate(sbp_f = factor(sbp, levels = c("buiten", "binnen")),
+         plotnaam_f = factor(plotnaam),
+         year2 = year - 2024)
+
+# Fit model
+fit_pois <- glmmTMB(count ~ year2 * sbp_f + (1 | plotnaam_f), data = data, family = poisson())
+fit_nb <- glmmTMB(count ~ year2 * sbp_f + (1 | plotnaam_f), data = data, family = nbinom2())
+```
+
+```{r}
+library(DHARMa)
+test <- testDispersion(fit_pois)
+```
+
+```{r}
+simulationOutput <- simulateResiduals(fittedModel = fit_pois)
+plot(simulationOutput, asFactor = TRUE)
+```
+
+
+```{r}
+performance::check_model(fit_pois)
+```
+
+betadisp is the log-dispersion parameter:
+
+```{r}
+fit_pois$fit$par
+summary(fit_pois)$varcor
+```
+
+```{r}
+fit_nb$fit$par
+summary(fit_nb)$varcor
+```
+
+```{r}
+aic <- AIC(fit_pois, fit_nb)
+
+phi <- sigma(fit_nb)
+
+if (phi > 1e6) {
+  best_model <- fit_pois
+  model_type <- "Poisson"
+} else if ((aic$AIC[2] + 2) < aic$AIC[1]) {
+  best_model <- fit_nb
+  model_type <- "Negative binomial"
+} else {
+  best_model <- fit_pois
+  model_type <- "Poisson"
+}
+
+model_type
+```
 
