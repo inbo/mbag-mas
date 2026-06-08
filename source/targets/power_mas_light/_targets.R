@@ -50,14 +50,63 @@ tar_source()
 
 # Target list
 list(
-  ## Prepare breeding dates data
-  # Read file
+  ## Prepare data
+  # Read occurrences
   tar_file(
     name = mas_data_clean_file,
     command = file.path(mbag_dir, "output", "datasets", "mas_data_clean.csv")
   ),
   tar_target(
-    name = mas_data_clean,
-    command = read_csv(mas_data_clean_file, show_col_types = FALSE)
+    name = mas_data_target_sp_raw,
+    command = read_csv(mas_data_clean_file, show_col_types = FALSE) %>%
+      filter(tolower(naam) %in% tolower(target_species))
+  ),
+  # Prepare occurrences and group by species (dynamic)
+  tar_group_by(
+    name = mas_data_target_sp,
+    command = mas_data_target_sp_raw %>%
+      select("plotid", "plotnaam", "naam", "aantal", "jaar",
+             "broedcode" = "wrntype", "regio", "openheid_klasse", "sbp",
+             "periode_in_jaar") %>%
+      # Only breeding individuals and count by site
+      filter(broedcode > 0) %>%
+      group_by(plotid, plotnaam, naam, jaar, regio, openheid_klasse, sbp,
+               periode_in_jaar) %>%
+      summarise(count = sum(.data$aantal), .groups = "drop") %>%
+      # Select data from 2024 onwards
+      filter(jaar %in% 2024:2025),
+    naam
+  ),
+
+  # Read visits
+  tar_file(
+    name = visits_file,
+    command = file.path(mbag_dir, "data", "steekproefkaders",
+                        "bezoekenlijst_2023_2025.csv")
+  ),
+  tar_target(
+    name = visits,
+    command = read_csv(visits_file, show_col_types = FALSE) %>%
+      filter(year %in% 2024:2025)
+  ),
+
+  # Add absences (dynamic branching by species)
+  tar_target(
+    name = target_sp_pa,
+    command = add_absences(mas_data_target_sp, visits) %>%
+      group_by(naam) %>%
+      tar_group(),
+    pattern = map(mas_data_target_sp)
+  ),
+
+  # Get best counting periods
+  tar_target(
+    name = best_periods,
+    command = target_sp_pa %>%
+      summarise(sum = sum(count), .by = c(year, period_count)) %>%
+      summarise(mean_sum = mean(sum), .by = period_count) %>%
+      slice_max(mean_sum) %>%
+      pull(period_count),
+    pattern = map(target_sp_pa)
   )
 )
