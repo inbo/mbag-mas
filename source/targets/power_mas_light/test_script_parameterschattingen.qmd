@@ -109,8 +109,8 @@ mas_data_veldleeuwerik_full <- visits %>%
 mas_data_veldleeuwerik_full %>%
   mutate(present = count > 0) %>%
   ggplot(aes(x = period_count, fill = present)) +
-    geom_bar() +
-    facet_grid(cols = vars(year), rows = vars(regio),
+  geom_bar() +
+  facet_grid(cols = vars(year), rows = vars(regio),
              scales = "free")
 ```
 
@@ -118,8 +118,8 @@ mas_data_veldleeuwerik_full %>%
 mas_data_veldleeuwerik_full %>%
   mutate(present = count > 0) %>%
   ggplot(aes(x = sbp, fill = present)) +
-    geom_bar() +
-    facet_grid(cols = vars(openheid_klasse), rows = vars(regio),
+  geom_bar() +
+  facet_grid(cols = vars(openheid_klasse), rows = vars(regio),
              scales = "free")
 ```
 
@@ -161,8 +161,10 @@ data <- mas_data_veldleeuwerik_full %>%
          year2 = year - 2024)
 
 # Fit model
-fit_pois <- glmmTMB(count ~ year2 * sbp_f + (1 | plotnaam_f), data = data, family = poisson())
-fit_nb <- glmmTMB(count ~ year2 * sbp_f + (1 | plotnaam_f), data = data, family = nbinom2())
+fit_pois <- glmmTMB(count ~ year2 * sbp_f + (1 | plotnaam_f), data = data,
+                    family = poisson())
+fit_nb <- glmmTMB(count ~ year2 * sbp_f + (1 | plotnaam_f), data = data,
+                  family = nbinom2())
 ```
 
 ```{r}
@@ -171,8 +173,8 @@ test <- testDispersion(fit_pois)
 ```
 
 ```{r}
-simulationOutput <- simulateResiduals(fittedModel = fit_pois)
-plot(simulationOutput, asFactor = TRUE)
+simulation_output <- simulateResiduals(fittedModel = fit_pois)
+plot(simulation_output, asFactor = TRUE)
 ```
 
 
