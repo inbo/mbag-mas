@@ -58,6 +58,7 @@ mas_data_target_sp %>%
 ```
 
 # Test case
+## Data preparatie
 
 Als eerste test case kijken we naar de data van de Veldleeuwerik in 2024-2025.
 We voegen ook afwezigheden toe.
@@ -104,6 +105,24 @@ mas_data_veldleeuwerik_full <- visits %>%
   )
 ```
 
+```{r}
+mas_data_veldleeuwerik_full %>%
+  mutate(present = count > 0) %>%
+  ggplot(aes(x = period_count, fill = present)) +
+    geom_bar() +
+    facet_grid(cols = vars(year), rows = vars(regio),
+             scales = "free")
+```
+
+```{r}
+mas_data_veldleeuwerik_full %>%
+  mutate(present = count > 0) %>%
+  ggplot(aes(x = sbp, fill = present)) +
+    geom_bar() +
+    facet_grid(cols = vars(openheid_klasse), rows = vars(regio),
+             scales = "free")
+```
+
 In welke telperiode worden de meeste vogels gezien?
 
 ```{r}
@@ -121,4 +140,7 @@ mas_data_veldleeuwerik_full %>%
   summarise(sum = sum(count), .by = c(year, period_count)) %>%
   arrange(desc(sum))
 ```
+
+## Model fit
+
 
