@@ -25,6 +25,8 @@ library(tidyverse)
 library(glmmTMB)
 
 conflicted::conflicts_prefer(dplyr::filter)
+
+mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
 ```
 
 # Datapreparatie
@@ -35,18 +37,17 @@ We selecteren de data met broedcode groter dan nul.
 ```{r}
 mas_data_target_sp_raw <- tar_read("mas_data_target_sp")
 mas_data_target_sp <- mas_data_target_sp_raw %>%
-  select("plotnaam", "naam", "aantal", "jaar", "broedcode" = "wrntype", "regio",
-         "openheid_klasse", "sbp", "periode_in_jaar") %>%
-  mutate(regio = ifelse(grepl("\\sleemstreek$", regio),
-                        "Leemstreek", regio)) %>%
+  select("plotid", "plotnaam", "naam", "aantal", "jaar",
+         "broedcode" = "wrntype", "regio", "openheid_klasse", "sbp",
+         "periode_in_jaar") %>%
   filter(broedcode > 0) %>%
-  group_by(plotnaam, naam, jaar, regio, openheid_klasse, sbp,
+  group_by(plotid, plotnaam, naam, jaar, regio, openheid_klasse, sbp,
            periode_in_jaar) %>%
   summarise(count = sum(.data$aantal), .groups = "drop")
 ```
 
 We hebben van de alle landbouwregio's in twee jaar gemonitord en sommige in meerdere jaren.
-De getallen duiden aan in hoeveel telpunten de doelsoorten zijn gezien.
+De getallen duiden aan in hoeveel telpunten de doelsoorten zijn gezien (zonder afwezigheden).
 
 ```{r}
 mas_data_target_sp %>%
@@ -59,18 +60,65 @@ mas_data_target_sp %>%
 # Test case
 
 Als eerste test case kijken we naar de data van de Veldleeuwerik in 2024-2025.
+We voegen ook afwezigheden toe.
 
 ```{r}
+# Filter data
 mas_data_veldleeuwerik <- mas_data_target_sp %>%
   filter(naam == "Veldleeuwerik",
          jaar %in% 2024:2025)
+
+# Get visits
+visits <- read_csv(file.path(mbag_dir, "data", "steekproefkaders",
+                             "bezoekenlijst_2023_2025.csv"),
+                   show_col_types = FALSE) %>%
+  filter(year %in% 2024:2025)
+
+# Add absence data
+mas_data_veldleeuwerik_full <- visits %>%
+  select(
+    plotid,
+    plotnaam,
+    year,
+    regio,
+    openheid_klasse,
+    sbp,
+    period_count
+  ) %>%
+  distinct() %>%
+  left_join(
+    mas_data_veldleeuwerik,
+    by = c(
+      "plotid",
+      "plotnaam",
+      "year" = "jaar",
+      "regio",
+      "openheid_klasse",
+      "sbp",
+      "period_count" = "periode_in_jaar"
+    )
+  ) %>%
+  mutate(
+    naam = coalesce(naam, "Veldleeuwerik"),
+    count = coalesce(count, 0)
+  )
 ```
 
+In welke telperiode worden de meeste vogels gezien?
 
 ```{r}
-mas_data_veldleeuwerik %>%
-  ggplot(aes(y = count, x = periode_in_jaar)) +
+mas_data_veldleeuwerik_full %>%
+  ggplot(aes(y = count, x = period_count)) +
   geom_boxplot() +
-  facet_grid(rows = vars(jaar), cols = vars(regio))
+  facet_grid(cols = vars(year), rows = vars(regio),
+             scales = "free")
+```
+
+In zowel 2024 als 2025 werden meeste Veldleeuwerikken gezien in telperiode 1.
+
+```{r}
+mas_data_veldleeuwerik_full %>%
+  summarise(sum = sum(count), .by = c(year, period_count)) %>%
+  arrange(desc(sum))
 ```
 
