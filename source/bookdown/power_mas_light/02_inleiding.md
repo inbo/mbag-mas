@@ -31,7 +31,7 @@ De centrale onderzoeksvraag luidt:
 
 > Welk verschil in populatietrend tussen SBP-gebieden en niet-SBP-gebieden kan worden gedetecteerd met een MAS light van tien jaar, gegeven een vooraf vastgelegd aantal telpunten?
 
-De parameter van interesse is het verschil in jaarlijkse trend tussen beide groepen:
+De parameter waarin we geïnteresseerd zijn, is het verschil in jaarlijkse trend tussen beide groepen:
 
 $$
 \beta_{jaar \times SBP}
