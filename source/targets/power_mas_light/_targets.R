@@ -193,7 +193,7 @@ list(
 
   tar_map(
     values = list(
-      species = target_species[1:2]
+      species = target_species
     ),
 
     # Go over each row
