@@ -237,7 +237,8 @@ list(
         power = 0.9,
         alpha = 0.1,
         filename = paste0("power_mas_light_",
-                          gsub("\\s", ".", tolower(species)))
+                          gsub("\\s", ".", tolower(species)),
+                          ".duckdb")
       ),
       pattern = map(design_list),
       iteration = "list"
