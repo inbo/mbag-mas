@@ -178,8 +178,8 @@ list(
     command = expand.grid(
       n_telpunten = c(100, 200),
       n_jaar = 10,
-      beta_1 = c(0),
-      beta_3 = 0.01
+      beta_1 = c(log(0.99)),
+      beta_3 = c(-log(0.99))
     )
   ),
   tar_target(
@@ -214,10 +214,10 @@ list(
           n_jaar = 0,
           n_telpunten = 0,
           beta_0 = 2,
-          beta_1 = 3,
-          beta_2 = 3,
+          beta_1 = 2,
+          beta_2 = 2,
           beta_3 = 3,
-          sigma_punt = 3,
+          sigma_punt = 2,
           theta = 2
         )
       ),
@@ -236,7 +236,8 @@ list(
         sim_power = simulate_mas_data,
         power = 0.9,
         alpha = 0.1,
-        filename = "power_mas_light"
+        filename = paste0("power_mas_light_",
+                          gsub("\\s", ".", tolower(species)))
       ),
       pattern = map(design_list),
       iteration = "list"
