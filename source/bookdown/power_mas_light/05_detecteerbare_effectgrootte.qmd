@@ -4,6 +4,7 @@ editor_options:
   chunk_output_type: console
 ---
 # Detecteerbare effectgrootte {#sec-detecteerbare-effectgrootte}
+## Resultaten
 
 ```{r}
 #| echo: FALSE
@@ -12,6 +13,7 @@ editor_options:
 library(knitr)
 library(targets)
 library(tidyverse)
+library(glmmTMB)
 
 source("R/tar_read_mas.R")
 ```
@@ -103,4 +105,314 @@ detectable_effect_df %>%
     colour = "Aantal telpunten"
   ) +
   theme_minimal()
+```
+
+## Bijkomende vragen
+### Effect van stratificatie
+
+De basisanalyse houdt geen expliciete rekening met landbouwstreek en landschapstype, hoewel deze variabelen gebruikt worden bij de steekproeftrekking. Indien deze stratificatievariabelen een belangrijk deel van de variatie in de tellingen verklaren, kan opname ervan in het analysemodel leiden tot een hogere statistische kracht. Daarom wordt voor de Veldleeuwerik een aanvullende gevoeligheidsanalyse uitgevoerd waarin landbouwstreek en landschapstype wel expliciet worden gemodelleerd. Op die manier kan worden nagegaan of de conclusies van de poweranalyse gevoelig zijn voor deze vereenvoudiging van het analysekader.
+
+```{r}
+# Get data
+model_data <- tar_read_mas("model_data")
+
+# Prepare data
+model_data_stratum <- model_data %>%
+  filter(naam == "Veldleeuwerik") %>%
+  mutate(
+    regio = ifelse(grepl("\\sleemstreek", regio), "Leemstreek", regio),
+    stratum = ifelse(
+      regio == "Weidestreek",
+      tolower(regio),
+      tolower(paste(regio, openheid_klasse, sep = "_"))                 
+    )
+  )
+```
+
+```{r}
+# Fit model
+fit_pois_stratum <- glmmTMB(
+  count ~ stratum + year2 * sbp_f + (1 | plotnaam_f),
+  data = model_data_stratum,
+  family = poisson()
+)
+```
+
+```{r}
+summary_model_stratum <- summary(fit_pois_stratum)
+coef_stratum <- summary_model_stratum$coefficients$cond
+
+parameters_stratum <- list(
+  n_telpunten = 100,
+  n_jaar = 10,
+
+  beta_0 = coef["(Intercept)", "Estimate"],
+  beta_1 = log(0.99),
+  beta_2 = coef["sbp_fbinnen", "Estimate"],
+  beta_3 = -log(0.99),
+  sigma_punt = unname(
+    attr(summary_model_stratum$varcor$cond$plotnaam_f, "stddev")
+  )
+)
+coef_beta_stratum <- coef[grep("^stratum", rownames(coef)), "Estimate"]
+```
+
+```{r}
+# Get weights
+file <- file.path("data/steekproefkaders/steekproefkader_mbag_mas.csv")
+projroot <- rprojroot::find_root(rprojroot::has_file(file))
+steekproefkader <- read_csv(file.path(projroot, file),
+                            show_col_types = FALSE) %>%
+  mutate(regio = ifelse(grepl("\\sleemstreek", regio), "Leemstreek", regio))
+totaal <- nrow(steekproefkader)
+
+weights_df <- steekproefkader %>%
+  mutate(regio = ifelse(grepl("\\sleemstreek", regio), "Leemstreek", regio)) %>%
+  count(regio, openheid_klasse) %>%
+  mutate(prop = n / totaal) %>%
+  tidyr::crossing(
+    sbp = c("binnen", "buiten")
+  ) %>%
+  mutate(
+    prop_sbp = 0.5,
+    prop_final = prop * prop_sbp
+  ) %>%
+  select(regio, openheid_klasse, sbp, w = prop_final) %>%
+  arrange(regio, openheid_klasse, sbp) %>%
+  mutate(
+    stratum = ifelse(
+      regio == "Weidestreek",
+      tolower(regio),
+      tolower(paste(regio, openheid_klasse, sep = "_"))                 
+    )
+  )
+```
+
+```{r}
+simulate_mas_data_stratum <- function(design, ...) {
+  stopifnot(require("glmmTMB"))
+
+  # Number of locations per stratum
+  n_per_stratum <- round(weights$w * design$n_telpunten)
+  diff_n <- design$n_telpunten - sum(n_per_stratum)
+  n_per_stratum[which.max(weights$w)] <-
+    n_per_stratum[which.max(weights$w)] + diff_n
+  
+  # Dataframe with locations
+  telpunten <- data.frame(
+    telpunt = seq_len(design$n_telpunten),
+    stratum = rep(weights$stratum, n_per_stratum),
+    sbp = rep(weights$sbp, n_per_stratum)
+  )
+
+  # Create random effect for location
+  rf_telpunt <- rnorm(
+    design$n_telpunten,
+    mean = 0,
+    sd = design$sigma_punt
+  )
+  telpunten$rf <- rf_telpunt
+  
+  # Add years
+  df <- tidyr::crossing(
+    telpunten,
+    jaar = seq_len(design$n_jaar) - 1
+  )
+  df$sbp_num <- as.integer(df$sbp == "binnen")
+
+  # Linear predictor
+  beta_stratum <- c(
+     0,   # Reference
+    coef_beta_stratum
+  )
+  names(beta_stratum) <- c(
+    setdiff(unique(df$stratum), gsub("stratum", "", names(coef_beta_stratum))),
+    gsub("stratum", "", names(beta_stratum)[-1])
+  )
+
+  df$eta <-
+    design$beta_0 +
+    beta_stratum[df$stratum] +
+    design$beta_1 * df$jaar +
+    design$beta_2 * df$sbp_num +
+    design$beta_3 * df$jaar * df$sbp_num +
+    df$rf
+
+  # Expected count
+  df$mu <- exp(df$eta)
+
+  # Observed count
+  df$count <- rpois(
+    nrow(df),
+    lambda = df$mu
+  )
+  df$sbp_f <- factor(df$sbp, levels = c("buiten", "binnen"))
+  df$telpunt_f <- factor(df$telpunt)
+
+  # Fit models
+  model <- try(
+    glmmTMB(count ~ stratum + jaar * sbp_f + (1 | telpunt_f),
+            data = df,
+            family = poisson())
+  )
+
+  if (inherits(model, "try-error")) {
+    return(1)
+  }
+
+  # Return p-value
+  p <- summary(model)$coefficients$cond["jaar:sbp_fbinnen", "Pr(>|z|)"]
+  p_final <- pmin(p, 1, na.rm = TRUE)
+
+  return(p_final)
+}
+
+detectable_effect_stratum <- designpower::find_power(
+  design = parameters_stratum,
+  design_digits = c(
+    n_jaar = 0,
+    n_telpunten = 0,
+    beta_stratum = 2,
+    beta_0 = 2,
+    beta_1 = 2,
+    beta_2 = 2,
+    beta_3 = 3,
+    sigma_punt = 2
+  ),
+  opti = "beta_3",
+  sim_power = simulate_mas_data_stratum,
+  extra_args = list(weights = weights_df,
+                    coef_beta_stratum = coef_beta_stratum),
+  power = 0.9,
+  alpha = 0.1,
+  filename = "power_mas_light_stratum.duckdb"
+)
+```
+
+### Effect van verspreiding
+
+De basisanalyse veronderstelt impliciet dat alle telpunten in Vlaanderen relevant zijn voor elke doelsoort. Voor soorten met een beperkte verspreiding is dit niet het geval. Daarom wordt voor de Geelgors een aanvullende analyse uitgevoerd waarbij regio's waar de soort vrijwel afwezig is (Polders, Zandstreek en Zandleemstreek) worden uitgesloten. Deze gevoeligheidsanalyse onderzoekt in welke mate de resultaten van de poweranalyse beïnvloed worden door de aanname dat alle telpunten potentieel geschikt zijn voor de doelsoort.
+
+```{r}
+# Prepare data
+model_data_geelgors <- model_data %>%
+  filter(naam == "Geelgors",
+         regio %in% c("Polders", "Zandstreek", "Zandleemstreek"))
+```
+
+Initieel voegden we Zandleemstreek toe, maar kregen we toch problemen met volledige separatie van de categorische variabelen.
+Dit duidt aan dat we dit in alle andere modellen ook moeten bekijken.
+
+```{r}
+# Fit model
+fit_pois_geelgors <- glmmTMB(
+  count ~ year2 * sbp_f + (1 | plotnaam_f),
+  data = model_data_geelgors,
+  family = poisson()
+)
+
+summary_model_geelgors <- summary(fit_pois_geelgors)
+coef_geelgors <- summary_model_geelgors$coefficients$cond
+
+parameters_geelgors <- list(
+  n_telpunten = 100,
+  n_jaar = 10,
+
+  beta_0 = coef["(Intercept)", "Estimate"],
+  beta_1 = log(0.99),
+  beta_2 = coef["sbp_fbinnen", "Estimate"],
+  beta_3 = -log(0.99),
+  sigma_punt = unname(attr(summary_model_geelgors$varcor$cond$plotnaam_f,
+                           "stddev"))
+)
+```
+
+```{r}
+simulate_mas_data_geelgors <- function(design, ...) {
+  stopifnot(require("glmmTMB"))
+
+  # Number of locations per stratum
+  n_per_stratum <- round(weights$w * design$n_telpunten)
+  diff_n <- design$n_telpunten - sum(n_per_stratum)
+  n_per_stratum[which.max(weights$w)] <-
+    n_per_stratum[which.max(weights$w)] + diff_n
+  
+  # Dataframe with locations
+  telpunten <- data.frame(
+    telpunt = seq_len(design$n_telpunten),
+    regio = rep(weights$regio, n_per_stratum),
+    sbp = rep(weights$sbp, n_per_stratum)
+  )
+
+  # Create random effect for location
+  rf_telpunt <- rnorm(
+    design$n_telpunten,
+    mean = 0,
+    sd = design$sigma_punt
+  )
+  telpunten$rf <- rf_telpunt
+  
+  # Add years
+  df <- tidyr::crossing(
+    telpunten,
+    jaar = seq_len(design$n_jaar) - 1
+  ) %>%
+    filter(regio %in% c("Polders", "Zandstreek", "Zandleemstreek"))
+  df$sbp_num <- as.integer(df$sbp == "binnen")
+
+  # Linear predictor
+  df$eta <-
+    design$beta_0 +
+    design$beta_1 * df$jaar +
+    design$beta_2 * df$sbp_num +
+    design$beta_3 * df$jaar * df$sbp_num +
+    df$rf
+
+  # Expected count
+  df$mu <- exp(df$eta)
+
+  # Observed count
+  df$count <- rpois(
+    nrow(df),
+    lambda = df$mu
+  )
+  df$sbp_f <- factor(df$sbp, levels = c("buiten", "binnen"))
+  df$telpunt_f <- factor(df$telpunt)
+
+  # Fit models
+  model <- try(
+    glmmTMB(count ~ jaar * sbp_f + (1 | telpunt_f),
+            data = df,
+            family = poisson())
+  )
+
+  if (inherits(model, "try-error")) {
+    return(1)
+  }
+
+  # Return p-value
+  p <- summary(model)$coefficients$cond["jaar:sbp_fbinnen", "Pr(>|z|)"]
+  p_final <- pmin(p, 1, na.rm = TRUE)
+
+  return(p_final)
+}
+
+detectable_effect_geelgors <- designpower::find_power(
+  design = parameters_geelgors,
+  design_digits = c(
+    n_jaar = 0,
+    n_telpunten = 0,
+    beta_0 = 2,
+    beta_1 = 2,
+    beta_2 = 2,
+    beta_3 = 3,
+    sigma_punt = 2
+  ),
+  opti = "beta_3",
+  sim_power = simulate_mas_data_geelgors,
+  extra_args = list(weights = weights_df),
+  power = 0.9,
+  alpha = 0.1,
+  filename = paste0("power_mas_light_geelgorstest.duckdb")
+)
 ```
