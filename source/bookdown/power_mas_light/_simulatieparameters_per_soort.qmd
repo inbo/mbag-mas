@@ -4,6 +4,7 @@ editor_options:
   chunk_output_type: console
 ---
 ### {{species}}
+#### Data exploratie
 
 ```{r}
 # Variables
@@ -24,7 +25,7 @@ presence_df <- target_sp_pa %>%
   mutate(present = total > 0)
 ```
 
-De `r species` werd het vaakst waargenomen in telronde `r unname(gsub("R", "", tar_read_mas("best_period", branch = branch)))`. Enkel deze data werden behouden voor de schatting van de parameters. We beschouwen twee jaar en vier telperiodes. We gaan na waar de soort nooit is waargenomen tijdens deze acht bezoeken. `r describe_presence(presence_df)`
+We gaan na waar de {{species}} nooit is waargenomen tijdens deze acht bezoeken. `r describe_presence(presence_df)` De soort werd het vaakst waargenomen in telronde `r unname(gsub("R", "", tar_read_mas("best_period", branch = branch)))`. Enkel deze data werden behouden voor de schatting van de parameters. We beschouwen twee jaar en vier telperiodes.
 
 ```{r}
 #| fig-height: 8
@@ -34,4 +35,42 @@ presence_df %>%
   facet_grid(regio ~ openheid_klasse, scales = "free") +
   labs(x = "SBP", y = "Aantal telpunten", fill = "Aanwezig") +
   theme_minimal()
+```
+
+#### Schatting modelparameters
+
+```{r}
+final_model <- tar_read_mas("final_model", branch = branch)[[1]]
+model <- ifelse(final_model$family == "poisson",
+                "Poisson", "Negatief binomiaal")
+```
+
+We vergeleken een Poisson en Negatief binomiaal model via AIC. Voor de {{species}} werd het `r model` geselecteerd.
+
+```{r}
+final_model <- tar_read_mas("final_model", branch = branch)[[1]]
+```
+
+We bekijken enkele diagnostische figuren en testen voor een overmaat aan nullen.
+
+**DHARMa** package:
+
+```{r}
+#| fig-height: 5
+simulation_output <- tar_read_mas("simulated_residuals", branch = branch)[[1]]
+plot(simulation_output, asFactor = TRUE)
+```
+
+```{r}
+#| fig-height: 5
+testZeroInflation(simulation_output)
+```
+
+**performance** package:
+
+```{r}
+#| warning: FALSE
+#| message: FALSE
+#| fig-height: 8
+performance::check_model(final_model$fit)
 ```

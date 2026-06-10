@@ -14,6 +14,7 @@ library(targets)
 library(tidyverse)
 library(factoextra)
 library(patchwork)
+library(DHARMa)
 
 source("R/describe_presence.R")
 source("R/tar_read_mas.R")
