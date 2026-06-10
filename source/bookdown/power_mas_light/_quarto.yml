@@ -6,6 +6,7 @@ project:
   - '!LICENSE.md'
   - '!README.md'
   output-dir: ../../../output/rapporten/power_mas_light
+  pre-render: R/pre_render.R
   post-render: _extensions/inbo/flandersqmd-book/filters/post_render.R
 
 execute:
