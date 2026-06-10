@@ -1,1 +1,106 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 # Detecteerbare effectgrootte {#sec-detecteerbare-effectgrootte}
+
+```{r}
+#| echo: FALSE
+#| warning: FALSE
+#| message: FALSE
+library(knitr)
+library(targets)
+library(tidyverse)
+
+source("R/tar_read_mas.R")
+```
+
+```{r}
+target_species <- c(
+  "Geelgors",
+  "Veldleeuwerik"
+)
+```
+
+```{r}
+# Get effect sizes
+detectable_effect_df <- lapply(target_species, function(spec) {
+  tar_read_mas("detectable_effect_df", species = spec)
+}) %>%
+  bind_rows()
+
+detectable_effect_df <- detectable_effect_df %>%
+  mutate(
+    beta3 = detectable_effect,
+    beta3_low = detectable_effect_low,
+    beta3_high = detectable_effect_high,
+
+    effect_pct = 100 * (exp(beta3) - 1),
+    effect_pct_low = 100 * (exp(beta3_low) - 1),
+    effect_pct_high = 100 * (exp(beta3_high) - 1)
+  )
+```
+
+
+```{r}
+detectable_effect_df %>%
+  ggplot(aes(x = n_telpunten, y = effect_pct, colour = species)) +
+  geom_line() +
+  geom_point(size = 3) +
+  geom_errorbar(
+    aes(
+      ymin = effect_pct_low,
+      ymax = effect_pct_high
+    ),
+    width = 5
+  ) +
+  labs(
+    x = "Aantal telpunten",
+    y = "Detecteerbare jaarlijkse interactieverandering (%)",
+    colour = "Soort"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+detectable_effect_df %>%
+  ggplot(aes(x = sigma_punt, y = effect_pct,
+             colour = factor(n_telpunten), group = factor(n_telpunten))) +
+  geom_point(size = 3) +
+  geom_errorbar(
+    aes(
+      ymin = effect_pct_low,
+      ymax = effect_pct_high
+    ),
+    width = 0.1
+  ) +
+  geom_smooth(method = "lm", formula = "y ~ x") +
+  labs(
+    x = "Variabiliteit telpunten (sigma_punt)",
+    y = "Detecteerbare jaarlijkse interactieverandering (%)",
+    colour = "Aantal telpunten"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+detectable_effect_df %>%
+  ggplot(aes(x = exp(beta_0), y = effect_pct,
+             colour = factor(n_telpunten), group = factor(n_telpunten))) +
+  geom_point(size = 3) +
+  geom_errorbar(
+    aes(
+      ymin = effect_pct_low,
+      ymax = effect_pct_high
+    ),
+    width = 0.01
+  ) +
+  geom_smooth(method = "lm", formula = "y ~ x") +
+  labs(
+    x = "Startdensiteit (exp(beta_0))",
+    y = "Detecteerbare jaarlijkse interactieverandering (%)",
+    colour = "Aantal telpunten"
+  ) +
+  theme_minimal()
+```
