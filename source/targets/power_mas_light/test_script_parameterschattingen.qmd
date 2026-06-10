@@ -133,7 +133,7 @@ mas_data_veldleeuwerik_full %>%
              scales = "free")
 ```
 
-In zowel 2024 als 2025 werden meeste Veldleeuwerikken gezien in telperiode 1.
+In zowel 2024 als 2025 werden meeste Veldleeuweriken gezien in telperiode 1.
 
 ```{r}
 mas_data_veldleeuwerik_full %>%

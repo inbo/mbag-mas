@@ -124,7 +124,7 @@ model_data_stratum <- model_data %>%
     stratum = ifelse(
       regio == "Weidestreek",
       tolower(regio),
-      tolower(paste(regio, openheid_klasse, sep = "_"))                 
+      tolower(paste(regio, openheid_klasse, sep = "_"))
     )
   )
 ```
@@ -183,7 +183,7 @@ weights_df <- steekproefkader %>%
     stratum = ifelse(
       regio == "Weidestreek",
       tolower(regio),
-      tolower(paste(regio, openheid_klasse, sep = "_"))                 
+      tolower(paste(regio, openheid_klasse, sep = "_"))
     )
   )
 ```
@@ -197,7 +197,7 @@ simulate_mas_data_stratum <- function(design, ...) {
   diff_n <- design$n_telpunten - sum(n_per_stratum)
   n_per_stratum[which.max(weights$w)] <-
     n_per_stratum[which.max(weights$w)] + diff_n
-  
+
   # Dataframe with locations
   telpunten <- data.frame(
     telpunt = seq_len(design$n_telpunten),
@@ -212,7 +212,7 @@ simulate_mas_data_stratum <- function(design, ...) {
     sd = design$sigma_punt
   )
   telpunten$rf <- rf_telpunt
-  
+
   # Add years
   df <- tidyr::crossing(
     telpunten,
@@ -221,10 +221,7 @@ simulate_mas_data_stratum <- function(design, ...) {
   df$sbp_num <- as.integer(df$sbp == "binnen")
 
   # Linear predictor
-  beta_stratum <- c(
-     0,   # Reference
-    coef_beta_stratum
-  )
+  beta_stratum <- c(0, coef_beta_stratum)
   names(beta_stratum) <- c(
     setdiff(unique(df$stratum), gsub("stratum", "", names(coef_beta_stratum))),
     gsub("stratum", "", names(beta_stratum)[-1])
@@ -282,7 +279,7 @@ detectable_effect_stratum <- designpower::find_power(
   opti = "beta_3",
   sim_power = simulate_mas_data_stratum,
   extra_args = list(weights = weights_df,
-                    coef_beta_stratum = coef_beta_stratum),
+                    coef_beta_stratum = round(coef_beta_stratum, 2)),
   power = 0.9,
   alpha = 0.1,
   filename = "power_mas_light_stratum.duckdb"
@@ -336,7 +333,7 @@ simulate_mas_data_geelgors <- function(design, ...) {
   diff_n <- design$n_telpunten - sum(n_per_stratum)
   n_per_stratum[which.max(weights$w)] <-
     n_per_stratum[which.max(weights$w)] + diff_n
-  
+
   # Dataframe with locations
   telpunten <- data.frame(
     telpunt = seq_len(design$n_telpunten),
@@ -351,7 +348,7 @@ simulate_mas_data_geelgors <- function(design, ...) {
     sd = design$sigma_punt
   )
   telpunten$rf <- rf_telpunt
-  
+
   # Add years
   df <- tidyr::crossing(
     telpunten,
