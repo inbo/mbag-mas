@@ -70,7 +70,7 @@ list(
              "broedcode" = "wrntype", "regio", "openheid_klasse", "sbp",
              "periode_in_jaar") %>%
       # Only breeding individuals and count by site
-      filter(broedcode > 0) %>%
+      filter(broedcode > 0 | naam == "Torenvalk") %>%
       group_by(plotid, plotnaam, naam, jaar, regio, openheid_klasse, sbp,
                periode_in_jaar) %>%
       summarise(count = sum(.data$aantal), .groups = "drop") %>%
