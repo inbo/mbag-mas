@@ -11,24 +11,14 @@ editor_options:
 species <- "{{species}}"
 branch <- {{branch}}
 
-# Load presence absence data
-target_sp_pa <- tar_read_mas("target_sp_pa", branch = branch)
+# Load presence absence data (logical over counting periods)
+presence_df <- tar_read_mas("presence_logical", branch = branch)
 ```
 
-```{r}
-presence_df <- target_sp_pa %>%
-  mutate(regio = ifelse(grepl("\\sleemstreek", regio), "Leemstreek", regio)) %>%
-  summarise(
-    total = sum(count),
-    .by = c("plotnaam", "openheid_klasse", "sbp", "regio")
-  ) %>%
-  mutate(present = total > 0)
-```
-
-We gaan na waar de {{species}} nooit is waargenomen tijdens deze acht bezoeken. `r describe_presence(presence_df)` De soort werd het vaakst waargenomen in telronde `r unname(gsub("R", "", tar_read_mas("best_period", branch = branch)))`. Enkel deze data werden behouden voor de schatting van de parameters. We beschouwen twee jaar en vier telperiodes.
+We beschouwen twee jaar en vier telperiodes. We gaan na waar de {{species}} is waargenomen tijdens deze acht bezoeken. `r describe_presence(presence_df)` De soort werd het vaakst waargenomen in telronde `r unname(gsub("R", "", tar_read_mas("best_period", branch = branch)))`. Enkel deze data werden behouden voor de schatting van de parameters.
 
 ```{r}
-#| fig-height: 8
+#| fig-height: 7.5
 presence_df %>%
   ggplot(aes(x = sbp, fill = present)) +
   geom_bar() +
@@ -45,7 +35,7 @@ model <- ifelse(final_model$family == "poisson",
                 "Poisson", "Negatief binomiaal")
 ```
 
-We vergeleken een Poisson en Negatief binomiaal model via AIC. Voor de {{species}} werd het `r model` geselecteerd.
+We vergeleken een Poisson en Negatief binomiaal model via AIC. Voor de {{species}} werd het `r model` model geselecteerd.
 
 ```{r}
 final_model <- tar_read_mas("final_model", branch = branch)[[1]]
@@ -65,6 +55,8 @@ plot(simulation_output, asFactor = TRUE)
 #| fig-height: 5
 testZeroInflation(simulation_output)
 ```
+
+\newpage
 
 **performance** package:
 

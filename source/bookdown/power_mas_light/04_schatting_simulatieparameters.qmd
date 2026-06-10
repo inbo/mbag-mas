@@ -41,7 +41,7 @@ target_species <- c(
 ```
 
 In dit hoofdstuk worden de simulatieparameters geschat die als input dienen voor de poweranalyse. Hiervoor wordt gebruikgemaakt van de gegevens uit de jaren 2024 en 2025 voor een selectie van doelsoorten (`r tolower(target_species)`).
-Eerst worden de waarnemingsgegevens ingelezen en gefilterd op de geselecteerde soorten. Enkel broedvogelwaarnemingen worden behouden (broedcode > 0) en per telpunt, jaar en telperiode samengevat tot aantallen. Vervolgens worden afwezigheden toegevoegd op basis van de beschikbare bezoekgegevens.
+Eerst worden de waarnemingsgegevens ingelezen en gefilterd op de geselecteerde soorten. Enkel broedvogelwaarnemingen worden behouden (broedcode > 0), behalve voor Torenvalk, en de aantallen worden samengevat per telpunt, jaar en telperiode samengevat. Vervolgens worden afwezigheden toegevoegd op basis van de beschikbare bezoekgegevens.
 Voor elke soort worden de data uit de telperiode geselecteerd waarin gemiddeld de hoogste aantallen worden vastgesteld over beide jaren. Deze periode wordt beschouwd als de meest geschikte periode voor de verdere modellering.
 
 Voor elke soort wordt vervolgens een Generalized Linear Mixed Model (GLMM) opgesteld met het aantal waargenomen individuen als responsvariabele (zie @sec-analysemodel).
@@ -79,6 +79,8 @@ parameters_df_selection %>%
 ```
 
 ```{r}
+#| warning: FALSE
+#| message: FALSE
 # Negative binomial
 pca_nb <- parameters_df %>%
   filter(!is.na(theta)) %>%
@@ -123,6 +125,9 @@ p_nb <- fviz_pca_biplot(
 
 p_pois + p_nb
 ```
+
+`r sort(target_species[tar_read_mas("presence_prop") < 0.2])` werden in minder dan 20 % van de telpunten waargenomen in 2024 en 2025 (zie verder).
+Voor deze soorten zullen we geen verdere analyses doen rond detecteerbare effectgrootte.
 
 \newpage
 

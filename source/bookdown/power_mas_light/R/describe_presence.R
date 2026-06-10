@@ -1,4 +1,14 @@
 describe_presence <- function(presence_df) {
+  # Get total proportion
+  tot_prop <- presence_df %>%
+    count(present) %>%
+    mutate(prop = n / sum(n)) %>%
+    filter(present)
+  p <- round(100 * tot_prop$prop)
+  txt_total <- paste0(
+    "De soort werd in ", p, " % van de bezochte telpunten waargenomen."
+  )
+
   # Summarise presences by landscape openness class and calculate proportions
   openheid <- presence_df %>%
     filter(present) %>%
@@ -131,7 +141,7 @@ describe_presence <- function(presence_df) {
 
   # Combine all text fragments into a single paragraph
   paste(
-    c(txt_openheid, txt_sbp, txt_regio),
+    c(txt_total, txt_openheid, txt_sbp, txt_regio),
     collapse = " "
   )
 }
