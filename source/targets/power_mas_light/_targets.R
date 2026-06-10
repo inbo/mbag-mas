@@ -154,6 +154,12 @@ list(
     pattern = map(species, fit_models),
     iteration = "list"
   ),
+  tar_target(
+    name = simulated_residuals,
+    command = DHARMa::simulateResiduals(fittedModel = final_model$fit),
+    pattern = map(final_model),
+    iteration = "list"
+  ),
 
   # Extract parameters
   tar_target(
@@ -193,7 +199,7 @@ list(
 
   tar_map(
     values = list(
-      species = target_species
+      species = target_species[target_species %in% c("Geelgors", "Veldleeuwerik")]
     ),
 
     # Go over each row
