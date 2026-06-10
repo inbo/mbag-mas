@@ -223,13 +223,13 @@ params <- tar_read(parameters)[[14]]
 ```{r}
 sim_f <- function(design, ...) {
   stopifnot(require("glmmTMB"))
-  
+
   # Create dataframe
   df <- expand.grid(
     telpunt = seq_len(design$n_telpunten),
     jaar = seq_len(design$n_jaar) - 1
   )
-  
+
   # Half of points is in SBP
   sbp_per_telpunt <- rep(
     c("buiten", "binnen"),
@@ -251,7 +251,7 @@ sim_f <- function(design, ...) {
     design$beta_2 * df$sbp_num +
     design$beta_3 * df$jaar * df$sbp_num +
     rf_telpunt[df$telpunt]
-  
+
   # Expected count
   df$mu <- exp(df$eta)
 
@@ -290,11 +290,11 @@ sim_f <- function(design, ...) {
   if (inherits(model, "try-error")) {
     return(1)
   }
-  
+
   # Return p-value
   p <- summary(model)$coefficients$cond["jaar:sbp_fbinnen", "Pr(>|z|)"]
   p_final <- pmin(p, 1, na.rm = TRUE)
-  
+
   return(p_final)
 }
 ```

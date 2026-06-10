@@ -72,7 +72,7 @@ parameters_df_selection %>%
   pivot_longer("beta_0":"theta", names_to = "param") %>%
   ggplot(aes(x = param, y = value)) +
   geom_boxplot() +
-  geom_point(position = position_jitter(0.2), size = 1, 
+  geom_point(position = position_jitter(0.2), size = 1,
              colour = "cornflowerblue") +
   labs(x = "Parameter", y = "Waarde") +
   theme_minimal()

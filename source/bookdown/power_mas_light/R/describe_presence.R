@@ -1,9 +1,9 @@
 describe_presence <- function(presence_df) {
   # Get total proportion
   tot_prop <- presence_df %>%
-    count(present) %>%
-    mutate(prop = n / sum(n)) %>%
-    filter(present)
+    count(.data$present) %>%
+    mutate(prop = .data$n / sum(.data$n)) %>%
+    filter(.data$present)
   p <- round(100 * tot_prop$prop)
   txt_total <- paste0(
     "De soort werd in ", p, " % van de bezochte telpunten waargenomen."
@@ -15,27 +15,25 @@ describe_presence <- function(presence_df) {
     count(openheid_klasse) %>%
     mutate(prop = n / sum(n))
 
-  # Generate a sentence describing the species' preference for open or half-open landscapes
+  # Generate a sentence describing the species' preference for landscapes
   txt_openheid <- dplyr::case_when(
-    any(openheid$openheid_klasse == "OL" &
-          openheid$prop >= 0.6) ~ {
-            p <- round(100 * openheid$prop[openheid$openheid_klasse == "OL"])
-            paste0(
-              "De soort werd vooral waargenomen in open landschap (",
-              p,
-              " % van de bezochte telpunten)."
-            )
-          },
+    any(openheid$openheid_klasse == "OL" & openheid$prop >= 0.6) ~ {
+      p <- round(100 * openheid$prop[openheid$openheid_klasse == "OL"])
+      paste0(
+        "De soort werd vooral waargenomen in open landschap (",
+        p,
+        " % van de bezochte telpunten)."
+      )
+    },
 
-    any(openheid$openheid_klasse == "HOL" &
-          openheid$prop >= 0.6) ~ {
-            p <- round(100 * openheid$prop[openheid$openheid_klasse == "HOL"])
-            paste0(
-              "De soort werd vooral waargenomen in halfopen landschap (",
-              p,
-              " % van de bezochte telpunten)."
-            )
-          },
+    any(openheid$openheid_klasse == "HOL" & openheid$prop >= 0.6) ~ {
+      p <- round(100 * openheid$prop[openheid$openheid_klasse == "HOL"])
+      paste0(
+        "De soort werd vooral waargenomen in halfopen landschap (",
+        p,
+        " % van de bezochte telpunten)."
+      )
+    },
 
     TRUE ~ {
       p_ol <- round(
@@ -62,25 +60,21 @@ describe_presence <- function(presence_df) {
 
   # Generate a sentence describing the species' association with SBP
   txt_sbp <- dplyr::case_when(
-    any(sbp$sbp == "binnen" &
-          sbp$prop >= 0.6) ~ {
-            p <- round(100 * sbp$prop[sbp$sbp == "binnen"])
-            paste0(
-              "De soort werd vooral binnen SBP waargenomen (",
-              p,
-              " % van de bezochte telpunten)."
-            )
-          },
+    any(sbp$sbp == "binnen" & sbp$prop >= 0.6) ~ {
+      p <- round(100 * sbp$prop[sbp$sbp == "binnen"])
+      paste0(
+        "De soort werd vooral binnen SBP waargenomen (",
+        p, " % van de bezochte telpunten)."
+      )
+    },
 
-    any(sbp$sbp == "buiten" &
-          sbp$prop >= 0.6) ~ {
-            p <- round(100 * sbp$prop[sbp$sbp == "buiten"])
-            paste0(
-              "De soort werd vooral buiten SBP waargenomen (",
-              p,
-              " % van de bezochte telpunten)."
-            )
-          },
+    any(sbp$sbp == "buiten" & sbp$prop >= 0.6) ~ {
+      p <- round(100 * sbp$prop[sbp$sbp == "buiten"])
+      paste0(
+        "De soort werd vooral buiten SBP waargenomen (",
+        p, " % van de bezochte telpunten)."
+      )
+    },
 
     TRUE ~ {
       p_binnen <- round(
@@ -99,7 +93,7 @@ describe_presence <- function(presence_df) {
     }
   )
 
-  # Calculate the proportion of surveyed locations with a presence in each region
+  # Calculate the proportion of surveyed locations with a presence per region
   regio <- presence_df %>%
     summarise(
       present = sum(present),
