@@ -26,5 +26,6 @@ autoqmd_prepare(
   branch = seq_along(target_species),
   template = "_simulatieparameters_per_soort.qmd",
   child_dir = "child_qmd",
-  target_file = "04_schatting_simulatieparameters.qmd"
+  target_file = "04_schatting_simulatieparameters.qmd",
+  page_break = "newpage"
 )
