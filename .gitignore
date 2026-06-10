@@ -8,6 +8,7 @@
 *.dbf
 *.doc*
 *.duckdb
+*.duckdb.wal
 *.gddoc
 *.gdsheet
 *.gpkg
