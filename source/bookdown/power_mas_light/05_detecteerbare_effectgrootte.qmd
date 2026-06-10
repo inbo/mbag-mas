@@ -197,21 +197,21 @@ weights_df <- steekproefkader %>%
   )
 ```
 
-```{r, eval=FALSE}
+```{r}
 simulate_mas_data_stratum <- function(design, ...) {
   stopifnot(require("glmmTMB"))
 
   # Number of locations per stratum
-  n_per_stratum <- round(weights$w * design$n_telpunten)
+  n_per_stratum <- round(weights_df$w * design$n_telpunten)
   diff_n <- design$n_telpunten - sum(n_per_stratum)
-  n_per_stratum[which.max(weights$w)] <-
-    n_per_stratum[which.max(weights$w)] + diff_n
+  n_per_stratum[which.max(weights_df$w)] <-
+    n_per_stratum[which.max(weights_df$w)] + diff_n
 
   # Dataframe with locations
   telpunten <- data.frame(
     telpunt = seq_len(design$n_telpunten),
-    stratum = rep(weights$stratum, n_per_stratum),
-    sbp = rep(weights$sbp, n_per_stratum)
+    stratum = rep(weights_df$stratum, n_per_stratum),
+    sbp = rep(weights_df$sbp, n_per_stratum)
   )
 
   # Create random effect for location
@@ -287,7 +287,7 @@ detectable_effect_stratum <- designpower::find_power(
   ),
   opti = "beta_3",
   sim_power = simulate_mas_data_stratum,
-  extra_args = list(weights = weights_df,
+  extra_args = list(weights_df = weights_df,
                     coef_beta_stratum = round(coef_beta_stratum, 2)),
   power = 0.9,
   alpha = 0.1,
@@ -333,21 +333,21 @@ parameters_geelgors <- list(
 )
 ```
 
-```{r, eval=FALSE}
+```{r}
 simulate_mas_data_geelgors <- function(design, ...) {
   stopifnot(require("glmmTMB"))
 
   # Number of locations per stratum
-  n_per_stratum <- round(weights$w * design$n_telpunten)
-  # diff_n <- design$n_telpunten - sum(n_per_stratum)
-  n_per_stratum[which.max(weights$w)] <-
-    n_per_stratum[which.max(weights$w)] + diff_n
+  n_per_stratum <- round(weights_df$w * design$n_telpunten)
+  diff_n <- design$n_telpunten - sum(n_per_stratum)
+  n_per_stratum[which.max(weights_df$w)] <-
+    n_per_stratum[which.max(weights_df$w)] + diff_n
 
   # Dataframe with locations
   telpunten <- data.frame(
     telpunt = seq_len(design$n_telpunten),
-    regio = rep(weights$regio, n_per_stratum),
-    sbp = rep(weights$sbp, n_per_stratum)
+    regio = rep(weights_df$regio, n_per_stratum),
+    sbp = rep(weights_df$sbp, n_per_stratum)
   )
 
   # Create random effect for location
@@ -416,7 +416,7 @@ detectable_effect_geelgors <- designpower::find_power(
   ),
   opti = "beta_3",
   sim_power = simulate_mas_data_geelgors,
-  extra_args = list(weights = weights_df),
+  extra_args = list(weights_df = weights_df),
   power = 0.9,
   alpha = 0.1,
   filename = paste0("power_mas_light_geelgorstest.duckdb")
