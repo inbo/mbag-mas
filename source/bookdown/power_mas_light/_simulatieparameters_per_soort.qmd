@@ -35,10 +35,10 @@ model <- ifelse(final_model$family == "poisson",
                 "Poisson", "Negatief binomiaal")
 ```
 
-We vergeleken een Poisson en Negatief binomiaal model via AIC. Voor de {{species}} werd het `r model` model geselecteerd.
+We vergeleken een Poisson en Negatief binomiaal model via AIC. Voor de {{species}} werd het `r model` model geselecteerd. We kijken ook even of het finale model foutmeldingen gaf.
 
 ```{r}
-final_model <- tar_read_mas("final_model", branch = branch)[[1]]
+glmmTMB::diagnose(final_model$fit)
 ```
 
 We bekijken enkele diagnostische figuren en testen voor een overmaat aan nullen.
