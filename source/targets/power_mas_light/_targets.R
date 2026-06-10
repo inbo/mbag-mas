@@ -110,6 +110,27 @@ list(
       pull(period_count),
     pattern = map(target_sp_pa)
   ),
+  tar_target(
+    name = presence_logical,
+    command = target_sp_pa %>%
+      mutate(regio = ifelse(grepl("\\sleemstreek", regio),
+                            "Leemstreek", regio)) %>%
+      summarise(
+        total = sum(count),
+        .by = c("plotnaam", "openheid_klasse", "sbp", "regio")
+      ) %>%
+      mutate(present = total > 0),
+    pattern = map(target_sp_pa)
+  ),
+  tar_target(
+    name = presence_prop,
+    command = presence_logical %>%
+      count(present) %>%
+      mutate(prop = n / sum(n)) %>%
+      filter(present) %>%
+      pull(prop),
+    pattern = map(presence_logical)
+  ),
 
   ## Estimate parameters
   # Prepare data
@@ -182,7 +203,7 @@ list(
   tar_target(
     name = scenarios,
     command = expand.grid(
-      n_telpunten = c(100, 200),
+      n_telpunten = c(100, 200, 400),
       n_jaar = 10,
       beta_1 = c(log(0.99)),
       beta_3 = c(-log(0.99))
@@ -199,7 +220,7 @@ list(
 
   tar_map(
     values = list(
-      species = target_species[target_species %in% c("Geelgors", "Veldleeuwerik")]
+      species = c("Geelgors", "Veldleeuwerik") # target_species[tar_read(presence_prop) > 0.2]
     ),
 
     # Go over each row
@@ -231,6 +252,7 @@ list(
       iteration = "list"
     ),
 
+    # Run simulations
     tar_target(
       name = detectable_effect,
       command = designpower::find_power(
@@ -248,6 +270,12 @@ list(
       ),
       pattern = map(design_list),
       iteration = "list"
+    ),
+
+    # Result to dataframe
+    tar_target(
+      name = detectable_effect_df,
+      command = detectable_effect_to_df(detectable_effect)
     )
   )
 )
