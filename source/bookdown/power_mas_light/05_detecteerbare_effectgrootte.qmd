@@ -15,6 +15,8 @@ library(targets)
 library(tidyverse)
 library(glmmTMB)
 
+conflicted::conflicts_prefer(dplyr::filter)
+
 source("R/tar_read_mas.R")
 ```
 
@@ -48,63 +50,70 @@ detectable_effect_df <- detectable_effect_df %>%
 ```{r}
 detectable_effect_df %>%
   ggplot(aes(x = n_telpunten, y = effect_pct, colour = species)) +
-  geom_line() +
-  geom_point(size = 3) +
+  geom_line(linewidth = 0.3) +
+  geom_point(size = 1) +
   geom_errorbar(
     aes(
       ymin = effect_pct_low,
       ymax = effect_pct_high
     ),
-    width = 5
+    width = 5, linewidth = 0.3
   ) +
   labs(
     x = "Aantal telpunten",
-    y = "Detecteerbare jaarlijkse interactieverandering (%)",
+    y = "Detecteerbare jaarlijkse\ninteractieverandering (%)",
     colour = "Soort"
   ) +
-  theme_minimal()
+  theme_minimal() +
+  theme(legend.position = "bottom")
 ```
 
 ```{r}
+#| warning: FALSE
+#| message: FALSE
 detectable_effect_df %>%
   ggplot(aes(x = sigma_punt, y = effect_pct,
              colour = factor(n_telpunten), group = factor(n_telpunten))) +
-  geom_point(size = 3) +
+  geom_point(size = 1) +
   geom_errorbar(
     aes(
       ymin = effect_pct_low,
       ymax = effect_pct_high
     ),
-    width = 0.1
+    width = 0.07, linewidth = 0.3
   ) +
-  geom_smooth(method = "lm", formula = "y ~ x") +
+  geom_smooth(method = "lm", formula = "y ~ x", linewidth = 0.3) +
   labs(
     x = "Variabiliteit telpunten (sigma_punt)",
-    y = "Detecteerbare jaarlijkse interactieverandering (%)",
+    y = "Detecteerbare jaarlijkse\ninteractieverandering (%)",
     colour = "Aantal telpunten"
   ) +
-  theme_minimal()
+  theme_minimal() +
+  theme(legend.position = "bottom")
 ```
 
 ```{r}
+#| warning: FALSE
+#| message: FALSE
 detectable_effect_df %>%
   ggplot(aes(x = exp(beta_0), y = effect_pct,
              colour = factor(n_telpunten), group = factor(n_telpunten))) +
-  geom_point(size = 3) +
+  geom_point(size = 1) +
   geom_errorbar(
     aes(
       ymin = effect_pct_low,
       ymax = effect_pct_high
     ),
-    width = 0.01
+    width = 0.005, linewidth = 0.3
   ) +
-  geom_smooth(method = "lm", formula = "y ~ x") +
+  geom_smooth(method = "lm", formula = "y ~ x", linewidth = 0.3) +
   labs(
     x = "Startdensiteit (exp(beta_0))",
-    y = "Detecteerbare jaarlijkse interactieverandering (%)",
+    y = "Detecteerbare jaarlijkse\ninteractieverandering (%)",
     colour = "Aantal telpunten"
   ) +
-  theme_minimal()
+  theme_minimal() +
+  theme(legend.position = "bottom")
 ```
 
 ## Bijkomende vragen
@@ -146,15 +155,15 @@ parameters_stratum <- list(
   n_telpunten = 100,
   n_jaar = 10,
 
-  beta_0 = coef["(Intercept)", "Estimate"],
+  beta_0 = coef_stratum["(Intercept)", "Estimate"],
   beta_1 = log(0.99),
-  beta_2 = coef["sbp_fbinnen", "Estimate"],
+  beta_2 = coef_stratum["sbp_fbinnen", "Estimate"],
   beta_3 = -log(0.99),
   sigma_punt = unname(
     attr(summary_model_stratum$varcor$cond$plotnaam_f, "stddev")
   )
 )
-coef_beta_stratum <- coef[grep("^stratum", rownames(coef)), "Estimate"]
+coef_beta_stratum <- coef_stratum[grep("^stratum", rownames(coef_stratum)), "Estimate"]
 ```
 
 ```{r}
@@ -188,7 +197,7 @@ weights_df <- steekproefkader %>%
   )
 ```
 
-```{r}
+```{r, eval=FALSE}
 simulate_mas_data_stratum <- function(design, ...) {
   stopifnot(require("glmmTMB"))
 
@@ -315,22 +324,22 @@ parameters_geelgors <- list(
   n_telpunten = 100,
   n_jaar = 10,
 
-  beta_0 = coef["(Intercept)", "Estimate"],
+  beta_0 = coef_geelgors["(Intercept)", "Estimate"],
   beta_1 = log(0.99),
-  beta_2 = coef["sbp_fbinnen", "Estimate"],
+  beta_2 = coef_geelgors["sbp_fbinnen", "Estimate"],
   beta_3 = -log(0.99),
   sigma_punt = unname(attr(summary_model_geelgors$varcor$cond$plotnaam_f,
                            "stddev"))
 )
 ```
 
-```{r}
+```{r, eval=FALSE}
 simulate_mas_data_geelgors <- function(design, ...) {
   stopifnot(require("glmmTMB"))
 
   # Number of locations per stratum
   n_per_stratum <- round(weights$w * design$n_telpunten)
-  diff_n <- design$n_telpunten - sum(n_per_stratum)
+  # diff_n <- design$n_telpunten - sum(n_per_stratum)
   n_per_stratum[which.max(weights$w)] <-
     n_per_stratum[which.max(weights$w)] + diff_n
 
