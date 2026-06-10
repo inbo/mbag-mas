@@ -1,0 +1,37 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+### {{species}}
+
+```{r}
+# Variables
+species <- "{{species}}"
+branch <- {{branch}}
+
+# Load presence absence data
+target_sp_pa <- tar_read_mas("target_sp_pa", branch = branch)
+```
+
+```{r}
+presence_df <- target_sp_pa %>%
+  mutate(regio = ifelse(grepl("\\sleemstreek", regio), "Leemstreek", regio)) %>%
+  summarise(
+    total = sum(count),
+    .by = c("plotnaam", "openheid_klasse", "sbp", "regio")
+  ) %>%
+  mutate(present = total > 0)
+```
+
+De `r species` werd het vaakst waargenomen in telronde `r unname(gsub("R", "", tar_read_mas("best_period", branch = branch)))`. Enkel deze data werden behouden voor de schatting van de parameters. We beschouwen twee jaar en vier telperiodes. We gaan na waar de soort nooit is waargenomen tijdens deze acht bezoeken. `r describe_presence(presence_df)`
+
+```{r}
+#| fig-height: 8
+presence_df %>%
+  ggplot(aes(x = sbp, fill = present)) +
+  geom_bar() +
+  facet_grid(regio ~ openheid_klasse, scales = "free") +
+  labs(x = "SBP", y = "Aantal telpunten", fill = "Aanwezig") +
+  theme_minimal()
+```
