@@ -43,7 +43,7 @@ glmmTMB::diagnose(final_model$fit)
 
 We bekijken enkele diagnostische figuren en testen voor een overmaat aan nullen.
 
-**DHARMa** package:
+**DHARMa** package [@dharma2024]:
 
 ```{r}
 #| fig-height: 5
@@ -58,7 +58,7 @@ testZeroInflation(simulation_output)
 
 \newpage
 
-**performance** package:
+**performance** package [@performance2021]:
 
 ```{r}
 #| warning: FALSE
