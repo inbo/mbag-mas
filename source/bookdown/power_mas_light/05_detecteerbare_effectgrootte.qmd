@@ -22,30 +22,35 @@ source("R/tar_read_mas.R")
 
 ```{r}
 target_species <- c(
+  "Boerenzwaluw",
   "Geelgors",
-  "Veldleeuwerik"
+  "Gele Kwikstaart",
+  "Grasmus",
+  "Graspieper",
+  "Grutto",
+  "Kievit",
+  "Kneu",
+  "Patrijs",
+  "Ringmus",
+  "Roodborsttapuit",
+  "Scholekster",
+  "Torenvalk",
+  "Veldleeuwerik",
+  "Wulp"
 )
 ```
 
 ```{r}
 # Get effect sizes
 detectable_effect_df <- lapply(target_species, function(spec) {
-  tar_read_mas("detectable_effect_df", species = spec)
+  tryCatch({
+    tar_read_mas("detectable_effect_df", species = spec)
+  }, error = function(e) {
+      NULL
+  })
 }) %>%
   bind_rows()
-
-detectable_effect_df <- detectable_effect_df %>%
-  mutate(
-    beta3 = detectable_effect,
-    beta3_low = detectable_effect_low,
-    beta3_high = detectable_effect_high,
-
-    effect_pct = 100 * (exp(beta3) - 1),
-    effect_pct_low = 100 * (exp(beta3_low) - 1),
-    effect_pct_high = 100 * (exp(beta3_high) - 1)
-  )
 ```
-
 
 ```{r}
 detectable_effect_df %>%
@@ -82,7 +87,7 @@ detectable_effect_df %>%
     ),
     width = 0.07, linewidth = 0.3
   ) +
-  geom_smooth(method = "lm", formula = "y ~ x", linewidth = 0.3) +
+  geom_smooth(method = "lm", formula = "y ~ x", linewidth = 0.3, se = FALSE) +
   labs(
     x = "Variabiliteit telpunten (sigma_punt)",
     y = "Detecteerbare jaarlijkse\ninteractieverandering (%)",
@@ -106,7 +111,7 @@ detectable_effect_df %>%
     ),
     width = 0.005, linewidth = 0.3
   ) +
-  geom_smooth(method = "lm", formula = "y ~ x", linewidth = 0.3) +
+  geom_smooth(method = "lm", formula = "y ~ x", linewidth = 0.3, se = FALSE) +
   labs(
     x = "Startdensiteit (exp(beta_0))",
     y = "Detecteerbare jaarlijkse\ninteractieverandering (%)",
@@ -293,7 +298,20 @@ detectable_effect_stratum <- designpower::find_power(
   alpha = 0.1,
   filename = "power_mas_light_stratum.duckdb"
 )
+
+effect_stratum_pct <- round(100 * (exp(detectable_effect_stratum[1]) - 1), 1)
+effect_stratum_pct_low <- round(100 * (exp(detectable_effect_stratum[2]) - 1), 1)
+effect_stratum_pct_high <- round(100 * (exp(detectable_effect_stratum[3]) - 1), 1)
+old_effects_stratum <- detectable_effect_df %>%
+  filter(species == "Veldleeuwerik", n_telpunten == 100)
+diff_stratum <- ifelse(
+  old_effects_stratum$effect_pct > 100 * (exp(detectable_effect_stratum[1]) - 1),
+  "hoger", 
+  "lager"
+)
 ```
+
+We kunnen effect van `r effect_stratum_pct` % detecteren (`r effect_stratum_pct_low` - `r effect_stratum_pct_high` %) voor 100 telpunten. We minimaal detecteerbare effect van het simpele model was `r diff_stratum`: `r round(old_effects_stratum$effect_pct, 1)` % (`r round(old_effects_stratum$effect_pct_low, 1)` - `r round(old_effects_stratum$effect_pct_high, 1)` %).
 
 ### Effect van verspreiding
 
@@ -421,4 +439,17 @@ detectable_effect_geelgors <- designpower::find_power(
   alpha = 0.1,
   filename = paste0("power_mas_light_geelgorstest.duckdb")
 )
+
+effect_geelgors_pct <- round(100 * (exp(detectable_effect_geelgors[1]) - 1), 1)
+effect_geelgors_pct_low <- round(100 * (exp(detectable_effect_geelgors[2]) - 1), 1)
+effect_geelgors_pct_high <- round(100 * (exp(detectable_effect_geelgors[3]) - 1), 1)
+old_effects_geelgors <- detectable_effect_df %>%
+  filter(species == "Geelgors", n_telpunten == 100)
+diff_geelgors <- ifelse(
+  old_effects_geelgors$effect_pct > 100 * (exp(detectable_effect_geelgors[1]) - 1),
+  "hoger", 
+  "lager"
+)
 ```
+
+We kunnen effect van `r effect_geelgors_pct` % detecteren (`r effect_geelgors_pct_low` - `r effect_geelgors_pct_high` %) voor 100 telpunten. We minimaal detecteerbare effect van het model op basis van alle data was `r diff_geelgors`: `r round(old_effects_geelgors$effect_pct, 1)` % (`r round(old_effects_geelgors$effect_pct_low, 1)` - `r round(old_effects_geelgors$effect_pct_high, 1)` %).
