@@ -1,0 +1,1170 @@
+---
+title: "Snelle analyses MBAG rapport"
+author: "Ward Langeraert"
+date: today
+
+format:
+  html:
+    toc: true
+    toc-depth: 4
+    toc-location: right
+    code-fold: true
+
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+#| warning: false
+#| message: false
+library(tidyverse)
+library(targets)
+library(knitr)
+library(INBOtheme)
+
+mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
+conflicted::conflicts_prefer(dplyr::filter)
+
+source(file.path(mbag_dir, "source", "R", "predatoren_f.R"))
+```
+
+# 1. Opzet van het rapport
+
+## 1. Veldwerk en dataset
+
+```{r}
+mas_data_clean <- read_csv(
+  file.path(mbag_dir, "output", "datasets", "mas_data_clean.csv"),
+  show_col_types = FALSE
+) %>%
+  filter(jaar %in% 2023:2025)
+
+visits_df <- read_csv(
+  file.path(mbag_dir, "data", "steekproefkaders",
+            "bezoekenlijst_2023_2025.csv"),
+  show_col_types = FALSE
+)
+```
+
+
+```{r}
+#| warning: false
+#| message: false
+add_absences_per_sp <- function(presence_data, visits) {
+  require("dplyr")
+
+  species <- unique(presence_data$naam)
+  soortgrp <- unique(presence_data$soortgrp)
+
+  out <- visits %>%
+    select(
+      "plotid",
+      "plotnaam",
+      "year",
+      "datum" = "date",
+      "regio",
+      "openheid_klasse",
+      "sbp",
+      "period_count"
+    ) %>%
+    distinct() %>%
+    left_join(
+      presence_data,
+      by = c(
+        "plotid",
+        "plotnaam",
+        "year" = "jaar",
+        "regio",
+        "openheid_klasse",
+        "sbp",
+        "period_count" = "periode_in_jaar"
+      )
+    ) %>%
+    mutate(
+      count = coalesce(.data$count, 0)
+    ) %>%
+    rename("jaar" = "year",
+           "periode_in_jaar" = "period_count",
+           "aantal" = "count")
+  out$naam <- species
+  out$soortgrp = soortgrp
+  
+  return(out)
+}
+
+mas_data_pa <- mas_data_clean %>%
+  select("plotid", "plotnaam", "naam", "soortgrp", "aantal", "jaar",
+         "broedcode" = "wrntype", "regio", "openheid_klasse", "sbp",
+         "periode_in_jaar") %>%
+  # Count by site
+  group_by(plotid, plotnaam, naam, broedcode, soortgrp, jaar, periode_in_jaar,
+           regio, openheid_klasse, sbp) %>%
+  summarise(count = sum(.data$aantal), .groups = "drop") %>%
+  # Add absences per species
+  group_by(naam) %>%
+  group_split() %>%
+  lapply(add_absences_per_sp, visits = visits_df) %>%
+  bind_rows() %>%
+  mutate(regio = ifelse(grepl("\\sleemstreek$", regio), "Leemstreek", regio))
+```
+
+### 1.1 Overzicht steekproef
+
+Deze figuur geeft het aantal bezochte telpunten weer per landbouwregio en stratum. Hierbij wordt onderscheid gemaakt tussen open en halfopen landschap en tussen locaties binnen en buiten een soortenbeschermingsprogramma (SBP).
+
+```{r}
+mas_data_pa %>%
+  distinct(
+    jaar,
+    regio,
+    openheid_klasse,
+    sbp,
+    plotnaam
+  ) %>%
+  count(
+    jaar,
+    regio,
+    openheid_klasse,
+    sbp,
+    name = "n_telpunten"
+  ) %>%
+  mutate(
+    stratum = paste(openheid_klasse, sbp, sep = " - ")
+  ) %>%
+  ggplot(aes(
+    x = regio,
+    y = n_telpunten,
+    fill = stratum
+  )) +
+  geom_col() +
+  facet_wrap(~jaar, scales = "free_x") +
+  labs(
+    x = "",
+    y = "Aantal telpunten",
+    fill = "Stratum"
+  ) +
+  theme(axis.text.x = element_text(angle = -45, vjust = 0.5, hjust = 0))
+```
+
+Deze figuur toont de relatieve verdeling van de bezochte telpunten binnen en buiten SBP per landbouwregio.
+
+```{r}
+mas_data_pa %>%
+  distinct(
+    jaar,
+    regio,
+    sbp,
+    plotnaam
+  ) %>%
+  count(
+    jaar,
+    regio,
+    sbp
+  ) %>%
+  ggplot(aes(
+    x = regio,
+    y = n,
+    fill = sbp
+  )) +
+  geom_col(position = "fill") +
+  facet_wrap(~jaar, scales = "free_x") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    x = "",
+    y = "% telpunten",
+    fill = "SBP"
+  ) +
+  theme(axis.text.x = element_text(angle = -45, vjust = 0.5, hjust = 0))
+```
+
+### 1.2 Dekking van de tellingen
+
+Deze figuur geeft het aantal bezochte telpunten weer per telperiode, regio en jaar. Deze figuur dat het veldwerk over het algemeen consistent is verlopen.
+
+```{r}
+mas_data_pa %>%
+  distinct(
+    jaar,
+    regio,
+    periode_in_jaar,
+    plotnaam
+  ) %>%
+  count(
+    jaar,
+    regio,
+    periode_in_jaar,
+    name = "n_telpunten"
+  ) %>%
+  ggplot(aes(
+    x = periode_in_jaar,
+    y = n_telpunten,
+    fill = factor(jaar)
+  )) +
+  geom_col(position = "dodge") +
+  facet_wrap(~regio) +
+  labs(
+    x = "Telperiode",
+    y = "Aantal telpunten",
+    fill = "Jaar"
+  )
+```
+
+Deze figuur toont voor hoeveel telperiodes elk telpunt werd bezocht. Een volledig bemonsterd telpunt werd tijdens alle vier de telperiodes bezocht.
+
+```{r}
+#| fig.width: 10
+#| fig.height: 8
+mas_data_pa %>%
+  distinct(
+    jaar,
+    regio,
+    plotnaam,
+    periode_in_jaar
+  ) %>%
+  count(
+    jaar,
+    regio,
+    plotnaam,
+    name = "n_periodes"
+  ) %>%
+  ggplot(aes(
+    x = factor(n_periodes)
+  )) +
+  geom_bar() +
+  facet_grid(jaar ~ regio, scales = "free") +
+  labs(
+    x = "Aantal bezochte periodes",
+    y = "Aantal telpunten"
+  )
+```
+
+## 1.3 Basiskenmerken dataset
+
+Deze tagbel geeft een overzicht van de omvang van de dataset per jaar, met het aantal telpunten, bezoeken, waarnemingen en vastgestelde soorten.
+
+```{r}
+count_df <- mas_data_pa %>%
+  group_by(jaar) %>%
+  summarise(
+    telpunten = n_distinct(plotnaam),
+    bezoeken = n_distinct(paste(plotnaam, periode_in_jaar)),
+    .groups = "drop"
+  )
+
+mas_data_clean %>%
+  group_by(jaar) %>%
+  summarise(
+    soorten = n_distinct(naam),
+    waarnemingen = n(),
+    .groups = "drop"
+  ) %>%
+  left_join(count_df, by = join_by(jaar)) %>%
+  kable()
+```
+
+Deze tabel toont het aantal vastgestelde soorten en waarnemingen voor vogels en zoogdieren afzonderlijk.
+
+```{r}
+mas_data_clean %>%
+  group_by(jaar, soortgrp) %>%
+  summarise(
+    soorten = n_distinct(naam),
+    waarnemingen = n(),
+    .groups = "drop"
+  ) %>%
+  mutate(soortgrp = ifelse(soortgrp == 1, "zoogdieren", "vogels")) %>%
+  kable()
+```
+
+Deze tabel geeft een overzicht van het aantal soorten en waarnemingen per broedcodecategorie.
+
+```{r}
+mas_data_clean %>%
+  group_by(jaar, wrntype) %>%
+  summarise(
+    soorten = n_distinct(naam),
+    waarnemingen = n(),
+    .groups = "drop"
+  ) %>%
+  rename(broedcode = wrntype) %>%
+  kable()
+```
+
+# 2. Algemene biodiversiteit
+
+Voor de volgende analyses kijken we enkel naar vogels en selecteren we broedcode > 0 behalve voor roofvogels (`r roofvogels_f()`).
+
+```{r}
+mas_data_analysis <- mas_data_pa %>%
+  filter(soortgrp == 2,
+         broedcode > 0 | naam %in% roofvogels_f() | is.na(broedcode))
+```
+
+## 2.1 Aantal soorten per telpunt
+
+Deze figuur toont de verdeling van het aantal vogelsoorten dat per telpunt werd vastgesteld tijdens een telronde.
+
+```{r}
+#| fig.width: 10
+#| fig.height: 8
+mas_data_analysis %>%
+  filter(aantal > 0) %>%
+  group_by(
+    jaar,
+    regio,
+    openheid_klasse,
+    sbp,
+    plotnaam,
+    periode_in_jaar
+  ) %>%
+  summarise(
+    n_soorten = n_distinct(naam),
+    .groups = "drop"
+  ) %>%
+  ggplot(aes(
+    x = factor(jaar),
+    y = n_soorten,
+    fill = sbp
+  )) +
+  geom_boxplot() +
+  facet_grid(
+    openheid_klasse ~ regio,
+    scales = "free_x"
+  ) +
+  labs(
+    x = "Jaar",
+    y = "Aantal soorten per telpunt",
+    fill = "SBP"
+  )
+```
+
+Aantal per telpunt over telrondes heen.
+
+```{r}
+#| fig.width: 10
+#| fig.height: 8
+mas_data_analysis %>%
+  filter(aantal > 0) %>%
+  group_by(
+    jaar,
+    regio,
+    openheid_klasse,
+    sbp,
+    plotnaam
+  ) %>%
+  summarise(
+    n_soorten = n_distinct(naam),
+    .groups = "drop"
+  ) %>%
+  ggplot(aes(
+    x = interaction(openheid_klasse, sbp),
+    y = n_soorten,
+    fill = sbp
+  )) +
+  geom_boxplot() +
+  facet_grid(
+    regio ~ jaar
+  ) +
+  labs(
+    x = "",
+    y = "Aantal soorten per telpunt"
+  )
+```
+
+## 2.2 Aantal soorten per telperiode
+
+Deze figuur toont hoe de soortenrijkdom varieert tussen de vier telperiodes.
+
+```{r}
+#| fig.width: 10
+#| fig.height: 8
+mas_data_analysis %>%
+  filter(aantal > 0) %>%
+  group_by(
+    jaar,
+    regio,
+    openheid_klasse,
+    sbp,
+    plotnaam,
+    periode_in_jaar
+  ) %>%
+  summarise(
+    n_soorten = n_distinct(naam),
+    .groups = "drop"
+  ) %>%
+  ggplot(aes(
+    x = factor(periode_in_jaar),
+    y = n_soorten,
+    fill = sbp
+  )) +
+  geom_boxplot() +
+  facet_grid(
+    openheid_klasse ~ regio
+  ) +
+  labs(
+    x = "Telperiode",
+    y = "Aantal soorten per telpunt",
+    fill = "SBP"
+  )
+```
+
+## 2.3 Gemiddeld aantal soorten
+
+Deze figuur geeft het gemiddelde aantal vogelsoorten per telpunt weer, samen met een maat voor de onzekerheid rond het gemiddelde (+-qnorm(0.975) * SD).
+
+```{r}
+#| fig.width: 10
+#| fig.height: 8
+mas_data_analysis %>%
+  filter(aantal > 0) %>%
+  group_by(
+    jaar,
+    regio,
+    openheid_klasse,
+    sbp,
+    plotnaam
+  ) %>%
+  summarise(
+    n_soorten = n_distinct(naam),
+    .groups = "drop"
+  ) %>%
+  group_by(
+    jaar,
+    regio,
+    openheid_klasse,
+    sbp
+  ) %>%
+  summarise(
+    mean_soorten = mean(n_soorten),
+    se = sd(n_soorten) / sqrt(n()),
+    .groups = "drop"
+  ) %>%
+  ggplot(aes(
+    x = factor(jaar),
+    y = mean_soorten,
+    colour = sbp,
+    group = sbp
+  )) +
+  geom_point(size = 2, position = position_dodge(0.3)) +
+  geom_line(position = position_dodge(0.3)) +
+  geom_errorbar(
+    aes(
+      ymin = mean_soorten + (qnorm(0.025) * se),
+      ymax = mean_soorten + (qnorm(0.975) * se)
+    ),
+    width = 0.15,
+    position = position_dodge(0.3)
+  ) +
+  facet_grid(
+    openheid_klasse ~ regio,
+    scales = "free_x"
+  ) +
+  labs(
+    x = "Jaar",
+    y = "Gemiddeld aantal soorten",
+    colour = "SBP"
+  )
+```
+
+## 2.4 Totaal aantal individuen per telpunt
+
+Deze figuur toont de verdeling van het totaal aantal waargenomen individuen per telpunt. Deze figuur geeft een indicatie van de algemene vogelabundantie in de verschillende strata.
+
+```{r}
+#| fig.width: 10
+#| fig.height: 8
+mas_data_analysis %>%
+  filter(aantal > 0) %>%
+  group_by(
+    jaar,
+    regio,
+    openheid_klasse,
+    sbp,
+    plotnaam,
+    periode_in_jaar
+  ) %>%
+  summarise(
+    n_ind = sum(aantal),
+    .groups = "drop"
+  ) %>%
+  ggplot(aes(
+    x = factor(jaar),
+    y = n_ind,
+    fill = sbp
+  )) +
+  geom_boxplot() +
+  facet_grid(
+    openheid_klasse ~ regio,
+    scales = "free_x"
+  ) +
+  labs(
+    x = "Jaar",
+    y = "Aantal individuen",
+    fill = "SBP"
+  )
+```
+
+## 2.5 Cumulatieve soortenrijkdom per jaar
+
+Deze figuren toont hoe het cumulatieve aantal vogelsoorten gedurende het seizoen toeneemt in de verschillende landbouwregio's. De figuur geeft een beeld van de totale soortenrijkdom en van het moment waarop nieuwe soorten worden vastgesteld.
+
+```{r}
+#| fig.height: 8
+r1_start <- "04-01"
+r1_stop <- "04-20"
+r2_start <- "04-21"
+r2_stop <- "05-10"
+r3_start <- "05-11"
+r3_stop <- "06-10"
+r4_start <- "06-21"
+r4_stop <- "07-15"
+
+for (j in 2023:2025) {
+  # Calculate the cumulative number of species over time for each agricultural
+  # region
+  cum_aantal_spec_strat <- mas_data_analysis %>%
+    filter(aantal > 0,
+           .data$jaar == j) %>%
+    group_by(regio, naam) %>%
+    filter(datum == min(datum)) %>%
+    slice(1) %>% # takes the first occurrence if there is a tie
+    ungroup() %>%
+    group_by(regio, datum) %>%
+    summarise(
+      n_spec = n_distinct(naam),
+      .groups = "drop"
+    ) %>%
+    group_by(regio) %>%
+    arrange(datum) %>%
+    mutate(cum_sum = cumsum(n_spec)) %>%
+    ungroup()
+  
+  # Create plot per region
+  cum_p1 <- cum_aantal_spec_strat %>%
+    ggplot(aes(x = datum, y = cum_sum, colour = regio)) +
+    # Add shade for counting periods
+    annotate("rect",
+      xmin = ymd(paste(j, r1_start, sep = "-")),
+      xmax = ymd(paste(j, r1_stop, sep = "-")),
+      ymin = 0, ymax = Inf,
+      alpha = 0.2
+    ) +
+    annotate("text",
+      label = "R1",
+      x = ymd(paste(j, r1_start, sep = "-")) +
+        (ymd(paste(j, r1_stop, sep = "-")) -
+          ymd(paste(j, r1_start, sep = "-"))) / 2,
+      y = 0,
+      vjust = -1
+    ) +
+    annotate("rect",
+      xmin = ymd(paste(j, r2_start, sep = "-")),
+      xmax = ymd(paste(j, r2_stop, sep = "-")),
+      ymin = 0, ymax = Inf,
+      alpha = 0.2
+    ) +
+    annotate("text",
+      label = "R2",
+      x = ymd(paste(j, r2_start, sep = "-")) +
+        (ymd(paste(j, r2_stop, sep = "-")) -
+          ymd(paste(j, r2_start, sep = "-"))) / 2,
+      y = 0,
+      vjust = -1
+    ) +
+    annotate("rect",
+      xmin = ymd(paste(j, r3_start, sep = "-")),
+      xmax = ymd(paste(j, r3_stop, sep = "-")),
+      ymin = 0, ymax = Inf,
+      alpha = 0.2
+    ) +
+    annotate("text",
+      label = "R3",
+      x = ymd(paste(j, r3_start, sep = "-")) +
+        (ymd(paste(j, r3_stop, sep = "-")) -
+          ymd(paste(j, r3_start, sep = "-"))) / 2,
+      y = 0,
+      vjust = -1
+    ) +
+    annotate("rect",
+      xmin = ymd(paste(j, r4_start, sep = "-")),
+      xmax = ymd(paste(j, r4_stop, sep = "-")),
+      ymin = 0, ymax = Inf,
+      alpha = 0.2
+    ) +
+    annotate("text",
+      label = "R4",
+      x = ymd(paste(j, r4_start, sep = "-")) +
+        (ymd(paste(j, r4_stop, sep = "-")) -
+          ymd(paste(j, r4_start, sep = "-"))) / 2,
+      y = 0,
+      vjust = -1
+    ) +
+    # Add line
+    geom_line(linewidth = 1) +
+    labs(x = "", y = "Totaal aantal soorten", colour = "Regio",
+         title = j) +
+    theme(legend.position = "bottom")
+  
+  # Calculate the cumulative number of species over time for each stratum
+  cum_aantal_spec_strat <- mas_data_analysis %>%
+    filter(aantal > 0,
+           .data$jaar == j) %>%
+    group_by(regio, openheid_klasse, sbp, naam) %>%
+    filter(datum == min(datum)) %>%
+    slice(1) %>% # takes the first occurrence if there is a tie
+    ungroup() %>%
+    group_by(regio, openheid_klasse, sbp, datum) %>%
+    summarise(
+      n_spec = n_distinct(naam),
+      .groups = "drop"
+    ) %>%
+    group_by(regio, openheid_klasse, sbp) %>%
+    arrange(datum) %>%
+    mutate(cum_sum = cumsum(n_spec)) %>%
+    ungroup()
+  
+  # Create plot per stratum
+  cum_p2 <- cum_aantal_spec_strat %>%
+    mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
+    ggplot(aes(x = datum, y = cum_sum, colour = stratum)) +
+    # Add shade for counting periods
+    annotate("rect",
+      xmin = ymd(paste(j, r1_start, sep = "-")),
+      xmax = ymd(paste(j, r1_stop, sep = "-")),
+      ymin = 0, ymax = Inf,
+      alpha = 0.2
+    ) +
+    annotate("text",
+      label = "R1",
+      x = ymd(paste(j, r1_start, sep = "-")) +
+        (ymd(paste(j, r1_stop, sep = "-")) -
+          ymd(paste(j, r1_start, sep = "-"))) / 2,
+      y = 0,
+      vjust = -1
+    ) +
+    annotate("rect",
+      xmin = ymd(paste(j, r2_start, sep = "-")),
+      xmax = ymd(paste(j, r2_stop, sep = "-")),
+      ymin = 0, ymax = Inf,
+      alpha = 0.2
+    ) +
+    annotate("text",
+      label = "R2",
+      x = ymd(paste(j, r2_start, sep = "-")) +
+        (ymd(paste(j, r2_stop, sep = "-")) -
+          ymd(paste(j, r2_start, sep = "-"))) / 2,
+      y = 0,
+      vjust = -1
+    ) +
+    annotate("rect",
+      xmin = ymd(paste(j, r3_start, sep = "-")),
+      xmax = ymd(paste(j, r3_stop, sep = "-")),
+      ymin = 0, ymax = Inf,
+      alpha = 0.2
+    ) +
+    annotate("text",
+      label = "R3",
+      x = ymd(paste(j, r3_start, sep = "-")) +
+        (ymd(paste(j, r3_stop, sep = "-")) -
+          ymd(paste(j, r3_start, sep = "-"))) / 2,
+      y = 0,
+      vjust = -1
+    ) +
+    annotate("rect",
+      xmin = ymd(paste(j, r4_start, sep = "-")),
+      xmax = ymd(paste(j, r4_stop, sep = "-")),
+      ymin = 0, ymax = Inf,
+      alpha = 0.2
+    ) +
+    annotate("text",
+      label = "R4",
+      x = ymd(paste(j, r4_start, sep = "-")) +
+        (ymd(paste(j, r4_stop, sep = "-")) -
+          ymd(paste(j, r4_start, sep = "-"))) / 2,
+      y = 0,
+      vjust = -1
+    ) +
+    # Add line
+    geom_line(linewidth = 1) +
+    facet_wrap(~regio) +
+    labs(x = "", y = "Totaal aantal soorten", colour = "Stratum") +
+    theme(legend.position = "bottom")
+  
+  # Combine cumulative species plots
+  p <- gridExtra::grid.arrange(cum_p1, cum_p2)
+}
+```
+
+# 3. Akkervogels
+
+```{r}
+akkervogels <- c(
+  "Boerenzwaluw",
+  "Geelgors",
+  "Gele Kwikstaart",
+  "Grasmus",
+  "Graspieper",
+  "Grutto",
+  "Kievit",
+  "Kneu",
+  "Patrijs",
+  "Ringmus",
+  "Roodborsttapuit",
+  "Scholekster",
+  "Torenvalk",
+  "Veldleeuwerik",
+  "Wulp"
+)
+```
+
+Focus op akkervogels: `r akkervogels`.
+
+## 3.1 Aantal akkervogelsoorten per telpunt
+
+Deze figuur toont de verdeling van het aantal akkervogels dat per telpunt werd vastgesteld tijdens een telronde.
+
+```{r}
+#| fig.width: 10
+#| fig.height: 8
+mas_data_analysis %>%
+  filter(
+    aantal > 0,
+    naam %in% akkervogels
+  ) %>%
+  group_by(
+    jaar,
+    regio,
+    openheid_klasse,
+    sbp,
+    plotnaam,
+    periode_in_jaar
+  ) %>%
+  summarise(
+    n_akkervogels = n_distinct(naam),
+    .groups = "drop"
+  ) %>%
+  ggplot(aes(
+    x = factor(jaar),
+    y = n_akkervogels,
+    fill = sbp
+  )) +
+  geom_boxplot() +
+  scale_y_continuous(limits = c(0, NA), breaks = 0:20) +
+  facet_grid(
+    openheid_klasse ~ regio,
+    scales = "free_x"
+  ) +
+  labs(
+    x = "Jaar",
+    y = "Aantal akkervogelsoorten per telpunt",
+    fill = "SBP"
+  )
+```
+
+Per telpunt over alle telrondes heen.
+
+```{r}
+#| fig.width: 10
+#| fig.height: 8
+mas_data_analysis %>%
+  filter(
+    aantal > 0,
+    naam %in% akkervogels
+  ) %>%
+  group_by(
+    jaar,
+    regio,
+    openheid_klasse,
+    sbp,
+    plotnaam
+  ) %>%
+  summarise(
+    n_akkervogels = n_distinct(naam),
+    .groups = "drop"
+  ) %>%
+  ggplot(aes(
+    x = interaction(openheid_klasse, sbp),
+    y = n_akkervogels,
+    fill = sbp
+  )) +
+  geom_boxplot() +
+  facet_grid(
+    regio ~ jaar
+  ) +
+  labs(
+    x = "",
+    y = "Aantal akkervogelsoorten per telpunt"
+  )
+```
+
+## 3.2 Gemiddeld aantal akkervogelsoorten
+
+Deze figuur toont het gemiddelde aantal akkervogelsoorten per telpunt.
+
+```{r}
+#| fig.width: 10
+#| fig.height: 8
+mas_data_analysis %>%
+  filter(
+    aantal > 0,
+    naam %in% akkervogels
+  ) %>%
+  group_by(
+    jaar,
+    regio,
+    openheid_klasse,
+    sbp,
+    plotnaam
+  ) %>%
+  summarise(
+    n_akkervogels = n_distinct(naam),
+    .groups = "drop"
+  ) %>%
+  group_by(
+    jaar,
+    regio,
+    openheid_klasse,
+    sbp
+  ) %>%
+  summarise(
+    mean_soorten = mean(n_akkervogels),
+    se = sd(n_akkervogels) / sqrt(n()),
+    .groups = "drop"
+  ) %>%
+  ggplot(aes(
+    x = factor(jaar),
+    y = mean_soorten,
+    colour = sbp,
+    group = sbp
+  )) +
+  geom_point(size = 2,
+             position = position_dodge(0.3)) +
+  geom_line(position = position_dodge(0.3)) +
+  geom_errorbar(
+    aes(
+      ymin = mean_soorten + qnorm(0.025) * se,
+      ymax = mean_soorten + qnorm(0.975) * se
+    ),
+    width = 0.15,
+    position = position_dodge(0.3)
+  ) +
+  facet_grid(
+    openheid_klasse ~ regio,
+    scales = "free_x"
+  ) +
+  labs(
+    x = "Jaar",
+    y = "Gemiddeld aantal akkervogelsoorten",
+    colour = "SBP"
+  )
+```
+
+## 3.3 Totale akkervogelabundantie per telpunt
+
+Deze figuur toont de verdeling van het aantal waargenomen akkervogelindividuen per telpunt.
+
+```{r}
+#| fig.width: 10
+#| fig.height: 8
+mas_data_analysis %>%
+  filter(
+    aantal > 0,
+    naam %in% akkervogels
+  ) %>%
+  group_by(
+    jaar,
+    regio,
+    openheid_klasse,
+    sbp,
+    plotnaam,
+    periode_in_jaar
+  ) %>%
+  summarise(
+    n_ind = sum(aantal),
+    .groups = "drop"
+  ) %>%
+  ggplot(aes(
+    x = factor(jaar),
+    y = n_ind,
+    fill = sbp
+  )) +
+  geom_boxplot() +
+  facet_grid(
+    openheid_klasse ~ regio,
+    scales = "free_x"
+  ) +
+  labs(
+    x = "Jaar",
+    y = "Aantal akkervogelindividuen per telpunt",
+    fill = "SBP"
+  )
+```
+
+# 4. SBP versus niet-SBP
+## 4.1 Soortenrijkdom
+
+```{r}
+soorten_stratum <- mas_data_analysis %>%
+  filter(aantal > 0) %>%
+  group_by(
+    jaar,
+    regio,
+    openheid_klasse,
+    sbp,
+    plotnaam
+  ) %>%
+  summarise(
+    n_soorten = n_distinct(naam),
+    .groups = "drop"
+  ) %>%
+  group_by(
+    jaar,
+    regio,
+    openheid_klasse,
+    sbp
+  ) %>%
+  summarise(
+    mean_soorten = mean(n_soorten),
+    se = sd(n_soorten) / sqrt(n()),
+    .groups = "drop"
+  )
+```
+
+Deze figuur toont het gemiddelde aantal vogelsoorten per telpunt voor de verschillende strata. Voor alle soorten:
+
+```{r}
+#| fig.height: 8
+soorten_stratum %>%
+  ggplot(aes(
+    x = openheid_klasse,
+    y = mean_soorten,
+    colour = sbp,
+    group = sbp
+  )) +
+  geom_point(size = 2) +
+  geom_line(linewidth = 1) +
+  geom_errorbar(
+    aes(
+      ymin = mean_soorten + (qnorm(0.025) * se),
+      ymax = mean_soorten + (qnorm(0.975) * se)
+    ),
+    width = 0.1
+  ) +
+  facet_grid(
+    regio ~ jaar
+  ) +
+  labs(
+    x = "Openheid",
+    y = "Gemiddeld aantal soorten",
+    colour = "SBP"
+  )
+```
+
+Voor akkervogels specifiek:
+
+```{r}
+akkersoorten_stratum <- mas_data_analysis %>%
+  filter(
+    naam %in% akkervogels,
+    aantal > 0
+  ) %>%
+  group_by(
+    jaar,
+    regio,
+    openheid_klasse,
+    sbp,
+    plotnaam
+  ) %>%
+  summarise(
+    n_akkersoorten = n_distinct(naam),
+    .groups = "drop"
+  ) %>%
+  group_by(
+    jaar,
+    regio,
+    openheid_klasse,
+    sbp
+  ) %>%
+  summarise(
+    mean_akkersoorten = mean(n_akkersoorten),
+    se = sd(n_akkersoorten) / sqrt(n()),
+    .groups = "drop"
+  )
+```
+
+```{r}
+#| fig.height: 8
+akkersoorten_stratum %>%
+  ggplot(aes(
+    x = openheid_klasse,
+    y = mean_akkersoorten,
+    colour = sbp,
+    group = sbp
+  )) +
+  geom_point(size = 2) +
+  geom_line(linewidth = 1) +
+  geom_errorbar(
+    aes(
+      ymin = mean_akkersoorten + (qnorm(0.025) * se),
+      ymax = mean_akkersoorten + (qnorm(0.975) * se)
+    ),
+    width = 0.1
+  ) +
+  facet_grid(
+    regio ~ jaar
+  ) +
+  labs(
+    x = "Openheid",
+    y = "Gemiddeld aantal akkervogelsoorten",
+    colour = "SBP"
+  )
+```
+
+Interessant is dat we zien dat algemene soortenrijkdom vaak hoger is in HOL, terwijl specifieke akkervogels meer in OL voorkomen.
+Ook zijn de akkervogels vaker aanwezig binnen SBP.
+
+## 4.2 Abundantie
+
+De volgende figuur toont het gemiddelde aantal waargenomen individuen per telpunt voor de verschillende strata. Voor alle soorten:
+
+```{r}
+soortenabundantie_stratum <- mas_data_analysis %>%
+  filter(
+    aantal > 0
+  ) %>%
+  group_by(
+    jaar,
+    regio,
+    openheid_klasse,
+    sbp,
+    plotnaam
+  ) %>%
+  summarise(
+    n_ind = sum(aantal),
+    .groups = "drop"
+  ) %>%
+  group_by(
+    jaar,
+    regio,
+    openheid_klasse,
+    sbp
+  ) %>%
+  summarise(
+    mean_ind = mean(n_ind),
+    se = sd(n_ind) / sqrt(n()),
+    .groups = "drop"
+  )
+```
+
+```{r}
+#| fig.height: 8
+soortenabundantie_stratum %>%
+  ggplot(aes(
+    x = openheid_klasse,
+    y = mean_ind,
+    colour = sbp,
+    group = sbp
+  )) +
+  geom_point(size = 2) +
+  geom_line(linewidth = 1) +
+  geom_errorbar(
+    aes(
+      ymin = mean_ind + (qnorm(0.025) * se),
+      ymax = mean_ind + (qnorm(0.975) * se)
+    ),
+    width = 0.1
+  ) +
+  facet_grid(
+    regio ~ jaar
+  ) +
+  labs(
+    x = "Openheid",
+    y = "Gemiddeld aantal soortenvogelindividuen",
+    colour = "SBP"
+  )
+```
+
+Voor de specifieke akkervogels:
+
+```{r}
+#| fig.height: 8
+akkerabundantie_stratum <- mas_data_analysis %>%
+  filter(
+    naam %in% akkervogels,
+    aantal > 0
+  ) %>%
+  group_by(
+    jaar,
+    regio,
+    openheid_klasse,
+    sbp,
+    plotnaam
+  ) %>%
+  summarise(
+    n_ind = sum(aantal),
+    .groups = "drop"
+  ) %>%
+  group_by(
+    jaar,
+    regio,
+    openheid_klasse,
+    sbp
+  ) %>%
+  summarise(
+    mean_ind = mean(n_ind),
+    se = sd(n_ind) / sqrt(n()),
+    .groups = "drop"
+  )
+```
+
+```{r}
+#| fig.height: 8
+akkerabundantie_stratum %>%
+  ggplot(aes(
+    x = openheid_klasse,
+    y = mean_ind,
+    colour = sbp,
+    group = sbp
+  )) +
+  geom_point(size = 2) +
+  geom_line(linewidth = 1) +
+  geom_errorbar(
+    aes(
+      ymin = mean_ind + (qnorm(0.025) * se),
+      ymax = mean_ind + (qnorm(0.975) * se)
+    ),
+    width = 0.1
+  ) +
+  facet_grid(
+    regio ~ jaar
+  ) +
+  labs(
+    x = "Openheid",
+    y = "Gemiddeld aantal akkervogelindividuen",
+    colour = "SBP"
+  )
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| fig.width: 10
+#| fig.height: 8
+akkerabundantie_stratum %>%
+  mutate(
+    stratum = paste(openheid_klasse, sbp, sep = "\n")
+  ) %>%
+  ggplot(aes(
+    x = stratum,
+    y = mean_ind
+  )) +
+  geom_col() +
+  facet_grid(
+    regio ~ jaar
+  ) +
+  labs(
+    x = "",
+    y = "Gemiddeld aantal akkervogelindividuen"
+  )
+```
+
