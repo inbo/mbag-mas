@@ -211,7 +211,8 @@ list(
   ),
 
   ## Power analysis
-  tar_target(
+  # Prepare scenarios
+  tar_group_size(
     name = scenarios,
     command = expand.grid(
       n_telpunten = c(100, 200, 400),
@@ -221,67 +222,49 @@ list(
         trend_to_beta_param(trend_buiten = 0.99, trend_binnen = 1.01)
       )
     ) %>%
-      tidyr::crossing(best_parameters)
+      tidyr::crossing(best_parameters),
+    size = 1
+  ),
+  # Prepare design lists
+  tar_target(
+    name = design_list,
+    command = prepare_design(
+      scenarios,
+      digits = c(
+        n_jaar = 0,
+        n_telpunten = 0,
+        beta_0 = 2,
+        beta_1 = 2,
+        beta_2 = 2,
+        beta_3 = 3,
+        sigma_punt = 6
+      )
+    ),
+    pattern = map(scenarios),
+    iteration = "list"
+  ),
+
+  # Run simulations
+  tar_target(
+    name = detectable_effect,
+    command = designpower::find_power(
+      design = design_list$design[
+        -which(names(design_list$design) == "tar_group")
+      ],
+      design_digits = design_list$digits,
+      opti = "beta_3",
+      sim_power = simulate_mas_data,
+      power = 0.9,
+      alpha = 0.1,
+      filename = "power_mas_light_akkervogel.duckdb"
+    ),
+    pattern = map(design_list),
+    iteration = "list"
+  ),
+
+  # Result to dataframe
+  tar_target(
+    name = detectable_effect_df,
+    command = detectable_effect_to_df(detectable_effect)
   )
-  #
-  # tar_map(
-  #   values = list(
-  #     species = target_species[tar_read(presence_prop) > 0.2]
-  #   ),
-  #
-  #   # Go over each row
-  #   tar_group_size(
-  #     name = species_scenarios_clean,
-  #     command = species_scenarios %>%
-  #       filter(naam == species) %>%
-  #       select(-"naam"),
-  #     size = 1
-  #   ),
-  #
-  #   # Prepare design lists
-  #   tar_target(
-  #     name = design_list,
-  #     command = prepare_design(
-  #       species_scenarios_clean,
-  #       digits = c(
-  #         n_jaar = 0,
-  #         n_telpunten = 0,
-  #         beta_0 = 2,
-  #         beta_1 = 2,
-  #         beta_2 = 2,
-  #         beta_3 = 3,
-  #         sigma_punt = 2,
-  #         theta = 2
-  #       )
-  #     ),
-  #     pattern = map(species_scenarios_clean),
-  #     iteration = "list"
-  #   ),
-  #
-  #   # Run simulations
-  #   tar_target(
-  #     name = detectable_effect,
-  #     command = designpower::find_power(
-  #       design = design_list$design[
-  #         -which(names(design_list$design) == "tar_group")
-  #       ],
-  #       design_digits = design_list$digits,
-  #       opti = "beta_3",
-  #       sim_power = simulate_mas_data,
-  #       power = 0.9,
-  #       alpha = 0.1,
-  #       filename = paste0("power_mas_light_",
-  #                         gsub("\\s", ".", tolower(species)),
-  #                         ".duckdb")
-  #     ),
-  #     pattern = map(design_list),
-  #     iteration = "list"
-  #   ),
-  #
-  #   # Result to dataframe
-  #   tar_target(
-  #     name = detectable_effect_df,
-  #     command = detectable_effect_to_df(detectable_effect)
-  #   )
-  # )
 )
