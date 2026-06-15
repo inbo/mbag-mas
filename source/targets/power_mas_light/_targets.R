@@ -180,43 +180,49 @@ list(
     command = DHARMa::simulateResiduals(fittedModel = fit_model$fit),
     pattern = map(fit_model),
     iteration = "list"
-  )
+  ),
 
-  # # Extract parameters
-  # tar_target(
-  #   name = parameters,
-  #   command = extract_parameters(fit_model$fit),
-  #   pattern = map(fit_model),
-  #   iteration = "list"
-  # ),
-  # tar_target(
-  #   name = parameters_df_grouped,
-  #   command = data.frame(naam = species, as.data.frame(parameters)),
-  #   pattern = map(species, parameters)
-  # ),
-  # tar_target(
-  #   name = parameters_df,
-  #   command = bind_rows(parameters_df_grouped),
-  # ),
-  #
-  # ## Power analysis
-  # tar_target(
-  #   name = scenarios,
-  #   command = expand.grid(
-  #     n_telpunten = c(100, 200, 400),
-  #     n_jaar = 10,
-  #     beta_1 = c(log(0.99)),
-  #     beta_3 = c(-log(0.99))
-  #   )
-  # ),
-  # tar_target(
-  #   name = species_scenarios,
-  #   command = tidyr::crossing(
-  #     parameters_df %>%
-  #       select("naam", "beta_0", "beta_2", "sigma_punt", "theta"),
-  #     scenarios
-  #   )
-  # ),
+  # Extract parameters
+  tar_target(
+    name = parameters,
+    command = extract_parameters(fit_model$fit),
+    pattern = map(fit_model),
+    iteration = "list"
+  ),
+  tar_target(
+    name = parameters_df_grouped,
+    command = data.frame(naam = species, as.data.frame(parameters),
+                         prop = presence_prop),
+    pattern = map(species, parameters, presence_prop)
+  ),
+  tar_target(
+    name = parameters_df,
+    command = bind_rows(parameters_df_grouped) %>%
+      filter(prop >= 0.2),
+  ),
+  tar_target(
+    name = best_parameters,
+    command = parameters_df %>%
+      summarise(
+        beta_0 = max(parameters_df$beta_0),
+        beta_2 = max(parameters_df$beta_2),
+        sigma_punt = min(parameters_df$sigma_punt)
+    )
+  ),
+
+  ## Power analysis
+  tar_target(
+    name = scenarios,
+    command = expand.grid(
+      n_telpunten = c(100, 200, 400),
+      n_jaar = 10,
+      beta_1 = c(log(0.99)),
+      beta_3 = c(
+        trend_to_beta_param(trend_buiten = 0.99, trend_binnen = 1.01)
+      )
+    ) %>%
+      tidyr::crossing(best_parameters)
+  )
   #
   # tar_map(
   #   values = list(
