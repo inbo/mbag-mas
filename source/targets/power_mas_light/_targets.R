@@ -133,15 +133,25 @@ list(
   ),
 
   ## Estimate parameters
-  # Prepare data
+  # Filter out zeroes
+  tar_target(
+    name = target_sp_pa_nozero,
+    command = target_sp_pa %>%
+      left_join(presence_logical,
+                by = join_by(plotnaam, regio, openheid_klasse, sbp)) %>%
+      filter(present) %>%
+      select(-"present"),
+    pattern = map(target_sp_pa, presence_logical)
+  ),
+  # Prepare model data
   tar_target(
     name = model_data,
-    command = target_sp_pa %>%
+    command = target_sp_pa_nozero %>%
       filter(period_count == best_period) %>%
       mutate(sbp_f = factor(sbp, levels = c("buiten", "binnen")),
              plotnaam_f = factor(plotnaam),
              year2 = year - 2024),
-    pattern = map(target_sp_pa, best_period)
+    pattern = map(target_sp_pa_nozero, best_period)
   ),
   tar_target(
     name = species,
