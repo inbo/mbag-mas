@@ -4,7 +4,6 @@ editor_options:
   chunk_output_type: console
 ---
 ### {{species}}
-#### Data exploratie
 
 ```{r}
 # Variables
@@ -25,44 +24,4 @@ presence_df %>%
   facet_grid(regio ~ openheid_klasse, scales = "free") +
   labs(x = "SBP", y = "Aantal telpunten", fill = "Aanwezig") +
   theme_minimal()
-```
-
-#### Schatting modelparameters
-
-```{r}
-final_model <- tar_read_mas("final_model", branch = branch)[[1]]
-model <- ifelse(final_model$family == "poisson",
-                "Poisson", "Negatief binomiaal")
-```
-
-We vergeleken een Poisson en Negatief binomiaal model via AIC. Voor de {{species}} werd het `r model` model geselecteerd. We kijken ook even of het finale model foutmeldingen gaf.
-
-```{r}
-glmmTMB::diagnose(final_model$fit)
-```
-
-We bekijken enkele diagnostische figuren en testen voor een overmaat aan nullen.
-
-**DHARMa** package [@dharma2024]:
-
-```{r}
-#| fig-height: 5
-simulation_output <- tar_read_mas("simulated_residuals", branch = branch)[[1]]
-plot(simulation_output, asFactor = TRUE)
-```
-
-```{r}
-#| fig-height: 5
-testZeroInflation(simulation_output)
-```
-
-\newpage
-
-**performance** package [@performance2021]:
-
-```{r}
-#| warning: FALSE
-#| message: FALSE
-#| fig-height: 8
-performance::check_model(final_model$fit)
 ```

@@ -13,8 +13,6 @@ library(knitr)
 library(targets)
 library(tidyverse)
 library(factoextra)
-library(patchwork)
-library(DHARMa)
 
 conflicted::conflicts_prefer(dplyr::filter)
 
@@ -42,13 +40,18 @@ target_species <- c(
 )
 ```
 
-In dit hoofdstuk worden de simulatieparameters geschat die als input dienen voor de poweranalyse. Hiervoor wordt gebruikgemaakt van de gegevens uit de jaren 2024 en 2025 voor een selectie van doelsoorten (`r tolower(target_species)`).
-Eerst worden de waarnemingsgegevens ingelezen en gefilterd op de geselecteerde soorten. Enkel broedvogelwaarnemingen worden behouden (broedcode > 0), behalve voor Torenvalk, en de aantallen worden samengevat per telpunt, jaar en telperiode samengevat. Vervolgens worden afwezigheden toegevoegd op basis van de beschikbare bezoekgegevens.
-Voor elke soort worden de data uit de telperiode geselecteerd waarin gemiddeld de hoogste aantallen worden vastgesteld over beide jaren. Deze periode wordt beschouwd als de meest geschikte periode voor de verdere modellering.
+In dit hoofdstuk worden de simulatieparameters geschat die als input dienen voor de poweranalyse. Hiervoor wordt gebruikgemaakt van de gegevens uit de jaren 2024 en 2025 voor een selectie van doelsoorten (`r target_species`).
+Eerst worden de waarnemingsgegevens ingelezen en gefilterd op de geselecteerde soorten.
+Enkel broedvogelwaarnemingen worden behouden (broedcode > 0), behalve voor Torenvalk, en de aantallen worden samengevat per telpunt, jaar en telperiode.
+Vervolgens worden afwezigheden toegevoegd op basis van de beschikbare bezoekgegevens.
+Voor elke soort worden de data uit de telperiode geselecteerd waarin gemiddeld de hoogste aantallen worden vastgesteld over beide jaren.
+Bovendien worden de nullen van locaties waar de soort nooit is gezien over alle 2 x 4 telperiodes verwijderd. Deze worden beschouwd als structurele afwezigheid van de soort.
 
-Voor elke soort wordt vervolgens een Generalized Linear Mixed Model (GLMM) opgesteld met het aantal waargenomen individuen als responsvariabele (zie @sec-analysemodel).
-Aangezien telgegevens vaak overdispersie vertonen, worden zowel een Poisson- als een negatieve binomiale verdeling geëvalueerd. Op basis van modelselectie wordt voor elke soort het meest geschikte model gekozen.
-Uit dit eindmodel worden vervolgens de parameters geëxtraheerd die nodig zijn voor de simulaties, waaronder de verwachte aantallen, de variatie tussen telpunten en, indien van toepassing, de mate van overdispersie (zie ook @sec-samenvatting-simulatieparameters).
+`r sort(target_species[tar_read_mas("presence_prop") < 0.2])` werden in minder dan 20 % van de telpunten waargenomen in 2024 en 2025 (zie verder).
+Deze soorten worden niet verder meegenomen in de analyses.
+
+Voor de resterende soorten wordt vervolgens een Generalized Linear Mixed Model (GLMM) opgesteld met het aantal waargenomen individuen als responsvariabele (zie @sec-analysemodel).
+Uit dit model worden vervolgens de parameters geëxtraheerd die nodig zijn voor de simulaties: de verwachte aantallen binnen en buiten SBP, en de variatie tussen telpunten (zie ook @sec-samenvatting-simulatieparameters).
 
 ## Overzicht parameterschattingen
 
@@ -59,10 +62,16 @@ De geschatte parameters zijn weergegeven in @tbl-est-params.
 #| tbl-cap: "Geschatte parameterwaarden op basis van bestaande data."
 parameters_df <- tar_read_mas("parameters_df")
 parameters_df_selection <- parameters_df %>%
-  select("soort" = "naam", "beta_0", "beta_2", "sigma_punt", "theta")
+  mutate(verwacht_buiten = round(exp(beta_0), 2),
+         verwacht_binnen = round(exp(beta_0 + beta_2), 2)) %>%
+  select("soort" = "naam", "beta_0", "beta_2", "verwacht_buiten",
+         "verwacht_binnen", "sigma_punt")
 parameters_df_selection %>%
-  arrange(soort) %>%
-  kable(booktabs = TRUE, digits = 3) %>%
+  mutate(beta_0 = round(beta_0, 3),
+         beta_2 = round(beta_2, 3),
+         sigma_punt = round(sigma_punt, 6)) %>%
+  arrange(desc(beta_0), desc(beta_2)) %>%
+  kable(booktabs = TRUE) %>%
   kableExtra::kable_styling(latex_options = c("striped")) %>%
   kableExtra::row_spec(0, bold = TRUE)
 ```
@@ -71,11 +80,13 @@ parameters_df_selection %>%
 #| warning: FALSE
 #| fig-height: 5
 parameters_df_selection %>%
-  pivot_longer("beta_0":"theta", names_to = "param") %>%
+  select(-starts_with("verwacht")) %>%
+  pivot_longer("beta_0":"sigma_punt", names_to = "param") %>%
   ggplot(aes(x = param, y = value)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
   geom_boxplot() +
   geom_point(position = position_jitter(0.2), size = 1,
-             colour = "cornflowerblue") +
+             colour = "firebrick") +
   labs(x = "Parameter", y = "Waarde") +
   theme_minimal()
 ```
@@ -83,23 +94,7 @@ parameters_df_selection %>%
 ```{r}
 #| warning: FALSE
 #| message: FALSE
-# Negative binomial
-pca_nb <- parameters_df %>%
-  filter(!is.na(theta)) %>%
-  select(naam, beta_0, beta_2, sigma_punt, theta) %>%
-  as.data.frame()
-
-rownames(pca_nb) <- pca_nb$naam
-
-pca_nb_fit <- prcomp(
-  pca_nb[, -1],
-  center = TRUE,
-  scale. = TRUE
-)
-
-# Poisson
 pca_pois <- parameters_df %>%
-  filter(is.na(theta)) %>%
   select(naam, beta_0, beta_2, sigma_punt) %>%
   as.data.frame()
 
@@ -111,25 +106,12 @@ pca_pois_fit <- prcomp(
   scale. = TRUE
 )
 
-p_pois <- fviz_pca_biplot(
+fviz_pca_biplot(
   pca_pois_fit,
   label = "all",
-  repel = TRUE,
-  title = "Poisson-soorten"
+  repel = TRUE
 )
-
-p_nb <- fviz_pca_biplot(
-  pca_nb_fit,
-  label = "all",
-  repel = TRUE,
-  title = "Negatief binomiale soorten"
-)
-
-p_pois + p_nb
 ```
-
-`r sort(target_species[tar_read_mas("presence_prop") < 0.2])` werden in minder dan 20 % van de telpunten waargenomen in 2024 en 2025 (zie verder).
-Voor deze soorten zullen we geen verdere analyses doen rond detecteerbare effectgrootte.
 
 \newpage
 
