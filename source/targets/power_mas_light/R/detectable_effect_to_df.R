@@ -1,4 +1,7 @@
 detectable_effect_to_df <- function(x) {
+  require("dplyr")
+  require("rlang")
+
   res <- lapply(
     names(x),
     function(target_name) {
@@ -21,9 +24,9 @@ detectable_effect_to_df <- function(x) {
         check.names = FALSE
       ) %>%
         mutate(
-          effect_pct = 100 * (exp(beta3) - 1),
-          effect_pct_low = 100 * (exp(beta3_low) - 1),
-          effect_pct_high = 100 * (exp(beta3_high) - 1)
+          effect_pct = 100 * (exp(.data$beta3) - 1),
+          effect_pct_low = 100 * (exp(.data$beta3_low) - 1),
+          effect_pct_high = 100 * (exp(.data$beta3_high) - 1)
         )
     }
   )

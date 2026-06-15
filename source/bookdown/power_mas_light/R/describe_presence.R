@@ -1,4 +1,7 @@
 describe_presence <- function(presence_df) {
+  require("dplyr")
+  require("rlang")
+
   # Get total proportion
   tot_prop <- presence_df %>%
     count(.data$present) %>%
@@ -11,8 +14,8 @@ describe_presence <- function(presence_df) {
 
   # Summarise presences by landscape openness class and calculate proportions
   openheid <- presence_df %>%
-    filter(present) %>%
-    count(openheid_klasse) %>%
+    filter(.data$present) %>%
+    count(.data$openheid_klasse) %>%
     mutate(prop = n / sum(n))
 
   # Generate a sentence describing the species' preference for landscapes
@@ -54,9 +57,9 @@ describe_presence <- function(presence_df) {
 
   # Summarise presences inside and outside SBP and calculate proportions
   sbp <- presence_df %>%
-    filter(present) %>%
+    filter(.data$present) %>%
     count(sbp) %>%
-    mutate(prop = n / sum(n))
+    mutate(prop = .data$n / sum(.data$n))
 
   # Generate a sentence describing the species' association with SBP
   txt_sbp <- dplyr::case_when(
@@ -96,15 +99,15 @@ describe_presence <- function(presence_df) {
   # Calculate the proportion of surveyed locations with a presence per region
   regio <- presence_df %>%
     summarise(
-      present = sum(present),
+      present = sum(.data$present),
       total = n(),
       .by = regio
     ) %>%
-    mutate(prop = present / total)
+    mutate(prop = .data$present / .data$total)
 
   # Identify regions where the species occurs in less than 20% of locations
   lage_regios <- regio %>%
-    filter(prop < 0.2)
+    filter(.data$prop < 0.2)
 
   # Generate a sentence only when one or more regions have very low occurrence
   txt_regio <- if (nrow(lage_regios) == 0) {

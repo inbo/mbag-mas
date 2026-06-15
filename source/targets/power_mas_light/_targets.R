@@ -220,7 +220,7 @@ list(
 
   tar_map(
     values = list(
-      species = c("Geelgors", "Veldleeuwerik") # target_species[tar_read(presence_prop) > 0.2]
+      species = target_species[tar_read(presence_prop) > 0.2]
     ),
 
     # Go over each row
