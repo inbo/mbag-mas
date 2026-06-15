@@ -207,7 +207,7 @@ list(
         beta_0 = max(parameters_df$beta_0),
         beta_2 = max(parameters_df$beta_2),
         sigma_punt = min(parameters_df$sigma_punt)
-    )
+      )
   ),
 
   ## Power analysis
