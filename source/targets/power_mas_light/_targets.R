@@ -236,8 +236,12 @@ list(
       tidyr::crossing(best_parameters) %>%
       rowwise() %>%
       mutate(
-        beta_3 = trend_to_beta_param(
-          trend_buiten = exp(beta_1)
+        beta_3 = ifelse(
+          n_jaar == 24,
+          log(1.005),
+          trend_to_beta_param(
+            trend_buiten = exp(beta_1)
+          )
         )
       ) %>%
       ungroup() %>%
@@ -255,7 +259,7 @@ list(
         beta_0 = 2,
         beta_1 = 2,
         beta_2 = 2,
-        beta_3 = 3,
+        beta_3 = ifelse(scenarios$n_jaar == 24, 4, 3),
         sigma_punt = 6
       )
     ),
