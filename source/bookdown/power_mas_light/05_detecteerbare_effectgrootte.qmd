@@ -159,7 +159,7 @@ pred_df <- detectable_effect_10j %>%
   }) %>%
   bind_rows() %>%
   left_join(
-    detectable_effect_10j %>% 
+    detectable_effect_10j %>%
       select(scenario, trend_buiten_tienjaarlijks),
     by = join_by(scenario),
     relationship = "many-to-many"
@@ -241,7 +241,9 @@ detectable_effect_years %>%
     values_from = value,
     names_prefix = "n = "
   ) %>%
-  arrange(n_jaar, factor(maat, levels = c("Per jaar", "Volledige tijdsreeks"))) %>%
+  arrange(
+    n_jaar, factor(maat, levels = c("Per jaar", "Volledige tijdsreeks"))
+  ) %>%
   mutate(
     `Lengte tijdsreeks` = if_else(
       duplicated(n_jaar),
@@ -341,7 +343,7 @@ pred_df <- detectable_effect_years %>%
   }) %>%
   bind_rows() %>%
   left_join(
-    detectable_effect_years %>% 
+    detectable_effect_years %>%
       select(scenario, n_jaar),
     by = join_by(scenario),
     relationship = "many-to-many"
