@@ -23,15 +23,15 @@ Beschouw een hypothetische akkervogelsoort die over heel Vlaanderen aanwezig is 
 Deze soort heeft de hoogste densiteit buiten SBP en de hoogste densiteit binnen SBP van de werkelijke akkervogels in MAS (hoogste $\beta_0$: `r round(tar_read_mas("best_parameters")$beta_0, 3)`, en $\beta_2$: `r round(tar_read_mas("best_parameters")$beta_2, 3)`) en de kleinste variatie tussen telpunten ($\sigma_{punt}$: `r round(tar_read_mas("best_parameters")$sigma_punt, 6)`).
 Deze heeft bijgevolg een verwachte densiteit buiten SBP van `r round(exp(tar_read_mas("best_parameters")$beta_0), 2)` en binnen SBP van `r round(exp(tar_read_mas("best_parameters")$beta_0 + tar_read_mas("best_parameters")$beta_2), 2)`.
 
-We onderscheiden in eerste instantie drie scenario's (~$\beta_1$):
+## Variabele trend buiten SBP
+
+We onderscheiden drie scenario's voor de trend buiten SBP (~$\beta_1$):
 
 1. Een achteruitgang buiten SBP van -1 % per jaar 
 2. Geen achteruitgang buiten SBP
 3. Een vooruitgang buiten SBP van +1 % per jaar
 
 De trend buiten SBP moet telkens positief zijn en groter dan de trend buiten SBP.
-
-## Resultaten
 
 ```{r}
 # Get effect sizes
@@ -42,23 +42,26 @@ detectable_effect_10j <- detectable_effect_df %>%
          .by = "beta_1")
 ```
 
+We zien slechts kleine verschillen tussen de scenario's.
+Zoals verwacht, zien we dat we een kleiner effect kunnen detecteren bij een groter aantal telpunten.
+
 ```{r}
 # Visualise raw estimates
 detectable_effect_10j %>%
-  ggplot(aes(x = n_telpunten, y = effect_pct, colour = scenario)) +
+  ggplot(aes(x = n_telpunten, y = effect_pct_10, colour = scenario)) +
   geom_line(linewidth = 0.3) +
   geom_point(size = 1) +
   geom_errorbar(
     aes(
-      ymin = effect_pct_low,
-      ymax = effect_pct_high
+      ymin = effect_pct_10_low,
+      ymax = effect_pct_10_high
     ),
     width = 5, linewidth = 0.3
   ) +
   scale_y_continuous(limits = c(0, NA)) +
   labs(
     x = "Aantal telpunten",
-    y = "Detecteerbare jaarlijkse\ninteractieverandering (%)",
+    y = "Detecteerbare 10-jaarlijkse\ninteractieverandering (%)",
     colour = "Scenario"
   ) +
   theme_minimal()
@@ -79,7 +82,7 @@ In de onderstaande figuur wordt de volle lijn enkel getoond binnen het bereik va
 pred_df <- detectable_effect_10j %>%
   group_split(scenario) %>%
   lapply(function(data) {
-    mod <- lm(effect_pct ~ I(1 / sqrt(n_telpunten)), data = data)
+    mod <- lm(effect_pct_10 ~ I(1 / sqrt(n_telpunten)), data = data)
 
     newdata <- tibble(
       n_telpunten = seq(min(data$n_telpunten), 800, length.out = 200)
@@ -100,14 +103,133 @@ pred_df <- detectable_effect_10j %>%
 
 # Visualise effect trend
 ggplot(detectable_effect_10j,
-       aes(x = n_telpunten, y = effect_pct, colour = scenario)) +
+       aes(x = n_telpunten, y = effect_pct_10, colour = scenario)) +
   geom_point(size = 1) +
-  # geom_ribbon(
-  #   data = pred_df,
-  #   aes(x = n_telpunten, y = fit, ymin = lwr, ymax = upr, fill = scenario),
-  #   alpha = 0.2,
-  #   inherit.aes = FALSE
-  # ) +
+  geom_line(
+    data = filter(pred_df, !extrapolated),
+    aes(y = fit),
+    linewidth = 0.3
+  ) +
+
+  # Extrapolation
+  geom_line(
+    data = filter(pred_df, extrapolated),
+    aes(y = fit),
+    linewidth = 0.3,
+    linetype = "dashed"
+  ) +
+
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(
+    x = "Aantal telpunten",
+    y = "Detecteerbare 10-jaarlijkse\ninteractieverandering (%)",
+    colour = "Scenario"
+  ) +
+  theme_minimal()
+```
+
+## Variabele lengte tijdsreeks
+
+We onderscheiden in drie scenario's voor de lengte van de tijdsreeks:
+
+1. 10 jaar
+2. 16 jaar
+3. 24 jaar
+
+Dit doen we voor een achteruitgang buiten SBP van -1 % per jaar (scenario 1 uit vorige Paragraaf).
+
+```{r}
+detectable_effect_years <- detectable_effect_df %>%
+  mutate(scenario = factor(cur_group_id()),
+         .by = c("beta_1", "n_jaar")) %>%
+  filter_out(scenario %in% 2:3)
+```
+
+Zoals verwacht, zien we dat we een kleiner effect kunnen detecteren bij een groter aantal telpunten en bij een langere tijdsreeks.
+
+```{r}
+# Visualise raw estimates
+detectable_effect_years %>%
+  ggplot(aes(x = n_telpunten, y = effect_pct, colour = factor(n_jaar))) +
+  geom_line(linewidth = 0.3) +
+  geom_point(size = 1) +
+  geom_errorbar(
+    aes(
+      ymin = effect_pct_low,
+      ymax = effect_pct_high
+    ),
+    width = 5, linewidth = 0.3
+  ) +
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(
+    x = "Aantal telpunten",
+    y = "Detecteerbare jaarlijkse\ninteractieverandering (%)",
+    colour = "Lengte tijdsreeks\n(jaar)"
+  ) +
+  theme_minimal()
+```
+
+We fitten een model van de vorm
+
+$$
+E = a n^{-b} T^{-c}
+$$
+
+waarbij 
+
+
+$E$: detecteerbare effectgrootte,
+
+$n$: het aantal telpunten,
+
+$T$: de lengte van de tijdsreeks (in jaren)
+
+```{r}
+fit_time <- lm(log(effect_pct) ~ log(n_telpunten) + log(n_jaar),
+               data = detectable_effect_years)
+summary(fit_time)
+```
+
+De simulaties tonen dat de detecteerbare effectgrootte wordt beschreven door een machtsfunctie van zowel het aantal telpunten als de lengte van de tijdreeks. De geschatte exponenten (`r round(coef(fit_time)[2], 3)` voor het aantal telpunten en `r round(coef(fit_time)[3], 3)` voor het aantal jaren) liggen dicht bij de theoretisch verwachte waarden van respectievelijk (-1/2) en (-3/2). Dit impliceert dat de detecteerbare effectgrootte bij benadering afneemt volgens
+
+$$
+\text{effectgrootte} \propto \frac{1}{\sqrt{n_{\text{telpunten}}}T^{3/2}}
+$$
+
+```{r}
+# Predict detectable effect
+pred_df <- detectable_effect_years %>%
+  group_split(scenario) %>%
+  lapply(function(data) {
+    mod <- lm(effect_pct ~ I(1 / sqrt(n_telpunten)), data = data)
+
+    newdata <- tibble(
+      n_telpunten = seq(min(data$n_telpunten), 800, length.out = 200)
+    )
+
+    pred <- predict(mod, newdata = newdata, interval = "confidence")
+
+    bind_cols(
+      newdata,
+      as.data.frame(pred)
+    ) %>%
+      mutate(
+        extrapolated = n_telpunten > max(data$n_telpunten),
+        scenario = unique(data$scenario)
+      )
+  }) %>%
+  bind_rows() %>%
+  left_join(
+    detectable_effect_years %>% 
+      select(scenario, n_jaar),
+    by = join_by(scenario),
+    relationship = "many-to-many"
+  )
+
+# Visualise effect trend
+ggplot(detectable_effect_years,
+       aes(x = n_telpunten, y = effect_pct, colour = factor(n_jaar))) +
+  geom_point(size = 1) +
   geom_line(
     data = filter(pred_df, !extrapolated),
     aes(y = fit),
@@ -126,7 +248,7 @@ ggplot(detectable_effect_10j,
   labs(
     x = "Aantal telpunten",
     y = "Detecteerbare jaarlijkse\ninteractieverandering (%)",
-    colour = "Scenario"
+    colour = "Lengte tijdsreeks\n(jaar)"
   ) +
   theme_minimal()
 ```
