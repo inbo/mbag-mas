@@ -4,7 +4,6 @@ editor_options:
   chunk_output_type: console
 ---
 # Detecteerbare effectgrootte {#sec-detecteerbare-effectgrootte}
-## Resultaten
 
 ```{r}
 #| echo: FALSE
@@ -20,41 +19,33 @@ conflicted::conflicts_prefer(dplyr::filter)
 source("R/tar_read_mas.R")
 ```
 
-```{r}
-target_species <- c(
-  "Boerenzwaluw",
-  "Geelgors",
-  "Gele Kwikstaart",
-  "Grasmus",
-  "Graspieper",
-  "Grutto",
-  "Kievit",
-  "Kneu",
-  "Patrijs",
-  "Ringmus",
-  "Roodborsttapuit",
-  "Scholekster",
-  "Torenvalk",
-  "Veldleeuwerik",
-  "Wulp"
-)
-```
+Beschouw een hypothetische akkervogelsoort die over heel Vlaanderen aanwezig is aan een gelijkaardige densiteit.
+Deze soort heeft de hoogste densiteit buiten SBP en de hoogste densiteit binnen SBP van de werkelijke akkervogels in MAS (hoogste $\beta_0$: `r round(tar_read_mas("best_parameters")$beta_0, 3)`, en $\beta_2$: `r round(tar_read_mas("best_parameters")$beta_2, 3)`) en de kleinste variatie tussen telpunten ($\sigma_{punt}$: `r round(tar_read_mas("best_parameters")$sigma_punt, 6)`).
+Deze heeft bijgevolg een verwachte densiteit buiten SBP van `r round(exp(tar_read_mas("best_parameters")$beta_0), 2)` en binnen SBP van `r round(exp(tar_read_mas("best_parameters")$beta_0 + tar_read_mas("best_parameters")$beta_2), 2)`.
+
+We onderscheiden in eerste instantie drie scenario's (~$\beta_1$):
+
+1. Een achteruitgang buiten SBP van -1 % per jaar 
+2. Geen achteruitgang buiten SBP
+3. Een vooruitgang buiten SBP van +1 % per jaar
+
+De trend buiten SBP moet telkens positief zijn en groter dan de trend buiten SBP.
+
+## Resultaten
 
 ```{r}
 # Get effect sizes
-detectable_effect_df <- lapply(target_species, function(spec) {
-  tryCatch({
-    tar_read_mas("detectable_effect_df", species = spec)
-  }, error = function(e) {
-    NULL
-  })
-}) %>%
-  bind_rows()
+detectable_effect_df <- tar_read_mas("detectable_effect_df")
+detectable_effect_10j <- detectable_effect_df %>%
+  filter(n_jaar == 10) %>%
+  mutate(scenario = factor(cur_group_id()),
+         .by = "beta_1")
 ```
 
 ```{r}
-detectable_effect_df %>%
-  ggplot(aes(x = n_telpunten, y = effect_pct, colour = species)) +
+# Visualise raw estimates
+detectable_effect_10j %>%
+  ggplot(aes(x = n_telpunten, y = effect_pct, colour = scenario)) +
   geom_line(linewidth = 0.3) +
   geom_point(size = 1) +
   geom_errorbar(
@@ -64,59 +55,78 @@ detectable_effect_df %>%
     ),
     width = 5, linewidth = 0.3
   ) +
+  scale_y_continuous(limits = c(0, NA)) +
   labs(
     x = "Aantal telpunten",
     y = "Detecteerbare jaarlijkse\ninteractieverandering (%)",
-    colour = "Soort"
+    colour = "Scenario"
   ) +
-  theme_minimal() +
-  theme(legend.position = "bottom")
+  theme_minimal()
 ```
 
-```{r}
-#| warning: FALSE
-#| message: FALSE
-detectable_effect_df %>%
-  ggplot(aes(x = sigma_punt, y = effect_pct,
-             colour = factor(n_telpunten), group = factor(n_telpunten))) +
-  geom_point(size = 1) +
-  geom_errorbar(
-    aes(
-      ymin = effect_pct_low,
-      ymax = effect_pct_high
-    ),
-    width = 0.07, linewidth = 0.3
-  ) +
-  geom_smooth(method = "lm", formula = "y ~ x", linewidth = 0.3, se = FALSE) +
-  labs(
-    x = "Variabiliteit telpunten (sigma_punt)",
-    y = "Detecteerbare jaarlijkse\ninteractieverandering (%)",
-    colour = "Aantal telpunten"
-  ) +
-  theme_minimal() +
-  theme(legend.position = "bottom")
-```
+De detecteerbare effectgrootte neemt af naarmate het aantal telpunten toeneemt. Dit is een rechtstreeks gevolg van de toename in statistische precisie bij een grotere steekproefomvang. In klassieke power-analyses daalt de standaardfout van een schatter ongeveer evenredig met de inverse vierkantswortel van de steekproefgrootte. Daardoor wordt ook de minimaal detecteerbare effectgrootte verwacht af te nemen volgens een relatie van de vorm
+
+$$
+\text{effectgrootte} \propto \frac{1}{\sqrt{n}},
+$$
+
+waarbij $n$ het aantal telpunten voorstelt.
+
+In de onderstaande figuur wordt de volle lijn enkel getoond binnen het bereik van de gesimuleerde aantallen telpunten. De stippellijn geeft een extrapolatie weer buiten dit bereik en moet daarom voorzichtig worden geïnterpreteerd. De gearceerde zone stelt het 95%-betrouwbaarheidsinterval van de geschatte relatie voor.
 
 ```{r}
-#| warning: FALSE
-#| message: FALSE
-detectable_effect_df %>%
-  ggplot(aes(x = exp(beta_0), y = effect_pct,
-             colour = factor(n_telpunten), group = factor(n_telpunten))) +
+# Predict detectable effect
+pred_df <- detectable_effect_10j %>%
+  group_split(scenario) %>%
+  lapply(function(data) {
+    mod <- lm(effect_pct ~ I(1 / sqrt(n_telpunten)), data = data)
+
+    newdata <- tibble(
+      n_telpunten = seq(min(data$n_telpunten), 800, length.out = 200)
+    )
+
+    pred <- predict(mod, newdata = newdata, interval = "confidence")
+
+    bind_cols(
+      newdata,
+      as.data.frame(pred)
+    ) %>%
+      mutate(
+        extrapolated = n_telpunten > max(data$n_telpunten),
+        scenario = unique(data$scenario)
+      )
+  }) %>%
+  bind_rows()
+
+# Visualise effect trend
+ggplot(detectable_effect_10j,
+       aes(x = n_telpunten, y = effect_pct, colour = scenario)) +
   geom_point(size = 1) +
-  geom_errorbar(
-    aes(
-      ymin = effect_pct_low,
-      ymax = effect_pct_high
-    ),
-    width = 0.005, linewidth = 0.3
+  # geom_ribbon(
+  #   data = pred_df,
+  #   aes(x = n_telpunten, y = fit, ymin = lwr, ymax = upr, fill = scenario),
+  #   alpha = 0.2,
+  #   inherit.aes = FALSE
+  # ) +
+  geom_line(
+    data = filter(pred_df, !extrapolated),
+    aes(y = fit),
+    linewidth = 0.3
   ) +
-  geom_smooth(method = "lm", formula = "y ~ x", linewidth = 0.3, se = FALSE) +
+
+  # Extrapolation
+  geom_line(
+    data = filter(pred_df, extrapolated),
+    aes(y = fit),
+    linewidth = 0.3,
+    linetype = "dashed"
+  ) +
+
+  scale_y_continuous(limits = c(0, NA)) +
   labs(
-    x = "Startdensiteit (exp(beta_0))",
+    x = "Aantal telpunten",
     y = "Detecteerbare jaarlijkse\ninteractieverandering (%)",
-    colour = "Aantal telpunten"
+    colour = "Scenario"
   ) +
-  theme_minimal() +
-  theme(legend.position = "bottom")
+  theme_minimal()
 ```
