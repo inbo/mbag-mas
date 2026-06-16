@@ -18,9 +18,11 @@ detectable_effect_to_df <- function(x) {
           effect_pct = 100 * (exp(.data$beta3) - 1),
           effect_pct_low = 100 * (exp(.data$beta3_low) - 1),
           effect_pct_high = 100 * (exp(.data$beta3_high) - 1),
-          effect_pct_10 = 100 * (exp(.data$beta3 * 10) - 1),
-          effect_pct_10_low = 100 * (exp(.data$beta3_low * 10) - 1),
-          effect_pct_10_high = 100 * (exp(.data$beta3_high * 10) - 1)
+          effect_pct_long = 100 * (exp(.data$beta3 * .data$n_jaar) - 1),
+          effect_pct_long_low = 100 * (exp(.data$beta3_low * .data$n_jaar) - 1),
+          effect_pct_long_high = 100 * (
+            exp(.data$beta3_high * .data$n_jaar) - 1
+          )
         )
     }
   )
