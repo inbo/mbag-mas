@@ -24,6 +24,7 @@ Deze soort heeft de hoogste densiteit buiten SBP en de hoogste densiteit binnen 
 Deze heeft bijgevolg een verwachte densiteit buiten SBP van `r round(exp(tar_read_mas("best_parameters")$beta_0), 2)` en binnen SBP van `r round(exp(tar_read_mas("best_parameters")$beta_0 + tar_read_mas("best_parameters")$beta_2), 2)`.
 
 ## Variabele trend buiten SBP
+### Methodiek
 
 We onderscheiden drie scenario's voor de trend buiten SBP (~$\beta_1$):
 
@@ -32,6 +33,8 @@ We onderscheiden drie scenario's voor de trend buiten SBP (~$\beta_1$):
 3. Een vooruitgang buiten SBP van +1 % per jaar (`r paste(round(100 * (exp(10 * 0.01) - 1), 1), "%")` over 10 jaar)
 
 De trend buiten SBP moet telkens positief zijn en groter dan de trend buiten SBP.
+
+### Resultaten
 
 ```{r}
 # Get effect sizes
@@ -52,28 +55,80 @@ detectable_effect_10j <- detectable_effect_df %>%
 
 We zien slechts kleine verschillen tussen de scenario's.
 Zoals verwacht, zien we dat we een kleiner effect kunnen detecteren bij een groter aantal telpunten.
+@tbl-trends-sbp geeft een overzicht van de veronderstelde trends buiten SBP en de overeenkomstige minimaal detecteerbare trends binnen SBP.
+@tbl-detectable-effect-10j toont dezelfde resultaten uitgedrukt als een detecteerbare verandering over een periode van 10 jaar.
+
+```{r}
+#| label: tbl-trends-sbp
+#| tbl-cap: "Veronderstelde trend buiten SBP en de overeenkomstige minimaal
+#|   detecteerbare trend binnen SBP voor drie scenario's en verschillende
+#|   aantallen telpunten. De trends worden zowel als jaarlijkse als als
+#|   cumulatieve verandering over 10 jaar weergegeven."
+detectable_effect_10j %>%
+  mutate(
+    trend_buiten_jaarlijks =
+      sprintf("%.1f %%", 100 * (exp(beta_1) - 1)),
+    trend_buiten_10j =
+      sprintf("%.1f %%", 100 * (exp(10 * beta_1) - 1)),
+    trend_binnen_jaarlijks =
+      sprintf("%.2f %%", 100 * (exp(beta_1 + beta3) - 1)),
+    trend_binnen_10j =
+      sprintf("%.2f %%", 100 * (exp(10 * (beta_1 + beta3)) - 1))
+  ) %>%
+  select(
+    n_telpunten,
+    trend_buiten_jaarlijks,
+    trend_buiten_10j,
+    trend_binnen_jaarlijks,
+    trend_binnen_10j
+  ) %>%
+  pivot_wider(
+    names_from = n_telpunten,
+    values_from = c(trend_binnen_jaarlijks, trend_binnen_10j),
+    names_glue = "{.value}_n{n_telpunten}"
+  ) %>%
+  kable(
+    booktabs = TRUE,
+    col.names = c(
+      "Jaarlijks",
+      "10 jaar",
+      "100",
+      "200",
+      "400",
+      "100",
+      "200",
+      "400"
+    )
+  ) %>%
+  kableExtra::add_header_above(c(
+    "Trend buiten SBP" = 2,
+    "Detecteerbare trend binnen SBP (jaarlijks)" = 3,
+    "Detecteerbare trend binnen SBP (10 jaar)" = 3
+  )) %>%
+  kableExtra::kable_styling(latex_options = "striped") %>%
+  kableExtra::row_spec(0, bold = TRUE)
+```
+
+\newpage
 
 ```{r}
 #| label: tbl-detectable-effect-10j
-#| tbl-cap: "Detecteerbare 10-jaarlijkse interactieverandering (%) als functie
-#|   van het aantal telpunten en de trend buiten SBP. De tabel toont zowel de
-#|   jaarlijkse als de 10-jaarlijkse verandering voor drie trendscenario’s."
+#| tbl-cap: "Minimaal detecteerbare positieve interactieverandering over een
+#|   periode van 10 jaar (%) voor drie trendscenario's buiten SBP en
+#|   verschillende aantallen telpunten. Waarden tussen haakjes geven de
+#|   onder- en bovengrens van de geschatte detecteerbare verandering weer."
 detectable_effect_10j %>%
   mutate(
     value = sprintf(
       "%.2f (%.2f–%.2f)",
       effect_pct_long, effect_pct_long_low, effect_pct_long_high
-    )
+    ),
   ) %>%
   select(starts_with("trend_buiten"), n_telpunten, value) %>%
   pivot_wider(
     names_from = n_telpunten,
     values_from = value,
     names_prefix = "n = "
-  ) %>%
-  rename(
-    `Jaarlijks` = trend_buiten_jaarlijks,
-    `10 jaar` = trend_buiten_tienjaarlijks
   ) %>%
   kable(
     booktabs = TRUE,
@@ -119,6 +174,8 @@ detectable_effect_10j %>%
   ) +
   theme_minimal()
 ```
+
+### Bespreking
 
 De detecteerbare effectgrootte neemt af naarmate het aantal telpunten toeneemt. Dit is een rechtstreeks gevolg van de toename in statistische precisie bij een grotere steekproefomvang. In klassieke power-analyses daalt de standaardfout van een schatter ongeveer evenredig met de inverse vierkantswortel van de steekproefgrootte. Daardoor wordt ook de minimaal detecteerbare effectgrootte verwacht af te nemen volgens een relatie van de vorm
 
@@ -193,7 +250,10 @@ ggplot(detectable_effect_10j,
   theme_minimal()
 ```
 
+\clearpage
+
 ## Variabele lengte tijdsreeks
+### Methodiek
 
 We onderscheiden in drie scenario's voor de lengte van de tijdsreeks:
 
@@ -202,6 +262,8 @@ We onderscheiden in drie scenario's voor de lengte van de tijdsreeks:
 3. 24 jaar
 
 Dit doen we voor een achteruitgang buiten SBP van -1 % per jaar (scenario 1 uit vorige Paragraaf).
+
+### Resultaten
 
 ```{r}
 detectable_effect_years <- detectable_effect_df %>%
@@ -286,6 +348,8 @@ detectable_effect_years %>%
   ) +
   theme_minimal()
 ```
+
+### Bespreking
 
 We fitten een model van de vorm
 
