@@ -17,7 +17,13 @@ presence_df <- tar_read_mas("presence_logical", branch = branch)
 We beschouwen twee jaar en vier telperiodes. We gaan na waar de {{species}} is waargenomen tijdens deze acht bezoeken. `r describe_presence(presence_df)` De soort werd het vaakst waargenomen in telronde `r unname(gsub("R", "", tar_read_mas("best_period", branch = branch)))`. Enkel deze data werden behouden voor de schatting van de parameters.
 
 ```{r}
-#| fig-height: 7.5
+#| label: fig-presence-{{label}}
+#| fig-cap: "Aanwezigheid van {{species}} over twee jaren en vier telperiodes
+#|   (acht bezoeken in totaal), uitgesplitst naar SBP, regio en openheidsklasse.
+#|   De figuur toont het aantal telpunten waar de soort al dan niet werd
+#|   waargenomen (`present`) binnen elke combinatie van strata."
+#| fig-height: 7
+#| fig-width: 6
 presence_df %>%
   ggplot(aes(x = sbp, fill = present)) +
   geom_bar() +

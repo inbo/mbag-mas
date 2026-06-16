@@ -27,9 +27,9 @@ Deze heeft bijgevolg een verwachte densiteit buiten SBP van `r round(exp(tar_rea
 
 We onderscheiden drie scenario's voor de trend buiten SBP (~$\beta_1$):
 
-1. Een achteruitgang buiten SBP van -1 % per jaar 
+1. Een achteruitgang buiten SBP van -1 % per jaar (`r paste(round(100 * (exp(10 * -0.01) - 1), 1), "%")` over 10 jaar)
 2. Stabiele trend buiten SBP
-3. Een vooruitgang buiten SBP van +1 % per jaar
+3. Een vooruitgang buiten SBP van +1 % per jaar (`r paste(round(100 * (exp(10 * 0.01) - 1), 1), "%")` over 10 jaar)
 
 De trend buiten SBP moet telkens positief zijn en groter dan de trend buiten SBP.
 
@@ -39,22 +39,75 @@ detectable_effect_df <- tar_read_mas("detectable_effect_df")
 detectable_effect_10j <- detectable_effect_df %>%
   filter(n_jaar == 10) %>%
   mutate(scenario = factor(cur_group_id()),
-         .by = "beta_1")
+         .by = "beta_1") %>%
+  mutate(
+    trend_buiten_jaarlijks = factor(
+      paste(round(100 * (exp(beta_1) - 1), 1), "%")
+    ),
+    trend_buiten_tienjaarlijks = factor(
+      paste(round(100 * (exp(10 * beta_1) - 1), 1), "%")
+    )
+  )
 ```
 
 We zien slechts kleine verschillen tussen de scenario's.
 Zoals verwacht, zien we dat we een kleiner effect kunnen detecteren bij een groter aantal telpunten.
 
 ```{r}
+#| label: tbl-detectable-effect-10j
+#| tbl-cap: "Detecteerbare 10-jaarlijkse interactieverandering (%) als functie
+#|   van het aantal telpunten en de trend buiten SBP. De tabel toont zowel de
+#|   jaarlijkse als de 10-jaarlijkse verandering voor drie trendscenario’s."
+detectable_effect_10j %>%
+  mutate(
+    value = sprintf(
+      "%.2f (%.2f–%.2f)",
+      effect_pct_long, effect_pct_long_low, effect_pct_long_high
+    )
+  ) %>%
+  select(starts_with("trend_buiten"), n_telpunten, value) %>%
+  pivot_wider(
+    names_from = n_telpunten,
+    values_from = value,
+    names_prefix = "n = "
+  ) %>%
+  rename(
+    `Jaarlijks` = trend_buiten_jaarlijks,
+    `10 jaar` = trend_buiten_tienjaarlijks
+  ) %>%
+  kable(
+    booktabs = TRUE,
+    col.names = c(
+      "Jaarlijks",
+      "10 jaar",
+      "n = 100",
+      "n = 200",
+      "n = 400"
+    )
+  ) %>%
+  kableExtra::add_header_above(c(
+    "Trend buiten SBP" = 2,
+    "Detecteerbare verandering over 10 jaar (%)" = 3
+  )) %>%
+  kableExtra::kable_styling(latex_options = "striped") %>%
+  kableExtra::row_spec(0, bold = TRUE)
+```
+
+```{r}
+#| label: fig-detectable-effect-10j-raw
+#| fig-cap: "Relatie tussen het aantal telpunten en de detecteerbare
+#|   10-jaarlijkse interactieverandering (%) voor drie trendscenario’s buiten
+#|   SBP."
 # Visualise raw estimates
 detectable_effect_10j %>%
-  ggplot(aes(x = n_telpunten, y = effect_pct_10, colour = factor(beta_1))) +
+  ggplot(aes(x = n_telpunten, y = effect_pct_long,
+             colour = trend_buiten_tienjaarlijks)) +
   geom_line(linewidth = 0.3) +
   geom_point(size = 1) +
   geom_errorbar(
     aes(
-      ymin = effect_pct_10_low,
-      ymax = effect_pct_10_high
+      ymin = effect_pct_long_low,
+      ymax = effect_pct_long_high
     ),
     width = 5, linewidth = 0.3
   ) +
@@ -62,7 +115,7 @@ detectable_effect_10j %>%
   labs(
     x = "Aantal telpunten",
     y = "Detecteerbare 10-jaarlijkse\ninteractieverandering (%)",
-    colour = "Trend buiten\nSBP"
+    colour = "Trend buiten\nSBP (10-jaar)"
   ) +
   theme_minimal()
 ```
@@ -78,11 +131,16 @@ waarbij $n$ het aantal telpunten voorstelt.
 In de onderstaande figuur wordt de volle lijn enkel getoond binnen het bereik van de gesimuleerde aantallen telpunten. De stippellijn geeft een extrapolatie weer buiten dit bereik en moet daarom voorzichtig worden geïnterpreteerd.
 
 ```{r}
+#| label: fig-detectable-effect-10j-model
+#| fig-cap: "Geschatte relatie tussen het aantal telpunten en de detecteerbare
+#|   10-jaarlijkse interactieverandering (%) op basis van een inverse
+#|   vierkantswortelmodel. De volle lijn geeft interpolatie binnen het
+#|   simulatiebereik weer; de stippellijn is extrapolatie."
 # Predict detectable effect
 pred_df <- detectable_effect_10j %>%
   group_split(scenario) %>%
   lapply(function(data) {
-    mod <- lm(effect_pct_10 ~ I(1 / sqrt(n_telpunten)), data = data)
+    mod <- lm(effect_pct_long ~ I(1 / sqrt(n_telpunten)), data = data)
 
     newdata <- tibble(
       n_telpunten = seq(min(data$n_telpunten), 800, length.out = 200)
@@ -102,14 +160,15 @@ pred_df <- detectable_effect_10j %>%
   bind_rows() %>%
   left_join(
     detectable_effect_10j %>% 
-      select(scenario, beta_1),
+      select(scenario, trend_buiten_tienjaarlijks),
     by = join_by(scenario),
     relationship = "many-to-many"
   )
 
 # Visualise effect trend
 ggplot(detectable_effect_10j,
-       aes(x = n_telpunten, y = effect_pct_10, colour = factor(beta_1))) +
+       aes(x = n_telpunten, y = effect_pct_long,
+           colour = trend_buiten_tienjaarlijks)) +
   geom_point(size = 1) +
   geom_line(
     data = filter(pred_df, !extrapolated),
@@ -129,7 +188,7 @@ ggplot(detectable_effect_10j,
   labs(
     x = "Aantal telpunten",
     y = "Detecteerbare 10-jaarlijkse\ninteractieverandering (%)",
-    colour = "Trend buiten\nSBP"
+    colour = "Trend buiten\nSBP (10-jaar)"
   ) +
   theme_minimal()
 ```
@@ -154,9 +213,60 @@ detectable_effect_years <- detectable_effect_df %>%
 Zoals verwacht, zien we dat we een kleiner effect kunnen detecteren bij een groter aantal telpunten en bij een langere tijdsreeks.
 
 ```{r}
+#| label: tbl-detectable-effect-years
+#| tbl-cap: "Detecteerbare jaarlijkse en cumulatieve interactieverandering (%)
+#|   als functie van het aantal telpunten en de lengte van de tijdsreeks."
+detectable_effect_years %>%
+  transmute(
+    n_jaar,
+    maat = "Per jaar",
+    n_telpunten,
+    value = sprintf("%.3f (%.3f–%.3f)",
+                    effect_pct, effect_pct_low, effect_pct_high)
+  ) %>%
+  bind_rows(
+    detectable_effect_years %>%
+      transmute(
+        n_jaar,
+        maat = "Volledige tijdsreeks",
+        n_telpunten,
+        value = sprintf("%.1f (%.1f–%.1f)",
+                        effect_pct_long,
+                        effect_pct_long_low,
+                        effect_pct_long_high)
+      )
+  ) %>%
+  pivot_wider(
+    names_from = n_telpunten,
+    values_from = value,
+    names_prefix = "n = "
+  ) %>%
+  arrange(n_jaar, factor(maat, levels = c("Per jaar", "Volledige tijdsreeks"))) %>%
+  mutate(
+    `Lengte tijdsreeks` = if_else(
+      duplicated(n_jaar),
+      "",
+      paste(n_jaar, "jaar")
+    )
+  ) %>%
+  select(`Lengte tijdsreeks`, maat, `n = 100`, `n = 200`, `n = 400`) %>%
+  kable(booktabs = TRUE) %>%
+  kableExtra::add_header_above(c(
+    " " = 2,
+    "Detecteerbare verandering (%)" = 3
+  )) %>%
+  kableExtra::kable_styling(latex_options = c("striped")) %>%
+  kableExtra::row_spec(0, bold = TRUE)
+```
+
+```{r}
+#| label: fig-detectable-effect-years-raw
+#| fig-cap: "Relatie tussen het aantal telpunten en de detecteerbare
+#|   jaarlijkse interactieverandering (%) voor drie verschillende tijdsreeksen."
 # Visualise raw estimates
 detectable_effect_years %>%
-  ggplot(aes(x = n_telpunten, y = effect_pct, colour = factor(n_jaar))) +
+  mutate(legend = factor(paste(n_jaar, "jaar"))) %>%
+  ggplot(aes(x = n_telpunten, y = effect_pct, colour = legend)) +
   geom_line(linewidth = 0.3) +
   geom_point(size = 1) +
   geom_errorbar(
@@ -170,7 +280,7 @@ detectable_effect_years %>%
   labs(
     x = "Aantal telpunten",
     y = "Detecteerbare jaarlijkse\ninteractieverandering (%)",
-    colour = "Lengte tijdsreeks\n(aantal jaar)"
+    colour = "Lengte tijdsreeks"
   ) +
   theme_minimal()
 ```
@@ -190,7 +300,7 @@ $n$: het aantal telpunten,
 
 $T$: de lengte van de tijdsreeks (in jaren)
 
-```{r}
+```{r, echo=TRUE}
 fit_time <- lm(log(effect_pct) ~ log(n_telpunten) + log(n_jaar),
                data = detectable_effect_years)
 summary(fit_time)
@@ -203,6 +313,11 @@ $$
 $$
 
 ```{r}
+#| label: fig-detectable-effect-years-model
+#| fig-cap: "Geschatte relatie tussen het aantal telpunten en de detecteerbare
+#|   jaarlijkse interactieverandering (%) op basis van een inverse
+#|   vierkantswortelmodel. De volle lijn geeft interpolatie binnen het
+#|   simulatiebereik weer; de stippellijn is extrapolatie."
 # Predict detectable effect
 pred_df <- detectable_effect_years %>%
   group_split(scenario) %>%
@@ -230,11 +345,13 @@ pred_df <- detectable_effect_years %>%
       select(scenario, n_jaar),
     by = join_by(scenario),
     relationship = "many-to-many"
-  )
+  ) %>%
+  mutate(legend = factor(paste(n_jaar, "jaar")))
 
 # Visualise effect trend
-ggplot(detectable_effect_years,
-       aes(x = n_telpunten, y = effect_pct, colour = factor(n_jaar))) +
+detectable_effect_years %>%
+  mutate(legend = factor(paste(n_jaar, "jaar"))) %>%
+  ggplot(aes(x = n_telpunten, y = effect_pct, colour = legend)) +
   geom_point(size = 1) +
   geom_line(
     data = filter(pred_df, !extrapolated),
@@ -254,7 +371,7 @@ ggplot(detectable_effect_years,
   labs(
     x = "Aantal telpunten",
     y = "Detecteerbare jaarlijkse\ninteractieverandering (%)",
-    colour = "Lengte tijdsreeks\n(aantal jaar)"
+    colour = "Lengte tijdsreeks"
   ) +
   theme_minimal()
 ```

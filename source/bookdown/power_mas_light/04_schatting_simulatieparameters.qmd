@@ -59,7 +59,10 @@ De geschatte parameters zijn weergegeven in @tbl-est-params.
 
 ```{r}
 #| label: tbl-est-params
-#| tbl-cap: "Geschatte parameterwaarden op basis van bestaande data."
+#| tbl-cap: "Geschatte simulatieparameters per soort op basis van de GLMM's
+#|   gefit op de gegevens van 2024 en 2025. `verwacht_buiten` en
+#|   `verwacht_binnen` geven het verwachte aantal individuen per telpunt
+#|   respectievelijk buiten en binnen SBP weer."
 parameters_df <- tar_read_mas("parameters_df")
 parameters_df_selection <- parameters_df %>%
   mutate(verwacht_buiten = round(exp(beta_0), 2),
@@ -77,6 +80,10 @@ parameters_df_selection %>%
 ```
 
 ```{r}
+#| label: fig-est-params-boxplot
+#| fig-cap: "Verdeling van de geschatte simulatieparameters over de
+#|   geselecteerde doelsoorten. Rode punten geven de waarden per
+#|   soort weer."
 #| warning: FALSE
 #| fig-height: 5
 parameters_df_selection %>%
@@ -92,6 +99,12 @@ parameters_df_selection %>%
 ```
 
 ```{r}
+#| label: fig-est-params-pca
+#| fig-cap: "PCA-biplot van de geschatte simulatieparameters voor de
+#|   geselecteerde doelsoorten. Soorten die dicht bij elkaar liggen hebben
+#|   vergelijkbare combinaties van `beta_0`, `beta_2` en `sigma_punt`. De
+#|   pijlen geven de bijdrage van deze parameters aan de eerste twee
+#|   hoofdcomponenten weer."
 #| warning: FALSE
 #| message: FALSE
 pca_pois <- parameters_df %>%
