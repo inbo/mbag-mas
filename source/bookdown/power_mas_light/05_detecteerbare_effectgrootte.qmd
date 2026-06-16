@@ -28,7 +28,7 @@ Deze heeft bijgevolg een verwachte densiteit buiten SBP van `r round(exp(tar_rea
 We onderscheiden drie scenario's voor de trend buiten SBP (~$\beta_1$):
 
 1. Een achteruitgang buiten SBP van -1 % per jaar 
-2. Geen achteruitgang buiten SBP
+2. Stabiele trend buiten SBP
 3. Een vooruitgang buiten SBP van +1 % per jaar
 
 De trend buiten SBP moet telkens positief zijn en groter dan de trend buiten SBP.
@@ -48,7 +48,7 @@ Zoals verwacht, zien we dat we een kleiner effect kunnen detecteren bij een grot
 ```{r}
 # Visualise raw estimates
 detectable_effect_10j %>%
-  ggplot(aes(x = n_telpunten, y = effect_pct_10, colour = scenario)) +
+  ggplot(aes(x = n_telpunten, y = effect_pct_10, colour = factor(beta_1))) +
   geom_line(linewidth = 0.3) +
   geom_point(size = 1) +
   geom_errorbar(
@@ -62,7 +62,7 @@ detectable_effect_10j %>%
   labs(
     x = "Aantal telpunten",
     y = "Detecteerbare 10-jaarlijkse\ninteractieverandering (%)",
-    colour = "Scenario"
+    colour = "Trend buiten\nSBP"
   ) +
   theme_minimal()
 ```
@@ -70,12 +70,12 @@ detectable_effect_10j %>%
 De detecteerbare effectgrootte neemt af naarmate het aantal telpunten toeneemt. Dit is een rechtstreeks gevolg van de toename in statistische precisie bij een grotere steekproefomvang. In klassieke power-analyses daalt de standaardfout van een schatter ongeveer evenredig met de inverse vierkantswortel van de steekproefgrootte. Daardoor wordt ook de minimaal detecteerbare effectgrootte verwacht af te nemen volgens een relatie van de vorm
 
 $$
-\text{effectgrootte} \propto \frac{1}{\sqrt{n}},
+\text{effectgrootte} \propto \frac{1}{\sqrt{n}}
 $$
 
 waarbij $n$ het aantal telpunten voorstelt.
 
-In de onderstaande figuur wordt de volle lijn enkel getoond binnen het bereik van de gesimuleerde aantallen telpunten. De stippellijn geeft een extrapolatie weer buiten dit bereik en moet daarom voorzichtig worden geïnterpreteerd. De gearceerde zone stelt het 95%-betrouwbaarheidsinterval van de geschatte relatie voor.
+In de onderstaande figuur wordt de volle lijn enkel getoond binnen het bereik van de gesimuleerde aantallen telpunten. De stippellijn geeft een extrapolatie weer buiten dit bereik en moet daarom voorzichtig worden geïnterpreteerd.
 
 ```{r}
 # Predict detectable effect
@@ -99,11 +99,17 @@ pred_df <- detectable_effect_10j %>%
         scenario = unique(data$scenario)
       )
   }) %>%
-  bind_rows()
+  bind_rows() %>%
+  left_join(
+    detectable_effect_10j %>% 
+      select(scenario, beta_1),
+    by = join_by(scenario),
+    relationship = "many-to-many"
+  )
 
 # Visualise effect trend
 ggplot(detectable_effect_10j,
-       aes(x = n_telpunten, y = effect_pct_10, colour = scenario)) +
+       aes(x = n_telpunten, y = effect_pct_10, colour = factor(beta_1))) +
   geom_point(size = 1) +
   geom_line(
     data = filter(pred_df, !extrapolated),
@@ -123,7 +129,7 @@ ggplot(detectable_effect_10j,
   labs(
     x = "Aantal telpunten",
     y = "Detecteerbare 10-jaarlijkse\ninteractieverandering (%)",
-    colour = "Scenario"
+    colour = "Trend buiten\nSBP"
   ) +
   theme_minimal()
 ```
@@ -164,7 +170,7 @@ detectable_effect_years %>%
   labs(
     x = "Aantal telpunten",
     y = "Detecteerbare jaarlijkse\ninteractieverandering (%)",
-    colour = "Lengte tijdsreeks\n(jaar)"
+    colour = "Lengte tijdsreeks\n(aantal jaar)"
   ) +
   theme_minimal()
 ```
@@ -248,7 +254,7 @@ ggplot(detectable_effect_years,
   labs(
     x = "Aantal telpunten",
     y = "Detecteerbare jaarlijkse\ninteractieverandering (%)",
-    colour = "Lengte tijdsreeks\n(jaar)"
+    colour = "Lengte tijdsreeks\n(aantal jaar)"
   ) +
   theme_minimal()
 ```
