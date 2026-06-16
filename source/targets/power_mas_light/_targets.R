@@ -217,12 +217,31 @@ list(
     command = expand.grid(
       n_telpunten = c(100, 200, 400),
       n_jaar = 10,
-      beta_1 = c(log(0.99)),
-      beta_3 = c(
-        trend_to_beta_param(trend_buiten = 0.99, trend_binnen = 1.01)
-      )
+      beta_1 = c(log(0.99), log(1), log(1.01))
     ) %>%
-      tidyr::crossing(best_parameters),
+      bind_rows(
+        expand.grid(
+          n_telpunten = c(100, 200, 400),
+          n_jaar = 16,
+          beta_1 = log(0.99)
+        )
+      ) %>%
+      bind_rows(
+        expand.grid(
+          n_telpunten = c(100, 200, 400),
+          n_jaar = 24,
+          beta_1 = log(0.99)
+        )
+      ) %>%
+      tidyr::crossing(best_parameters) %>%
+      rowwise() %>%
+      mutate(
+        beta_3 = trend_to_beta_param(
+          trend_buiten = exp(beta_1)
+        )
+      ) %>%
+      ungroup() %>%
+      arrange(n_jaar, beta_1, n_telpunten),
     size = 1
   ),
   # Prepare design lists
