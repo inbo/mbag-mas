@@ -57,7 +57,7 @@ flandersqmd:
   reportnr: internal
 
   linenr: false
-  watermark: ONTWERP
+  watermark:
 
 book:
   chapters:
@@ -66,6 +66,7 @@ book:
   - 03_methodiek.qmd
   - 04_schatting_simulatieparameters.qmd
   - 05_detecteerbare_effectgrootte.qmd
+  - 06_conclusie.md
   - referenties.md
 
 bibliography: references.bib

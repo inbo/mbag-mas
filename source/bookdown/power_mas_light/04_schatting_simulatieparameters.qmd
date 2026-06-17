@@ -40,13 +40,14 @@ target_species <- c(
 )
 ```
 
-In dit hoofdstuk worden de simulatieparameters geschat die als input dienen voor de poweranalyse. Hiervoor wordt gebruikgemaakt van de gegevens uit de jaren 2024 en 2025 voor een selectie van doelsoorten (`r target_species`).
+In dit hoofdstuk worden de simulatieparameters geschat die als input dienen voor de poweranalyse. Hiervoor wordt gebruikgemaakt van de gegevens uit de jaren 2024 en 2025 voor de doelsoorten: `r target_species`.
+
 Eerst worden de waarnemingsgegevens ingelezen en gefilterd op de geselecteerde soorten.
 Enkel broedvogelwaarnemingen worden behouden (broedcode > 0), behalve voor Torenvalk, en de aantallen worden samengevat per telpunt, jaar en telperiode.
 Vervolgens worden afwezigheden toegevoegd op basis van de beschikbare bezoekgegevens.
 Voor elke soort worden de data uit de telperiode geselecteerd waarin gemiddeld de hoogste aantallen worden vastgesteld over beide jaren.
-Bovendien worden de nullen van locaties waar de soort nooit is gezien over alle 2 x 4 telperiodes verwijderd. Deze worden beschouwd als structurele afwezigheid van de soort.
 
+Ten slotte worden de nullen van locaties waar de soort nooit is gezien over alle 2 x 4 telperiodes verwijderd. Deze worden beschouwd als structurele afwezigheid van de soort.
 `r sort(target_species[tar_read_mas("presence_prop") < 0.2])` werden in minder dan 20 % van de telpunten waargenomen in 2024 en 2025 (zie verder).
 Deze soorten worden niet verder meegenomen in de analyses.
 
