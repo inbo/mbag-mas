@@ -133,15 +133,25 @@ list(
   ),
 
   ## Estimate parameters
-  # Prepare data
+  # Filter out zeroes
+  tar_target(
+    name = target_sp_pa_nozero,
+    command = target_sp_pa %>%
+      left_join(presence_logical,
+                by = join_by(plotnaam, regio, openheid_klasse, sbp)) %>%
+      filter(present) %>%
+      select(-"present"),
+    pattern = map(target_sp_pa, presence_logical)
+  ),
+  # Prepare model data
   tar_target(
     name = model_data,
-    command = target_sp_pa %>%
+    command = target_sp_pa_nozero %>%
       filter(period_count == best_period) %>%
       mutate(sbp_f = factor(sbp, levels = c("buiten", "binnen")),
              plotnaam_f = factor(plotnaam),
              year2 = year - 2024),
-    pattern = map(target_sp_pa, best_period)
+    pattern = map(target_sp_pa_nozero, best_period)
   ),
   tar_target(
     name = species,
@@ -149,133 +159,135 @@ list(
     pattern = map(model_data)
   ),
 
-  # Fit models
+  # Fit model
   tar_target(
-    name = fit_models,
+    name = fit_model,
     command = list(
-      poisson = glmmTMB::glmmTMB(
-        count ~ year2 * sbp_f + (1 | plotnaam_f),
+      naam = species,
+      fit = glmmTMB::glmmTMB(
+        count ~ sbp_f + (1 | plotnaam_f),
         data = model_data,
         family = poisson()
-      ),
-      negbin =  glmmTMB::glmmTMB(
-        count ~ year2 * sbp_f + (1 | plotnaam_f),
-        data = model_data,
-        family = nbinom2()
       )
     ),
-    pattern = map(model_data),
+    pattern = map(species, model_data),
     iteration = "list"
   ),
 
-  # Select model
-  tar_target(
-    name = final_model,
-    command = c(naam = species, select_model(fit_models)),
-    pattern = map(species, fit_models),
-    iteration = "list"
-  ),
+  # Model diagnostics
   tar_target(
     name = simulated_residuals,
-    command = DHARMa::simulateResiduals(fittedModel = final_model$fit),
-    pattern = map(final_model),
+    command = DHARMa::simulateResiduals(fittedModel = fit_model$fit),
+    pattern = map(fit_model),
     iteration = "list"
   ),
 
   # Extract parameters
   tar_target(
     name = parameters,
-    command = extract_parameters(final_model$fit),
-    pattern = map(final_model),
+    command = extract_parameters(fit_model$fit),
+    pattern = map(fit_model),
     iteration = "list"
   ),
   tar_target(
     name = parameters_df_grouped,
-    command = data.frame(naam = species, as.data.frame(parameters)),
-    pattern = map(species, parameters)
+    command = data.frame(naam = species, as.data.frame(parameters),
+                         prop = presence_prop),
+    pattern = map(species, parameters, presence_prop)
   ),
   tar_target(
     name = parameters_df,
-    command = bind_rows(parameters_df_grouped),
+    command = bind_rows(parameters_df_grouped) %>%
+      filter(prop >= 0.2),
+  ),
+  tar_target(
+    name = best_parameters,
+    command = parameters_df %>%
+      summarise(
+        beta_0 = max(parameters_df$beta_0),
+        beta_2 = max(parameters_df$beta_2),
+        sigma_punt = min(parameters_df$sigma_punt)
+      )
   ),
 
   ## Power analysis
-  tar_target(
+  # Prepare scenarios
+  tar_group_size(
     name = scenarios,
     command = expand.grid(
       n_telpunten = c(100, 200, 400),
       n_jaar = 10,
-      beta_1 = c(log(0.99)),
-      beta_3 = c(-log(0.99))
-    )
-  ),
-  tar_target(
-    name = species_scenarios,
-    command = tidyr::crossing(
-      parameters_df %>%
-        select("naam", "beta_0", "beta_2", "sigma_punt", "theta"),
-      scenarios
-    )
-  ),
-
-  tar_map(
-    values = list(
-      species = target_species[tar_read(presence_prop) > 0.2]
-    ),
-
-    # Go over each row
-    tar_group_size(
-      name = species_scenarios_clean,
-      command = species_scenarios %>%
-        filter(naam == species) %>%
-        select(-"naam"),
-      size = 1
-    ),
-
-    # Prepare design lists
-    tar_target(
-      name = design_list,
-      command = prepare_design(
-        species_scenarios_clean,
-        digits = c(
-          n_jaar = 0,
-          n_telpunten = 0,
-          beta_0 = 2,
-          beta_1 = 2,
-          beta_2 = 2,
-          beta_3 = 3,
-          sigma_punt = 2,
-          theta = 2
+      beta_1 = c(log(0.99), log(1), log(1.01))
+    ) %>%
+      bind_rows(
+        expand.grid(
+          n_telpunten = c(100, 200, 400),
+          n_jaar = 16,
+          beta_1 = log(0.99)
         )
-      ),
-      pattern = map(species_scenarios_clean),
-      iteration = "list"
+      ) %>%
+      bind_rows(
+        expand.grid(
+          n_telpunten = c(100, 200, 400),
+          n_jaar = 24,
+          beta_1 = log(0.99)
+        )
+      ) %>%
+      tidyr::crossing(best_parameters) %>%
+      rowwise() %>%
+      mutate(
+        beta_3 = ifelse(
+          n_jaar == 24,
+          log(1.005),
+          trend_to_beta_param(
+            trend_buiten = exp(beta_1)
+          )
+        )
+      ) %>%
+      ungroup() %>%
+      arrange(n_jaar, beta_1, n_telpunten),
+    size = 1
+  ),
+  # Prepare design lists
+  tar_target(
+    name = design_list,
+    command = prepare_design(
+      scenarios,
+      digits = c(
+        n_jaar = 0,
+        n_telpunten = 0,
+        beta_0 = 2,
+        beta_1 = 2,
+        beta_2 = 2,
+        beta_3 = ifelse(scenarios$n_jaar == 24, 4, 3),
+        sigma_punt = 6
+      )
     ),
+    pattern = map(scenarios),
+    iteration = "list"
+  ),
 
-    # Run simulations
-    tar_target(
-      name = detectable_effect,
-      command = designpower::find_power(
-        design = design_list$design[
-          -which(names(design_list$design) == "tar_group")
-        ],
-        design_digits = design_list$digits,
-        opti = "beta_3",
-        sim_power = simulate_mas_data,
-        power = 0.9,
-        alpha = 0.1,
-        filename = paste0("power_mas_light_",
-                          gsub("\\s", ".", tolower(species)),
-                          ".duckdb")
-      ),
-      pattern = map(design_list),
-      iteration = "list"
+  # Run simulations
+  tar_target(
+    name = detectable_effect,
+    command = designpower::find_power(
+      design = design_list$design[
+        -which(names(design_list$design) == "tar_group")
+      ],
+      design_digits = design_list$digits,
+      opti = "beta_3",
+      sim_power = simulate_mas_data,
+      power = 0.9,
+      alpha = 0.1,
+      filename = "power_mas_light_akkervogel.duckdb"
     ),
+    pattern = map(design_list),
+    iteration = "list"
+  ),
 
-    # Result to dataframe
-    tar_target(
-      name = detectable_effect_df,
-      command = detectable_effect_to_df(detectable_effect)
-    )
+  # Result to dataframe
+  tar_target(
+    name = detectable_effect_df,
+    command = detectable_effect_to_df(detectable_effect)
   )
 )

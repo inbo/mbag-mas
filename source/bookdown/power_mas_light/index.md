@@ -1,8 +1,14 @@
 # Samenvatting {.unnumbered}
 
 <!-- description: start -->
-De tekst voor de verplichte samenvatting.
-Hou het [Heerlijk Helder](https://overheid.vlaanderen.be/communicatie/heerlijk-helder).
+Dit rapport onderzoekt de statistische haalbaarheid van een vereenvoudigd monitoringsontwerp, genaamd "MAS light". Het doel van dit meetnet is na te gaan of de populatietrends van akkervogels binnen soortenbeschermingsprogramma's (SBP) gunstiger evolueren dan in vergelijkbare gebieden buiten SBP. De centrale vraag is welk verschil in trend tussen beide groepen met voldoende statistische zekerheid kan worden aangetoond.
+
+Hiervoor werd een simulatiegebaseerde poweranalyse uitgevoerd, waarbij telgegevens werden gegenereerd met een Poisson Generalized Linear Mixed Model (GLMM) en vervolgens geanalyseerd met hetzelfde model. De minimaal detecteerbare effectgrootte (MDE) werd bepaald voor verschillende scenario's met 100, 200 en 400 telpunten en tijdsreeksen van 10, 16 en 24 jaar. De effectgrootte wordt hierbij gedefinieerd als het minimaal detecteerbare verschil in populatietrend tussen SBP- en niet-SBP-gebieden.
+
+De simulaties tonen dat de detecteerbare effectgrootte afneemt naarmate zowel het aantal telpunten als de lengte van de tijdsreeks toeneemt en bij benadering evenredig is met ($1 / \sqrt{n*T^3}$). De analyses zijn uitgevoerd voor een hypothetische, optimale akkervogelsoort met een hoge dichtheid en een beperkte variatie tussen telpunten. De resultaten vertegenwoordigen daardoor een best-case scenario; voor zeldzamere soorten of soorten met een heterogenere verspreiding zal de minimaal detecteerbare effectgrootte groter zijn.
+
+Zelfs voor deze optimale hypothetische akkervogelsoort blijft de minimaal detecteerbare trendverschil relatief groot. Bij een meetnet van 400 telpunten zijn, voor een realistische soort die niet overal voorkomt, in de praktijk mogelijk slechts ongeveer 200 telpunten informatief. In dat geval is pas een zeer sterke positieve interactie tussen SBP en niet-SBP detecteerbaar. Concreet betekent dit dat de populatie binnen SBP over een periode van 10 jaar ongeveer 60 % gunstiger moet evolueren dan buiten SBP voordat een statistisch significant verschil in trend kan worden aangetoond. Indien deze soort 9.5 % buiten SBP afneemt over 10 jaar, moet ze binnen SBP 46.2 % toenemen. Voor een stabiele trend buiten SBP moet ze binnen SBP 60 % toenemen en voor een toename van  10.5 % buiten SBP moet ze 75.1 % toenemen binnen SBP.
+Beschouw hetzelfde voorbeeld voor een tijdsreeks van 24 jaar; dan moet de populatie binnen SBP 37 % gunstiger evolueren dan buiten SBP voordat een statistisch significant verschil in trend kan worden aangetoond.
 <!-- description: end -->
 
 <!-- This part adds the table of content in the pdf -->

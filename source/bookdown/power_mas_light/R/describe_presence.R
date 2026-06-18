@@ -13,7 +13,7 @@ describe_presence <- function(presence_df) {
   )
 
   # Summarise presences by landscape openness class and calculate proportions
-  openheid <- presence_df %>%
+  openheid <- presence_df %>% # nolint: object_usage_linter
     filter(.data$present) %>%
     count(.data$openheid_klasse) %>%
     mutate(prop = n / sum(n))

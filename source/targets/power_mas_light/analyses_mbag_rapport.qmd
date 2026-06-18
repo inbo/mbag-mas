@@ -87,8 +87,8 @@ add_absences_per_sp <- function(presence_data, visits) {
            "periode_in_jaar" = "period_count",
            "aantal" = "count")
   out$naam <- species
-  out$soortgrp = soortgrp
-  
+  out$soortgrp <- soortgrp
+
   return(out)
 }
 
@@ -240,7 +240,7 @@ mas_data_pa %>%
 
 ## 1.3 Basiskenmerken dataset
 
-Deze tagbel geeft een overzicht van de omvang van de dataset per jaar, met het aantal telpunten, bezoeken, waarnemingen en vastgestelde soorten.
+Deze tabel geeft een overzicht van de omvang van de dataset per jaar, met het aantal telpunten, bezoeken, waarnemingen en vastgestelde soorten.
 
 ```{r}
 count_df <- mas_data_pa %>%
@@ -410,7 +410,7 @@ mas_data_analysis %>%
 
 ## 2.3 Gemiddeld aantal soorten
 
-Deze figuur geeft het gemiddelde aantal vogelsoorten per telpunt weer, samen met een maat voor de onzekerheid rond het gemiddelde (+-qnorm(0.975) * SD).
+Deze figuur geeft het gemiddelde aantal vogelsoorten per telpunt weer, samen met een maat voor de onzekerheid rond het gemiddelde ($\pm \text{qnorm}(0.975) * \text{SD}$).
 
 ```{r}
 #| fig.width: 10
@@ -538,7 +538,7 @@ for (j in 2023:2025) {
     arrange(datum) %>%
     mutate(cum_sum = cumsum(n_spec)) %>%
     ungroup()
-  
+
   # Create plot per region
   cum_p1 <- cum_aantal_spec_strat %>%
     ggplot(aes(x = datum, y = cum_sum, colour = regio)) +
@@ -553,7 +553,7 @@ for (j in 2023:2025) {
       label = "R1",
       x = ymd(paste(j, r1_start, sep = "-")) +
         (ymd(paste(j, r1_stop, sep = "-")) -
-          ymd(paste(j, r1_start, sep = "-"))) / 2,
+           ymd(paste(j, r1_start, sep = "-"))) / 2,
       y = 0,
       vjust = -1
     ) +
@@ -567,7 +567,7 @@ for (j in 2023:2025) {
       label = "R2",
       x = ymd(paste(j, r2_start, sep = "-")) +
         (ymd(paste(j, r2_stop, sep = "-")) -
-          ymd(paste(j, r2_start, sep = "-"))) / 2,
+           ymd(paste(j, r2_start, sep = "-"))) / 2,
       y = 0,
       vjust = -1
     ) +
@@ -581,7 +581,7 @@ for (j in 2023:2025) {
       label = "R3",
       x = ymd(paste(j, r3_start, sep = "-")) +
         (ymd(paste(j, r3_stop, sep = "-")) -
-          ymd(paste(j, r3_start, sep = "-"))) / 2,
+           ymd(paste(j, r3_start, sep = "-"))) / 2,
       y = 0,
       vjust = -1
     ) +
@@ -595,7 +595,7 @@ for (j in 2023:2025) {
       label = "R4",
       x = ymd(paste(j, r4_start, sep = "-")) +
         (ymd(paste(j, r4_stop, sep = "-")) -
-          ymd(paste(j, r4_start, sep = "-"))) / 2,
+           ymd(paste(j, r4_start, sep = "-"))) / 2,
       y = 0,
       vjust = -1
     ) +
@@ -604,7 +604,7 @@ for (j in 2023:2025) {
     labs(x = "", y = "Totaal aantal soorten", colour = "Regio",
          title = j) +
     theme(legend.position = "bottom")
-  
+
   # Calculate the cumulative number of species over time for each stratum
   cum_aantal_spec_strat <- mas_data_analysis %>%
     filter(aantal > 0,
@@ -622,7 +622,7 @@ for (j in 2023:2025) {
     arrange(datum) %>%
     mutate(cum_sum = cumsum(n_spec)) %>%
     ungroup()
-  
+
   # Create plot per stratum
   cum_p2 <- cum_aantal_spec_strat %>%
     mutate(stratum = paste(openheid_klasse, sbp, sep = " - ")) %>%
@@ -638,7 +638,7 @@ for (j in 2023:2025) {
       label = "R1",
       x = ymd(paste(j, r1_start, sep = "-")) +
         (ymd(paste(j, r1_stop, sep = "-")) -
-          ymd(paste(j, r1_start, sep = "-"))) / 2,
+           ymd(paste(j, r1_start, sep = "-"))) / 2,
       y = 0,
       vjust = -1
     ) +
@@ -652,7 +652,7 @@ for (j in 2023:2025) {
       label = "R2",
       x = ymd(paste(j, r2_start, sep = "-")) +
         (ymd(paste(j, r2_stop, sep = "-")) -
-          ymd(paste(j, r2_start, sep = "-"))) / 2,
+           ymd(paste(j, r2_start, sep = "-"))) / 2,
       y = 0,
       vjust = -1
     ) +
@@ -666,7 +666,7 @@ for (j in 2023:2025) {
       label = "R3",
       x = ymd(paste(j, r3_start, sep = "-")) +
         (ymd(paste(j, r3_stop, sep = "-")) -
-          ymd(paste(j, r3_start, sep = "-"))) / 2,
+           ymd(paste(j, r3_start, sep = "-"))) / 2,
       y = 0,
       vjust = -1
     ) +
@@ -680,7 +680,7 @@ for (j in 2023:2025) {
       label = "R4",
       x = ymd(paste(j, r4_start, sep = "-")) +
         (ymd(paste(j, r4_stop, sep = "-")) -
-          ymd(paste(j, r4_start, sep = "-"))) / 2,
+           ymd(paste(j, r4_start, sep = "-"))) / 2,
       y = 0,
       vjust = -1
     ) +
@@ -689,7 +689,7 @@ for (j in 2023:2025) {
     facet_wrap(~regio) +
     labs(x = "", y = "Totaal aantal soorten", colour = "Stratum") +
     theme(legend.position = "bottom")
-  
+
   # Combine cumulative species plots
   p <- gridExtra::grid.arrange(cum_p1, cum_p2)
 }

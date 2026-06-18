@@ -4,7 +4,6 @@ editor_options:
   chunk_output_type: console
 ---
 # Detecteerbare effectgrootte {#sec-detecteerbare-effectgrootte}
-## Resultaten
 
 ```{r}
 #| echo: FALSE
@@ -20,456 +19,404 @@ conflicted::conflicts_prefer(dplyr::filter)
 source("R/tar_read_mas.R")
 ```
 
-```{r}
-target_species <- c(
-  "Boerenzwaluw",
-  "Geelgors",
-  "Gele Kwikstaart",
-  "Grasmus",
-  "Graspieper",
-  "Grutto",
-  "Kievit",
-  "Kneu",
-  "Patrijs",
-  "Ringmus",
-  "Roodborsttapuit",
-  "Scholekster",
-  "Torenvalk",
-  "Veldleeuwerik",
-  "Wulp"
-)
-```
+Beschouw een hypothetische akkervogelsoort die over heel Vlaanderen aanwezig is aan een gelijkaardige densiteit.
+Deze soort heeft de hoogste densiteit buiten SBP en de hoogste densiteit binnen SBP van de werkelijke akkervogels in MAS (hoogste $\beta_0$: `r round(tar_read_mas("best_parameters")$beta_0, 3)`, en $\beta_2$: `r round(tar_read_mas("best_parameters")$beta_2, 3)`) en de kleinste variatie tussen telpunten ($\sigma_{punt}$: `r round(tar_read_mas("best_parameters")$sigma_punt, 6)`).
+Deze heeft bijgevolg een verwachte startdensiteit buiten SBP van `r round(exp(tar_read_mas("best_parameters")$beta_0), 2)` en binnen SBP van `r round(exp(tar_read_mas("best_parameters")$beta_0 + tar_read_mas("best_parameters")$beta_2), 2)`.
+
+## Variabele trend buiten SBP
+### Methodiek
+
+We onderscheiden drie scenario's voor de trend buiten SBP (~$\beta_1$):
+
+1. Een achteruitgang buiten SBP van -1 % per jaar (`r paste(round(100 * (exp(10 * -0.01) - 1), 1), "%")` over 10 jaar)
+2. Stabiele trend buiten SBP
+3. Een vooruitgang buiten SBP van +1 % per jaar (`r paste(round(100 * (exp(10 * 0.01) - 1), 1), "%")` over 10 jaar)
+
+De trend binnen SBP moet telkens positief zijn en groter dan de trend buiten SBP.
+
+### Resultaten
 
 ```{r}
 # Get effect sizes
-detectable_effect_df <- lapply(target_species, function(spec) {
-  tryCatch({
-    tar_read_mas("detectable_effect_df", species = spec)
-  }, error = function(e) {
-    NULL
-  })
-}) %>%
-  bind_rows()
+detectable_effect_df <- tar_read_mas("detectable_effect_df")
+detectable_effect_10j <- detectable_effect_df %>%
+  filter(n_jaar == 10) %>%
+  mutate(scenario = factor(cur_group_id()),
+         .by = "beta_1") %>%
+  mutate(
+    trend_buiten_jaarlijks = factor(
+      paste(round(100 * (exp(beta_1) - 1), 1), "%")
+    ),
+    trend_buiten_tienjaarlijks = factor(
+      paste(round(100 * (exp(10 * beta_1) - 1), 1), "%")
+    )
+  )
+```
+
+De minimaal detecteerbare trendverschillen tussen buiten en binnen SBP zijn zeer hoog.
+We zien hierin slechts kleine verschillen tussen de trendscenario's.
+Wel zal de minimaal detecteerbare trend binnen SBP hoger zijn naarmate de trend buiten SBP hoger is om dezelfde positieve trendverschil te kunnen detecteren tussen beide.
+Zoals verwacht, blijkt dat een kleiner effect (trendverschillen buiten vs. binnen SBP) gedetecteerd kan worden bij een groter aantal telpunten.
+@tbl-trends-sbp geeft een overzicht van de veronderstelde trends buiten SBP en de overeenkomstige minimaal detecteerbare trends binnen SBP.
+@tbl-detectable-effect-10j toont dezelfde resultaten uitgedrukt als een het detecteerbaar verschil met "binnen SBP" over een periode van 10 jaar.
+
+```{r}
+#| label: tbl-trends-sbp
+#| tbl-cap: "Veronderstelde trend buiten SBP en de overeenkomstige minimaal
+#|   detecteerbare trend binnen SBP voor drie scenario's en verschillende
+#|   aantallen telpunten. De trends worden zowel als jaarlijkse als als
+#|   cumulatieve verandering over 10 jaar weergegeven."
+detectable_effect_10j %>%
+  mutate(
+    trend_buiten_jaarlijks =
+      sprintf("%.1f %%", 100 * (exp(beta_1) - 1)),
+    trend_buiten_10j =
+      sprintf("%.1f %%", 100 * (exp(10 * beta_1) - 1)),
+    trend_binnen_jaarlijks =
+      sprintf("%.2f %%", 100 * (exp(beta_1 + beta3) - 1)),
+    trend_binnen_10j =
+      sprintf("%.2f %%", 100 * (exp(10 * (beta_1 + beta3)) - 1))
+  ) %>%
+  select(
+    n_telpunten,
+    trend_buiten_jaarlijks,
+    trend_buiten_10j,
+    trend_binnen_jaarlijks,
+    trend_binnen_10j
+  ) %>%
+  pivot_wider(
+    names_from = n_telpunten,
+    values_from = c(trend_binnen_jaarlijks, trend_binnen_10j),
+    names_glue = "{.value}_n{n_telpunten}"
+  ) %>%
+  kable(
+    booktabs = TRUE,
+    col.names = c(
+      "Jaarlijks",
+      "10 jaar",
+      "100",
+      "200",
+      "400",
+      "100",
+      "200",
+      "400"
+    )
+  ) %>%
+  kableExtra::add_header_above(c(
+    "Trend buiten SBP" = 2,
+    "Detecteerbare trend\nbinnen SBP (jaarlijks)" = 3,
+    "Detecteerbare trend\nbinnen SBP (10 jaar)" = 3
+  )) %>%
+  kableExtra::kable_styling(latex_options = "striped") %>%
+  kableExtra::row_spec(0, bold = TRUE)
+```
+
+\newpage
+
+```{r}
+#| label: tbl-detectable-effect-10j
+#| tbl-cap: "Minimaal detecteerbaar trendverschil over een
+#|   periode van 10 jaar (%) voor drie trendscenario's buiten SBP en
+#|   verschillende aantallen telpunten. Waarden tussen haakjes geven de
+#|   onder- en bovengrens van de geschatte detecteerbare verandering weer."
+detectable_effect_10j %>%
+  mutate(value = paste(round(effect_pct_long, 2), "%")) %>%
+  select(starts_with("trend_buiten"), n_telpunten, value) %>%
+  pivot_wider(
+    names_from = n_telpunten,
+    values_from = value,
+    names_prefix = "n = "
+  ) %>%
+  kable(
+    booktabs = TRUE,
+    col.names = c(
+      "Jaarlijks",
+      "10 jaar",
+      "n = 100",
+      "n = 200",
+      "n = 400"
+    )
+  ) %>%
+  kableExtra::add_header_above(c(
+    "Trend buiten SBP" = 2,
+    "Detecteerbaar trendverschil met\n'binnen SBP' over 10 jaar" = 3
+  )) %>%
+  kableExtra::kable_styling(latex_options = "striped") %>%
+  kableExtra::row_spec(0, bold = TRUE)
 ```
 
 ```{r}
-detectable_effect_df %>%
-  ggplot(aes(x = n_telpunten, y = effect_pct, colour = species)) +
+#| label: fig-detectable-effect-10j-raw
+#| fig-cap: "Relatie tussen het aantal telpunten en het detecteerbaar
+#|   10-jaarlijkse trendverschil (%) voor drie trendscenario's buiten
+#|   SBP."
+# Visualise raw estimates
+detectable_effect_10j %>%
+  ggplot(aes(x = n_telpunten, y = effect_pct_long,
+             colour = trend_buiten_tienjaarlijks)) +
   geom_line(linewidth = 0.3) +
   geom_point(size = 1) +
-  geom_errorbar(
-    aes(
-      ymin = effect_pct_low,
-      ymax = effect_pct_high
-    ),
-    width = 5, linewidth = 0.3
-  ) +
+  scale_y_continuous(limits = c(0, NA)) +
   labs(
     x = "Aantal telpunten",
-    y = "Detecteerbare jaarlijkse\ninteractieverandering (%)",
-    colour = "Soort"
+    y = "Detecteerbaar 10-jaarlijks\ntrendverschil (%)",
+    colour = "Trend buiten\nSBP (10-jaar)"
   ) +
-  theme_minimal() +
-  theme(legend.position = "bottom")
+  theme_minimal()
 ```
 
-```{r}
-#| warning: FALSE
-#| message: FALSE
-detectable_effect_df %>%
-  ggplot(aes(x = sigma_punt, y = effect_pct,
-             colour = factor(n_telpunten), group = factor(n_telpunten))) +
-  geom_point(size = 1) +
-  geom_errorbar(
-    aes(
-      ymin = effect_pct_low,
-      ymax = effect_pct_high
-    ),
-    width = 0.07, linewidth = 0.3
-  ) +
-  geom_smooth(method = "lm", formula = "y ~ x", linewidth = 0.3, se = FALSE) +
-  labs(
-    x = "Variabiliteit telpunten (sigma_punt)",
-    y = "Detecteerbare jaarlijkse\ninteractieverandering (%)",
-    colour = "Aantal telpunten"
-  ) +
-  theme_minimal() +
-  theme(legend.position = "bottom")
-```
+### Bespreking
+
+De detecteerbare effectgrootte neemt af naarmate het aantal telpunten toeneemt. Dit is een rechtstreeks gevolg van de toename in statistische precisie bij een grotere steekproefomvang. In klassieke power-analyses daalt de standaardfout van een schatter ongeveer evenredig met de inverse vierkantswortel van de steekproefgrootte. Daardoor wordt ook de minimaal detecteerbare effectgrootte verwacht af te nemen volgens een relatie van de vorm
+
+$$
+\text{effectgrootte} \propto \frac{1}{\sqrt{n}}
+$$
+
+waarbij $n$ het aantal telpunten voorstelt.
+
+In de onderstaande figuur wordt de doorlopende lijn enkel getoond binnen het bereik van de gesimuleerde aantallen telpunten. De stippellijn geeft een extrapolatie weer buiten dit bereik en moet daarom voorzichtig worden geïnterpreteerd.
 
 ```{r}
-#| warning: FALSE
-#| message: FALSE
-detectable_effect_df %>%
-  ggplot(aes(x = exp(beta_0), y = effect_pct,
-             colour = factor(n_telpunten), group = factor(n_telpunten))) +
-  geom_point(size = 1) +
-  geom_errorbar(
-    aes(
-      ymin = effect_pct_low,
-      ymax = effect_pct_high
-    ),
-    width = 0.005, linewidth = 0.3
-  ) +
-  geom_smooth(method = "lm", formula = "y ~ x", linewidth = 0.3, se = FALSE) +
-  labs(
-    x = "Startdensiteit (exp(beta_0))",
-    y = "Detecteerbare jaarlijkse\ninteractieverandering (%)",
-    colour = "Aantal telpunten"
-  ) +
-  theme_minimal() +
-  theme(legend.position = "bottom")
-```
+#| label: fig-detectable-effect-10j-model
+#| fig-cap: "Geschatte relatie tussen het aantal telpunten en het detecteerbaar
+#|   10-jaarlijks trendverschil (%) op basis van een inverse
+#|   vierkantswortelmodel. De doorlopende lijn geeft interpolatie binnen het
+#|   simulatiebereik weer; de stippellijn is extrapolatie."
+# Predict detectable effect
+pred_df <- detectable_effect_10j %>%
+  group_split(scenario) %>%
+  lapply(function(data) {
+    mod <- lm(effect_pct_long ~ I(1 / sqrt(n_telpunten)), data = data)
 
-## Bijkomende vragen
-### Effect van stratificatie
-
-De basisanalyse houdt geen expliciete rekening met landbouwstreek en landschapstype, hoewel deze variabelen gebruikt worden bij de steekproeftrekking. Indien deze stratificatievariabelen een belangrijk deel van de variatie in de tellingen verklaren, kan opname ervan in het analysemodel leiden tot een hogere statistische kracht. Daarom wordt voor de Veldleeuwerik een aanvullende gevoeligheidsanalyse uitgevoerd waarin landbouwstreek en landschapstype wel expliciet worden gemodelleerd. Op die manier kan worden nagegaan of de conclusies van de poweranalyse gevoelig zijn voor deze vereenvoudiging van het analysekader.
-
-```{r}
-# Get data
-model_data <- tar_read_mas("model_data")
-
-# Prepare data
-model_data_stratum <- model_data %>%
-  filter(naam == "Veldleeuwerik") %>%
-  mutate(
-    regio = ifelse(grepl("\\sleemstreek", regio), "Leemstreek", regio),
-    stratum = ifelse(
-      regio == "Weidestreek",
-      tolower(regio),
-      tolower(paste(regio, openheid_klasse, sep = "_"))
+    newdata <- tibble(
+      n_telpunten = seq(min(data$n_telpunten), 800, length.out = 200)
     )
+
+    pred <- predict(mod, newdata = newdata, interval = "confidence")
+
+    bind_cols(
+      newdata,
+      as.data.frame(pred)
+    ) %>%
+      mutate(
+        extrapolated = n_telpunten > max(data$n_telpunten),
+        scenario = unique(data$scenario)
+      )
+  }) %>%
+  bind_rows() %>%
+  left_join(
+    detectable_effect_10j %>%
+      select(scenario, trend_buiten_tienjaarlijks),
+    by = join_by(scenario),
+    relationship = "many-to-many"
   )
+
+# Visualise effect trend
+ggplot(detectable_effect_10j,
+       aes(x = n_telpunten, y = effect_pct_long,
+           colour = trend_buiten_tienjaarlijks)) +
+  geom_point(size = 1) +
+  geom_line(
+    data = filter(pred_df, !extrapolated),
+    aes(y = fit),
+    linewidth = 0.3
+  ) +
+
+  # Extrapolation
+  geom_line(
+    data = filter(pred_df, extrapolated),
+    aes(y = fit),
+    linewidth = 0.3,
+    linetype = "dashed"
+  ) +
+
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(
+    x = "Aantal telpunten",
+    y = "Detecteerbaar 10-jaarlijks\ntrendverschil (%)",
+    colour = "Trend buiten\nSBP (10-jaar)"
+  ) +
+  theme_minimal()
 ```
 
+\clearpage
+
+## Variabele lengte tijdsreeks
+### Methodiek
+
+We onderscheiden in drie scenario's voor de lengte van de tijdsreeks:
+
+1. 10 jaar
+2. 16 jaar
+3. 24 jaar
+
+Dit is uitgevoerd voor een achteruitgang buiten SBP van -1 % per jaar (scenario 1 uit vorige Paragraaf).
+
+### Resultaten
+
 ```{r}
-# Fit model
-fit_pois_stratum <- glmmTMB(
-  count ~ stratum + year2 * sbp_f + (1 | plotnaam_f),
-  data = model_data_stratum,
-  family = poisson()
-)
+detectable_effect_years <- detectable_effect_df %>%
+  mutate(scenario = factor(cur_group_id()),
+         .by = c("beta_1", "n_jaar")) %>%
+  filter_out(scenario %in% 2:3)
 ```
 
-```{r}
-summary_model_stratum <- summary(fit_pois_stratum)
-coef_stratum <- summary_model_stratum$coefficients$cond
-
-parameters_stratum <- list(
-  n_telpunten = 100,
-  n_jaar = 10,
-
-  beta_0 = coef_stratum["(Intercept)", "Estimate"],
-  beta_1 = log(0.99),
-  beta_2 = coef_stratum["sbp_fbinnen", "Estimate"],
-  beta_3 = -log(0.99),
-  sigma_punt = unname(
-    attr(summary_model_stratum$varcor$cond$plotnaam_f, "stddev")
-  )
-)
-coef_beta_stratum <- coef_stratum[
-  grep("^stratum", rownames(coef_stratum)), "Estimate"
-]
-```
+Zoals verwacht, blijkt dat een kleiner effect gedetecteerd kan worden bij een groter aantal telpunten en bij een langere tijdsreeks.
 
 ```{r}
-# Get weights
-file <- file.path("data/steekproefkaders/steekproefkader_mbag_mas.csv")
-projroot <- rprojroot::find_root(rprojroot::has_file(file))
-steekproefkader <- read_csv(file.path(projroot, file),
-                            show_col_types = FALSE) %>%
-  mutate(regio = ifelse(grepl("\\sleemstreek", regio), "Leemstreek", regio))
-totaal <- nrow(steekproefkader)
-
-weights_df <- steekproefkader %>%
-  mutate(regio = ifelse(grepl("\\sleemstreek", regio), "Leemstreek", regio)) %>%
-  count(regio, openheid_klasse) %>%
-  mutate(prop = n / totaal) %>%
-  tidyr::crossing(
-    sbp = c("binnen", "buiten")
+#| label: tbl-detectable-effect-years
+#| tbl-cap: "Detecteerbaar jaarlijks en cumulatieve trendverschil (%)
+#|   als functie van het aantal telpunten en de lengte van de tijdsreeks."
+detectable_effect_years %>%
+  transmute(
+    n_jaar,
+    maat = "Per jaar",
+    n_telpunten,
+    value = paste(round(effect_pct, 2), "%")
+  ) %>%
+  bind_rows(
+    detectable_effect_years %>%
+      transmute(
+        n_jaar,
+        maat = "Volledige tijdsreeks",
+        n_telpunten,
+        value = paste(round(effect_pct_long, 2), "%")
+      )
+  ) %>%
+  pivot_wider(
+    names_from = n_telpunten,
+    values_from = value,
+    names_prefix = "n = "
+  ) %>%
+  arrange(
+    n_jaar, factor(maat, levels = c("Per jaar", "Volledige tijdsreeks"))
   ) %>%
   mutate(
-    prop_sbp = 0.5,
-    prop_final = prop * prop_sbp
-  ) %>%
-  select(regio, openheid_klasse, sbp, w = prop_final) %>%
-  arrange(regio, openheid_klasse, sbp) %>%
-  mutate(
-    stratum = ifelse(
-      regio == "Weidestreek",
-      tolower(regio),
-      tolower(paste(regio, openheid_klasse, sep = "_"))
+    `Lengte tijdsreeks` = if_else(
+      duplicated(n_jaar),
+      "",
+      paste(n_jaar, "jaar")
     )
-  )
-```
-
-```{r}
-simulate_mas_data_stratum <- function(design, ...) {
-  require("dplyr")
-  require("rlang")
-  stopifnot(require("glmmTMB"))
-
-  # Number of locations per stratum
-  n_per_stratum <- round(weights_df$w * design$n_telpunten)
-  diff_n <- design$n_telpunten - sum(n_per_stratum)
-  n_per_stratum[which.max(weights_df$w)] <-
-    n_per_stratum[which.max(weights_df$w)] + diff_n
-
-  # Dataframe with locations
-  telpunten <- data.frame(
-    telpunt = seq_len(design$n_telpunten),
-    stratum = rep(weights_df$stratum, n_per_stratum),
-    sbp = rep(weights_df$sbp, n_per_stratum)
-  )
-
-  # Create random effect for location
-  rf_telpunt <- rnorm(
-    design$n_telpunten,
-    mean = 0,
-    sd = design$sigma_punt
-  )
-  telpunten$rf <- rf_telpunt
-
-  # Add years
-  df <- tidyr::crossing(
-    telpunten,
-    jaar = seq_len(design$n_jaar) - 1
-  )
-  df$sbp_num <- as.integer(df$sbp == "binnen")
-
-  # Linear predictor
-  beta_stratum <- c(0, coef_beta_stratum)
-  names(beta_stratum) <- c(
-    setdiff(unique(df$stratum), gsub("stratum", "", names(coef_beta_stratum))),
-    gsub("stratum", "", names(beta_stratum)[-1])
-  )
-
-  df$eta <-
-    design$beta_0 +
-    beta_stratum[df$stratum] +
-    design$beta_1 * df$jaar +
-    design$beta_2 * df$sbp_num +
-    design$beta_3 * df$jaar * df$sbp_num +
-    df$rf
-
-  # Expected count
-  df$mu <- exp(df$eta)
-
-  # Observed count
-  df$count <- rpois(
-    nrow(df),
-    lambda = df$mu
-  )
-  df$sbp_f <- factor(df$sbp, levels = c("buiten", "binnen"))
-  df$telpunt_f <- factor(df$telpunt)
-
-  # Fit models
-  model <- try(
-    glmmTMB(count ~ stratum + jaar * sbp_f + (1 | telpunt_f),
-            data = df,
-            family = poisson())
-  )
-
-  if (inherits(model, "try-error")) {
-    return(1)
-  }
-
-  # Return p-value
-  p <- summary(model)$coefficients$cond["jaar:sbp_fbinnen", "Pr(>|z|)"]
-  p_final <- pmin(p, 1, na.rm = TRUE)
-
-  return(p_final)
-}
-
-detectable_effect_stratum <- designpower::find_power(
-  design = parameters_stratum,
-  design_digits = c(
-    n_jaar = 0,
-    n_telpunten = 0,
-    beta_stratum = 2,
-    beta_0 = 2,
-    beta_1 = 2,
-    beta_2 = 2,
-    beta_3 = 3,
-    sigma_punt = 2
-  ),
-  opti = "beta_3",
-  sim_power = simulate_mas_data_stratum,
-  extra_args = list(weights_df = weights_df,
-                    coef_beta_stratum = round(coef_beta_stratum, 2)),
-  power = 0.9,
-  alpha = 0.1,
-  filename = "power_mas_light_stratum.duckdb"
-)
-
-effect_stratum_pct <- round(
-  100 * (exp(detectable_effect_stratum[1]) - 1), 1
-)
-effect_stratum_pct_low <- round(
-  100 * (exp(detectable_effect_stratum[2]) - 1), 1
-)
-effect_stratum_pct_high <- round(
-  100 * (exp(detectable_effect_stratum[3]) - 1), 1
-)
-old_effects_stratum <- detectable_effect_df %>%
-  filter(species == "Veldleeuwerik", n_telpunten == 100)
-diff_stratum <- ifelse(
-  old_effects_stratum$effect_pct >
-    100 * (exp(detectable_effect_stratum[1]) - 1),
-  "hoger",
-  "lager"
-)
-```
-
-We kunnen effect van `r effect_stratum_pct` % detecteren (`r effect_stratum_pct_low` - `r effect_stratum_pct_high` %) voor 100 telpunten. We minimaal detecteerbare effect van het simpele model was `r diff_stratum`: `r round(old_effects_stratum$effect_pct, 1)` % (`r round(old_effects_stratum$effect_pct_low, 1)` - `r round(old_effects_stratum$effect_pct_high, 1)` %).
-
-### Effect van verspreiding
-
-De basisanalyse veronderstelt impliciet dat alle telpunten in Vlaanderen relevant zijn voor elke doelsoort. Voor soorten met een beperkte verspreiding is dit niet het geval. Daarom wordt voor de Geelgors een aanvullende analyse uitgevoerd waarbij regio's waar de soort vrijwel afwezig is (Polders, Zandstreek en Zandleemstreek) worden uitgesloten. Deze gevoeligheidsanalyse onderzoekt in welke mate de resultaten van de poweranalyse beïnvloed worden door de aanname dat alle telpunten potentieel geschikt zijn voor de doelsoort.
-
-```{r}
-# Prepare data
-model_data_geelgors <- model_data %>%
-  filter(naam == "Geelgors",
-         regio %in% c("Polders", "Zandstreek", "Zandleemstreek"))
-```
-
-Initieel voegden we Zandleemstreek toe, maar kregen we toch problemen met volledige separatie van de categorische variabelen.
-Dit duidt aan dat we dit in alle andere modellen ook moeten bekijken.
-
-```{r}
-# Fit model
-fit_pois_geelgors <- glmmTMB(
-  count ~ year2 * sbp_f + (1 | plotnaam_f),
-  data = model_data_geelgors,
-  family = poisson()
-)
-
-summary_model_geelgors <- summary(fit_pois_geelgors)
-coef_geelgors <- summary_model_geelgors$coefficients$cond
-
-parameters_geelgors <- list(
-  n_telpunten = 100,
-  n_jaar = 10,
-
-  beta_0 = coef_geelgors["(Intercept)", "Estimate"],
-  beta_1 = log(0.99),
-  beta_2 = coef_geelgors["sbp_fbinnen", "Estimate"],
-  beta_3 = -log(0.99),
-  sigma_punt = unname(attr(summary_model_geelgors$varcor$cond$plotnaam_f,
-                           "stddev"))
-)
-```
-
-```{r}
-simulate_mas_data_geelgors <- function(design, ...) {
-  stopifnot(require("glmmTMB"))
-  require("dplyr")
-  require("rlang")
-
-  # Number of locations per stratum
-  n_per_stratum <- round(weights_df$w * design$n_telpunten)
-  diff_n <- design$n_telpunten - sum(n_per_stratum)
-  n_per_stratum[which.max(weights_df$w)] <-
-    n_per_stratum[which.max(weights_df$w)] + diff_n
-
-  # Dataframe with locations
-  telpunten <- data.frame(
-    telpunt = seq_len(design$n_telpunten),
-    regio = rep(weights_df$regio, n_per_stratum),
-    sbp = rep(weights_df$sbp, n_per_stratum)
-  )
-
-  # Create random effect for location
-  rf_telpunt <- rnorm(
-    design$n_telpunten,
-    mean = 0,
-    sd = design$sigma_punt
-  )
-  telpunten$rf <- rf_telpunt
-
-  # Add years
-  df <- tidyr::crossing(
-    telpunten,
-    jaar = seq_len(design$n_jaar) - 1
   ) %>%
-    filter(.data$regio %in% c("Polders", "Zandstreek", "Zandleemstreek"))
-  df$sbp_num <- as.integer(df$sbp == "binnen")
-
-  # Linear predictor
-  df$eta <-
-    design$beta_0 +
-    design$beta_1 * df$jaar +
-    design$beta_2 * df$sbp_num +
-    design$beta_3 * df$jaar * df$sbp_num +
-    df$rf
-
-  # Expected count
-  df$mu <- exp(df$eta)
-
-  # Observed count
-  df$count <- rpois(
-    nrow(df),
-    lambda = df$mu
-  )
-  df$sbp_f <- factor(df$sbp, levels = c("buiten", "binnen"))
-  df$telpunt_f <- factor(df$telpunt)
-
-  # Fit models
-  model <- try(
-    glmmTMB(count ~ jaar * sbp_f + (1 | telpunt_f),
-            data = df,
-            family = poisson())
-  )
-
-  if (inherits(model, "try-error")) {
-    return(1)
-  }
-
-  # Return p-value
-  p <- summary(model)$coefficients$cond["jaar:sbp_fbinnen", "Pr(>|z|)"]
-  p_final <- pmin(p, 1, na.rm = TRUE)
-
-  return(p_final)
-}
-
-detectable_effect_geelgors <- designpower::find_power(
-  design = parameters_geelgors,
-  design_digits = c(
-    n_jaar = 0,
-    n_telpunten = 0,
-    beta_0 = 2,
-    beta_1 = 2,
-    beta_2 = 2,
-    beta_3 = 3,
-    sigma_punt = 2
-  ),
-  opti = "beta_3",
-  sim_power = simulate_mas_data_geelgors,
-  extra_args = list(weights_df = weights_df),
-  power = 0.9,
-  alpha = 0.1,
-  filename = paste0("power_mas_light_geelgorstest.duckdb")
-)
-
-effect_geelgors_pct <- round(
-  100 * (exp(detectable_effect_geelgors[1]) - 1), 1
-)
-effect_geelgors_pct_low <- round(
-  100 * (exp(detectable_effect_geelgors[2]) - 1), 1
-)
-effect_geelgors_pct_high <- round(
-  100 * (exp(detectable_effect_geelgors[3]) - 1), 1
-)
-old_effects_geelgors <- detectable_effect_df %>%
-  filter(species == "Geelgors", n_telpunten == 100)
-diff_geelgors <- ifelse(
-  old_effects_geelgors$effect_pct >
-    100 * (exp(detectable_effect_geelgors[1]) - 1),
-  "hoger",
-  "lager"
-)
+  select(`Lengte tijdsreeks`, maat, `n = 100`, `n = 200`, `n = 400`) %>%
+  kable(booktabs = TRUE) %>%
+  kableExtra::add_header_above(c(
+    " " = 2,
+    "Detecteerbaar trendverschil" = 3
+  )) %>%
+  kableExtra::kable_styling(latex_options = c("striped")) %>%
+  kableExtra::row_spec(0, bold = TRUE)
 ```
 
-We kunnen effect van `r effect_geelgors_pct` % detecteren (`r effect_geelgors_pct_low` - `r effect_geelgors_pct_high` %) voor 100 telpunten. We minimaal detecteerbare effect van het model op basis van alle data was `r diff_geelgors`: `r round(old_effects_geelgors$effect_pct, 1)` % (`r round(old_effects_geelgors$effect_pct_low, 1)` - `r round(old_effects_geelgors$effect_pct_high, 1)` %).
+```{r}
+#| label: fig-detectable-effect-years-raw
+#| fig-cap: "Relatie tussen het aantal telpunten en het detecteerbaar
+#|   jaarlijks trendverschil (%) voor drie verschillende tijdsreeksen."
+# Visualise raw estimates
+detectable_effect_years %>%
+  mutate(legend = factor(paste(n_jaar, "jaar"))) %>%
+  ggplot(aes(x = n_telpunten, y = effect_pct, colour = legend)) +
+  geom_line(linewidth = 0.3) +
+  geom_point(size = 1) +
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(
+    x = "Aantal telpunten",
+    y = "Detecteerbaar jaarlijks\ntrendverschil (%)",
+    colour = "Lengte tijdsreeks"
+  ) +
+  theme_minimal()
+```
+
+### Bespreking
+
+We fitten een model van de vorm
+
+$$
+E = a n^{-b} T^{-c}
+$$
+
+waarbij 
+
+
+$E$: detecteerbare effectgrootte,
+
+$n$: het aantal telpunten,
+
+$T$: de lengte van de tijdsreeks (in jaren)
+
+```{r, echo=TRUE}
+fit_time <- lm(log(effect_pct) ~ log(n_telpunten) + log(n_jaar),
+               data = detectable_effect_years)
+summary(fit_time)
+```
+
+De simulaties tonen dat de detecteerbare effectgrootte wordt beschreven door een machtsfunctie van zowel het aantal telpunten als de lengte van de tijdreeks. De geschatte exponenten (`r round(coef(fit_time)[2], 3)` voor het aantal telpunten en `r round(coef(fit_time)[3], 3)` voor het aantal jaren) liggen dicht bij de theoretisch verwachte waarden van respectievelijk (-1/2) en (-3/2). Dit impliceert dat de detecteerbare effectgrootte bij benadering afneemt volgens
+
+$$
+\text{effectgrootte} \propto \frac{1}{\sqrt{n_{\text{telpunten}}*T^3}}
+$$
+
+```{r}
+#| label: fig-detectable-effect-years-model
+#| fig-cap: "Geschatte relatie tussen het aantal telpunten en het detecteerbaar
+#|   jaarlijks trendverschil (%) op basis van een inverse
+#|   vierkantswortelmodel. De doorlopende lijn geeft interpolatie binnen het
+#|   simulatiebereik weer; de stippellijn is extrapolatie."
+# Predict detectable effect
+pred_df <- detectable_effect_years %>%
+  group_split(scenario) %>%
+  lapply(function(data) {
+    mod <- lm(effect_pct ~ I(1 / sqrt(n_telpunten)), data = data)
+
+    newdata <- tibble(
+      n_telpunten = seq(min(data$n_telpunten), 800, length.out = 200)
+    )
+
+    pred <- predict(mod, newdata = newdata, interval = "confidence")
+
+    bind_cols(
+      newdata,
+      as.data.frame(pred)
+    ) %>%
+      mutate(
+        extrapolated = n_telpunten > max(data$n_telpunten),
+        scenario = unique(data$scenario)
+      )
+  }) %>%
+  bind_rows() %>%
+  left_join(
+    detectable_effect_years %>%
+      select(scenario, n_jaar),
+    by = join_by(scenario),
+    relationship = "many-to-many"
+  ) %>%
+  mutate(legend = factor(paste(n_jaar, "jaar")))
+
+# Visualise effect trend
+detectable_effect_years %>%
+  mutate(legend = factor(paste(n_jaar, "jaar"))) %>%
+  ggplot(aes(x = n_telpunten, y = effect_pct, colour = legend)) +
+  geom_point(size = 1) +
+  geom_line(
+    data = filter(pred_df, !extrapolated),
+    aes(y = fit),
+    linewidth = 0.3
+  ) +
+
+  # Extrapolation
+  geom_line(
+    data = filter(pred_df, extrapolated),
+    aes(y = fit),
+    linewidth = 0.3,
+    linetype = "dashed"
+  ) +
+
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(
+    x = "Aantal telpunten",
+    y = "Detecteerbaar jaarlijks\ntrendverschil (%)",
+    colour = "Lengte tijdsreeks"
+  ) +
+  theme_minimal()
+```

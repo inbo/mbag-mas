@@ -1,7 +1,7 @@
 # Inleiding {#sec-inleiding}
 ## Achtergrond
 
-De biodiversiteit in het Vlaamse landbouwgebied staat al decennia onder druk. Veranderingen in landgebruik, schaalvergroting van de landbouw, verlies van landschapselementen en een toenemende intensivering van beheer hebben geleid tot sterke achteruitgangen van verschillende typische akker- en weidevogels. Soorten zoals veldleeuwerik, patrijs, kievit, gele kwikstaart en grutto vertonen op lange termijn afnemende populatietrends en worden daarom vaak gebruikt als indicatoren voor de ecologische kwaliteit van het landbouwgebied [@vermeersch2004].
+De biodiversiteit in het Vlaamse landbouwgebied staat al decennia onder druk. Veranderingen in landgebruik, schaalvergroting van de landbouw, verlies van landschapselementen en een toenemende intensivering van beheer hebben geleid tot sterke achteruitgangen van verschillende typische akker- en weidevogels. Soorten zoals Veldleeuwerik, Patrijs, Kievit, Gele kwikstaart en Grutto vertonen op lange termijn afnemende populatietrends en worden daarom vaak gebruikt als indicatoren voor de ecologische kwaliteit van het landbouwgebied [@vermeersch2004].
 
 Tegelijk neemt de vraag naar beleidsrelevante biodiversiteitsinformatie toe. Zowel het Vlaamse beleid als Europese initiatieven, waaronder het Gemeenschappelijk Landbouwbeleid (GLB) en de Europese natuurherstelverordening, vereisen betrouwbare informatie over de toestand van soorten en over de effectiviteit van genomen beheermaatregelen. Hiervoor volstaan algemene biodiversiteitsindicatoren niet altijd. Er is nood aan monitoring die specifiek gericht is op soorten en maatregelen in landbouwgebied.
 
@@ -17,19 +17,21 @@ Een centrale toepassing van het meetnet is de evaluatie van soortenbeschermingsp
 
 Het is belangrijk te benadrukken dat dergelijke vergelijkingen observationeel zijn. De analyses laten toe om verschillen in trends te detecteren, maar volstaan op zichzelf niet om causale effecten van beheermaatregelen aan te tonen.
 
+\newpage
+
 ## Doel van deze studie
 
-Deze studie voert een simulatiegebaseerde poweranalyse uit voor een mogelijke MAS light.
+Deze studie voert een simulatiegebaseerde poweranalyse uit voor een mogelijke "MAS light".
 
 Daarbij wordt onderzocht welke verschillen in populatietrend tussen SBP- en niet-SBP-gebieden detecteerbaar zijn na tien jaar monitoring, gegeven verschillende aantallen telpunten. De analyse focust op uitspraken voor Vlaanderen als geheel. Landbouwstreken en landschapstypes worden wel gebruikt bij de steekproeftrekking om representativiteit te garanderen, maar vormen geen afzonderlijke rapporteringsniveaus.
 
-De resultaten moeten toelaten om de benodigde monitoringinspanning af te wegen tegen de verwachte informatiewinst en zo een onderbouwde keuze te maken voor de omvang van een toekomstig MAS light.
+De resultaten moeten toelaten om de benodigde monitoringinspanning af te wegen tegen de verwachte informatiewinst en zo een onderbouwde keuze te maken voor de omvang van een toekomstig "MAS light".
 
 ## Onderzoeksvraag
 
 De centrale onderzoeksvraag luidt:
 
-> Welk verschil in populatietrend tussen SBP-gebieden en niet-SBP-gebieden kan worden gedetecteerd met een MAS light van tien jaar, gegeven een vooraf vastgelegd aantal telpunten?
+> Welk verschil in populatietrend tussen SBP-gebieden en niet-SBP-gebieden kan worden gedetecteerd met een "MAS light" van tien jaar, gegeven een vooraf vastgelegd aantal telpunten?
 
 De parameter waarin we geïnteresseerd zijn, is het verschil in jaarlijkse trend tussen beide groepen:
 

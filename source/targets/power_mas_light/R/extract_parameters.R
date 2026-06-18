@@ -4,10 +4,7 @@ extract_parameters <- function(model) {
 
   list(
     beta_0 = coef["(Intercept)", "Estimate"],
-    beta_1 = coef["year2", "Estimate"],
     beta_2 = coef["sbp_fbinnen", "Estimate"],
-    beta_3 = coef["year2:sbp_fbinnen", "Estimate"],
-    sigma_punt = unname(attr(summary_model$varcor$cond$plotnaam_f, "stddev")),
-    theta = exp(unname(model$fit$par["betadisp"]))
+    sigma_punt = unname(attr(summary_model$varcor$cond$plotnaam_f, "stddev"))
   )
 }

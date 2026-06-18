@@ -10,9 +10,9 @@ library(tidyverse)
 
 Alle analyses worden uitgevoerd in R [@R].
 
-De hier beschreven methodiek moet worden beschouwd als een eerste aanzet voor de evaluatie van een mogelijk MAS light. Gezien de beperkte beschikbare tijd werd bewust gekozen voor een relatief eenvoudig simulatie- en analysekader dat de belangrijkste kenmerken van het monitoringsontwerp omvat.
+De hier beschreven methodiek moet worden beschouwd als een eerste aanzet voor de evaluatie van een mogelijk "MAS light". Gezien de beperkte beschikbare tijd werd bewust gekozen voor een relatief eenvoudig simulatie- en analysekader dat de belangrijkste kenmerken van het monitoringsontwerp omvat.
 
-Deze aanpak laat toe om snel een eerste inschatting te maken van de statistische kracht van het voorgestelde meetnet. Indien de resultaten aantonen dat het gewenste effect reeds met ruime zekerheid detecteerbaar is binnen dit eenvoudige kader, kan in een volgende fase een meer realistische simulatie worden uitgewerkt. Omgekeerd geldt dat wanneer de resultaten bij dit eenvoudige model reeds onvoldoende of slechts marginaal zijn, een uitgebreider en realistischer model naar verwachting niet tot gunstigere conclusies zal leiden.
+Deze aanpak laat toe om snel een eerste inschatting te maken van de statistische kracht van het voorgestelde meetnet. Indien de resultaten aantonen dat het gewenste effect reeds met ruime zekerheid detecteerbaar is binnen dit eenvoudige kader, kan in een volgende fase een meer realistische simulatie worden uitgewerkt. De resultaten moeten echter geïnterpreteerd worden in het licht van de gemaakte vereenvoudigingen. Afhankelijk van de aard en de impact daarvan kan een uitgebreider simulatie- of analysekader zowel tot gunstigere als tot ongunstigere conclusies leiden. De huidige aanpak biedt daarom in de eerste plaats een transparante en reproduceerbare basis om de haalbaarheid van het voorgestelde monitoringsontwerp te evalueren.
 
 Mogelijke uitbreidingen van het simulatiekader worden besproken in @sec-methodiek-uitbreidingen.
 
@@ -35,9 +35,11 @@ De afbakening gebeurde in verschillende stappen, waaronder:
 
 Het resultaat is een ruimtelijk expliciete lijst van potentiële telpunten met straal van 300 m die de statistische doelpopulatie van het meetnet zo goed mogelijk benadert.
 
+\newpage
+
 ### Ruimtelijke stratificatie
 
-Om een representatieve dekking van Vlaanderen te garanderen, werd het steekproefkader gestratificeerd volgens drie factoren:
+Om een representatieve dekking van Vlaanderen te garanderen en de efficiëntie van de steekproef te verhogen, werd het steekproefkader gestratificeerd volgens drie factoren:
 
 * landbouwstreek (6 niveaus);
 * landschapstype (open of halfopen landschap);
@@ -51,7 +53,7 @@ $$
 
 mogelijke strata.
 
-De stratificatie werd oorspronkelijk ontwikkeld om uitspraken mogelijk te maken op het niveau van landbouwstreken en landschapstypes. In de huidige studie worden echter uitsluitend uitspraken nagestreefd op Vlaams niveau. De strata dienen daarom enkel om een representatieve steekproef van Vlaanderen samen te stellen en spelen verder geen expliciete rol in de simulaties of analyses.
+De stratificatie werd oorspronkelijk ontwikkeld om uitspraken mogelijk te maken op het niveau van landbouwstreken en landschapstypes. Daarnaast kan een geschikte stratificatie de precisie van schattingen verhogen doordat variatie tussen strata expliciet wordt opgevangen in het steekproefontwerp. In de huidige studie worden echter uitsluitend uitspraken nagestreefd op Vlaams niveau. De strata worden daarom gebruikt om de telpunten representatief over Vlaanderen te verdelen, maar in de basisanalyse niet expliciet opgenomen als verklarende variabelen in het analysemodel. De mogelijke invloed hiervan op de statistische kracht kan worden onderzocht in een aanvullende gevoeligheidsanalyse.
 
 ### Allocatie van telpunten
 
@@ -143,83 +145,8 @@ De analyse wordt uitgevoerd voor alle landbouwvogels op de lijst in Vlaanderen v
 
 
 Voor elke soort worden de nodige parameters geschat uit bestaande monitoringgegevens (zie @sec-samenvatting-simulatieparameters).
-In plaats van 15 afzonderlijke soorten volledig uit te werken, wordt de variatie tussen soorten benaderd door verschillende parametercombinaties te analyseren Deze parametercombinaties vormen samen een “wolk” van mogelijke soortgedragingen.
-
-Vervolgens wordt deze multidimensionale ruimte samengevat met een principale componentenanalyse (PCA) (@fig-pca-voorbeeld). Dit reduceert de complexe parameterstructuur tot enkele dominante assen die de belangrijkste ecologische verschillen tussen soorten beschrijven. Op basis van deze samenvatting kunnen enkele representatieve scenario’s worden geselecteerd die de volledige variatie goed benaderen.
-
-```{r}
-#| label: fig-pca-voorbeeld
-#| fig-cap: "Illustratie van de reductie van soorten naar een gedeelde
-#|  parameter-ruimte via PCA (synthetisch voorbeeld). De rode hoeken geven vier
-#|  mogelijke scenario's aan van parameterwaardecombinaties."
-set.seed(123)
-
-species <- paste0("sp_", 1:15)
-n_sim <- 300
-
-sim_species <- function(sp) {
-  tibble::tibble(
-    species = sp,
-    beta0 = rnorm(n_sim, runif(1, 1, 3), 0.5),
-    beta1 = rnorm(n_sim, runif(1, -0.03, 0), 0.01),
-    beta2 = rnorm(n_sim, runif(1, -1, 1), 0.3),
-    beta3 = rnorm(n_sim, runif(1, -0.02, 0.02), 0.01),
-    sigma_punt = rgamma(n_sim, 2, runif(1, 0.3, 1)),
-    theta = rgamma(n_sim, 2, runif(1, 0.5, 2))
-  )
-}
-
-sim <- map_dfr(species, sim_species)
-
-species_mean <- sim %>%
-  group_by(species) %>%
-  summarise(across(beta0:theta, mean), .groups = "drop")
-
-pca <- prcomp(species_mean %>% select(-species), scale. = TRUE)
-
-pca_df <- as_tibble(pca$x[, 1:2]) %>%
-  mutate(species = species_mean$species)
-
-# bepaal 4 hoekpunten in PCA-ruimte
-pc1_min <- min(pca_df$PC1)
-pc1_max <- max(pca_df$PC1)
-pc2_min <- min(pca_df$PC2)
-pc2_max <- max(pca_df$PC2)
-
-corners_up <- tibble::tibble(
-  PC1 = c(pc1_min, pc1_max),
-  PC2 = c(pc2_max, pc2_max),
-  scenario = c("NW (laag PC1, hoog PC2)",
-               "NO (hoog PC1, hoog PC2)")
-)
-corners_down <- tibble::tibble(
-  PC1 = c(pc1_min, pc1_max),
-  PC2 = c(pc2_min, pc2_min),
-  scenario = c("ZW (laag PC1, laag PC2)",
-               "ZO (hoog PC1, laag PC2)")
-)
-
-ggplot(pca_df, aes(PC1, PC2)) +
-  geom_point(size = 2) +
-  geom_text(aes(label = species), size = 3, hjust = 1, vjust = -1) +
-
-  # hoekpunten toevoegen
-  geom_point(data = corners_up, aes(PC1, PC2),
-             color = "red", size = 3, shape = 4) +
-  geom_text(data = corners_up, aes(PC1, PC2, label = scenario),
-            color = "red", vjust = -1.2, size = 2.5) +
-  geom_point(data = corners_down, aes(PC1, PC2),
-             color = "red", size = 3, shape = 4) +
-  geom_text(data = corners_down, aes(PC1, PC2, label = scenario),
-            color = "red", vjust = 2.2, size = 2.5) +
-
-  scale_x_continuous(expand = expansion(mult = c(0.2, 0.2))) +
-  scale_y_continuous(expand = 0.1) +
-  theme_minimal()
-```
-
-De uiteindelijke selectie van scenario’s gebeurt vervolgens op basis van de positie van soorten in deze geobserveerde parameter-ruimte. Hierbij worden representatieve extremen in de PCA-ruimte gekozen, zodat de volledige variatie in detecteerbaarheid, populatiedynamiek en effectgrootte tussen soorten wordt afgedekt met een beperkt aantal simulatiescenario’s.
-Indien er weinig variatie is tussen alle soorten voor bepaalde parameters kan het ook zijn dat we de scenario's zelf kiezen en we ons niet moeten baseren op de PCA-ruimte.
+In plaats van 15 afzonderlijke soorten volledig uit te werken, wordt de variatie tussen soorten benaderd door verschillende parametercombinaties te analyseren.
+De uiteindelijke selectie van scenario’s gebeurt vervolgens op basis van deze analyse.
 
 ## Data-generatieproces
 
@@ -254,13 +181,13 @@ $$
 \mu_{ijt} = \exp(\eta_{ij})
 $$
 
-De waargenomen tellingen worden gegenereerd uit een negatieve binomiale verdeling:
+De waargenomen tellingen worden gegenereerd uit een Poissonverdeling:
 
 $$
-y_{ij} \sim NB(\mu_{ij}, \theta)
+y_{ij} \sim Poisson(\mu_{ij})
 $$
 
-waarbij ($\theta$) de overdispersieparameter is.
+\newpage
 
 ### Implementatie
 
@@ -293,10 +220,9 @@ mu <- exp(eta)
 en de tellingen worden gesimuleerd via:
 
 ```r
-y <- rnbinom(
+y <- rpois(
   n = length(mu),
-  mu = mu,
-  size = theta
+  lambda = mu
 )
 ```
 
@@ -307,20 +233,31 @@ Deze gesimuleerde tellingen vormen vervolgens de input voor het analysemodel dat
 | Parameter         | Betekenis                                        | Rol in simulatie                             | Hoe bepalen                                |
 | ----------------- | ------------------------------------------------ | -------------------------------------------- | ------------------------------------------ |
 | $\beta_0$         | Gemiddelde log-densiteit buiten SBP in startjaar | Baseline populatiegrootte                    | Geschat uit bestaande MAS-data             |
-| $\beta_1$         | Jaarlijkse trend buiten SBP                      | Referentietrend (controlegroep)              | Conservatieve aanname (bv. -1% per jaar)   |
+| $\beta_1$         | Jaarlijkse trend buiten SBP                      | Referentietrend (controlegroep)              | Conservatieve aanname                      |
 | $\beta_2$         | Verschil SBP vs. niet-SBP in startjaar           | Verschil in intercept tussen groepen         | Geschat uit bestaande MAS-data             |
-| $\beta_3$         | Trendverschil SBP vs. niet-SBP                   | **Doelparameter (detecteerbaar effect)       | Gevarieerd in simulaties (startwaarde +1%) |
+| $\beta_3$         | Trendverschil SBP vs. niet-SBP                   | **Doelparameter (detecteerbaar effect)**     | Gevarieerd in simulaties                   |
 | $\sigma^2_{punt}$ | Variatie tussen telpunten                        | Ruimtelijke heterogeniteit                   | Geschat uit bestaande MAS-data             |
-| $\theta$          | Overdispersie (negatief-binomiaal)               | Extra Poisson-variatie in tellingen          | Geschat uit bestaande MAS-data             |
 
-We starten met een veronderstelling dat soorten buiten SBP een licht negatieve trend hebben en binnen SBP een stabiele trend.
-De analyse zal $\beta_3$ optimaliseren, maar als er tijd is kunnen we de keuze voor $\beta_1$ ook veranderen om te zien of dit andere resultaten geeft.
+We starten met een veronderstelling dat soorten buiten SBP een licht negatieve trend hebben en binnen SBP een positieve trend.
+De analyse zal $\beta_3$ optimaliseren, maar we willen de keuze voor $\beta_1$ ook veranderen om te zien of dit andere resultaten geeft.
 
-De schatting van de parameters zal gebeuren door het analysemodel te fitten op de MAS-data voor elke referentiesoort (@sec-doelsoorten).
+De schatting van de parameters zal gebeuren door het volgende model te fitten op de MAS-data voor elke doelsoort (@sec-doelsoorten).
+
+$$
+\eta_{j} = \beta_0 + \beta_2 SBP_j + u_{punt,j}
+$$
+
+Waarbij het aantal per telpunt 
+
+$$
+y_{j} \sim Poisson(\exp(\eta_{j}))
+$$
 
 ### Rol van stratificatie
 
-Stratificatie (landbouwstreek × landschap × SBP) wordt gebruikt om telpunten te verdelen volgens oppervlaktegewichten (behalve binnen en buiten SBP worden 50-50 verdeeld), maar heeft geen directe rol in de datageneratie of -analyse.
+Stratificatie (landbouwstreek × landschap × SBP) wordt gebruikt om telpunten over Vlaanderen te verdelen volgens vooraf bepaalde gewichten (waarbij binnen en buiten SBP 50–50 worden verdeeld). In de basisanalyse wordt deze stratificatie uitsluitend gebruikt voor de allocatie van de telpunten en niet expliciet opgenomen in de datageneratie of het analysemodel.
+
+Het expliciet modelleren van stratificatievariabelen kan de residuele variantie verminderen wanneer deze variabelen een deel van de ruimtelijke heterogeniteit verklaren, en daardoor de statistische kracht verhogen. Daarom kan in een aanvullende gevoeligheidsanalyse onderzocht worden in welke mate het opnemen van de stratificatievariabelen in de simulaties en het analysemodel de detecteerbare effectgroottes beïnvloedt.
 
 ## Analysemodel {#sec-analysemodel}
 
@@ -337,14 +274,14 @@ en fitten we met de **glmmTMB** package [@mcgillycuddy2025glmmTMB; @brooks2017gl
 ```r
 glmmTMB(
   y ~ jaar * sbp + (1 | punt),
-  family = nbinom2()
+  family = poisson()
 )
 ```
 
 De centrale toets is of deze parameter verschilt van nul:
 
 ```r
-jaar:sbp
+jaar:sbpbinnen
 ```
 
 Deze parameter meet het verschil in trend tussen SBP en niet-SBP.
@@ -355,7 +292,7 @@ In plaats van een klassieke steekproefgrootteanalyse wordt gewerkt vanuit een va
 De centrale effectparameter is de interactieterm tussen jaar en SBP-status, die het verschil in jaarlijkse log-trend tussen beide groepen beschrijft.
 
 Met behulp van de **designpower** package wordt via simulaties bepaald welke waarde van dit trendverschil nodig is om een vooraf gekozen power te bereiken [@onkelinx2026designpower].
-Dit levert de minimum detecteerbare effectgrootte (MDE) op voor elk scenario van het aantal telpunten, en geeft zo direct inzicht in de gevoeligheid van het monitoringsnetwerk.
+Dit levert de minimaal detecteerbare effectgrootte (MDE) op voor elk scenario van het aantal telpunten (en eventueel andere scenario's), en geeft zo direct inzicht in de gevoeligheid van het monitoringsnetwerk.
 We kiezen een power van 0.9 en significantieniveau van 0.1.
 
 ```r
@@ -385,8 +322,8 @@ Met power = 0.9 en $\alpha$ = 0.1 kiezen we dus voor een ontwerp dat heel gevoel
 
 De huidige analyse is bewust opgezet als een eerste, vereenvoudigde evaluatie van de detecteerbaarheid van trendverschillen tussen SBP- en niet-SBP-gebieden. Verschillende elementen van de analyse kunnen in een latere fase verder worden onderzocht.
 
-Een eerste belangrijk punt dat de doelsoorten niet overal in Vlaanderen voorkomen. Als bijvoorbeeld blijkt dat we 400 punten nodig hebben, dan zijn er maar enkele daarvan relevant voor zeldzame soorten zoals de geelgors. Stel dat deze soort in 10 % van het Vlaams landbouwgebied voorkomt, dan hebben we cru gesteld 4,000 telpunten nodig in Vlaanderen om voor deze soort een significant effect te kunnen detecteren. Nu gaan we ervan uit dat alle punten in Vlaanderen relevant zijn. Wanneer de resultaten bij het huidige, eenvoudige model reeds onvoldoende zijn, weten we reeds dat een uitgebreidere steekproef niet tot gunstigere conclusies zal leiden.
+Een eerste uitbreiding betreft de expliciete modellering van de stratificatie. In de basisanalyse worden landbouwstreek en landschapstype enkel gebruikt voor de allocatie van telpunten. Wanneer deze variabelen een belangrijk deel van de ruimtelijke variatie verklaren, kan opname ervan in de simulaties en het analysemodel de residuele variantie verminderen en de statistische kracht verhogen.
 
-Daarnaast kan worden nagegaan of de effecten verschillen tussen open landschap (OL) en halfopen landschap (HOL). In de huidige studie worden beide landschapstypes samengenomen om uitspraken op Vlaams niveau te maximaliseren. Dit vertegenwoordigt het meest gunstige scenario qua steekproefgrootte. Indien zelfs op Vlaams niveau geen voldoende kleine effectgroottes detecteerbaar blijken, is het uitgesloten dat een verdere opsplitsing naar landschapstype wel voldoende statistische kracht zal opleveren.
+Daarnaast wordt in de huidige analyse verondersteld dat alle telpunten in Vlaanderen potentieel relevant zijn voor de doelsoort. Voor soorten met een beperkte verspreiding is dit niet realistisch. Zo komt de Geelgors slechts in een beperkt deel van Vlaanderen voor en dragen telpunten buiten het verspreidingsgebied weinig of niet bij aan de detectie van trends. Een uitbreiding van het simulatiekader kan daarom rekening houden met de gekende verspreiding van doelsoorten en de steekproef beperken tot geschikte regio's of habitats.
 
-Ten slotte kunnen ook meer realistische simulatie- en analysemethoden worden onderzocht. Voorbeelden zijn het toelaten van niet-lineaire populatietrends doorheen de tijd. Dergelijke uitbreidingen sluiten doorgaans beter aan bij de biologische realiteit, maar vereisen bijkomende aannames en een grotere modelcomplexiteit. De huidige analyse kan daarom worden beschouwd als een eerste screening van de haalbaarheid, waarna indien nodig meer verfijnde modellen kunnen worden ontwikkeld.
+Ten slotte kunnen ook meer realistische simulatie- en analysemethoden worden onderzocht, zoals niet-lineaire populatietrends of complexere ruimtelijke structuren. Dergelijke uitbreidingen sluiten doorgaans beter aan bij de biologische realiteit, maar vereisen bijkomende aannames en een grotere modelcomplexiteit. De huidige analyse vertrekt vanuit een modelgebaseerde benadering van de datageneratie en inferentie. Alternatieve design-gebaseerde benaderingen, waarbij de eigenschappen van het steekproefontwerp centraal staan, kunnen in bepaalde situaties tot andere conclusies leiden over de variantie en de statistische kracht. De resultaten van deze studie moeten daarom worden geïnterpreteerd als een eerste evaluatie binnen het gekozen modelkader.
