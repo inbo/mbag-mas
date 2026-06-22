@@ -1,3 +1,5 @@
+{{< colophon >}}
+
 # Samenvatting {.unnumbered}
 
 <!-- description: start -->
@@ -10,25 +12,3 @@ De simulaties tonen dat de detecteerbare effectgrootte afneemt naarmate zowel he
 Zelfs voor deze optimale hypothetische akkervogelsoort blijft de minimaal detecteerbare trendverschil relatief groot. Bij een meetnet van 400 telpunten zijn, voor een realistische soort die niet overal voorkomt, in de praktijk mogelijk slechts ongeveer 200 telpunten informatief. In dat geval is pas een zeer sterke positieve interactie tussen SBP en niet-SBP detecteerbaar. Concreet betekent dit dat de populatie binnen SBP over een periode van 10 jaar ongeveer 60 % gunstiger moet evolueren dan buiten SBP voordat een statistisch significant verschil in trend kan worden aangetoond. Indien deze soort 9.5 % buiten SBP afneemt over 10 jaar, moet ze binnen SBP 46.2 % toenemen. Voor een stabiele trend buiten SBP moet ze binnen SBP 60 % toenemen en voor een toename van  10.5 % buiten SBP moet ze 75.1 % toenemen binnen SBP.
 Beschouw hetzelfde voorbeeld voor een tijdsreeks van 24 jaar; dan moet de populatie binnen SBP 37 % gunstiger evolueren dan buiten SBP voordat een statistisch significant verschil in trend kan worden aangetoond.
 <!-- description: end -->
-
-<!-- This part adds the table of content in the pdf -->
-
-<!-- Add it at the end of the last chapter of the frontmatter -->
-
-<!-- spell-check: ignore:start-->
-
-::: {.content-visible when-format="pdf"}
-\clearpage
-\phantomsection
-\addcontentsline{toc}{chapter}{\contentsname}
-\setcounter{tocdepth}{2}
-\tableofcontents
-
-\clearpage
-
-<!-- keep the lines below -->
-:::
-
-<!-- spell-check: ignore:end-->
-
-<!-- This part adds the tables of contents in the pdf -->

@@ -25,8 +25,8 @@ lang: nl-BE
 flandersqmd:
   entity: INBO
   level: 2
-  public_report: false
-  colophon: false
+  public_report: true
+  colophon: true
 
   title: Poweranalyse voor het meten van de effectiviteit van soortenbeschermingsprogramma’s
     in landbouwgebied van Vlaanderen
@@ -53,15 +53,30 @@ flandersqmd:
     affiliation:
     - Instituut voor Natuur- en Bosonderzoek (INBO)
 
-  year: 2026
-  reportnr: internal
+  rightsholder:
+  - name:
+      given: Instituut voor Natuur- en Bosonderzoek (INBO)
+    email: info@inbo.be
+    ror: 00j54wy13
+  funder:
+  - name:
+      given: Instituut voor Natuur- en Bosonderzoek (INBO)
+    email: info@inbo.be
+    ror: 00j54wy13
 
-  linenr: false
-  watermark:
+  doi:
+  depotnr:
+  year: 2026
+  reportnr:
+  cover:
+  coverphoto:
+  coverdescription:
 
 book:
   chapters:
   - index.md
+  - 00_abstract.md
+  - 01_aanbevelingen.md
   - 02_inleiding.md
   - 03_methodiek.qmd
   - 04_schatting_simulatieparameters.qmd
