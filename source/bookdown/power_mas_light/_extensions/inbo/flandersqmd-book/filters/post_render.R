@@ -1,3 +1,4 @@
+# remotes::install_github("inbo/flandersqmd#7")
 library(flandersqmd)
 
 message <- c(
