@@ -8,7 +8,7 @@ library(tidyverse)
 
 # Methodiek {#sec-methodiek}
 
-Alle analyses worden uitgevoerd in R [@R].
+Alle analyses worden uitgevoerd in R [@R]. De gebruikte code en de bronbestanden van het rapport zijn beschikbaar in de GitHub-repository <https://github.com/inbo/mbag-mas>. De analyses zijn ondergebracht in `source/targets/power_mas_light` en het rapport in `source/bookdown/power_mas_light`.
 
 De hier beschreven methodiek moet worden beschouwd als een eerste aanzet voor de evaluatie van een mogelijk "MAS light". Gezien de beperkte beschikbare tijd werd bewust gekozen voor een relatief eenvoudig simulatie- en analysekader dat de belangrijkste kenmerken van het monitoringsontwerp omvat.
 
