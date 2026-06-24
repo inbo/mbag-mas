@@ -43,7 +43,7 @@ target_species <- c(
 )
 ```
 
-In dit hoofdstuk worden de simulatieparameters geschat die als input dienen voor de poweranalyse. Hiervoor wordt gebruikgemaakt van de gegevens uit de jaren 2024 en 2025 voor de doelsoorten: `r target_species`.
+In dit hoofdstuk worden de simulatieparameters geschat die als input dienen voor de poweranalyse. Hiervoor wordt gebruikgemaakt van de gegevens uit de jaren 2024 en 2025 voor de doelsoorten: `r tolower(target_species)`.
 
 Eerst worden de waarnemingsgegevens ingelezen en gefilterd op de geselecteerde soorten.
 Enkel broedvogelwaarnemingen worden behouden (broedcode > 0), behalve voor Torenvalk, en de aantallen worden samengevat per telpunt, jaar en telperiode.
@@ -51,11 +51,11 @@ Vervolgens worden afwezigheden toegevoegd op basis van de beschikbare bezoekgege
 Voor elke soort worden de data uit de telperiode geselecteerd waarin gemiddeld de hoogste aantallen worden vastgesteld over beide jaren.
 
 Ten slotte worden de nullen van locaties waar de soort nooit is gezien over alle 2 x 4 telperiodes verwijderd. Deze worden beschouwd als structurele afwezigheid van de soort.
-`r sort(target_species[tar_read_mas("presence_prop") < 0.2])` werden in minder dan 20 % van de telpunten waargenomen in 2024 en 2025 (zie verder).
+`r tolower(sort(target_species[tar_read_mas("presence_prop") < 0.2]))` werden in minder dan 20 % van de telpunten waargenomen in 2024 en 2025 (zie verder).
 Deze soorten worden niet verder meegenomen in de analyses.
 
 Voor de resterende soorten wordt vervolgens een Generalized Linear Mixed Model (GLMM) opgesteld met het aantal waargenomen individuen als responsvariabele (zie @sec-analysemodel).
-Uit dit model worden vervolgens de parameters geëxtraheerd die nodig zijn voor de simulaties: de verwachte aantallen binnen en buiten SBP, en de variatie tussen telpunten (zie ook @sec-samenvatting-simulatieparameters).
+Uit dit model worden vervolgens de parameters geëxtraheerd die nodig zijn voor de simulaties: de verwachte aantallen binnen en buiten SBP-gebied, en de variatie tussen telpunten (zie ook @sec-samenvatting-simulatieparameters).
 
 ## Overzicht parameterschattingen
 
@@ -66,13 +66,18 @@ De geschatte parameters zijn weergegeven in @tbl-est-params.
 #| tbl-cap: "Geschatte simulatieparameters per soort op basis van de GLMM's
 #|   gefit op de gegevens van 2024 en 2025. `verwacht_buiten` en
 #|   `verwacht_binnen` geven het verwachte aantal individuen per telpunt
-#|   respectievelijk buiten en binnen SBP weer."
+#|   respectievelijk buiten en binnen SBP-gebied weer."
 parameters_df <- tar_read_mas("parameters_df")
 parameters_df_selection <- parameters_df %>%
-  mutate(verwacht_buiten = round(exp(beta_0), 2),
-         verwacht_binnen = round(exp(beta_0 + beta_2), 2)) %>%
-  select("soort" = "naam", "beta_0", "beta_2", "verwacht_buiten",
-         "verwacht_binnen", "sigma_punt")
+  mutate(
+    soort = tolower(naam),
+    verwacht_buiten = round(exp(beta_0), 2),
+    verwacht_binnen = round(exp(beta_0 + beta_2), 2)
+  ) %>%
+  select(
+    "soort", "beta_0", "beta_2", "verwacht_buiten", "verwacht_binnen",
+    "sigma_punt"
+  )
 parameters_df_selection %>%
   mutate(beta_0 = round(beta_0, 3),
          beta_2 = round(beta_2, 3),
@@ -115,7 +120,7 @@ pca_pois <- parameters_df %>%
   select(naam, beta_0, beta_2, sigma_punt) %>%
   as.data.frame()
 
-rownames(pca_pois) <- pca_pois$naam
+rownames(pca_pois) <- tolower(pca_pois$naam)
 
 pca_pois_fit <- prcomp(
   pca_pois[, -1],

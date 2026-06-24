@@ -1,7 +1,7 @@
 # Inleiding {#sec-inleiding}
 ## Achtergrond
 
-De biodiversiteit in het Vlaamse landbouwgebied staat al decennia onder druk. Veranderingen in landgebruik, schaalvergroting van de landbouw, verlies van landschapselementen en een toenemende intensivering van beheer hebben geleid tot sterke achteruitgangen van verschillende typische akker- en weidevogels. Soorten zoals Veldleeuwerik, Patrijs, Kievit, Gele kwikstaart en Grutto vertonen op lange termijn afnemende populatietrends en worden daarom vaak gebruikt als indicatoren voor de ecologische kwaliteit van het landbouwgebied [@vermeersch2004].
+De biodiversiteit in het Vlaamse landbouwgebied staat al decennia onder druk. Veranderingen in landgebruik, schaalvergroting van de landbouw, verlies van landschapselementen en een toenemende intensivering van beheer hebben geleid tot sterke achteruitgangen van verschillende typische akker- en weidevogels. Soorten zoals veldleeuwerik, patrijs, kievit, gele kwikstaart en grutto vertonen op lange termijn afnemende populatietrends en worden daarom vaak gebruikt als indicatoren voor de ecologische kwaliteit van het landbouwgebied [@vermeersch2004].
 
 Tegelijk neemt de vraag naar beleidsrelevante biodiversiteitsinformatie toe. Zowel het Vlaamse beleid als Europese initiatieven, waaronder het Gemeenschappelijk Landbouwbeleid (GLB) en de Europese natuurherstelverordening, vereisen betrouwbare informatie over de toestand van soorten en over de effectiviteit van genomen beheermaatregelen. Hiervoor volstaan algemene biodiversiteitsindicatoren niet altijd. Er is nood aan monitoring die specifiek gericht is op soorten en maatregelen in landbouwgebied.
 
@@ -13,7 +13,7 @@ De volledige MAS-methodiek vereist echter een aanzienlijke veldinspanning, mede 
 
 Bij de verdere uitrol van MAS rijst daarom de vraag of een vereenvoudigde versie van het meetnet ("MAS light") voldoende statistische kracht behoudt om beleidsrelevante veranderingen te detecteren op schaal Vlaanderen (dus niet langer focus op subgebieden).
 
-Een centrale toepassing van het meetnet is de evaluatie van soortenbeschermingsprogramma's (SBP's). Hiervoor is het noodzakelijk om populatietrends binnen SBP-gebieden te kunnen vergelijken met trends buiten SBP-gebieden. Indien de populaties binnen SBP-gebieden systematisch gunstiger evolueren dan buiten SBP-gebieden, kan dit een indicatie vormen dat de genomen maatregelen bijdragen aan het behalen van de beleidsdoelen.
+Een centrale toepassing van het meetnet is de evaluatie van soortenbeschermingsprogrammagebieden (SBP-gebieden). Hiervoor is het noodzakelijk om populatietrends binnen SBP-gebieden te kunnen vergelijken met trends buiten SBP-gebieden. Indien de populaties binnen SBP-gebieden systematisch gunstiger evolueren dan buiten SBP-gebieden, kan dit een indicatie vormen dat de genomen maatregelen bijdragen aan het behalen van de beleidsdoelen.
 
 Het is belangrijk te benadrukken dat dergelijke vergelijkingen observationeel zijn. De analyses laten toe om verschillen in trends te detecteren, maar volstaan op zichzelf niet om causale effecten van beheermaatregelen aan te tonen.
 
@@ -39,6 +39,6 @@ $$
 \beta_{jaar \times SBP}
 $$
 
-uit een model waarin de jaarlijkse trend binnen en buiten SBP wordt vergeleken.
+uit een model waarin de jaarlijkse trend binnen en buiten SBP-gebied wordt vergeleken.
 
 Meer specifiek wordt voor verschillende scenario's van het aantal telpunten bepaald welke minimale effectgrootte detecteerbaar is met een statistische power van 90 % en een significantieniveau van 0,1.

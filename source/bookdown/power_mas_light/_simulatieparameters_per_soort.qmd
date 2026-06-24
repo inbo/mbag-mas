@@ -3,11 +3,10 @@ output: html_document
 editor_options: 
   chunk_output_type: console
 ---
-### {{species}}
+### {{subtitle}}
 
 ```{r}
 # Variables
-species <- "{{species}}"
 branch <- {{branch}}
 
 # Load presence absence data (logical over counting periods)

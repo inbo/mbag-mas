@@ -21,19 +21,19 @@ source("R/tar_read_mas.R")
 ```
 
 Beschouw een hypothetische akkervogelsoort die over heel Vlaanderen aanwezig is aan een gelijkaardige densiteit.
-Deze soort heeft de hoogste densiteit buiten SBP en de hoogste densiteit binnen SBP van de werkelijke akkervogels in MAS (hoogste $\beta_0$: `r round(tar_read_mas("best_parameters")$beta_0, 3)`, en $\beta_2$: `r round(tar_read_mas("best_parameters")$beta_2, 3)`) en de kleinste variatie tussen telpunten ($\sigma_{punt}$: `r round(tar_read_mas("best_parameters")$sigma_punt, 6)`).
-Deze heeft bijgevolg een verwachte startdensiteit buiten SBP van `r round(exp(tar_read_mas("best_parameters")$beta_0), 2)` en binnen SBP van `r round(exp(tar_read_mas("best_parameters")$beta_0 + tar_read_mas("best_parameters")$beta_2), 2)`.
+Deze soort heeft de hoogste densiteit buiten SBP-gebied en de hoogste densiteit binnen SBP-gebied van de werkelijke akkervogels in MAS (hoogste $\beta_0$: `r round(tar_read_mas("best_parameters")$beta_0, 3)`, en $\beta_2$: `r round(tar_read_mas("best_parameters")$beta_2, 3)`) en de kleinste variatie tussen telpunten ($\sigma_{punt}$: `r round(tar_read_mas("best_parameters")$sigma_punt, 6)`).
+Deze heeft bijgevolg een verwachte startdensiteit buiten SBP-gebied van `r round(exp(tar_read_mas("best_parameters")$beta_0), 2)` en binnen SBP-gebied van `r round(exp(tar_read_mas("best_parameters")$beta_0 + tar_read_mas("best_parameters")$beta_2), 2)`.
 
-## Variabele trend buiten SBP
+## Variabele trend buiten SBP-gebied
 ### Methodiek
 
-We onderscheiden drie scenario's voor de trend buiten SBP (~$\beta_1$):
+We onderscheiden drie scenario's voor de trend buiten SBP-gebied (~$\beta_1$):
 
-1. Een achteruitgang buiten SBP van -1 % per jaar (`r paste(round(100 * (exp(10 * -0.01) - 1), 1), "%")` over 10 jaar)
-2. Stabiele trend buiten SBP
-3. Een vooruitgang buiten SBP van +1 % per jaar (`r paste(round(100 * (exp(10 * 0.01) - 1), 1), "%")` over 10 jaar)
+1. Een achteruitgang buiten SBP-gebied van -1 % per jaar (`r paste(round(100 * (exp(10 * -0.01) - 1), 1), "%")` over 10 jaar)
+2. Stabiele trend buiten SBP-gebied
+3. Een vooruitgang buiten SBP-gebied van +1 % per jaar (`r paste(round(100 * (exp(10 * 0.01) - 1), 1), "%")` over 10 jaar)
 
-De trend binnen SBP moet telkens positief zijn en groter dan de trend buiten SBP.
+De trend binnen SBP-gebied moet telkens positief zijn en groter dan de trend buiten SBP-gebied.
 
 ### Resultaten
 
@@ -54,17 +54,17 @@ detectable_effect_10j <- detectable_effect_df %>%
   )
 ```
 
-De minimaal detecteerbare trendverschillen tussen buiten en binnen SBP zijn zeer hoog.
+De minimaal detecteerbare trendverschillen tussen buiten en binnen SBP-gebied zijn zeer hoog.
 We zien hierin slechts kleine verschillen tussen de trendscenario's.
-Wel zal de minimaal detecteerbare trend binnen SBP hoger zijn naarmate de trend buiten SBP hoger is om dezelfde positieve trendverschil te kunnen detecteren tussen beide.
-Zoals verwacht, blijkt dat een kleiner effect (trendverschillen buiten vs. binnen SBP) gedetecteerd kan worden bij een groter aantal telpunten.
-@tbl-trends-sbp geeft een overzicht van de veronderstelde trends buiten SBP en de overeenkomstige minimaal detecteerbare trends binnen SBP.
+Wel zal de minimaal detecteerbare trend binnen SBP-gebied hoger zijn naarmate de trend buiten SBP-gebied hoger is om dezelfde positieve trendverschil te kunnen detecteren tussen beide.
+Zoals verwacht, blijkt dat een kleiner effect (trendverschillen buiten vs. binnen SBP-gebied) gedetecteerd kan worden bij een groter aantal telpunten.
+@tbl-trends-sbp geeft een overzicht van de veronderstelde trends buiten SBP-gebied en de overeenkomstige minimaal detecteerbare trends binnen SBP-gebied.
 @tbl-detectable-effect-10j toont dezelfde resultaten uitgedrukt als een het detecteerbaar verschil met "binnen SBP" over een periode van 10 jaar.
 
 ```{r}
 #| label: tbl-trends-sbp
-#| tbl-cap: "Veronderstelde trend buiten SBP en de overeenkomstige minimaal
-#|   detecteerbare trend binnen SBP voor drie scenario's en verschillende
+#| tbl-cap: "Veronderstelde trend buiten SBP-gebied en de overeenkomstige minimaal
+#|   detecteerbare trend binnen SBP-gebied voor drie scenario's en verschillende
 #|   aantallen telpunten. De trends worden zowel als jaarlijkse als als
 #|   cumulatieve verandering over 10 jaar weergegeven."
 detectable_effect_10j %>%
@@ -117,7 +117,7 @@ detectable_effect_10j %>%
 ```{r}
 #| label: tbl-detectable-effect-10j
 #| tbl-cap: "Minimaal detecteerbaar trendverschil over een
-#|   periode van 10 jaar (%) voor drie trendscenario's buiten SBP en
+#|   periode van 10 jaar (%) voor drie trendscenario's buiten SBP-gebied en
 #|   verschillende aantallen telpunten. Waarden tussen haakjes geven de
 #|   onder- en bovengrens van de geschatte detecteerbare verandering weer."
 detectable_effect_10j %>%
@@ -150,7 +150,7 @@ detectable_effect_10j %>%
 #| label: fig-detectable-effect-10j-raw
 #| fig-cap: "Relatie tussen het aantal telpunten en het detecteerbaar
 #|   10-jaarlijkse trendverschil (%) voor drie trendscenario's buiten
-#|   SBP."
+#|   SBP-gebied."
 # Visualise raw estimates
 detectable_effect_10j %>%
   ggplot(aes(x = n_telpunten, y = effect_pct_long,
@@ -252,7 +252,7 @@ We onderscheiden in drie scenario's voor de lengte van de tijdsreeks:
 2. 16 jaar
 3. 24 jaar
 
-Dit is uitgevoerd voor een achteruitgang buiten SBP van -1 % per jaar (scenario 1 uit vorige Paragraaf).
+Dit is uitgevoerd voor een achteruitgang buiten SBP-gebied van -1 % per jaar (scenario 1 uit vorige Paragraaf).
 
 ### Resultaten
 

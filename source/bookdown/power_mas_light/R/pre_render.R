@@ -22,7 +22,8 @@ target_species <- c(
 # Create child document for each species
 # Include child files in report
 autoqmd_prepare(
-  species = target_species,
+  species = tolower(target_species),
+  subtitle = stringr::str_to_sentence(target_species),
   label = gsub("\\s", ".", tolower(target_species)),
   branch = seq_along(target_species),
   template = "_simulatieparameters_per_soort.qmd",
