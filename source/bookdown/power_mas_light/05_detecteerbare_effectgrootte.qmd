@@ -6,13 +6,14 @@ editor_options:
 # Detecteerbare effectgrootte {#sec-detecteerbare-effectgrootte}
 
 ```{r}
-#| echo: FALSE
 #| warning: FALSE
 #| message: FALSE
 library(knitr)
 library(targets)
 library(tidyverse)
-library(glmmTMB)
+library(INBOtheme)
+
+theme_set(theme_inbo(base_size = 12, transparent = TRUE))
 
 conflicted::conflicts_prefer(dplyr::filter)
 

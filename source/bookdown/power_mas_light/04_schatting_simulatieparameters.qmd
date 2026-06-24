@@ -13,6 +13,9 @@ library(knitr)
 library(targets)
 library(tidyverse)
 library(factoextra)
+library(INBOtheme)
+
+theme_set(theme_inbo(base_size = 12, transparent = TRUE))
 
 conflicted::conflicts_prefer(dplyr::filter)
 
@@ -91,7 +94,7 @@ parameters_df_selection %>%
   select(-starts_with("verwacht")) %>%
   pivot_longer("beta_0":"sigma_punt", names_to = "param") %>%
   ggplot(aes(x = param, y = value)) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "grey") +
   geom_boxplot() +
   geom_point(position = position_jitter(0.2), size = 1,
              colour = "firebrick") +
