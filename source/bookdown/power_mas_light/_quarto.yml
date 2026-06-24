@@ -75,8 +75,7 @@ flandersqmd:
 book:
   chapters:
   - index.md
-  - 00_abstract.md
-  - 01_aanbevelingen.md
+  - 01_abstract.md
   - 02_inleiding.md
   - 03_methodiek.qmd
   - 04_schatting_simulatieparameters.qmd
