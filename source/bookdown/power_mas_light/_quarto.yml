@@ -75,7 +75,6 @@ flandersqmd:
 book:
   chapters:
   - index.md
-  - 00_samenvatting.md
   - 01_abstract.md
   - 02_inleiding.md
   - 03_methodiek.qmd
