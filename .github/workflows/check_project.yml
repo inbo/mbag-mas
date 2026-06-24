@@ -7,11 +7,19 @@ name: check-project
 
 jobs:
   check-src:
-    runs-on: ubuntu-latest
-    name: "check project with checklist"
+    runs-on: ubuntu-24.04
+    name: "Check project with checklist"
     env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RSPM: "https://packagemanager.posit.co/cran/__linux__/noble/latest"
+
     permissions:
       contents: read
+
     steps:
-      - uses: inbo/actions/check_project@main
+      - name: "Check project with checklist"
+        uses: inbo/actions/check_project@composite
+        with:
+          extra_repositories: "https://cranhaven.r-universe.dev https://inbo.r-universe.dev"
+          apt: "libpoppler-cpp-dev"
