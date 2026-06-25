@@ -1,8 +1,8 @@
-# Conclusie {.unnumbered}
+# Conclusie
 
 De doelstelling van deze studie was om via een simulatiegebaseerde poweranalyse te bepalen in welke mate een vereenvoudigd monitoringsontwerp ("MAS light") over een periode van 10 jaar in staat is om trendverschillen tussen SBP-gebieden en niet-SBP-gebieden in Vlaanderen te detecteren.
 
-De simulaties tonen aan dat de detecteerbare effectgrootte ($E$) (= trendverschil buiten vs. binnen SBP-gebied) zich gedraagt volgens een wiskundige machtsfunctie van zowel het aantal telpunten ($n$) als de lengte van de tijdsreeks ($T$ in jaren):
+De simulaties tonen aan dat de detecteerbare effectgrootte ($E$) (= trendverschil buiten vs. binnen SBP-gebied) zich gedraagt volgens een wiskundige machtsfunctie van zowel het aantal telpunten ($n$) als de lengte van de tijdreeks ($T$ in jaren):
 
 $$
 E \propto \frac{1}{\sqrt{n*T^3}}
@@ -19,9 +19,7 @@ We kunnen daarom besluiten dat het niet aangewezen is om het aantal meetpunten t
 \begingroup
 \let\clearpage\relax
 \let\cleardoublepage\relax
-\chapter*{Dankwoord}
-\addcontentsline{toc}{chapter}{Dankwoord}
-\markboth{Dankwoord}{Dankwoord}
+\chapter{Dankwoord}
 \endgroup
 ```
 

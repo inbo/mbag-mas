@@ -55,7 +55,7 @@ detectable_effect_10j <- detectable_effect_df %>%
 ```
 
 De minimaal detecteerbare trendverschillen tussen buiten en binnen SBP-gebied zijn zeer hoog.
-We zien hierin slechts kleine verschillen tussen de trendscenario's.
+We zien hierin slechts kleine verschillen tussen de trendscenario's (@fig-detectable-effect-10j-raw).
 Wel zal de minimaal detecteerbare trend binnen SBP-gebied hoger zijn naarmate de trend buiten SBP-gebied hoger is om dezelfde positieve trendverschil te kunnen detecteren tussen beide.
 Zoals verwacht, blijkt dat een kleiner effect (trendverschillen buiten vs. binnen SBP-gebied) gedetecteerd kan worden bij een groter aantal telpunten.
 @tbl-trends-sbp geeft een overzicht van de veronderstelde trends buiten SBP-gebied en de overeenkomstige minimaal detecteerbare trends binnen SBP-gebied.
@@ -111,8 +111,6 @@ detectable_effect_10j %>%
   kableExtra::kable_styling(latex_options = "striped") %>%
   kableExtra::row_spec(0, bold = TRUE)
 ```
-
-\newpage
 
 ```{r}
 #| label: tbl-detectable-effect-10j
@@ -176,7 +174,7 @@ $$
 
 waarbij $n$ het aantal telpunten voorstelt.
 
-In de onderstaande figuur wordt de doorlopende lijn enkel getoond binnen het bereik van de gesimuleerde aantallen telpunten. De stippellijn geeft een extrapolatie weer buiten dit bereik en moet daarom voorzichtig worden geïnterpreteerd.
+In de @fig-detectable-effect-10j-model wordt de doorlopende lijn enkel getoond binnen het bereik van de gesimuleerde aantallen telpunten. De stippellijn geeft een extrapolatie weer buiten dit bereik en moet daarom voorzichtig worden geïnterpreteerd.
 
 ```{r}
 #| label: fig-detectable-effect-10j-model
@@ -241,17 +239,10 @@ ggplot(detectable_effect_10j,
   theme_minimal()
 ```
 
-\clearpage
-
-## Variabele lengte tijdsreeks
+## Variabele lengte tijdreeks
 ### Methodiek
 
-We onderscheiden in drie scenario's voor de lengte van de tijdsreeks:
-
-1. 10 jaar
-2. 16 jaar
-3. 24 jaar
-
+We onderscheiden in drie scenario's voor de lengte van de tijdreeks (10, 16 en 24 jaar).
 Dit is uitgevoerd voor een achteruitgang buiten SBP-gebied van -1 % per jaar (scenario 1 uit vorige Paragraaf).
 
 ### Resultaten
@@ -263,12 +254,12 @@ detectable_effect_years <- detectable_effect_df %>%
   filter_out(scenario %in% 2:3)
 ```
 
-Zoals verwacht, blijkt dat een kleiner effect gedetecteerd kan worden bij een groter aantal telpunten en bij een langere tijdsreeks.
+Zoals verwacht, blijkt dat een kleiner effect gedetecteerd kan worden bij een groter aantal telpunten en bij een langere tijdreeks (@tbl-detectable-effect-years, @fig-detectable-effect-years-raw).
 
 ```{r}
 #| label: tbl-detectable-effect-years
 #| tbl-cap: "Detecteerbaar jaarlijks en cumulatieve trendverschil (%)
-#|   als functie van het aantal telpunten en de lengte van de tijdsreeks."
+#|   als functie van het aantal telpunten en de lengte van de tijdreeks."
 detectable_effect_years %>%
   transmute(
     n_jaar,
@@ -280,7 +271,7 @@ detectable_effect_years %>%
     detectable_effect_years %>%
       transmute(
         n_jaar,
-        maat = "Volledige tijdsreeks",
+        maat = "Volledige tijdreeks",
         n_telpunten,
         value = paste(round(effect_pct_long, 2), "%")
       )
@@ -291,16 +282,16 @@ detectable_effect_years %>%
     names_prefix = "n = "
   ) %>%
   arrange(
-    n_jaar, factor(maat, levels = c("Per jaar", "Volledige tijdsreeks"))
+    n_jaar, factor(maat, levels = c("Per jaar", "Volledige tijdreeks"))
   ) %>%
   mutate(
-    `Lengte tijdsreeks` = if_else(
+    `Lengte tijdreeks` = if_else(
       duplicated(n_jaar),
       "",
       paste(n_jaar, "jaar")
     )
   ) %>%
-  select(`Lengte tijdsreeks`, maat, `n = 100`, `n = 200`, `n = 400`) %>%
+  select(`Lengte tijdreeks`, maat, `n = 100`, `n = 200`, `n = 400`) %>%
   kable(booktabs = TRUE) %>%
   kableExtra::add_header_above(c(
     " " = 2,
@@ -310,10 +301,12 @@ detectable_effect_years %>%
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
+\clearpage
+
 ```{r}
 #| label: fig-detectable-effect-years-raw
 #| fig-cap: "Relatie tussen het aantal telpunten en het detecteerbaar
-#|   jaarlijks trendverschil (%) voor drie verschillende tijdsreeksen."
+#|   jaarlijks trendverschil (%) voor drie verschillende tijdreeksen."
 # Visualise raw estimates
 detectable_effect_years %>%
   mutate(legend = factor(paste(n_jaar, "jaar"))) %>%
@@ -324,7 +317,7 @@ detectable_effect_years %>%
   labs(
     x = "Aantal telpunten",
     y = "Detecteerbaar jaarlijks\ntrendverschil (%)",
-    colour = "Lengte tijdsreeks"
+    colour = "Lengte tijdreeks"
   ) +
   theme_minimal()
 ```
@@ -344,7 +337,9 @@ $E$: detecteerbare effectgrootte,
 
 $n$: het aantal telpunten,
 
-$T$: de lengte van de tijdsreeks (in jaren)
+$T$: de lengte van de tijdreeks (in jaren)
+
+\vspace{0.5\baselineskip}
 
 ```{r, echo=TRUE}
 fit_time <- lm(log(effect_pct) ~ log(n_telpunten) + log(n_jaar),
@@ -352,7 +347,7 @@ fit_time <- lm(log(effect_pct) ~ log(n_telpunten) + log(n_jaar),
 summary(fit_time)
 ```
 
-De simulaties tonen dat de detecteerbare effectgrootte wordt beschreven door een machtsfunctie van zowel het aantal telpunten als de lengte van de tijdreeks. De geschatte exponenten (`r round(coef(fit_time)[2], 3)` voor het aantal telpunten en `r round(coef(fit_time)[3], 3)` voor het aantal jaren) liggen dicht bij de theoretisch verwachte waarden van respectievelijk (-1/2) en (-3/2). Dit impliceert dat de detecteerbare effectgrootte bij benadering afneemt volgens
+De simulaties tonen dat de detecteerbare effectgrootte wordt beschreven door een machtsfunctie van zowel het aantal telpunten als de lengte van de tijdreeks (@fig-detectable-effect-years-model). De geschatte exponenten (`r round(coef(fit_time)[2], 3)` voor het aantal telpunten en `r round(coef(fit_time)[3], 3)` voor het aantal jaren) liggen dicht bij de theoretisch verwachte waarden van respectievelijk (-1/2) en (-3/2). Dit impliceert dat de detecteerbare effectgrootte bij benadering afneemt volgens
 
 $$
 \text{effectgrootte} \propto \frac{1}{\sqrt{n_{\text{telpunten}}*T^3}}
@@ -417,7 +412,7 @@ detectable_effect_years %>%
   labs(
     x = "Aantal telpunten",
     y = "Detecteerbaar jaarlijks\ntrendverschil (%)",
-    colour = "Lengte tijdsreeks"
+    colour = "Lengte tijdreeks"
   ) +
   theme_minimal()
 ```

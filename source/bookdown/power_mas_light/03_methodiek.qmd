@@ -8,7 +8,13 @@ library(tidyverse)
 
 # Methodiek {#sec-methodiek}
 
-Alle analyses worden uitgevoerd in R [@R]. De gebruikte code en de bronbestanden van het rapport zijn beschikbaar in de GitHub-repository <https://github.com/inbo/mbag-mas>. De analyses zijn ondergebracht in `source/targets/power_mas_light` en het rapport in `source/bookdown/power_mas_light`.
+Alle analyses werden uitgevoerd in R [@R]. De gebruikte code en de bronbestanden van het rapport zijn beschikbaar in de GitHub-repository <https://github.com/inbo/mbag-mas>. De analyses zijn ondergebracht in
+
+`source/targets/power_mas_light`, 
+
+en het rapport in
+
+`source/bookdown/power_mas_light`.
 
 De hier beschreven methodiek moet worden beschouwd als een eerste aanzet voor de evaluatie van een mogelijk "MAS light". Gezien de beperkte beschikbare tijd werd bewust gekozen voor een relatief eenvoudig simulatie- en analysekader dat de belangrijkste kenmerken van het monitoringsontwerp omvat.
 
@@ -34,8 +40,6 @@ De afbakening gebeurde in verschillende stappen, waaronder:
 * filtering op minimale zichtbaarheid.
 
 Het resultaat is een ruimtelijk expliciete lijst van potentiële telpunten met straal van 300 m die de statistische doelpopulatie van het meetnet zo goed mogelijk benadert.
-
-\newpage
 
 ### Ruimtelijke stratificatie
 
@@ -105,6 +109,8 @@ Per telpunt worden jaarlijks vier telrondes uitgevoerd gedurende een periode van
 ### Totaal aantal telpunten
 
 De volgende scenario's worden in eerste instantie onderzocht:
+
+\vspace{0.5\baselineskip}
 
 ```r
 n_punten <- c(
@@ -192,6 +198,8 @@ $$
 
 De random effecten voor de ruimtelijke component worden gegenereerd als:
 
+\vspace{0.5\baselineskip}
+
 ```r
 rf_punt <- rnorm(
   n_punten,
@@ -200,6 +208,8 @@ rf_punt <- rnorm(
 ```
 
 Vervolgens wordt voor elke combinatie van telpunt en jaar de lineaire predictor berekend:
+
+\vspace{0.5\baselineskip}
 
 ```r
 eta <-
@@ -212,11 +222,15 @@ eta <-
 
 waaruit de verwachte abundantie wordt afgeleid:
 
+\vspace{0.5\baselineskip}
+
 ```r
 mu <- exp(eta)
 ```
 
 en de tellingen worden gesimuleerd via:
+
+\vspace{0.5\baselineskip}
 
 ```r
 y <- rpois(
@@ -268,7 +282,9 @@ $$
 u_{punt,j}
 $$
 
-en fitten we met de **glmmTMB** package [@mcgillycuddy2025glmmTMB; @brooks2017glmmTMB]
+en fitten we met de **glmmTMB** package [@mcgillycuddy2025glmmTMB; @brooks2017glmmTMB].
+
+\vspace{0.5\baselineskip}
 
 ```r
 glmmTMB(
@@ -278,6 +294,8 @@ glmmTMB(
 ```
 
 De centrale toets is of deze parameter verschilt van nul:
+
+\vspace{0.5\baselineskip}
 
 ```r
 jaar:sbpbinnen
@@ -294,8 +312,10 @@ Met behulp van de **designpower** package wordt via simulaties bepaald welke waa
 Dit levert de minimaal detecteerbare effectgrootte (MDE) op voor elk scenario van het aantal telpunten (en eventueel andere scenario's), en geeft zo direct inzicht in de gevoeligheid van het monitoringsnetwerk.
 We kiezen een power van 0.9 en significantieniveau van 0.1.
 
+\vspace{0.5\baselineskip}
+
 ```r
-find_power(
+designpower::find_power(
   design,                      # initiële designparameters
                                # (aantal jaren, telperiodes, sd's ...)
   design_digits,               # aantal decimalen designparameters (precisie)
