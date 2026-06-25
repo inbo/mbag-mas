@@ -277,7 +277,7 @@ list(
       sim_power = simulate_mas_data,
       power = 0.9,
       alpha = 0.1,
-      db_file = "power_mas_light_akkervogel.duckdb",
+      db_file = "power_mas_light_akkervogel2.duckdb",
       seed = 123
     ),
     pattern = map(design_list),
@@ -288,5 +288,20 @@ list(
   tar_target(
     name = detectable_effect_df,
     command = detectable_effect_to_df(detectable_effect)
+  ),
+  tar_target(
+    name = power_plots,
+    command = get_power_plot(
+      design = design_list$design,
+      design_digits = design_list$digits,
+      opti = "beta_3",
+      sim_power = simulate_mas_data,
+      power = 0.9,
+      alpha = 0.1,
+      db_file = "power_mas_light_akkervogel2.duckdb",
+      seed = 123
+    ),
+    pattern = map(design_list),
+    iteration = "list"
   )
 )
