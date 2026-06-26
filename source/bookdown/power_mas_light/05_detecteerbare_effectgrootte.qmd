@@ -397,7 +397,7 @@ pred_df <- detectable_effect_years %>%
   mutate(legend = factor(paste(n_jaar, "jaar")))
 
 # Visualise effect trend
-p_detectable_effect_years_model <- detectable_effect_years %>%
+p_effect_years_model <- detectable_effect_years %>%
   mutate(legend = factor(paste(n_jaar, "jaar"))) %>%
   ggplot(aes(x = n_telpunten, y = effect_pct, colour = legend)) +
   geom_point(size = 1) +
@@ -425,9 +425,9 @@ p_detectable_effect_years_model <- detectable_effect_years %>%
 
 ggsave(
   "./figures/detectable_effect_years_model.png",
-  p_detectable_effect_years_model,
+  p_effect_years_model,
   dpi = 300
 )
 
-p_detectable_effect_years_model
+p_effect_years_model
 ```
