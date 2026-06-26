@@ -68,8 +68,8 @@ flandersqmd:
   depotnr:
   year: 2026
   reportnr:
-  cover:
-  coverphoto:
+  cover: figures/cover.png
+  coverphoto: figures/cover.png
   coverdescription:
 
 book:
