@@ -1,0 +1,53 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
+targets_path <- file.path(mbag_dir, "source", "targets", "power_mas_light")
+
+branch <- {{branch}}
+
+sc <- tar_read_mas("scenarios")[branch, ]
+
+cap <- paste0(
+  "Optimalisatie van de parameter beta_3 voor een scenario met ",
+  sc$n_telpunten, " telpunten en een tijdreeks van ",
+  sc$n_jaar, " jaar. De overige modelparameters zijn beta_0 = ",
+  round(sc$beta_0, 3), ", beta_1 = log(",
+  round(exp(sc$beta_1), 3), "), beta_2 = ",
+  round(sc$beta_2, 3), " en sigma_punt = ",
+  round(sc$sigma_punt, 6),
+  ". Uitgaande van een startwaarde beta_3 = ",
+  round(sc$beta_3, 4),
+  " wordt iteratief gezocht naar de waarde die een statistische power van 0,9 oplevert."
+)
+```
+
+```{r}
+#| label: fig-powerplot-{{branch}}
+#| fig-cap: !expr "cap"
+#| fig-width: 9
+#| fig-height: 5
+# Get input for power calculation
+design_list <- tar_read_mas("design_list", branch = branch)[[1]]
+source(file.path(targets_path, "R", "simulate_mas_data.R"))
+
+# Catch plot
+p <- grDevices::recordPlot({
+  find_power(
+    design = design_list$design[
+      -which(names(design_list$design) == "tar_group")
+    ],
+    design_digits = design_list$digits,
+    opti = "beta_3",
+    sim_power = simulate_mas_data,
+    power = 0.9,
+    alpha = 0.1,
+    filename = file.path(targets_path, "power_mas_light_akkervogel2.duckdb")
+  )
+})
+p
+```

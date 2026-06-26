@@ -74,13 +74,15 @@ flandersqmd:
 
 book:
   chapters:
-  - index.md
-  - 01_abstract.md
-  - 02_inleiding.md
-  - 03_methodiek.qmd
-  - 04_schatting_simulatieparameters.qmd
-  - 05_detecteerbare_effectgrootte.qmd
-  - 06_conclusie.md
-  - referenties.md
+    - index.md
+    - 01_abstract.md
+    - 02_inleiding.md
+    - 03_methodiek.qmd
+    - 04_schatting_simulatieparameters.qmd
+    - 05_detecteerbare_effectgrootte.qmd
+    - 06_conclusie.md
+    - referenties.md
+  appendices:
+    - appendix.qmd
 
 bibliography: references.bib
