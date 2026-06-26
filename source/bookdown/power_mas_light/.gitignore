@@ -7,5 +7,7 @@
 output
 site_libs
 
+!figures/cover.png
+
 /.quarto/
 **/*.quarto_ipynb
