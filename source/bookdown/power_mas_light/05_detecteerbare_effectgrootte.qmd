@@ -63,10 +63,10 @@ Zoals verwacht, blijkt dat een kleiner effect (trendverschillen buiten vs. binne
 
 ```{r}
 #| label: tbl-trends-sbp
-#| tbl-cap: "Veronderstelde trend buiten SBP-gebied en de overeenkomstige minimaal
-#|   detecteerbare trend binnen SBP-gebied voor drie scenario's en verschillende
-#|   aantallen telpunten. De trends worden zowel als jaarlijkse als als
-#|   cumulatieve verandering over 10 jaar weergegeven."
+#| tbl-cap: "Veronderstelde trend buiten SBP-gebied en de overeenkomstige
+#|   minimaal detecteerbare trend binnen SBP-gebied voor drie scenario's en
+#|   verschillende aantallen telpunten. De trends worden zowel als jaarlijkse
+#|   als als cumulatieve verandering over 10 jaar weergegeven."
 detectable_effect_10j %>%
   mutate(
     trend_buiten_jaarlijks =
@@ -395,7 +395,7 @@ pred_df <- detectable_effect_years %>%
   mutate(legend = factor(paste(n_jaar, "jaar")))
 
 # Visualise effect trend
-detectable_effect_years %>%
+p_detectable_effect_years_model <- detectable_effect_years %>%
   mutate(legend = factor(paste(n_jaar, "jaar"))) %>%
   ggplot(aes(x = n_telpunten, y = effect_pct, colour = legend)) +
   geom_point(size = 1) +
@@ -420,4 +420,12 @@ detectable_effect_years %>%
     colour = "Lengte tijdreeks"
   ) +
   theme_minimal()
+
+ggsave(
+  "./figures/detectable_effect_years_model.png",
+  p_detectable_effect_years_model,
+  dpi = 300
+)
+
+p_detectable_effect_years_model
 ```
