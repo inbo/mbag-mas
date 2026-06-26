@@ -317,14 +317,15 @@ We kiezen een power van 0.9 en significantieniveau van 0.1.
 ```r
 designpower::find_power(
   design,                      # initiële designparameters
-                               # (aantal jaren, telperiodes, sd's ...)
+                               # (aantal jaren, telperiodes, beta's ...)
   design_digits,               # aantal decimalen designparameters (precisie)
   opti,                        # parameter te optimaliseren (jaar:sbp)
-  sim_power,                   # simulatie functie
-                               # (genereert data en fit analysemodel, output = p-waarde)
+  sim_power,                   # simulatiefunctie
+                               # (genereert data en fit analysemodel,
+                               #  output = p-waarde)
   power = 0.9,                 # target power
-  alpha = 0.1,                 # significance level
-  filename = "power.duckdb",   # slaat alles op in database (met hashes)
+  alpha = 0.1,                 # significantieniveau
+  filename = "power.duckdb"    # slaat alles op in database (met hashes)
 )
 ```
 
