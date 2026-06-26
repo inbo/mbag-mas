@@ -21,8 +21,8 @@ cap <- paste0(
   round(sc$beta_2, 3), " en sigma_punt = ",
   round(sc$sigma_punt, 6),
   ". Uitgaande van een startwaarde beta_3 = ",
-  round(sc$beta_3, 4),
-  " wordt iteratief gezocht naar de waarde die een statistische power van 0,9 oplevert."
+  round(sc$beta_3, 4), " wordt iteratief gezocht naar de waarde die een ",
+  "statistische power van 0,9 oplevert."
 )
 ```
 

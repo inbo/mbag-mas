@@ -1,4 +1,4 @@
-# remotes::install_github("inbo/flandersqmd#7")
+# remotes::install_github("inbo/flandersqmd#57a604d981d85d632db65c98b1abb2e9d032359c") # nolint: commented_code_linter, line_length_linter
 library(flandersqmd)
 
 message <- c(
