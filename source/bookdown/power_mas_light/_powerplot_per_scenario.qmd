@@ -10,19 +10,24 @@ targets_path <- file.path(mbag_dir, "source", "targets", "power_mas_light")
 
 branch <- {{branch}}
 
-sc <- tar_read_mas("scenarios")[branch, ]
+# Get design parameters
+design_list <- tar_read_mas("design_list", branch = branch)[[1]]
+result <- tar_read_mas("detectable_effect", branch = branch)[[1]]
 
 cap <- paste0(
   "Optimalisatie van de parameter beta_3 voor een scenario met ",
-  sc$n_telpunten, " telpunten en een tijdreeks van ",
-  sc$n_jaar, " jaar. De overige modelparameters zijn beta_0 = ",
-  round(sc$beta_0, 3), ", beta_1 = log(",
-  round(exp(sc$beta_1), 3), "), beta_2 = ",
-  round(sc$beta_2, 3), " en sigma_punt = ",
-  round(sc$sigma_punt, 6),
+  design_list$design$n_telpunten, " telpunten en een tijdreeks van ",
+  design_list$design$n_jaar, " jaar. De overige modelparameters zijn beta_0 = ",
+  round(design_list$design$beta_0, 3), ", beta_1 = log(",
+  round(exp(design_list$design$beta_1), 3), "), beta_2 = ",
+  round(design_list$design$beta_2, 3), " en sigma_punt = ",
+  round(design_list$design$sigma_punt, 6),
   ". Uitgaande van een startwaarde beta_3 = ",
-  round(sc$beta_3, 4), " wordt iteratief gezocht naar de waarde die een ",
-  "statistische power van 0,9 oplevert."
+  round(design_list$design$beta_3, 4),
+  " wordt iteratief gezocht naar de waarde die een ",
+  "statistische power van 0,9 oplevert. ",
+  "De resulterende waarde voor beta_3 is ",
+  round(result[1], design_list$digits["beta_3"]), "."
 )
 ```
 
@@ -31,8 +36,7 @@ cap <- paste0(
 #| fig-cap: !expr "cap"
 #| fig-width: 9
 #| fig-height: 5
-# Get input for power calculation
-design_list <- tar_read_mas("design_list", branch = branch)[[1]]
+# Get simulation function for power calculation
 source(file.path(targets_path, "R", "simulate_mas_data.R"))
 
 # Catch plot

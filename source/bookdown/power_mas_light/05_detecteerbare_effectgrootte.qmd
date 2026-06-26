@@ -24,6 +24,8 @@ Beschouw een hypothetische akkervogelsoort die over heel Vlaanderen aanwezig is 
 Deze soort heeft de hoogste densiteit buiten SBP-gebied en de hoogste densiteit binnen SBP-gebied van de werkelijke akkervogels in MAS (hoogste $\beta_0$: `r round(tar_read_mas("best_parameters")$beta_0, 3)`, en $\beta_2$: `r round(tar_read_mas("best_parameters")$beta_2, 3)`) en de kleinste variatie tussen telpunten ($\sigma_{punt}$: `r round(tar_read_mas("best_parameters")$sigma_punt, 6)`).
 Deze heeft bijgevolg een verwachte startdensiteit buiten SBP-gebied van `r round(exp(tar_read_mas("best_parameters")$beta_0), 2)` en binnen SBP-gebied van `r round(exp(tar_read_mas("best_parameters")$beta_0 + tar_read_mas("best_parameters")$beta_2), 2)`.
 
+De detecteerbare effectgrootte werd bepaald via een iteratieve optimalisatieprocedure waarbij de parameter $\beta_3$ werd gekozen zodat een statistische power van 0,9 werd bereikt. Een gedetailleerde visualisatie van deze optimalisatie voor elk scenario is opgenomen in @sec-powerplot.
+
 ## Variabele trend buiten SBP-gebied
 ### Methodiek
 
