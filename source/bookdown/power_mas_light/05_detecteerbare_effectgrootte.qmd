@@ -339,12 +339,9 @@ $n$: het aantal telpunten,
 
 $T$: de lengte van de tijdreeks (in jaren)
 
-\vspace{0.5\baselineskip}
-
-```{r, echo=TRUE}
+```{r, echo=FALSE}
 fit_time <- lm(log(effect_pct) ~ log(n_telpunten) + log(n_jaar),
                data = detectable_effect_years)
-summary(fit_time)
 ```
 
 De simulaties tonen dat de detecteerbare effectgrootte wordt beschreven door een machtsfunctie van zowel het aantal telpunten als de lengte van de tijdreeks (@fig-detectable-effect-years-model). De geschatte exponenten (`r round(coef(fit_time)[2], 3)` voor het aantal telpunten en `r round(coef(fit_time)[3], 3)` voor het aantal jaren) liggen dicht bij de theoretisch verwachte waarden van respectievelijk (-1/2) en (-3/2). Dit impliceert dat de detecteerbare effectgrootte bij benadering afneemt volgens
@@ -352,6 +349,14 @@ De simulaties tonen dat de detecteerbare effectgrootte wordt beschreven door een
 $$
 \text{effectgrootte} \propto \frac{1}{\sqrt{n_{\text{telpunten}}*T^3}}
 $$
+
+\newpage
+
+```{r, echo=TRUE}
+fit_time <- lm(log(effect_pct) ~ log(n_telpunten) + log(n_jaar),
+               data = detectable_effect_years)
+summary(fit_time)
+```
 
 ```{r}
 #| label: fig-detectable-effect-years-model
