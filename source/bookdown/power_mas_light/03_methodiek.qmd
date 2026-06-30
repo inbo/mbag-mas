@@ -203,7 +203,7 @@ De random effecten voor de ruimtelijke component worden gegenereerd als:
 ```r
 rf_punt <- rnorm(
   n_punten,
-  sd = sd_punt
+  sd = sigma_punt
 )
 ```
 
@@ -213,10 +213,10 @@ Vervolgens wordt voor elke combinatie van telpunt en jaar de lineaire predictor 
 
 ```r
 eta <-
-  beta0 +
-  beta1 * jaar +
-  beta2 * sbp +
-  beta3 * jaar * sbp +
+  beta_0 +
+  beta_1 * jaar +
+  beta_2 * sbp +
+  beta_3 * jaar * sbp +
   rf_punt[punt]
 ```
 
