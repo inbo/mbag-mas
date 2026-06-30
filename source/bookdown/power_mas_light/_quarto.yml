@@ -24,6 +24,7 @@ lang: nl-BE
 
 flandersqmd:
   entity: INBO
+  publisher: INBO
   level: 2
   public_report: true
   colophon: true
