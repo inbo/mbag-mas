@@ -74,3 +74,34 @@ cropped <- image_crop(
 
 # Save final cover image
 image_write(cropped, "./figures/cover.png")
+
+# Get figure
+img <- image_read("./figures/cover.png")
+img <- image_draw(img)
+
+# Replace old y-axis text with white rectangle
+rect(
+  xleft = 5,
+  ybottom = 80,
+  xright = 25,
+  ytop = 320,
+  col = "white",
+  border = NA
+)
+
+# New text
+grid::grid.text(
+  "Geschatte power",
+  x = unit(15, "pt"),
+  y = unit(0.53, "npc"),
+  rot = 90,
+  gp = grid::gpar(
+    fontsize = 12,
+    fontfamily = "sans",
+    col = "black"
+  )
+)
+
+dev.off()
+
+image_write(img, "./figures/cover_nl.png")
