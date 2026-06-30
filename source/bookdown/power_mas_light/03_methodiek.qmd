@@ -274,7 +274,7 @@ Het expliciet modelleren van stratificatievariabelen kan de residuele variantie 
 
 ## Analysemodel {#sec-analysemodel}
 
-De gesimuleerde data worden geanalyseerd met een Generalized Linear Mixed Model (GLMM).
+De gesimuleerde data worden geanalyseerd met een *generalized linear mixed model* (GLMM).
 Het analysemodel is
 
 $$
@@ -323,7 +323,7 @@ designpower::find_power(
   sim_power,                   # simulatiefunctie
                                # (genereert data en fit analysemodel,
                                #  output = p-waarde)
-  power = 0.9,                 # target power
+  power = 0.9,                 # doelpower
   alpha = 0.1,                 # significantieniveau
   filename = "power.duckdb"    # slaat alles op in database (met hashes)
 )
