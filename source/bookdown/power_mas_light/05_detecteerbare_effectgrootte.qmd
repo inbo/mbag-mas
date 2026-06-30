@@ -18,6 +18,8 @@ theme_set(theme_inbo(base_size = 12, transparent = TRUE))
 conflicted::conflicts_prefer(dplyr::filter)
 
 source("R/tar_read_mas.R")
+
+options(OutDec = ",")
 ```
 
 Beschouw een hypothetische akkervogelsoort die over heel Vlaanderen aanwezig is aan een gelijkaardige densiteit.
@@ -69,16 +71,28 @@ Zoals verwacht, blijkt dat een kleiner effect (trendverschillen buiten vs. binne
 #|   minimaal detecteerbare trend binnen SBP-gebied voor drie scenario's en
 #|   verschillende aantallen telpunten. De trends worden zowel als jaarlijkse
 #|   als als cumulatieve verandering over 10 jaar weergegeven."
+fmt_pct <- function(x, digits) {
+  paste0(
+    formatC(
+      x,
+      format = "f",
+      digits = digits,
+      decimal.mark = ","
+    ),
+    " %"
+  )
+}
+
 detectable_effect_10j %>%
   mutate(
     trend_buiten_jaarlijks =
-      sprintf("%.1f %%", 100 * (exp(beta_1) - 1)),
+      fmt_pct(100 * (exp(beta_1) - 1), 1),
     trend_buiten_10j =
-      sprintf("%.1f %%", 100 * (exp(10 * beta_1) - 1)),
+      fmt_pct(100 * (exp(10 * beta_1) - 1), 1),
     trend_binnen_jaarlijks =
-      sprintf("%.2f %%", 100 * (exp(beta_1 + beta3) - 1)),
+      fmt_pct(100 * (exp(beta_1 + beta3) - 1), 2),
     trend_binnen_10j =
-      sprintf("%.2f %%", 100 * (exp(10 * (beta_1 + beta3)) - 1))
+      fmt_pct(100 * (exp(10 * (beta_1 + beta3)) - 1), 2)
   ) %>%
   select(
     n_telpunten,

@@ -7,6 +7,8 @@ library(INBOtheme)
 theme_set(theme_inbo(base_size = 12, transparent = TRUE))
 conflicted::conflicts_prefer(dplyr::filter)
 
+options(OutDec = ",")
+
 source("R/tar_read_mas.R")
 mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
 targets_path <- file.path(mbag_dir, "source", "targets", "power_mas_light")
