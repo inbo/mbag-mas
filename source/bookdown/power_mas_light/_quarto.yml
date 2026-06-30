@@ -24,6 +24,7 @@ lang: nl-BE
 
 flandersqmd:
   entity: INBO
+  publisher: INBO
   level: 2
   public_report: true
   colophon: true
@@ -64,23 +65,25 @@ flandersqmd:
     email: info@inbo.be
     ror: 00j54wy13
 
-  doi:
+  doi: 10.21436/inbor.152017328
   depotnr:
   year: 2026
-  reportnr:
-  cover:
-  coverphoto:
-  coverdescription:
+  reportnr: 53
+  cover: figures/cover.png
+  coverphoto: figures/cover.png
+  coverdescription: Visualisatie van de iteratieve optimalisatie van de detecteerbare effectgrootte voor een van de onderzochte simulatiescenario's. Via simulaties wordt de minimale waarde voor de parameter $\beta_3$ bepaald die een statistische power van 0,9 bereikt.
 
 book:
   chapters:
-  - index.md
-  - 01_abstract.md
-  - 02_inleiding.md
-  - 03_methodiek.qmd
-  - 04_schatting_simulatieparameters.qmd
-  - 05_detecteerbare_effectgrootte.qmd
-  - 06_conclusie.md
-  - referenties.md
+    - index.md
+    - 01_abstract.md
+    - 02_inleiding.md
+    - 03_methodiek.qmd
+    - 04_schatting_simulatieparameters.qmd
+    - 05_detecteerbare_effectgrootte.qmd
+    - 06_conclusie.md
+    - referenties.md
+  appendices:
+    - appendix.qmd
 
 bibliography: references.bib

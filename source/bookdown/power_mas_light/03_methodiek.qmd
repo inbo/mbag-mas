@@ -49,7 +49,7 @@ Om een representatieve dekking van Vlaanderen te garanderen en de efficiëntie v
 * landschapstype (open of halfopen landschap);
 * SBP-status (binnen of buiten soortenbeschermingsprogrammagebieden).
 
-Dit resulteert in:
+Dit resulteert in
 
 $$
 6 \times 2 \times 2 = 24
@@ -186,7 +186,7 @@ $$
 \mu_{ijt} = \exp(\eta_{ij})
 $$
 
-De waargenomen tellingen worden gegenereerd uit een Poissonverdeling:
+De waargenomen tellingen worden gegenereerd uit een poissonverdeling:
 
 $$
 y_{ij} \sim Poisson(\mu_{ij})
@@ -203,7 +203,7 @@ De random effecten voor de ruimtelijke component worden gegenereerd als:
 ```r
 rf_punt <- rnorm(
   n_punten,
-  sd = sd_punt
+  sd = sigma_punt
 )
 ```
 
@@ -213,10 +213,10 @@ Vervolgens wordt voor elke combinatie van telpunt en jaar de lineaire predictor 
 
 ```r
 eta <-
-  beta0 +
-  beta1 * jaar +
-  beta2 * sbp +
-  beta3 * jaar * sbp +
+  beta_0 +
+  beta_1 * jaar +
+  beta_2 * sbp +
+  beta_3 * jaar * sbp +
   rf_punt[punt]
 ```
 
@@ -274,7 +274,7 @@ Het expliciet modelleren van stratificatievariabelen kan de residuele variantie 
 
 ## Analysemodel {#sec-analysemodel}
 
-De gesimuleerde data worden geanalyseerd met een Generalized Linear Mixed Model (GLMM).
+De gesimuleerde data worden geanalyseerd met een *generalized linear mixed model* (GLMM).
 Het analysemodel is
 
 $$
@@ -310,21 +310,22 @@ De centrale effectparameter is de interactieterm tussen jaar en SBP-status, die 
 
 Met behulp van de **designpower** package wordt via simulaties bepaald welke waarde van dit trendverschil nodig is om een vooraf gekozen power te bereiken [@onkelinx2026designpower].
 Dit levert de minimaal detecteerbare effectgrootte (MDE) op voor elk scenario van het aantal telpunten (en eventueel andere scenario's), en geeft zo direct inzicht in de gevoeligheid van het monitoringsnetwerk.
-We kiezen een power van 0.9 en significantieniveau van 0.1.
+We kiezen een power van 0,9 en significantieniveau van 0,1.
 
 \vspace{0.5\baselineskip}
 
 ```r
 designpower::find_power(
   design,                      # initiële designparameters
-                               # (aantal jaren, telperiodes, sd's ...)
+                               # (aantal jaren, telperiodes, beta's ...)
   design_digits,               # aantal decimalen designparameters (precisie)
   opti,                        # parameter te optimaliseren (jaar:sbp)
-  sim_power,                   # simulatie functie
-                               # (genereert data en fit analysemodel, output = p-waarde)
-  power = 0.9,                 # target power
-  alpha = 0.1,                 # significance level
-  filename = "power.duckdb",   # slaat alles op in database (met hashes)
+  sim_power,                   # simulatiefunctie
+                               # (genereert data en fit analysemodel,
+                               #  output = p-waarde)
+  power = 0.9,                 # doelpower
+  alpha = 0.1,                 # significantieniveau
+  filename = "power.duckdb"    # slaat alles op in database (met hashes)
 )
 ```
 
@@ -335,7 +336,7 @@ Een power van 0,9 betekent dus 90 % kans om een echt effect te detecteren (of 10
 Het significantieniveau ($\alpha$) is de drempel voor hoe snel je een effect als “statistisch significant” beschouwt terwijl het in werkelijkheid niet bestaat.
 Een $\alpha$ van 0.1 betekent dat je een 10% kans op een vals positief resultaat (type I-fout: je concludeert soms ten onrechte dat er een effect is, terwijl er eigenlijk geen is).
 
-Met power = 0.9 en $\alpha$ = 0.1 kiezen we dus voor een ontwerp dat heel gevoelig is (weinig kans om echte trends te missen), maar accepteert wel een relatief ruime foutkans op vals-positieven.
+Met power = 0,9 en $\alpha$ = 0,1 kiezen we dus voor een ontwerp dat heel gevoelig is (weinig kans om echte trends te missen), maar accepteert wel een relatief ruime foutkans op vals-positieven.
 
 ## Mogelijke uitbreidingen van het simulatiekader {#sec-methodiek-uitbreidingen}
 
@@ -343,6 +344,6 @@ De huidige analyse is bewust opgezet als een eerste, vereenvoudigde evaluatie va
 
 Een eerste uitbreiding betreft de expliciete modellering van de stratificatie. In de basisanalyse worden landbouwstreek en landschapstype enkel gebruikt voor de allocatie van telpunten. Wanneer deze variabelen een belangrijk deel van de ruimtelijke variatie verklaren, kan opname ervan in de simulaties en het analysemodel de residuele variantie verminderen en de statistische kracht verhogen.
 
-Daarnaast wordt in de huidige analyse verondersteld dat alle telpunten in Vlaanderen potentieel relevant zijn voor de doelsoort. Voor soorten met een beperkte verspreiding is dit niet realistisch. Zo komt de geelgors slechts in een beperkt deel van Vlaanderen voor en dragen telpunten buiten het verspreidingsgebied weinig of niet bij aan de detectie van trends. Een uitbreiding van het simulatiekader kan daarom rekening houden met de gekende verspreiding van doelsoorten en de steekproef beperken tot geschikte regio's of habitats.
+Daarnaast wordt in de huidige analyse verondersteld dat alle telpunten in Vlaanderen potentieel relevant zijn voor de doelsoort. Voor soorten met een beperkte verspreiding is dit niet realistisch. Zo komt de geelgors slechts in een beperkt deel van Vlaanderen voor en dragen telpunten buiten het verspreidingsgebied weinig of niet bij aan de detectie van trends. Een uitbreiding van het simulatiekader kan daarom rekening houden met de gekende verspreiding van doelsoorten en de steekproef beperken tot geschikte regio's of habitatten.
 
 Ten slotte kunnen ook meer realistische simulatie- en analysemethoden worden onderzocht, zoals niet-lineaire populatietrends of complexere ruimtelijke structuren. Dergelijke uitbreidingen sluiten doorgaans beter aan bij de biologische realiteit, maar vereisen bijkomende aannames en een grotere modelcomplexiteit. De huidige analyse vertrekt vanuit een modelgebaseerde benadering van de datageneratie en inferentie. Alternatieve design-gebaseerde benaderingen, waarbij de eigenschappen van het steekproefontwerp centraal staan, kunnen in bepaalde situaties tot andere conclusies leiden over de variantie en de statistische kracht. De resultaten van deze studie moeten daarom worden geïnterpreteerd als een eerste evaluatie binnen het gekozen modelkader.

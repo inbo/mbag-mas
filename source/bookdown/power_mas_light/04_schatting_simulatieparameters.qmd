@@ -21,6 +21,8 @@ conflicted::conflicts_prefer(dplyr::filter)
 
 source("R/describe_presence.R")
 source("R/tar_read_mas.R")
+
+options(OutDec = ",")
 ```
 
 ```{r}
@@ -63,7 +65,7 @@ De geschatte parameters zijn weergegeven in @tbl-est-params.
 
 ```{r}
 #| label: tbl-est-params
-#| tbl-cap: "Geschatte simulatieparameters per soort op basis van de GLMM's
+#| tbl-cap: "Geschatte simulatieparameters per soort op basis van de GLMMs
 #|   gefit op de gegevens van 2024 en 2025. `verwacht_buiten` en
 #|   `verwacht_binnen` geven het verwachte aantal individuen per telpunt
 #|   respectievelijk buiten en binnen SBP-gebied weer."

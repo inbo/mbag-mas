@@ -18,11 +18,15 @@ theme_set(theme_inbo(base_size = 12, transparent = TRUE))
 conflicted::conflicts_prefer(dplyr::filter)
 
 source("R/tar_read_mas.R")
+
+options(OutDec = ",")
 ```
 
 Beschouw een hypothetische akkervogelsoort die over heel Vlaanderen aanwezig is aan een gelijkaardige densiteit.
-Deze soort heeft de hoogste densiteit buiten SBP-gebied en de hoogste densiteit binnen SBP-gebied van de werkelijke akkervogels in MAS (hoogste $\beta_0$: `r round(tar_read_mas("best_parameters")$beta_0, 3)`, en $\beta_2$: `r round(tar_read_mas("best_parameters")$beta_2, 3)`) en de kleinste variatie tussen telpunten ($\sigma_{punt}$: `r round(tar_read_mas("best_parameters")$sigma_punt, 6)`).
+Deze soort heeft de hoogste densiteit buiten SBP-gebied en de hoogste densiteit binnen SBP-gebied van de werkelijke akkervogels in MAS (hoogste $\beta_0$ = `r round(tar_read_mas("best_parameters")$beta_0, 3)`, en $\beta_2$ = `r round(tar_read_mas("best_parameters")$beta_2, 3)`) en de kleinste variatie tussen telpunten ($\sigma_{punt}$ = `r round(tar_read_mas("best_parameters")$sigma_punt, 6)`).
 Deze heeft bijgevolg een verwachte startdensiteit buiten SBP-gebied van `r round(exp(tar_read_mas("best_parameters")$beta_0), 2)` en binnen SBP-gebied van `r round(exp(tar_read_mas("best_parameters")$beta_0 + tar_read_mas("best_parameters")$beta_2), 2)`.
+
+De detecteerbare effectgrootte werd bepaald via een iteratieve optimalisatieprocedure waarbij de parameter $\beta_3$ werd gekozen zodat een statistische power van 0,9 werd bereikt. Een gedetailleerde visualisatie van deze optimalisatie voor elk scenario is opgenomen in @sec-powerplot.
 
 ## Variabele trend buiten SBP-gebied
 ### Methodiek
@@ -63,20 +67,32 @@ Zoals verwacht, blijkt dat een kleiner effect (trendverschillen buiten vs. binne
 
 ```{r}
 #| label: tbl-trends-sbp
-#| tbl-cap: "Veronderstelde trend buiten SBP-gebied en de overeenkomstige minimaal
-#|   detecteerbare trend binnen SBP-gebied voor drie scenario's en verschillende
-#|   aantallen telpunten. De trends worden zowel als jaarlijkse als als
-#|   cumulatieve verandering over 10 jaar weergegeven."
+#| tbl-cap: "Veronderstelde trend buiten SBP-gebied en de overeenkomstige
+#|   minimaal detecteerbare trend binnen SBP-gebied voor drie scenario's en
+#|   verschillende aantallen telpunten. De trends worden zowel als jaarlijkse
+#|   als als cumulatieve verandering over 10 jaar weergegeven."
+fmt_pct <- function(x, digits) {
+  paste0(
+    formatC(
+      x,
+      format = "f",
+      digits = digits,
+      decimal.mark = ","
+    ),
+    " %"
+  )
+}
+
 detectable_effect_10j %>%
   mutate(
     trend_buiten_jaarlijks =
-      sprintf("%.1f %%", 100 * (exp(beta_1) - 1)),
+      fmt_pct(100 * (exp(beta_1) - 1), 1),
     trend_buiten_10j =
-      sprintf("%.1f %%", 100 * (exp(10 * beta_1) - 1)),
+      fmt_pct(100 * (exp(10 * beta_1) - 1), 1),
     trend_binnen_jaarlijks =
-      sprintf("%.2f %%", 100 * (exp(beta_1 + beta3) - 1)),
+      fmt_pct(100 * (exp(beta_1 + beta3) - 1), 2),
     trend_binnen_10j =
-      sprintf("%.2f %%", 100 * (exp(10 * (beta_1 + beta3)) - 1))
+      fmt_pct(100 * (exp(10 * (beta_1 + beta3)) - 1), 2)
   ) %>%
   select(
     n_telpunten,
@@ -339,12 +355,9 @@ $n$: het aantal telpunten,
 
 $T$: de lengte van de tijdreeks (in jaren)
 
-\vspace{0.5\baselineskip}
-
-```{r, echo=TRUE}
+```{r, echo=FALSE}
 fit_time <- lm(log(effect_pct) ~ log(n_telpunten) + log(n_jaar),
                data = detectable_effect_years)
-summary(fit_time)
 ```
 
 De simulaties tonen dat de detecteerbare effectgrootte wordt beschreven door een machtsfunctie van zowel het aantal telpunten als de lengte van de tijdreeks (@fig-detectable-effect-years-model). De geschatte exponenten (`r round(coef(fit_time)[2], 3)` voor het aantal telpunten en `r round(coef(fit_time)[3], 3)` voor het aantal jaren) liggen dicht bij de theoretisch verwachte waarden van respectievelijk (-1/2) en (-3/2). Dit impliceert dat de detecteerbare effectgrootte bij benadering afneemt volgens
@@ -352,6 +365,14 @@ De simulaties tonen dat de detecteerbare effectgrootte wordt beschreven door een
 $$
 \text{effectgrootte} \propto \frac{1}{\sqrt{n_{\text{telpunten}}*T^3}}
 $$
+
+\newpage
+
+```{r, echo=TRUE}
+fit_time <- lm(log(effect_pct) ~ log(n_telpunten) + log(n_jaar),
+               data = detectable_effect_years)
+summary(fit_time)
+```
 
 ```{r}
 #| label: fig-detectable-effect-years-model
@@ -390,7 +411,7 @@ pred_df <- detectable_effect_years %>%
   mutate(legend = factor(paste(n_jaar, "jaar")))
 
 # Visualise effect trend
-detectable_effect_years %>%
+p_effect_years_model <- detectable_effect_years %>%
   mutate(legend = factor(paste(n_jaar, "jaar"))) %>%
   ggplot(aes(x = n_telpunten, y = effect_pct, colour = legend)) +
   geom_point(size = 1) +
@@ -415,4 +436,12 @@ detectable_effect_years %>%
     colour = "Lengte tijdreeks"
   ) +
   theme_minimal()
+
+ggsave(
+  "./figures/detectable_effect_years_model.png",
+  p_effect_years_model,
+  dpi = 300
+)
+
+p_effect_years_model
 ```

@@ -2,6 +2,6 @@ Titel: Poweranalyse voor het meten van de effectiviteit van soortenbeschermingsp
 Subtitel: Aanzet tot een vereenvoudigde versie van het Meetnet Agrarische Soorten (“MAS light”)
 Auteur(s): Ward Langeraert
 Contactpersoon: ward.langeraert@inbo.be
-Afbeelding voor cover: 
+Afbeelding voor cover: figures/cover.png
 Embargo tot: 
 Geen druk
