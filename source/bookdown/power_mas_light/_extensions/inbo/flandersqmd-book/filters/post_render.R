@@ -1,12 +1,17 @@
-# remotes::install_github("inbo/flandersqmd#57a604d981d85d632db65c98b1abb2e9d032359c") # nolint: commented_code_linter, line_length_linter
-library(flandersqmd)
+# Source functions
+scripts <- list.files(
+  path = "R",
+  pattern = "^autoqmd.*\\.R$",
+  full.names = TRUE
+)
+invisible(lapply(scripts, source))
 
+# Clean report file and remove child files
 message <- c(
   "",
   "> Niet manueel aanpassen"
 )
 
-# Clean report file and remove child files
 autoqmd_finalise(
   target_files = "04_schatting_simulatieparameters.qmd",
   message = message,

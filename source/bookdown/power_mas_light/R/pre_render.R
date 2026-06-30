@@ -1,7 +1,15 @@
-# remotes::install_github("inbo/flandersqmd#57a604d981d85d632db65c98b1abb2e9d032359c") # nolint: commented_code_linter, line_length_linter
-library(flandersqmd)
+# Load packages
 library(targets)
+
+# Source functions
 source("R/tar_read_mas.R")
+
+scripts <- list.files(
+  path = "R",
+  pattern = "^autoqmd.*\\.R$",
+  full.names = TRUE
+)
+invisible(lapply(scripts, source))
 
 # Results chapter 4 by species
 target_species <- c(
