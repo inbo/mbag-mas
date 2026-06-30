@@ -49,7 +49,7 @@ Om een representatieve dekking van Vlaanderen te garanderen en de efficiëntie v
 * landschapstype (open of halfopen landschap);
 * SBP-status (binnen of buiten soortenbeschermingsprogrammagebieden).
 
-Dit resulteert in:
+Dit resulteert in
 
 $$
 6 \times 2 \times 2 = 24
@@ -186,7 +186,7 @@ $$
 \mu_{ijt} = \exp(\eta_{ij})
 $$
 
-De waargenomen tellingen worden gegenereerd uit een Poissonverdeling:
+De waargenomen tellingen worden gegenereerd uit een poissonverdeling:
 
 $$
 y_{ij} \sim Poisson(\mu_{ij})
@@ -344,6 +344,6 @@ De huidige analyse is bewust opgezet als een eerste, vereenvoudigde evaluatie va
 
 Een eerste uitbreiding betreft de expliciete modellering van de stratificatie. In de basisanalyse worden landbouwstreek en landschapstype enkel gebruikt voor de allocatie van telpunten. Wanneer deze variabelen een belangrijk deel van de ruimtelijke variatie verklaren, kan opname ervan in de simulaties en het analysemodel de residuele variantie verminderen en de statistische kracht verhogen.
 
-Daarnaast wordt in de huidige analyse verondersteld dat alle telpunten in Vlaanderen potentieel relevant zijn voor de doelsoort. Voor soorten met een beperkte verspreiding is dit niet realistisch. Zo komt de geelgors slechts in een beperkt deel van Vlaanderen voor en dragen telpunten buiten het verspreidingsgebied weinig of niet bij aan de detectie van trends. Een uitbreiding van het simulatiekader kan daarom rekening houden met de gekende verspreiding van doelsoorten en de steekproef beperken tot geschikte regio's of habitats.
+Daarnaast wordt in de huidige analyse verondersteld dat alle telpunten in Vlaanderen potentieel relevant zijn voor de doelsoort. Voor soorten met een beperkte verspreiding is dit niet realistisch. Zo komt de geelgors slechts in een beperkt deel van Vlaanderen voor en dragen telpunten buiten het verspreidingsgebied weinig of niet bij aan de detectie van trends. Een uitbreiding van het simulatiekader kan daarom rekening houden met de gekende verspreiding van doelsoorten en de steekproef beperken tot geschikte regio's of habitatten.
 
 Ten slotte kunnen ook meer realistische simulatie- en analysemethoden worden onderzocht, zoals niet-lineaire populatietrends of complexere ruimtelijke structuren. Dergelijke uitbreidingen sluiten doorgaans beter aan bij de biologische realiteit, maar vereisen bijkomende aannames en een grotere modelcomplexiteit. De huidige analyse vertrekt vanuit een modelgebaseerde benadering van de datageneratie en inferentie. Alternatieve design-gebaseerde benaderingen, waarbij de eigenschappen van het steekproefontwerp centraal staan, kunnen in bepaalde situaties tot andere conclusies leiden over de variantie en de statistische kracht. De resultaten van deze studie moeten daarom worden geïnterpreteerd als een eerste evaluatie binnen het gekozen modelkader.
