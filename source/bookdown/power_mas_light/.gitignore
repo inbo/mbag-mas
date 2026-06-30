@@ -7,6 +7,7 @@
 output
 site_libs
 
+!figures/cover_en.png
 !figures/cover.png
 
 /.quarto/
