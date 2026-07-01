@@ -28,6 +28,7 @@ flandersqmd:
   level: 2
   public_report: true
   colophon: true
+  linenr: true
 
   title: Poweranalyse voor het meten van de effectiviteit van soortenbeschermingsprogramma’s
     in landbouwgebied van Vlaanderen
@@ -66,7 +67,7 @@ flandersqmd:
     ror: 00j54wy13
 
   doi: 10.21436/inbor.152017328
-  depotnr:
+  depotnr: D/2026/3241/272
   year: 2026
   reportnr: 53
   cover: figures/cover.png
