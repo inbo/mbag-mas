@@ -9,7 +9,7 @@ Tegelijk neemt de vraag naar beleidsrelevante biodiversiteitsinformatie toe. Zow
 
 Om deze reden werd het Meetnet Agrarische Soorten (MAS) ontwikkeld [@langeraert2025pilot; @jansen2026mas]. Het meetnet heeft als doel de toestand en trends van landbouwgebonden soorten op te volgen en tegelijk een kader te bieden voor de evaluatie van beleidsmaatregelen.
 
-De volledige MAS-methodiek vereist echter een aanzienlijke veldinspanning, mede doordat er ook voor subgebieden (bv. per landbouwstreek en type landschap) een uitspraak wou worden gedaan. Zowel het aantal telpunten als het aantal bezoeken per jaar hebben een belangrijke invloed op de benodigde middelen voor coördinatie, opleiding, kwaliteitscontrole en veldwerk.
+De volledige MAS-methodiek vereist echter een aanzienlijke veldinspanning, mede doordat er ook voor subgebieden (bv. per landbouwstreek en type landschap) een uitspraak werd beoogd. Zowel het aantal telpunten als het aantal bezoeken per jaar hebben een belangrijke invloed op de benodigde middelen voor coördinatie, opleiding, kwaliteitscontrole en veldwerk.
 
 Bij de verdere uitrol van MAS rijst daarom de vraag of een vereenvoudigde versie van het meetnet ("MAS light") voldoende statistische kracht behoudt om beleidsrelevante veranderingen te detecteren op schaal Vlaanderen (dus niet langer focus op subgebieden).
 

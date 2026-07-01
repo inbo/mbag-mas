@@ -1,6 +1,8 @@
-describe_presence <- function(presence_df) {
+describe_presence <- function(presence_df, spec = NULL) {
   require("dplyr")
   require("rlang")
+
+  if (is.null(spec)) spec <- "soort"
 
   # Get total proportion
   tot_prop <- presence_df %>%
@@ -8,8 +10,8 @@ describe_presence <- function(presence_df) {
     mutate(prop = .data$n / sum(.data$n)) %>%
     filter(.data$present)
   p <- round(100 * tot_prop$prop)
-  txt_total <- paste0(
-    "De soort werd in ", p, " % van de bezochte telpunten waargenomen."
+  txt_total <- paste(
+    "De", spec, "werd in", p, "% van de bezochte telpunten waargenomen."
   )
 
   # Summarise presences by landscape openness class and calculate proportions

@@ -63,7 +63,7 @@ We zien hierin slechts kleine verschillen tussen de trendscenario's (@fig-detect
 Wel zal de minimaal detecteerbare trend binnen SBP-gebied hoger zijn naarmate de trend buiten SBP-gebied hoger is om dezelfde positieve trendverschil te kunnen detecteren tussen beide.
 Zoals verwacht, blijkt dat een kleiner effect (trendverschillen buiten vs. binnen SBP-gebied) gedetecteerd kan worden bij een groter aantal telpunten.
 @tbl-trends-sbp geeft een overzicht van de veronderstelde trends buiten SBP-gebied en de overeenkomstige minimaal detecteerbare trends binnen SBP-gebied.
-@tbl-detectable-effect-10j toont dezelfde resultaten uitgedrukt als een het detecteerbaar verschil met "binnen SBP" over een periode van 10 jaar.
+@tbl-detectable-effect-10j toont dezelfde resultaten uitgedrukt als het detecteerbaar verschil met "binnen SBP" over een periode van 10 jaar.
 
 ```{r}
 #| label: tbl-trends-sbp
