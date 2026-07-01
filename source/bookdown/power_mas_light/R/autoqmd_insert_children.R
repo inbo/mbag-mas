@@ -126,7 +126,7 @@ autoqmd_insert_children <- function(
   # Insert child files
   switch(
     ext,
-    "qmd" = autoqmd_insert_qmd(
+    "qmd" = autoqmd_insert_qmd( # nolint: object_usage_linter
       target_file = target_file,
       child_files = child_files,
       start_marker = start_marker,
@@ -136,7 +136,7 @@ autoqmd_insert_children <- function(
       template_deps = template_deps,
       quiet = quiet
     ),
-    "yml" = autoqmd_insert_yaml(
+    "yml" = autoqmd_insert_yaml( # nolint: object_usage_linter
       target_file = target_file,
       child_files = child_files,
       child_labels = child_labels,
@@ -144,7 +144,7 @@ autoqmd_insert_children <- function(
       end_marker = end_marker,
       quiet = quiet
     ),
-    "yaml" = autoqmd_insert_yaml(
+    "yaml" = autoqmd_insert_yaml( # nolint: object_usage_linter
       target_file = target_file,
       child_files = child_files,
       child_labels = child_labels,

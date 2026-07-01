@@ -162,7 +162,7 @@ rect(
 )
 
 grid.text(
-  expression(beta[ 3 ]~"(effectgrootte)"),
+  expression(beta[3] ~ "(effectgrootte)"),
   x = unit(0.55, "npc"),
   y = unit(0.05, "npc"),
   gp = gpar(

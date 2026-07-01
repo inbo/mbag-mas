@@ -107,7 +107,7 @@ autoqmd_prepare <- function(
   }
 
   # Generate child documents from template
-  child_files <- autoqmd_generate_children(
+  child_files <- autoqmd_generate_children( # nolint: object_usage_linter
     ...,
     template = template,
     child_dir = child_dir,
@@ -117,7 +117,7 @@ autoqmd_prepare <- function(
   )
 
   # Insert includes
-  autoqmd_insert_children(
+  autoqmd_insert_children( # nolint: object_usage_linter
     target_file = target_file,
     child_files = child_files,
     start_marker = start_marker,

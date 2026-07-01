@@ -70,7 +70,7 @@ autoqmd_finalise <- function(
   }
 
   # Clean up qmd
-  lapply(target_files, autoqmd_cleanup, message = message, ...)
+  lapply(target_files, autoqmd_cleanup, message = message, ...) # nolint: object_usage_linter
 
   # Remove child documents folder
   unlink(child_dirs_rm, recursive = TRUE)

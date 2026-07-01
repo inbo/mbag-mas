@@ -73,7 +73,7 @@ autoqmd_insert_qmd <- function(
   }
 
   # Generate dependency timestamps using the helper
-  timestamp_line <- autoqmd_dependency_stamp(c(template, template_deps))
+  timestamp_line <- autoqmd_dependency_stamp(c(template, template_deps)) # nolint: object_usage_linter
 
   # Build child includes
   if (!is.null(page_break)) {
