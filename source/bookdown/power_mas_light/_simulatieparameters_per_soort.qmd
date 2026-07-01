@@ -20,7 +20,7 @@ presence_df <- tar_read_mas("presence_logical", branch = branch)
 #| fig-cap: "Aanwezigheid van {{species}} over twee jaren en vier telperiodes
 #|   (acht bezoeken in totaal), uitgesplitst naar SBP, regio en openheidsklasse.
 #|   De figuur toont het aantal telpunten waar de soort al dan niet werd
-#|   waargenomen (`present`) binnen elke combinatie van strata."
+#|   waargenomen binnen elke combinatie van strata."
 #| fig-height: 6.7
 #| fig-width: 6
 presence_df %>%
