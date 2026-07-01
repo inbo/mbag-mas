@@ -1,34 +1,16 @@
+{{< colophon >}}
+
 # Samenvatting {.unnumbered}
 
 <!-- description: start -->
-Dit rapport onderzoekt de statistische haalbaarheid van een vereenvoudigd monitoringsontwerp, genaamd "MAS light". Het doel van dit meetnet is na te gaan of de populatietrends van akkervogels binnen soortenbeschermingsprogramma's (SBP) gunstiger evolueren dan in vergelijkbare gebieden buiten SBP. De centrale vraag is welk verschil in trend tussen beide groepen met voldoende statistische zekerheid kan worden aangetoond.
+Dit rapport onderzoekt de statistische haalbaarheid van een vereenvoudigd monitoringsontwerp, genaamd "MAS light". Het doel van dit meetnet is na te gaan of de populatietrends van akkervogels binnen soortenbeschermingsprogrammagebieden (SBP-gebieden) gunstiger evolueren dan in vergelijkbare gebieden buiten SBP-gebieden. De centrale vraag is welk verschil in trend tussen beide groepen met voldoende statistische zekerheid kan worden aangetoond.
 
-Hiervoor werd een simulatiegebaseerde poweranalyse uitgevoerd, waarbij telgegevens werden gegenereerd met een Poisson Generalized Linear Mixed Model (GLMM) en vervolgens geanalyseerd met hetzelfde model. De minimaal detecteerbare effectgrootte (MDE) werd bepaald voor verschillende scenario's met 100, 200 en 400 telpunten en tijdsreeksen van 10, 16 en 24 jaar. De effectgrootte wordt hierbij gedefinieerd als het minimaal detecteerbare verschil in populatietrend tussen SBP- en niet-SBP-gebieden.
+Hiervoor werd een simulatiegebaseerde poweranalyse uitgevoerd, waarbij telgegevens werden gegenereerd met een Poisson GLMM (*generalized linear mixed model*) en vervolgens geanalyseerd met hetzelfde model. De minimaal detecteerbare effectgrootte (MDE) werd bepaald voor verschillende scenario's met 100, 200 en 400 telpunten en tijdreeksen van 10, 16 en 24 jaar. De effectgrootte wordt hierbij gedefinieerd als het minimaal detecteerbare verschil in populatietrend tussen SBP- en niet-SBP-gebieden.
 
-De simulaties tonen dat de detecteerbare effectgrootte afneemt naarmate zowel het aantal telpunten als de lengte van de tijdsreeks toeneemt en bij benadering evenredig is met ($1 / \sqrt{n*T^3}$). De analyses zijn uitgevoerd voor een hypothetische, optimale akkervogelsoort met een hoge dichtheid en een beperkte variatie tussen telpunten. De resultaten vertegenwoordigen daardoor een best-case scenario; voor zeldzamere soorten of soorten met een heterogenere verspreiding zal de minimaal detecteerbare effectgrootte groter zijn.
+De simulaties tonen dat de detecteerbare effectgrootte afneemt naarmate zowel het aantal telpunten ($n$) als de lengte van de tijdreeks ($T$) toeneemt en bij benadering evenredig is met ($1 / \sqrt{nT^3}$). De analyses zijn uitgevoerd voor een hypothetische, optimale akkervogelsoort met een hoge dichtheid en een beperkte variatie tussen telpunten. De resultaten geven daardoor een optimistische inschatting van de minimaal detecteerbare effectgrootte; voor zeldzamere soorten of soorten met een heterogenere verspreiding zal deze groter zijn.
 
-Zelfs voor deze optimale hypothetische akkervogelsoort blijft de minimaal detecteerbare trendverschil relatief groot. Bij een meetnet van 400 telpunten zijn, voor een realistische soort die niet overal voorkomt, in de praktijk mogelijk slechts ongeveer 200 telpunten informatief. In dat geval is pas een zeer sterke positieve interactie tussen SBP en niet-SBP detecteerbaar. Concreet betekent dit dat de populatie binnen SBP over een periode van 10 jaar ongeveer 60 % gunstiger moet evolueren dan buiten SBP voordat een statistisch significant verschil in trend kan worden aangetoond. Indien deze soort 9.5 % buiten SBP afneemt over 10 jaar, moet ze binnen SBP 46.2 % toenemen. Voor een stabiele trend buiten SBP moet ze binnen SBP 60 % toenemen en voor een toename van  10.5 % buiten SBP moet ze 75.1 % toenemen binnen SBP.
-Beschouw hetzelfde voorbeeld voor een tijdsreeks van 24 jaar; dan moet de populatie binnen SBP 37 % gunstiger evolueren dan buiten SBP voordat een statistisch significant verschil in trend kan worden aangetoond.
+Zelfs voor deze hypothetische, optimale akkervogelsoort blijft het minimaal detecteerbare trendverschil relatief groot. Bij een meetnet van 400 telpunten zijn, voor een realistische soort die niet overal voorkomt, in de praktijk mogelijk slechts ongeveer 200 telpunten informatief. In dat geval is pas een sterk gunstiger trend binnen SBP-gebieden dan buiten SBP-gebieden detecteerbaar. Concreet betekent dit dat de populatie binnen SBP-gebied over een periode van 10 jaar ongeveer 60 % gunstiger moet evolueren dan buiten SBP-gebied voordat een statistisch significant verschil in trend kan worden aangetoond. Indien deze soort 9,5 % buiten SBP-gebied afneemt over 10 jaar, moet ze binnen SBP-gebied 46,2 % toenemen. Voor een stabiele trend buiten SBP-gebied moet ze binnen SBP-gebied 58,4 % toenemen en voor een toename van 10,5 % buiten SBP-gebied moet ze 73,3 % toenemen binnen SBP-gebied.
+Beschouw hetzelfde voorbeeld voor een tijdreeks van 24 jaar; dan moet de populatie binnen SBP-gebied 37,6 % gunstiger evolueren dan buiten SBP-gebied voordat een statistisch significant verschil in trend kan worden aangetoond.
+
+De resultaten wijzen er dan ook op dat het verkleinen van het aantal meetpunten niet aangewezen is, omdat de statistische gevoeligheid dan te beperkt wordt om verschillen in populatietrend tussen SBP- en niet-SBP-gebieden betrouwbaar aan te tonen.
 <!-- description: end -->
-
-<!-- This part adds the table of content in the pdf -->
-
-<!-- Add it at the end of the last chapter of the frontmatter -->
-
-<!-- spell-check: ignore:start-->
-
-::: {.content-visible when-format="pdf"}
-\clearpage
-\phantomsection
-\addcontentsline{toc}{chapter}{\contentsname}
-\setcounter{tocdepth}{2}
-\tableofcontents
-
-\clearpage
-
-<!-- keep the lines below -->
-:::
-
-<!-- spell-check: ignore:end-->
-
-<!-- This part adds the tables of contents in the pdf -->

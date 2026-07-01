@@ -24,9 +24,11 @@ lang: nl-BE
 
 flandersqmd:
   entity: INBO
+  publisher: INBO
   level: 2
-  public_report: false
-  colophon: false
+  public_report: true
+  colophon: true
+  linenr: true
 
   title: Poweranalyse voor het meten van de effectiviteit van soortenbeschermingsprogramma’s
     in landbouwgebied van Vlaanderen
@@ -53,20 +55,36 @@ flandersqmd:
     affiliation:
     - Instituut voor Natuur- en Bosonderzoek (INBO)
 
-  year: 2026
-  reportnr: internal
+  rightsholder:
+  - name:
+      given: Instituut voor Natuur- en Bosonderzoek (INBO)
+    email: info@inbo.be
+    ror: 00j54wy13
+  funder:
+  - name:
+      given: Instituut voor Natuur- en Bosonderzoek (INBO)
+    email: info@inbo.be
+    ror: 00j54wy13
 
-  linenr: false
-  watermark:
+  doi: 10.21436/inbor.152017328
+  depotnr: D/2026/3241/272
+  year: 2026
+  reportnr: 53
+  cover: figures/cover.png
+  coverphoto: figures/cover.png
+  coverdescription: Visualisatie van de iteratieve optimalisatie van de detecteerbare effectgrootte voor een van de onderzochte simulatiescenario's. Via simulaties wordt de minimale waarde voor de parameter $\beta_3$ bepaald die een statistische power van 0,9 bereikt.
 
 book:
   chapters:
-  - index.md
-  - 02_inleiding.md
-  - 03_methodiek.qmd
-  - 04_schatting_simulatieparameters.qmd
-  - 05_detecteerbare_effectgrootte.qmd
-  - 06_conclusie.md
-  - referenties.md
+    - index.md
+    - 01_abstract.md
+    - 02_inleiding.md
+    - 03_methodiek.qmd
+    - 04_schatting_simulatieparameters.qmd
+    - 05_detecteerbare_effectgrootte.qmd
+    - 06_conclusie.md
+    - referenties.md
+  appendices:
+    - appendix.qmd
 
 bibliography: references.bib

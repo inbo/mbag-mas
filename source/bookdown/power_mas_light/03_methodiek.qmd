@@ -8,7 +8,13 @@ library(tidyverse)
 
 # Methodiek {#sec-methodiek}
 
-Alle analyses worden uitgevoerd in R [@R].
+Alle analyses werden uitgevoerd in R [@R]. De gebruikte code en de bronbestanden van het rapport zijn beschikbaar in de GitHub-repository <https://github.com/inbo/mbag-mas>. De analyses zijn ondergebracht in
+
+`source/targets/power_mas_light`, 
+
+en het rapport in
+
+`source/bookdown/power_mas_light`.
 
 De hier beschreven methodiek moet worden beschouwd als een eerste aanzet voor de evaluatie van een mogelijk "MAS light". Gezien de beperkte beschikbare tijd werd bewust gekozen voor een relatief eenvoudig simulatie- en analysekader dat de belangrijkste kenmerken van het monitoringsontwerp omvat.
 
@@ -35,17 +41,15 @@ De afbakening gebeurde in verschillende stappen, waaronder:
 
 Het resultaat is een ruimtelijk expliciete lijst van potentiële telpunten met straal van 300 m die de statistische doelpopulatie van het meetnet zo goed mogelijk benadert.
 
-\newpage
-
 ### Ruimtelijke stratificatie
 
 Om een representatieve dekking van Vlaanderen te garanderen en de efficiëntie van de steekproef te verhogen, werd het steekproefkader gestratificeerd volgens drie factoren:
 
 * landbouwstreek (6 niveaus);
 * landschapstype (open of halfopen landschap);
-* SBP-status (binnen of buiten soortenbeschermingsprogramma's).
+* SBP-status (binnen of buiten soortenbeschermingsprogrammagebieden).
 
-Dit resulteert in:
+Dit resulteert in
 
 $$
 6 \times 2 \times 2 = 24
@@ -61,7 +65,7 @@ Binnen elk stratum worden telpunten aselect geselecteerd uit het steekproefkader
 
 Voor deze poweranalyse wordt aangenomen dat het totale aantal telpunten vooraf wordt vastgelegd. Dit totaal wordt vervolgens verdeeld over de landbouwstreek en landschapstype op basis van hun relatieve oppervlakte binnen Vlaanderen. Binnen elke combinatie van landbouwstreek en landschapstype wordt daarbij een gelijke verdeling gehanteerd tussen telpunten binnen en buiten SBP-gebieden.
 
-Een finale steekproefgrootte van 400 punten zal bv. resulteren in 200 punten binnen SBP en 200 buiten SBP. Verdere allocatie in landbouwregio landschapstype gebeurt relatief naar het aantal potentiële telpunten in elk stratum van het steekproefkader (@tbl-gewichten-strata).
+Een finale steekproefgrootte van 400 punten zal bv. resulteren in 200 punten binnen SBP-gebied en 200 buiten SBP-gebied. Verdere allocatie in landbouwregio landschapstype gebeurt relatief naar het aantal potentiële telpunten in elk stratum van het steekproefkader (@tbl-gewichten-strata).
 
 ```{r}
 #| label: tbl-gewichten-strata
@@ -106,6 +110,8 @@ Per telpunt worden jaarlijks vier telrondes uitgevoerd gedurende een periode van
 
 De volgende scenario's worden in eerste instantie onderzocht:
 
+\vspace{0.5\baselineskip}
+
 ```r
 n_punten <- c(
   100,
@@ -122,27 +128,26 @@ De analyse wordt uitgevoerd voor alle landbouwvogels op de lijst in Vlaanderen v
 
 | Soort              | Lijst Vlaanderen      | Lijst Wallonië      | Monitoring Vlaanderen |
 |--------------------|-----------------------|---------------------|-----------------------|
-| Boerenzwaluw       | x                     | x                   | ABV + MAS             |
-| Geelgors           | x                     | x                   | ABV + MAS             |
-| Gele kwikstaart    | x                     | x                   | ABV + MAS             |
-| Grasmus            | x                     | x                   | ABV + MAS             |
-| Graspieper         | x                     | x                   | MAS ???               |
-| Grauwe gors        |                       | x                   | BBV (WGG)             |
-| Grauwe klauwier    |                       | x                   | BBV                   |
-| Grutto             | x                     |                     | ???                   |
-| Kievit             | x                     | x                   | ABV + MAS             |
-| Kneu               | x                     | x                   | ABV + MAS             |
-| Patrijs            | x                     | x                   | ABV + MAS             |
-| Ringmus            | x                     | x                   | ABV + MAS             |
-| Roek               |                       | x                   | BBV                   |
-| Roodborsttapuit    | x                     | x                   | ABV + MAS             |
-| Scholekster        | x                     |                     | ABV                   |
-| Spreeuw            |                       | x                   | ABV + MAS             |
-| Torenvalk          | x                     | x                   | ABV + MAS             |
-| Veldleeuwerik      | x                     | x                   | ABV + MAS             |
-| Wulp               | x                     |                     | ???                   |
-| Zomertortel        |                       | x                   | ???                   |
-
+| boerenzwaluw       | x                     | x                   | ABV + MAS             |
+| geelgors           | x                     | x                   | ABV + MAS             |
+| gele kwikstaart    | x                     | x                   | ABV + MAS             |
+| grasmus            | x                     | x                   | ABV + MAS             |
+| graspieper         | x                     | x                   | MAS ???               |
+| grauwe gors        |                       | x                   | BBV (WGG)             |
+| grauwe klauwier    |                       | x                   | BBV                   |
+| grutto             | x                     |                     | ???                   |
+| kievit             | x                     | x                   | ABV + MAS             |
+| kneu               | x                     | x                   | ABV + MAS             |
+| patrijs            | x                     | x                   | ABV + MAS             |
+| ringmus            | x                     | x                   | ABV + MAS             |
+| roek               |                       | x                   | BBV                   |
+| roodborsttapuit    | x                     | x                   | ABV + MAS             |
+| scholekster        | x                     |                     | ABV                   |
+| spreeuw            |                       | x                   | ABV + MAS             |
+| torenvalk          | x                     | x                   | ABV + MAS             |
+| veldleeuwerik      | x                     | x                   | ABV + MAS             |
+| wulp               | x                     |                     | ???                   |
+| zomertortel        |                       | x                   | ???                   |
 
 Voor elke soort worden de nodige parameters geschat uit bestaande monitoringgegevens (zie @sec-samenvatting-simulatieparameters).
 In plaats van 15 afzonderlijke soorten volledig uit te werken, wordt de variatie tussen soorten benaderd door verschillende parametercombinaties te analyseren.
@@ -181,7 +186,7 @@ $$
 \mu_{ijt} = \exp(\eta_{ij})
 $$
 
-De waargenomen tellingen worden gegenereerd uit een Poissonverdeling:
+De waargenomen tellingen worden gegenereerd uit een poissonverdeling:
 
 $$
 y_{ij} \sim Poisson(\mu_{ij})
@@ -193,31 +198,39 @@ $$
 
 De random effecten voor de ruimtelijke component worden gegenereerd als:
 
+\vspace{0.5\baselineskip}
+
 ```r
 rf_punt <- rnorm(
   n_punten,
-  sd = sd_punt
+  sd = sigma_punt
 )
 ```
 
 Vervolgens wordt voor elke combinatie van telpunt en jaar de lineaire predictor berekend:
 
+\vspace{0.5\baselineskip}
+
 ```r
 eta <-
-  beta0 +
-  beta1 * jaar +
-  beta2 * sbp +
-  beta3 * jaar * sbp +
+  beta_0 +
+  beta_1 * jaar +
+  beta_2 * sbp +
+  beta_3 * jaar * sbp +
   rf_punt[punt]
 ```
 
 waaruit de verwachte abundantie wordt afgeleid:
+
+\vspace{0.5\baselineskip}
 
 ```r
 mu <- exp(eta)
 ```
 
 en de tellingen worden gesimuleerd via:
+
+\vspace{0.5\baselineskip}
 
 ```r
 y <- rpois(
@@ -238,7 +251,7 @@ Deze gesimuleerde tellingen vormen vervolgens de input voor het analysemodel dat
 | $\beta_3$         | Trendverschil SBP vs. niet-SBP                   | **Doelparameter (detecteerbaar effect)**     | Gevarieerd in simulaties                   |
 | $\sigma^2_{punt}$ | Variatie tussen telpunten                        | Ruimtelijke heterogeniteit                   | Geschat uit bestaande MAS-data             |
 
-We starten met een veronderstelling dat soorten buiten SBP een licht negatieve trend hebben en binnen SBP een positieve trend.
+We starten met een veronderstelling dat soorten buiten SBP-gebied een licht negatieve trend hebben en binnen SBP-gebied een positieve trend.
 De analyse zal $\beta_3$ optimaliseren, maar we willen de keuze voor $\beta_1$ ook veranderen om te zien of dit andere resultaten geeft.
 
 De schatting van de parameters zal gebeuren door het volgende model te fitten op de MAS-data voor elke doelsoort (@sec-doelsoorten).
@@ -255,13 +268,13 @@ $$
 
 ### Rol van stratificatie
 
-Stratificatie (landbouwstreek × landschap × SBP) wordt gebruikt om telpunten over Vlaanderen te verdelen volgens vooraf bepaalde gewichten (waarbij binnen en buiten SBP 50–50 worden verdeeld). In de basisanalyse wordt deze stratificatie uitsluitend gebruikt voor de allocatie van de telpunten en niet expliciet opgenomen in de datageneratie of het analysemodel.
+Stratificatie (landbouwstreek × landschap × SBP) wordt gebruikt om telpunten over Vlaanderen te verdelen volgens vooraf bepaalde gewichten (waarbij binnen en buiten SBP-gebied 50–50 worden verdeeld). In de basisanalyse wordt deze stratificatie uitsluitend gebruikt voor de allocatie van de telpunten en niet expliciet opgenomen in de datageneratie of het analysemodel.
 
 Het expliciet modelleren van stratificatievariabelen kan de residuele variantie verminderen wanneer deze variabelen een deel van de ruimtelijke heterogeniteit verklaren, en daardoor de statistische kracht verhogen. Daarom kan in een aanvullende gevoeligheidsanalyse onderzocht worden in welke mate het opnemen van de stratificatievariabelen in de simulaties en het analysemodel de detecteerbare effectgroottes beïnvloedt.
 
 ## Analysemodel {#sec-analysemodel}
 
-De gesimuleerde data worden geanalyseerd met een Generalized Linear Mixed Model (GLMM).
+De gesimuleerde data worden geanalyseerd met een *generalized linear mixed model* (GLMM).
 Het analysemodel is
 
 $$
@@ -269,7 +282,9 @@ $$
 u_{punt,j}
 $$
 
-en fitten we met de **glmmTMB** package [@mcgillycuddy2025glmmTMB; @brooks2017glmmTMB]
+en fitten we met de **glmmTMB** package [@mcgillycuddy2025glmmTMB; @brooks2017glmmTMB].
+
+\vspace{0.5\baselineskip}
 
 ```r
 glmmTMB(
@@ -280,11 +295,13 @@ glmmTMB(
 
 De centrale toets is of deze parameter verschilt van nul:
 
+\vspace{0.5\baselineskip}
+
 ```r
 jaar:sbpbinnen
 ```
 
-Deze parameter meet het verschil in trend tussen SBP en niet-SBP.
+Deze parameter meet het verschil in trend tussen SBP- en niet-SBP-gebieden.
 
 ## Detecteerbare effectgrootte
 
@@ -293,19 +310,22 @@ De centrale effectparameter is de interactieterm tussen jaar en SBP-status, die 
 
 Met behulp van de **designpower** package wordt via simulaties bepaald welke waarde van dit trendverschil nodig is om een vooraf gekozen power te bereiken [@onkelinx2026designpower].
 Dit levert de minimaal detecteerbare effectgrootte (MDE) op voor elk scenario van het aantal telpunten (en eventueel andere scenario's), en geeft zo direct inzicht in de gevoeligheid van het monitoringsnetwerk.
-We kiezen een power van 0.9 en significantieniveau van 0.1.
+We kiezen een power van 0,9 en significantieniveau van 0,1.
+
+\vspace{0.5\baselineskip}
 
 ```r
-find_power(
+designpower::find_power(
   design,                      # initiële designparameters
-                               # (aantal jaren, telperiodes, sd's ...)
+                               # (aantal jaren, telperiodes, beta's ...)
   design_digits,               # aantal decimalen designparameters (precisie)
-  opti,                        # parameter te optimaliseren (jaar:sbp)
-  sim_power,                   # simulatie functie
-                               # (genereert data en fit analysemodel, output = p-waarde)
-  power = 0.9,                 # target power
-  alpha = 0.1,                 # significance level
-  filename = "power.duckdb",   # slaat alles op in database (met hashes)
+  opti,                        # parameter te optimaliseren (beta_3)
+  sim_power,                   # simulatiefunctie
+                               # (genereert data en fit analysemodel,
+                               #  output = p-waarde)
+  power = 0.9,                 # doelpower
+  alpha = 0.1,                 # significantieniveau
+  filename = "power.duckdb"    # slaat alles op in database (met hashes)
 )
 ```
 
@@ -316,7 +336,7 @@ Een power van 0,9 betekent dus 90 % kans om een echt effect te detecteren (of 10
 Het significantieniveau ($\alpha$) is de drempel voor hoe snel je een effect als “statistisch significant” beschouwt terwijl het in werkelijkheid niet bestaat.
 Een $\alpha$ van 0.1 betekent dat je een 10% kans op een vals positief resultaat (type I-fout: je concludeert soms ten onrechte dat er een effect is, terwijl er eigenlijk geen is).
 
-Met power = 0.9 en $\alpha$ = 0.1 kiezen we dus voor een ontwerp dat heel gevoelig is (weinig kans om echte trends te missen), maar accepteert wel een relatief ruime foutkans op vals-positieven.
+Met power = 0,9 en $\alpha$ = 0,1 kiezen we dus voor een ontwerp dat heel gevoelig is (weinig kans om echte trends te missen), maar accepteert wel een relatief ruime foutkans op vals-positieven.
 
 ## Mogelijke uitbreidingen van het simulatiekader {#sec-methodiek-uitbreidingen}
 
@@ -324,6 +344,6 @@ De huidige analyse is bewust opgezet als een eerste, vereenvoudigde evaluatie va
 
 Een eerste uitbreiding betreft de expliciete modellering van de stratificatie. In de basisanalyse worden landbouwstreek en landschapstype enkel gebruikt voor de allocatie van telpunten. Wanneer deze variabelen een belangrijk deel van de ruimtelijke variatie verklaren, kan opname ervan in de simulaties en het analysemodel de residuele variantie verminderen en de statistische kracht verhogen.
 
-Daarnaast wordt in de huidige analyse verondersteld dat alle telpunten in Vlaanderen potentieel relevant zijn voor de doelsoort. Voor soorten met een beperkte verspreiding is dit niet realistisch. Zo komt de Geelgors slechts in een beperkt deel van Vlaanderen voor en dragen telpunten buiten het verspreidingsgebied weinig of niet bij aan de detectie van trends. Een uitbreiding van het simulatiekader kan daarom rekening houden met de gekende verspreiding van doelsoorten en de steekproef beperken tot geschikte regio's of habitats.
+Daarnaast wordt in de huidige analyse verondersteld dat alle telpunten in Vlaanderen potentieel relevant zijn voor de doelsoort. Voor soorten met een beperkte verspreiding is dit niet realistisch. Zo komt de geelgors slechts in een beperkt deel van Vlaanderen voor en dragen telpunten buiten het verspreidingsgebied weinig of niet bij aan de detectie van trends. Een uitbreiding van het simulatiekader kan daarom rekening houden met de gekende verspreiding van doelsoorten en de steekproef beperken tot geschikte regio's of habitats.
 
 Ten slotte kunnen ook meer realistische simulatie- en analysemethoden worden onderzocht, zoals niet-lineaire populatietrends of complexere ruimtelijke structuren. Dergelijke uitbreidingen sluiten doorgaans beter aan bij de biologische realiteit, maar vereisen bijkomende aannames en een grotere modelcomplexiteit. De huidige analyse vertrekt vanuit een modelgebaseerde benadering van de datageneratie en inferentie. Alternatieve design-gebaseerde benaderingen, waarbij de eigenschappen van het steekproefontwerp centraal staan, kunnen in bepaalde situaties tot andere conclusies leiden over de variantie en de statistische kracht. De resultaten van deze studie moeten daarom worden geïnterpreteerd als een eerste evaluatie binnen het gekozen modelkader.
