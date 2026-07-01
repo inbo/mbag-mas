@@ -319,7 +319,7 @@ designpower::find_power(
   design,                      # initiële designparameters
                                # (aantal jaren, telperiodes, beta's ...)
   design_digits,               # aantal decimalen designparameters (precisie)
-  opti,                        # parameter te optimaliseren (jaar:sbp)
+  opti,                        # parameter te optimaliseren (beta_3)
   sim_power,                   # simulatiefunctie
                                # (genereert data en fit analysemodel,
                                #  output = p-waarde)
