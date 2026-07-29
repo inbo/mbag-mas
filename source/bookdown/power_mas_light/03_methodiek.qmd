@@ -192,8 +192,6 @@ $$
 y_{ij} \sim Poisson(\mu_{ij})
 $$
 
-\newpage
-
 ### Implementatie
 
 De random effecten voor de ruimtelijke component worden gegenereerd als:

@@ -317,8 +317,6 @@ detectable_effect_years %>%
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
-\clearpage
-
 ```{r}
 #| label: fig-detectable-effect-years-raw
 #| fig-cap: "Relatie tussen het aantal telpunten en het detecteerbaar
@@ -365,8 +363,6 @@ De simulaties tonen dat de detecteerbare effectgrootte wordt beschreven door een
 $$
 \text{effectgrootte} \propto \frac{1}{\sqrt{n_{\text{telpunten}}*T^3}}
 $$
-
-\newpage
 
 ```{r, echo=TRUE}
 fit_time <- lm(log(effect_pct) ~ log(n_telpunten) + log(n_jaar),

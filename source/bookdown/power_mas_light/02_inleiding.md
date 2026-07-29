@@ -17,8 +17,6 @@ Een centrale toepassing van het meetnet is de evaluatie van soortenbeschermingsp
 
 Het is belangrijk te benadrukken dat dergelijke vergelijkingen observationeel zijn. De analyses laten toe om verschillen in trends te detecteren, maar volstaan op zichzelf niet om causale effecten van beheermaatregelen aan te tonen.
 
-\newpage
-
 ## Doel van deze studie
 
 Deze studie voert een simulatiegebaseerde poweranalyse uit voor een mogelijke "MAS light".
