@@ -1,7 +1,7 @@
 # Inleiding {#sec-inleiding}
 ## Achtergrond
 
-De biodiversiteit in het Vlaamse landbouwgebied staat al decennia onder druk. Veranderingen in landgebruik, schaalvergroting van de landbouw, verlies van landschapselementen en een toenemende intensivering van beheer hebben geleid tot sterke achteruitgangen van verschillende typische akker- en weidevogels. Soorten zoals veldleeuwerik, patrijs, kievit, gele kwikstaart en grutto vertonen op lange termijn afnemende populatietrends en worden daarom vaak gebruikt als indicatoren voor de ecologische kwaliteit van het landbouwgebied [@vermeersch2004].
+De biodiversiteit in het Vlaamse landbouwgebied staat al decennia onder druk. Veranderingen in landgebruik, schaalvergroting van de landbouw, verlies van landschapselementen en een toenemende intensivering van beheer hebben geleid tot sterke achteruitgangen van verschillende typische akker- en weidevogels. Soorten zoals veldleeuwerik (*Alauda arvensis*), patrijs (*Perdix perdix*), kievit (*Vanellus vanellus*), gele kwikstaart (*Motacilla flava*) en grutto (*Limosa limosa*) vertonen op lange termijn afnemende populatietrends en worden daarom vaak gebruikt als indicatoren voor de ecologische kwaliteit van het landbouwgebied [@vermeersch2004].
 
 Tegelijk neemt de vraag naar beleidsrelevante biodiversiteitsinformatie toe. Zowel het Vlaamse beleid als Europese initiatieven, waaronder het Gemeenschappelijk Landbouwbeleid (GLB) en de Europese natuurherstelverordening, vereisen betrouwbare informatie over de toestand van soorten en over de effectiviteit van genomen beheermaatregelen. Hiervoor volstaan algemene biodiversiteitsindicatoren niet altijd. Er is nood aan monitoring die specifiek gericht is op soorten en maatregelen in landbouwgebied.
 

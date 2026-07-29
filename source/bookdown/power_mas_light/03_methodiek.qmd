@@ -126,28 +126,28 @@ Deze aantallen kunnen later aangepast worden.
 
 De analyse wordt uitgevoerd voor alle landbouwvogels op de lijst in Vlaanderen voor de natuurherstelverordening.
 
-| Soort              | Lijst Vlaanderen      | Lijst Wallonië      | Monitoring Vlaanderen |
-|--------------------|-----------------------|---------------------|-----------------------|
-| boerenzwaluw       | x                     | x                   | ABV + MAS             |
-| geelgors           | x                     | x                   | ABV + MAS             |
-| gele kwikstaart    | x                     | x                   | ABV + MAS             |
-| grasmus            | x                     | x                   | ABV + MAS             |
-| graspieper         | x                     | x                   | MAS ???               |
-| grauwe gors        |                       | x                   | BBV (WGG)             |
-| grauwe klauwier    |                       | x                   | BBV                   |
-| grutto             | x                     |                     | ???                   |
-| kievit             | x                     | x                   | ABV + MAS             |
-| kneu               | x                     | x                   | ABV + MAS             |
-| patrijs            | x                     | x                   | ABV + MAS             |
-| ringmus            | x                     | x                   | ABV + MAS             |
-| roek               |                       | x                   | BBV                   |
-| roodborsttapuit    | x                     | x                   | ABV + MAS             |
-| scholekster        | x                     |                     | ABV                   |
-| spreeuw            |                       | x                   | ABV + MAS             |
-| torenvalk          | x                     | x                   | ABV + MAS             |
-| veldleeuwerik      | x                     | x                   | ABV + MAS             |
-| wulp               | x                     |                     | ???                   |
-| zomertortel        |                       | x                   | ???                   |
+| Soort           | Wetenschappelijke naam                 | Lijst Vlaanderen | Lijst Wallonië | Monitoring Vlaanderen |
+| --------------- | -------------------------------------- | ---------------: | -------------: | --------------------- |
+| boerenzwaluw    | *Hirundo rustica* Linnaeus, 1758       |                x |              x | ABV + MAS             |
+| geelgors        | *Emberiza citrinella* Linnaeus, 1758   |                x |              x | ABV + MAS             |
+| gele kwikstaart | *Motacilla flava* Linnaeus, 1758       |                x |              x | ABV + MAS             |
+| grasmus         | *Curruca communis* (Latham, 1787)      |                x |              x | ABV + MAS             |
+| graspieper      | *Anthus pratensis* (Linnaeus, 1758)    |                x |              x | MAS ???               |
+| grauwe gors     | *Emberiza calandra* Linnaeus, 1758     |                  |              x | BBV (WGG)             |
+| grauwe klauwier | *Lanius collurio* Linnaeus, 1758       |                  |              x | BBV                   |
+| grutto          | *Limosa limosa* (Linnaeus, 1758)       |                x |                | ???                   |
+| kievit          | *Vanellus vanellus* (Linnaeus, 1758)   |                x |              x | ABV + MAS             |
+| kneu            | *Linaria cannabina* (Linnaeus, 1758)   |                x |              x | ABV + MAS             |
+| patrijs         | *Perdix perdix* (Linnaeus, 1758)       |                x |              x | ABV + MAS             |
+| ringmus         | *Passer montanus* (Linnaeus, 1758)     |                x |              x | ABV + MAS             |
+| roek            | *Corvus frugilegus* Linnaeus, 1758     |                  |              x | BBV                   |
+| roodborsttapuit | *Saxicola rubicola* (Linnaeus, 1766)   |                x |              x | ABV + MAS             |
+| scholekster     | *Haematopus ostralegus* Linnaeus, 1758 |                x |                | ABV                   |
+| spreeuw         | *Sturnus vulgaris* Linnaeus, 1758      |                  |              x | ABV + MAS             |
+| torenvalk       | *Falco tinnunculus* Linnaeus, 1758     |                x |              x | ABV + MAS             |
+| veldleeuwerik   | *Alauda arvensis* Linnaeus, 1758       |                x |              x | ABV + MAS             |
+| wulp            | *Numenius arquata* (Linnaeus, 1758)    |                x |                | ???                   |
+| zomertortel     | *Streptopelia turtur* (Linnaeus, 1758) |                  |              x | ???                   |
 
 Voor elke soort worden de nodige parameters geschat uit bestaande monitoringgegevens (zie @sec-samenvatting-simulatieparameters).
 In plaats van 15 afzonderlijke soorten volledig uit te werken, wordt de variatie tussen soorten benaderd door verschillende parametercombinaties te analyseren.
