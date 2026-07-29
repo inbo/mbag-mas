@@ -28,7 +28,7 @@ Het ontwerp van het MAS wordt uitgebreid beschreven in @langeraert2025pilot en @
 
 ### Steekproefkader
 
-Het MAS richt zich op landbouwgebieden in Vlaanderen die potentieel geschikt zijn voor akkervogels. Het steekproefkader werd opgebouwd op basis van de Vlaamse landbouwstreken en omvat uitsluitend locaties in open en halfopen landbouwlandschappen.
+Het MAS richt zich op landbouwgebieden in Vlaanderen. Het steekproefkader werd opgebouwd op basis van de Vlaamse landbouwstreken en omvat uitsluitend locaties in open en halfopen landbouwlandschappen.
 De landbouwregio van de duinen werd niet opgenomen omdat daar zeer weinig potentiële telpunten aanwezig zijn [@jansen2026mas].
 
 De afbakening gebeurde in verschillende stappen, waaronder:
@@ -124,7 +124,7 @@ Deze aantallen kunnen later aangepast worden.
 
 ### Doelsoorten {#sec-doelsoorten}
 
-De analyse wordt uitgevoerd voor alle landbouwvogels op de lijst in Vlaanderen voor de natuurherstelverordening.
+De analyse wordt uitgevoerd voor alle algemene boerenlandvogels uit de lijst voor Vlaanderen uit Bijlage V van de Natuurherstelverordening.
 
 | Soort           | Wetenschappelijke naam                 | Lijst Vlaanderen | Lijst Wallonië | Monitoring Vlaanderen |
 | --------------- | -------------------------------------- | ---------------: | -------------: | --------------------- |

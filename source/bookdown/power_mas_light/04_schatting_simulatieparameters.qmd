@@ -26,6 +26,14 @@ options(OutDec = ",")
 ```
 
 ```{r}
+firstup_names <- function(x) {
+  names <- tolower(paste(x, collapse = ", "))
+  substr(names, 1, 1) <- toupper(substr(names, 1, 1))
+  names
+}
+```
+
+```{r}
 target_species <- c(
   "Boerenzwaluw",
   "Geelgors",
@@ -53,7 +61,7 @@ Vervolgens worden afwezigheden toegevoegd op basis van de beschikbare bezoekgege
 Voor elke soort worden de data uit de telperiode geselecteerd waarin gemiddeld de hoogste aantallen worden vastgesteld over beide jaren.
 
 Ten slotte worden de nullen van locaties waar de soort nooit is gezien over alle 2 x 4 telperiodes verwijderd. Deze worden beschouwd als structurele afwezigheid van de soort.
-`r tolower(sort(target_species[tar_read_mas("presence_prop") < 0.2]))` werden in minder dan 20 % van de telpunten waargenomen in 2024 en 2025 (zie verder).
+`r firstup_names(sort(target_species[tar_read_mas("presence_prop") < 0.2]))` werden in minder dan 20 % van de telpunten waargenomen in 2024 en 2025 (zie verder).
 Deze soorten worden niet verder meegenomen in de analyses.
 
 Voor de resterende soorten wordt vervolgens een Generalized Linear Mixed Model (GLMM) opgesteld met het aantal waargenomen individuen als responsvariabele (zie @sec-analysemodel).
