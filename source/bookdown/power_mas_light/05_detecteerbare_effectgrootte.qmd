@@ -24,7 +24,8 @@ options(OutDec = ",")
 
 Beschouw een hypothetische boerenlandvogelsoort die over heel Vlaanderen aanwezig is aan een gelijkaardige densiteit.
 Deze soort heeft de hoogste densiteit buiten SBP-gebied en de hoogste densiteit binnen SBP-gebied van de werkelijke boerenlandvogels in MAS (hoogste $\beta_0$ = `r round(tar_read_mas("best_parameters")$beta_0, 3)`, en $\beta_2$ = `r round(tar_read_mas("best_parameters")$beta_2, 3)`) en de kleinste variatie tussen telpunten ($\sigma_{punt}$ = `r round(tar_read_mas("best_parameters")$sigma_punt, 6)`).
-Deze heeft bijgevolg een verwachte startdensiteit buiten SBP-gebied van $\exp(\beta_0) =$ `r round(exp(tar_read_mas("best_parameters")$beta_0), 2)` en binnen SBP-gebied van $\exp(\beta_0 + \beta_2) =$ `r round(exp(tar_read_mas("best_parameters")$beta_0 + tar_read_mas("best_parameters")$beta_2), 2)`.
+Deze variatie is praktisch verwaarloosbaar: het verschil tussen een telpunt aan de onderkant en de bovenkant van de verdeling van telpunteffecten bedraagt slechts `r round((exp(diff(qnorm(c(0.025, 0.975), sd = tar_read_mas("best_parameters")$sigma_punt))) - 1) * 100, 3)` %.
+Deze verwachte startdensiteit buiten SBP-gebied bedraagd bijgevolg $\exp(\beta_0) =$ `r round(exp(tar_read_mas("best_parameters")$beta_0), 2)` en binnen SBP-gebied van $\exp(\beta_0 + \beta_2) =$ `r round(exp(tar_read_mas("best_parameters")$beta_0 + tar_read_mas("best_parameters")$beta_2), 2)`.
 
 De detecteerbare effectgrootte werd bepaald via een iteratieve optimalisatieprocedure waarbij de parameter $\beta_3$ werd gekozen zodat een statistische power van 0,9 werd bereikt. Een gedetailleerde visualisatie van deze optimalisatie voor elk scenario is opgenomen in @sec-powerplot.
 
@@ -186,15 +187,22 @@ detectable_effect_10j %>%
 
 ### Bespreking
 
-De detecteerbare effectgrootte neemt af naarmate het aantal telpunten toeneemt. Dit is een rechtstreeks gevolg van de toename in statistische precisie bij een grotere steekproefomvang. In klassieke power-analyses daalt de standaardfout van een schatter ongeveer evenredig met de inverse vierkantswortel van de steekproefgrootte. Daardoor wordt ook de minimaal detecteerbare effectgrootte verwacht af te nemen volgens een relatie van de vorm
+De detecteerbare effectgrootte neemt af naarmate het aantal telpunten toeneemt.
+Dit is een rechtstreeks gevolg van de toename in statistische precisie bij een grotere steekproefomvang.
+In klassieke power-analyses daalt de standaardfout van een schatter ongeveer evenredig met de inverse vierkantswortel van de steekproefgrootte. 
+Omdat in het Poisson-model een log-link wordt gebruikt, geldt deze relatie voor de geschatte effecten op de log-schaal.
+De minimaal detecteerbare effectgrootte op deze schaal wordt daarom verwacht af te nemen volgens een relatie van de vorm
 
 $$
-\text{effectgrootte} \propto \frac{1}{\sqrt{n}}
+\text{MDE}_{log} \propto \frac{1}{\sqrt{n}}
 $$
 
 waarbij $n$ het aantal telpunten voorstelt.
 
-In de @fig-detectable-effect-10j-model wordt de doorlopende lijn enkel getoond binnen het bereik van de gesimuleerde aantallen telpunten. De stippellijn geeft een extrapolatie weer buiten dit bereik en moet daarom voorzichtig worden geïnterpreteerd.
+In deze analyse drukken we het minimaal detecteerbare effect echter uit als een percentage op de oorspronkelijke schaal over 10 jaar, namelijk als $(\exp(\beta_{3, min} * 10) - 1) * 100 \%$.
+De detecteerbare effectgrootte in procenten vertoont in de simulaties ongeveer dezelfde afname met het aantal telpunten (@fig-detectable-effect-10j-model).
+
+In @fig-detectable-effect-10j-model wordt de doorlopende lijn enkel getoond binnen het bereik van de gesimuleerde aantallen telpunten. De stippellijn geeft een extrapolatie weer buiten dit bereik en moet daarom voorzichtig worden geïnterpreteerd.
 
 ```{r}
 #| label: fig-detectable-effect-10j-model
@@ -372,11 +380,15 @@ fit_time <- lm(log(effect_pct) ~ log(n_telpunten) + log(n_jaar),
                data = detectable_effect_years)
 ```
 
-De simulaties tonen dat de detecteerbare effectgrootte wordt beschreven door een machtsfunctie van zowel het aantal telpunten als de lengte van de tijdreeks (@fig-detectable-effect-years-model). De geschatte exponenten (`r round(coef(fit_time)[2], 3)` voor het aantal telpunten en `r round(coef(fit_time)[3], 3)` voor het aantal jaren) liggen dicht bij de theoretisch verwachte waarden van respectievelijk (-1/2) en (-3/2). Dit impliceert dat de detecteerbare effectgrootte bij benadering afneemt volgens
+De simulaties tonen dat de detecteerbare effectgrootte wordt beschreven door een machtsfunctie van zowel het aantal telpunten als de lengte van de tijdreeks (@fig-detectable-effect-years-model).
+De geschatte exponenten (`r round(coef(fit_time)[2], 3)` voor het aantal telpunten en `r round(coef(fit_time)[3], 3)` voor het aantal jaren) liggen dicht bij de theoretisch verwachte waarden van respectievelijk (-1/2) en (-3/2). Deze theoretische relatie geldt voor de detecteerbare effectgrootte op de log-schaal en impliceert dat deze bij benadering afneemt volgens
 
 $$
-\text{effectgrootte} \propto \frac{1}{\sqrt{n_{\text{telpunten}}*T^3}}
+\text{MDE}_{log} \propto \frac{1}{\sqrt{n_{\text{telpunten}}*T^3}}
 $$
+
+De detecteerbare effectgrootte wordt in deze analyse echter uitgedrukt als een percentage op de oorspronkelijke schaal (@fig-detectable-effect-years-model).
+De simulaties tonen dat ook de teruggetransformeerde effectgrootte ongeveer dezelfde afhankelijkheid van het aantal telpunten en de lengte van de tijdreeks vertoont als op de log-schaal.
 
 ```{r, echo=TRUE}
 fit_time <- lm(log(effect_pct) ~ log(n_telpunten) + log(n_jaar),

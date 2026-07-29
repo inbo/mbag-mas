@@ -2,10 +2,10 @@
 
 De doelstelling van deze studie was om via een simulatiegebaseerde poweranalyse te bepalen in welke mate een vereenvoudigd monitoringsontwerp ("MAS light") over een periode van 10 jaar in staat is om trendverschillen tussen SBP-gebieden en niet-SBP-gebieden in Vlaanderen te detecteren.
 
-De simulaties tonen aan dat de detecteerbare effectgrootte ($E$) (= trendverschil buiten vs. binnen SBP-gebied) zich gedraagt volgens een wiskundige machtsfunctie van zowel het aantal telpunten ($n$) als de lengte van de tijdreeks ($T$ in jaren):
+De simulaties tonen aan dat de detecteerbare effectgrootte (MDE) (= trendverschil buiten vs. binnen SBP-gebied) zich gedraagt volgens een wiskundige machtsfunctie van zowel het aantal telpunten ($n$) als de lengte van de tijdreeks ($T$ in jaren):
 
 $$
-E \propto \frac{1}{\sqrt{n*T^3}}
+\text{MDE} \propto \frac{1}{\sqrt{n*T^3}}
 $$
 
 De gepresenteerde powerberekeningen geven een realistische indicatie van de detecteerbare effectgrootte, maar zijn gebaseerd op gunstige aannames. De analyses vertrekken van een hypothetische boerenlandvogelsoort met de hoogst waargenomen densiteiten binnen en buiten SBP-gebied en de kleinst mogelijke variatie tussen telpunten. Voor soorten die zeldzamer zijn of een grilliger voorkomen kennen, zal de minimaal detecteerbare effectgrootte hoger liggen.
