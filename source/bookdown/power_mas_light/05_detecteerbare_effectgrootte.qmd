@@ -33,11 +33,11 @@ De detecteerbare effectgrootte werd bepaald via een iteratieve optimalisatieproc
 
 We onderscheiden drie scenario's voor de trend buiten SBP-gebied (~$\beta_1$):
 
-1. Een achteruitgang buiten SBP-gebied van -1 % per jaar (`r paste(round(100 * (exp(10 * -0.01) - 1), 1), "%")` over 10 jaar)
-2. Stabiele trend buiten SBP-gebied
-3. Een vooruitgang buiten SBP-gebied van +1 % per jaar (`r paste(round(100 * (exp(10 * 0.01) - 1), 1), "%")` over 10 jaar)
+1. Een log-lineaire achteruitgang buiten SBP-gebied van -1 % per jaar (`r paste(round(100 * (exp(10 * -0.01) - 1), 1), "%")` over 10 jaar)
+2. Constant buiten SBP-gebied (log-lineaire trend van 0% per jaar)
+3. Een log-lineaire vooruitgang buiten SBP-gebied van +1 % per jaar (`r paste(round(100 * (exp(10 * 0.01) - 1), 1), "%")` over 10 jaar)
 
-De trend binnen SBP-gebied moet telkens positief zijn en groter dan de trend buiten SBP-gebied.
+De log-lineaire trend binnen SBP-gebied moet telkens gunstiger zijn de trend buiten SBP-gebied.
 
 ### Resultaten
 
