@@ -33,6 +33,7 @@ cap <- paste0(
 ```
 
 ```{r}
+#| message: FALSE
 #| label: fig-powerplot-{{branch}}
 #| fig-cap: !expr "cap"
 #| fig-width: 9
