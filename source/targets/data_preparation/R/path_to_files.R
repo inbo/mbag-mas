@@ -1,7 +1,8 @@
 # Paths to raw data from SOVON
 paths_to_counts_sovon <- function(
-    proj_path,
-    pattern = "qgis_export_sovon_wfs") {
+  proj_path,
+  pattern = "qgis_export_sovon_wfs"
+) {
   # List paths to all files
   file_paths <- list.files(
     file.path(proj_path, "data"),

@@ -281,54 +281,54 @@ Zoals verwacht, blijkt dat een kleiner effect gedetecteerd kan worden bij een gr
 #| tbl-cap: "Detecteerbaar jaarlijks en cumulatieve trendverschil (%)
 #|   als functie van het aantal telpunten en de lengte van de tijdreeks."
 detectable_effect_years %>%
-    transmute(
+  transmute(
+    n_jaar,
+    maat = "Per jaar",
+    n_telpunten,
+    value = fmt_pct(effect_pct, 1)
+  ) %>%
+  bind_rows(
+    detectable_effect_years %>%
+      transmute(
         n_jaar,
-        maat = "Per jaar",
+        maat = "Volledige tijdreeks",
         n_telpunten,
-        value = fmt_pct(effect_pct, 1)
-    ) %>%
-    bind_rows(
-        detectable_effect_years %>%
-            transmute(
-                n_jaar,
-                maat = "Volledige tijdreeks",
-                n_telpunten,
-                value = fmt_pct(effect_pct_long, 0)
-            )
-    ) %>%
-    pivot_wider(
-        names_from = n_telpunten,
-        values_from = value,
-        names_prefix = "n = "
-    ) %>%
-    arrange(
-        factor(maat, levels = c("Per jaar", "Volledige tijdreeks")),
-        n_jaar
-    ) %>%
-    mutate(
-        `Lengte tijdreeks` = if_else(
-            !duplicated(paste(maat, n_jaar)),
-            paste(n_jaar, "jaar"),
-            ""
-        )
-    ) %>%
-    select(`Lengte tijdreeks`, `n = 100`, `n = 200`, `n = 400`) %>%
-    kable(
-        booktabs = TRUE,
-        align = rep(c("l", "r"), c(1, 3))
-    ) %>%
-    kableExtra::add_header_above(c(
-        " " = 1,
-        "Detecteerbaar trendverschil" = 3
-    )) %>%
-    kableExtra::pack_rows("Per jaar", 1, 3) %>%
-    kableExtra::pack_rows(
-        "Volledige tijdreeks",
-        3 + 1,
-        2 * 3
-    ) %>%
-    kableExtra::kable_styling(latex_options = c("striped")) %>%
-    kableExtra::row_spec(0, bold = TRUE)
+        value = fmt_pct(effect_pct_long, 0)
+      )
+  ) %>%
+  pivot_wider(
+    names_from = n_telpunten,
+    values_from = value,
+    names_prefix = "n = "
+  ) %>%
+  arrange(
+    factor(maat, levels = c("Per jaar", "Volledige tijdreeks")),
+    n_jaar
+  ) %>%
+  mutate(
+    `Lengte tijdreeks` = if_else(
+      !duplicated(paste(maat, n_jaar)),
+      paste(n_jaar, "jaar"),
+      ""
+    )
+  ) %>%
+  select(`Lengte tijdreeks`, `n = 100`, `n = 200`, `n = 400`) %>%
+  kable(
+    booktabs = TRUE,
+    align = rep(c("l", "r"), c(1, 3))
+  ) %>%
+  kableExtra::add_header_above(c(
+    " " = 1,
+    "Detecteerbaar trendverschil" = 3
+  )) %>%
+  kableExtra::pack_rows("Per jaar", 1, 3) %>%
+  kableExtra::pack_rows(
+    "Volledige tijdreeks",
+    3 + 1,
+    2 * 3
+  ) %>%
+  kableExtra::kable_styling(latex_options = c("striped")) %>%
+  kableExtra::row_spec(0, bold = TRUE)
 ```
 
 ```{r}
