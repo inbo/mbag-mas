@@ -46,11 +46,7 @@ Om een representatieve dekking van Vlaanderen te garanderen en de efficiëntie v
 * landschapstype (open of halfopen landschap);
 * SBP-status (binnen of buiten soortenbeschermingsprogrammagebieden).
 
-Dit resulteert in
-$
-6 \times 2 \times 2 = 24
-$
-mogelijke strata.
+Dit resulteert in $6 \times 2 \times 2 = 24$ mogelijke strata.
 
 De stratificatie werd oorspronkelijk ontwikkeld om uitspraken mogelijk te maken op het niveau van landbouwstreken en landschapstypes. Daarnaast kan een geschikte stratificatie de precisie van schattingen verhogen doordat variatie tussen strata expliciet wordt opgevangen in het steekproefontwerp. In de huidige studie worden echter uitsluitend uitspraken nagestreefd op Vlaams niveau. De strata worden daarom gebruikt om de telpunten representatief over Vlaanderen te verdelen, maar in de basisanalyse niet expliciet opgenomen als verklarende variabelen in het analysemodel. De mogelijke invloed hiervan op de statistische kracht kan worden onderzocht in een aanvullende gevoeligheidsanalyse.
 
