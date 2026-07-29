@@ -126,6 +126,7 @@ detectable_effect_10j %>%
     "Detecteerbare trend\nbinnen SBP (10 jaar)" = 3
   )) %>%
   kableExtra::kable_styling(latex_options = "striped") %>%
+  kableExtra::column_spec(c(2, 5), border_right = TRUE) %>%
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
@@ -159,6 +160,7 @@ detectable_effect_10j %>%
     "Detecteerbaar trendverschil met\n'binnen SBP' over 10 jaar" = 3
   )) %>%
   kableExtra::kable_styling(latex_options = "striped") %>%
+  kableExtra::column_spec(2, border_right = TRUE) %>%
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
