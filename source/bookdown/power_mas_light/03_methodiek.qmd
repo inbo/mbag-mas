@@ -31,7 +31,7 @@ De landbouwregio van de duinen werd niet opgenomen omdat daar zeer weinig potent
 De afbakening gebeurde in verschillende stappen, waaronder:
 
 * selectie van open en halfopen landschap;
-* uitsluiting van niet-relevante landgebruiken (onder andere woongebied, industrie, spoorweginfrastructuur en autosnelwegen);
+* uitsluiting van niet-relevante landgebruiken (onder andere woongebied, industrie, autosnelwegen en spoorweginfrastructuur);
 * selectie van openbare wegen en paden van waaruit tellingen kunnen worden uitgevoerd;
 * filtering op landgebruik binnen de telcirkel;
 * filtering op minimale zichtbaarheid.
