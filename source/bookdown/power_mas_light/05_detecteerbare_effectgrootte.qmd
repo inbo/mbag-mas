@@ -117,7 +117,8 @@ detectable_effect_10j %>%
       "100",
       "200",
       "400"
-    )
+    ),
+    align = "r"
   ) %>%
   kableExtra::add_header_above(c(
     "Trend buiten SBP" = 2,
@@ -150,7 +151,8 @@ detectable_effect_10j %>%
       "n = 100",
       "n = 200",
       "n = 400"
-    )
+    ),
+    align = "r"
   ) %>%
   kableExtra::add_header_above(c(
     "Trend buiten SBP" = 2,
@@ -308,7 +310,10 @@ detectable_effect_years %>%
     )
   ) %>%
   select(`Lengte tijdreeks`, maat, `n = 100`, `n = 200`, `n = 400`) %>%
-  kable(booktabs = TRUE) %>%
+  kable(
+    booktabs = TRUE,
+    align = rep(c("l", "r"), c(2, 3))
+  ) %>%
   kableExtra::add_header_above(c(
     " " = 2,
     "Detecteerbaar trendverschil" = 3
