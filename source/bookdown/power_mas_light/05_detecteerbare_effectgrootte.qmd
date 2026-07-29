@@ -90,9 +90,9 @@ detectable_effect_10j %>%
     trend_buiten_10j =
       fmt_pct(100 * (exp(10 * beta_1) - 1), 1),
     trend_binnen_jaarlijks =
-      fmt_pct(100 * (exp(beta_1 + beta3) - 1), 2),
+      fmt_pct(100 * (exp(beta_1 + beta3) - 1), 1),
     trend_binnen_10j =
-      fmt_pct(100 * (exp(10 * (beta_1 + beta3)) - 1), 2)
+      fmt_pct(100 * (exp(10 * (beta_1 + beta3)) - 1), 0)
   ) %>%
   select(
     n_telpunten,
@@ -137,7 +137,7 @@ detectable_effect_10j %>%
 #|   verschillende aantallen telpunten. Waarden tussen haakjes geven de
 #|   onder- en bovengrens van de geschatte detecteerbare verandering weer."
 detectable_effect_10j %>%
-  mutate(value = paste(round(effect_pct_long, 2), "%")) %>%
+  mutate(value = fmt_pct(effect_pct_long, 0)) %>%
   select(starts_with("trend_buiten"), n_telpunten, value) %>%
   pivot_wider(
     names_from = n_telpunten,
@@ -285,7 +285,7 @@ detectable_effect_years %>%
     n_jaar,
     maat = "Per jaar",
     n_telpunten,
-    value = paste(round(effect_pct, 2), "%")
+    value = fmt_pct(effect_pct, 1)
   ) %>%
   bind_rows(
     detectable_effect_years %>%
@@ -293,7 +293,7 @@ detectable_effect_years %>%
         n_jaar,
         maat = "Volledige tijdreeks",
         n_telpunten,
-        value = paste(round(effect_pct_long, 2), "%")
+        value = fmt_pct(effect_pct_long, 0)
       )
   ) %>%
   pivot_wider(
