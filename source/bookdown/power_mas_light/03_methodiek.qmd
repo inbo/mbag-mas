@@ -163,13 +163,15 @@ $$
 u_{punt,j}
 $$
 
-waar:
+waarbij $Jaar_i$ het jaar van de telling weergeeft. Deze variabele start bij 0 voor het eerste jaar van de simulatie en neemt vervolgens met één toe voor elk opeenvolgend jaar. $SBP_j$ is een indicatorvariabele die aangeeft of telpunt $j$ binnen of buiten SBP-gebied ligt: $SBP_j = 0$ voor telpunten buiten en $SBP_j = 1$ voor telpunten binnen SBP-gebied.
+
+Het random intercept:
 
 $$
 u_{punt,j} \sim N(0,\sigma^2_{punt})
 $$
 
-de structurele verschillen tussen telpunten beschrijft.
+beschrijft de structurele verschillen tussen telpunten.
 
 De verwachte dichtheid wordt vervolgens:
 
@@ -241,7 +243,7 @@ Deze gesimuleerde tellingen vormen vervolgens de input voor het analysemodel dat
 | $\sigma^2_{punt}$ | Variatie tussen telpunten                        | Ruimtelijke heterogeniteit                   | Geschat uit bestaande MAS-data             |
 
 We starten met een veronderstelling dat soorten buiten SBP-gebied een licht negatieve trend hebben en binnen SBP-gebied een positieve trend.
-De analyse zal $\beta_3$ optimaliseren, maar we willen de keuze voor $\beta_1$ ook veranderen om te zien of dit andere resultaten geeft.
+De analyse zal $\beta_3$ optimaliseren, maar we willen de keuze voor $\beta_0$ en $\beta_1$ ook veranderen om te zien of dit andere resultaten geeft.
 
 De schatting van de parameters zal gebeuren door het volgende model te fitten op de MAS-data voor elke doelsoort (@sec-doelsoorten).
 
