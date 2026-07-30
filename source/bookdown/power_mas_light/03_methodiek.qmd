@@ -14,7 +14,7 @@ De gebruikte code en de bronbestanden van het rapport zijn beschikbaar in de Git
 De analyses zijn ondergebracht in
 `source/targets/power_mas_light`, 
 en het rapport in
-`source/bookdown/power_mas_light`.
+`source/bookdown/` `power_mas_light`.
 
 De hier beschreven methodiek moet worden beschouwd als een eerste aanzet voor de evaluatie van een mogelijk "MAS light". Gezien de beperkte beschikbare tijd werd bewust gekozen voor een relatief eenvoudig simulatie- en analysekader dat de belangrijkste kenmerken van het monitoringsontwerp omvat.
 
@@ -29,15 +29,15 @@ Het ontwerp van het MAS wordt uitgebreid beschreven in @langeraert2025pilot en @
 ### Steekproefkader
 
 Het MAS richt zich op landbouwgebieden in Vlaanderen. Het steekproefkader werd opgebouwd op basis van de Vlaamse landbouwstreken en omvat uitsluitend locaties in open en halfopen landbouwlandschappen.
-De landbouwregio van de duinen werd niet opgenomen omdat daar zeer weinig potentiële telpunten aanwezig zijn [@jansen2026mas].
+De landbouwstreek van de duinen werd niet opgenomen omdat daar zeer weinig potentiële telpunten aanwezig zijn [@jansen2026mas].
 
 De afbakening gebeurde in verschillende stappen, waaronder:
 
-* selectie van open en halfopen landschap;
-* uitsluiting van niet-relevante landgebruiken (onder andere woongebied, industrie, autosnelwegen en spoorweginfrastructuur);
-* selectie van openbare wegen en paden van waaruit tellingen kunnen worden uitgevoerd;
-* filtering op landgebruik binnen de telcirkel;
-* filtering op minimale zichtbaarheid.
+* selectie van open en halfopen landschap
+* uitsluiting van niet-relevante landgebruiken (onder andere woongebied, industrie, autosnelwegen en spoorweginfrastructuur)
+* selectie van openbare wegen en paden van waaruit tellingen kunnen worden uitgevoerd
+* filtering op landgebruik binnen de telcirkel
+* filtering op minimale zichtbaarheid
 
 Het resultaat is een ruimtelijk expliciete lijst van potentiële telpunten met straal van 300 m die de statistische doelpopulatie van het meetnet zo goed mogelijk benadert.
 
@@ -45,9 +45,9 @@ Het resultaat is een ruimtelijk expliciete lijst van potentiële telpunten met s
 
 Om een representatieve dekking van Vlaanderen te garanderen en de efficiëntie van de steekproef te verhogen, werd het steekproefkader gestratificeerd volgens drie factoren:
 
-* landbouwstreek (6 niveaus);
-* landschapstype (open of halfopen landschap);
-* SBP-status (binnen of buiten soortenbeschermingsprogrammagebieden).
+* landbouwstreek (6 niveaus)
+* landschapstype (open of halfopen landschap)
+* SBP-status (binnen of buiten soortenbeschermingsprogrammagebieden)
 
 Dit resulteert in $6 \times 2 \times 2 = 24$ mogelijke strata.
 
@@ -59,12 +59,13 @@ Binnen elk stratum worden telpunten aselect geselecteerd uit het steekproefkader
 
 Voor deze poweranalyse wordt aangenomen dat het totale aantal telpunten vooraf wordt vastgelegd. Dit totaal wordt vervolgens verdeeld over de landbouwstreek en landschapstype op basis van hun relatieve oppervlakte binnen Vlaanderen. Binnen elke combinatie van landbouwstreek en landschapstype wordt daarbij een gelijke verdeling gehanteerd tussen telpunten binnen en buiten SBP-gebieden.
 
-Een finale steekproefgrootte van 400 punten zal bv. resulteren in 200 punten binnen SBP-gebied en 200 buiten SBP-gebied. Verdere allocatie in landbouwregio landschapstype gebeurt in verhouding met het aantal potentiële telpunten in elk stratum van het steekproefkader (@tbl-gewichten-strata).
+Een finale steekproefgrootte van 400 punten zal bv. resulteren in 200 punten binnen SBP-gebied en 200 buiten SBP-gebied. Verdere allocatie in landbouwstreek landschapstype gebeurt in verhouding met het aantal potentiële telpunten in elk stratum van het steekproefkader (@tbl-gewichten-strata).
 
 ```{r}
 #| label: tbl-gewichten-strata
 #| tbl-cap: "Gewichten per stratum (w) en voorbeeld van aantal punten per
-#|   stratum als de finale steekproefgrootte 400 zou zijn."
+#|   stratum als de finale steekproefgrootte 400 zou zijn.
+#|   OL: open landschap, HOL: halfopen landschap."
 # project root
 file <- file.path("data/steekproefkaders/steekproefkader_mbag_mas.csv")
 projroot <- rprojroot::find_root(rprojroot::has_file(file))
@@ -91,9 +92,9 @@ steekproefkader %>%
     booktabs = TRUE,
     digits = 5,
     col.names = c(
-      "Landbouwregio",
-      "Openheid landschap",
-      "SBP",
+      "Landbouwstreek",
+      "Landschapstype",
+      "SBP-status",
       "w",
       "voorbeeld (N = 400)"
     )
@@ -183,8 +184,8 @@ In dit hoofdstuk wordt beschreven hoe synthetische teldata worden gegenereerd.
 ### Simulatiemodel
 De simulatie gebeurt op het niveau van:
 
-* telpunt;
-* jaar;
+* telpunt
+* jaar
 
 Elke observatie stelt dus één telling voor op een bepaald telpunt in een bepaald jaar. De telperiode wordt niet expliciet gemodelleerd: voor elke soort wordt één representatieve telperiode geselecteerd, namelijk de periode met de hoogste aantallen in de beschikbare monitoringgegevens.
 
@@ -334,7 +335,7 @@ jaar:sbpbinnen
 
 Deze parameter meet het verschil in trend tussen SBP- en niet-SBP-gebieden.
 
-## Detecteerbare effectgrootte
+## Bepalen van de detecteerbare effectgrootte
 
 In plaats van een klassieke steekproefgrootteanalyse wordt gewerkt vanuit een vast monitoringsontwerp (scenario's 100-400 telpunten) en wordt onderzocht welke trendverschillen tussen SBP- en niet-SBP-gebieden met dit ontwerp detecteerbaar zijn.
 De centrale effectparameter is de interactieterm tussen jaar en SBP-status, die het verschil in jaarlijkse log-trend tussen beide groepen beschrijft.

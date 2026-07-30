@@ -23,4 +23,4 @@ We kunnen daarom besluiten dat het niet aangewezen is om het aantal meetpunten t
 \endgroup
 ```
 
-De auteur wil Hans Van Caster, Myriam Dumortier, Peter Van Gossum, Stijn Vandenbulcke en Thierry Onkelinx bedanken voor hun waardevolle feedback op deze analyse en de bijbehorende resultaten.
+De auteur wil Hans Van Caster, Myriam Dumortier, Peter Van Gossum, Stijn Vandenbulcke en Thierry Onkelinx bedanken voor hun waardevolle feedback op deze analyse, de bijbehorende resultaten en de rapporttekst.

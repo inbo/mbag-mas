@@ -25,7 +25,7 @@ options(OutDec = ",")
 Beschouw een hypothetische boerenlandvogelsoort die over heel Vlaanderen aanwezig is aan een gelijkaardige densiteit.
 Deze soort heeft de hoogste densiteit buiten SBP-gebied en de hoogste densiteit binnen SBP-gebied van de werkelijke boerenlandvogels in MAS (hoogste $\beta_0$ = `r round(tar_read_mas("best_parameters")$beta_0, 3)`, en $\beta_2$ = `r round(tar_read_mas("best_parameters")$beta_2, 3)`) en de kleinste variatie tussen telpunten ($\sigma_{punt}$ = `r round(tar_read_mas("best_parameters")$sigma_punt, 6)`).
 Deze variatie is praktisch verwaarloosbaar: het verschil tussen een telpunt aan de onderkant en de bovenkant van de verdeling van telpunteffecten bedraagt slechts `r round((exp(diff(qnorm(c(0.025, 0.975), sd = tar_read_mas("best_parameters")$sigma_punt))) - 1) * 100, 3)` %.
-Deze verwachte startdensiteit buiten SBP-gebied bedraagt bijgevolg $\exp(\beta_0) =$ `r round(exp(tar_read_mas("best_parameters")$beta_0), 2)` en binnen SBP-gebied van $\exp(\beta_0 + \beta_2) =$ `r round(exp(tar_read_mas("best_parameters")$beta_0 + tar_read_mas("best_parameters")$beta_2), 2)`.
+Deze verwachte startdensiteit buiten SBP-gebied bedraagt bijgevolg $\exp(\beta_0) =$ `r round(exp(tar_read_mas("best_parameters")$beta_0), 2)` en binnen SBP-gebied $\exp(\beta_0 + \beta_2) =$ `r round(exp(tar_read_mas("best_parameters")$beta_0 + tar_read_mas("best_parameters")$beta_2), 2)`.
 
 De detecteerbare effectgrootte werd bepaald via een iteratieve optimalisatieprocedure waarbij de parameter $\beta_3$ werd gekozen zodat een statistische power van 0,9 werd bereikt. Een gedetailleerde visualisatie van deze optimalisatie voor elk scenario is opgenomen in @sec-powerplot.
 
@@ -369,9 +369,9 @@ $$
 waarbij 
 
 
-$E$: detecteerbare effectgrootte,
+$E$: detecteerbare effectgrootte
 
-$n$: het aantal telpunten,
+$n$: het aantal telpunten
 
 $T$: de lengte van de tijdreeks (in jaren)
 

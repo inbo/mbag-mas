@@ -6,7 +6,7 @@ Nochtans stelt de EU Natuurherstelverordening dat de lidstaten herstelmaatregele
 
 Tegelijk neemt de vraag naar beleidsrelevante biodiversiteitsinformatie toe. Zowel het Vlaamse beleid als Europese initiatieven, waaronder het Gemeenschappelijk Landbouwbeleid (GLB) en de Europese natuurherstelverordening, vereisen betrouwbare informatie over de toestand van soorten en over de effectiviteit van genomen beheermaatregelen. Hiervoor volstaan algemene biodiversiteitsindicatoren niet altijd. Er is nood aan monitoring die specifiek gericht is op soorten en maatregelen in landbouwgebied.
 
-## Het MAS en nood aan een vereenvoudigd monitoringsontwerp
+## Het MAS en de nood aan een vereenvoudigd monitoringsontwerp
 
 Om deze reden werd het Meetnet Agrarische Soorten (MAS) ontwikkeld [@langeraert2025pilot; @jansen2026mas]. Het meetnet heeft als doel de toestand en trends van landbouwgebonden soorten op te volgen en tegelijk een kader te bieden voor de evaluatie van beleidsmaatregelen.
 In het kader van het Meetnet Biodiversiteit Agrarisch Gebied (MBAG) werd het MAS in 2024 en 2025 over heel Vlaanderen uitgerold [@dumortier2026mbag].
