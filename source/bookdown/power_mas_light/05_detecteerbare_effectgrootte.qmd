@@ -66,6 +66,8 @@ Zoals verwacht, blijkt dat een kleiner effect (trendverschillen buiten vs. binne
 @tbl-trends-sbp geeft een overzicht van de veronderstelde trends buiten SBP-gebied en de overeenkomstige minimaal detecteerbare trends binnen SBP-gebied.
 @tbl-detectable-effect-10j toont dezelfde resultaten uitgedrukt als het detecteerbaar verschil met "binnen SBP" over een periode van 10 jaar.
 
+\newpage
+
 ```{r}
 #| label: tbl-trends-sbp
 #| tbl-cap: "Veronderstelde trend buiten SBP-gebied en de overeenkomstige
@@ -185,6 +187,8 @@ detectable_effect_10j %>%
   theme_minimal()
 ```
 
+\newpage
+
 ### Bespreking
 
 De detecteerbare effectgrootte neemt af naarmate het aantal telpunten toeneemt.
@@ -266,6 +270,8 @@ ggplot(detectable_effect_10j,
   ) +
   theme_minimal()
 ```
+
+\newpage
 
 ## Variabele lengte tijdreeks
 ### Methodiek
@@ -357,6 +363,8 @@ detectable_effect_years %>%
   ) +
   theme_minimal()
 ```
+
+\newpage
 
 ### Bespreking
 

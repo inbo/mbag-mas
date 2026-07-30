@@ -226,6 +226,8 @@ $$
 
 <!-- spell-check: ignore:end -->
 
+\newpage
+
 ### Implementatie
 
 De random effecten voor de ruimtelijke component worden gegenereerd als:
