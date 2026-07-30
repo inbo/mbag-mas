@@ -242,6 +242,7 @@ highway
 hokken'
 indicatorfunctie
 indicatorsoorten
+indicatorvariabele
 inner
 intercept
 jaar/cyclus
@@ -285,6 +286,7 @@ po.Rproj
 pointid
 pointids
 points
+poissonverdeling
 polygon
 positive
 pratensis
@@ -328,11 +330,13 @@ telperiode
 telperiodes
 telpunt
 telpunt/hok
+telpunteffecten
 telpunten
 telpunten/
 telronde
 telrondes
 tertiare
+teruggetransformeerde
 thinning
 tinnunculus
 toevoegen'

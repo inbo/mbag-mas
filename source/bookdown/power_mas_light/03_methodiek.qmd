@@ -56,7 +56,7 @@ Binnen elk stratum worden telpunten aselect geselecteerd uit het steekproefkader
 
 Voor deze poweranalyse wordt aangenomen dat het totale aantal telpunten vooraf wordt vastgelegd. Dit totaal wordt vervolgens verdeeld over de landbouwstreek en landschapstype op basis van hun relatieve oppervlakte binnen Vlaanderen. Binnen elke combinatie van landbouwstreek en landschapstype wordt daarbij een gelijke verdeling gehanteerd tussen telpunten binnen en buiten SBP-gebieden.
 
-Een finale steekproefgrootte van 400 punten zal bv. resulteren in 200 punten binnen SBP-gebied en 200 buiten SBP-gebied. Verdere allocatie in landbouwregio landschapstype gebeurt relatief naar het aantal potentiële telpunten in elk stratum van het steekproefkader (@tbl-gewichten-strata).
+Een finale steekproefgrootte van 400 punten zal bv. resulteren in 200 punten binnen SBP-gebied en 200 buiten SBP-gebied. Verdere allocatie in landbouwregio landschapstype gebeurt in verhouding met het aantal potentiële telpunten in elk stratum van het steekproefkader (@tbl-gewichten-strata).
 
 ```{r}
 #| label: tbl-gewichten-strata
@@ -84,7 +84,17 @@ steekproefkader %>%
   ) %>%
   select(regio, openheid_klasse, sbp, w = prop_final, `voorbeeld (N = 400)`) %>%
   arrange(regio, openheid_klasse, sbp) %>%
-  kable(booktabs = TRUE, digits = 5) %>%
+  kable(
+    booktabs = TRUE,
+    digits = 5,
+    col.names = c(
+      "Landbouwregio",
+      "Openheid landschap",
+      "SBP",
+      "w",
+      "voorbeeld (N = 400)"
+    )
+  ) %>%
   kableExtra::kable_styling(latex_options = c("striped")) %>%
   kableExtra::row_spec(0, bold = TRUE)
 ```
@@ -115,30 +125,49 @@ Deze aantallen kunnen later aangepast worden.
 
 ### Doelsoorten {#sec-doelsoorten}
 
-De analyse wordt uitgevoerd voor alle algemene boerenlandvogels uit de lijst voor Vlaanderen uit Bijlage V van de Natuurherstelverordening.
+De analyse wordt uitgevoerd voor alle algemene boerenlandvogels uit de lijst voor Vlaanderen uit Bijlage V van de Natuurherstelverordening (@tbl-soorten).
 
-| Soort           | Wetenschappelijke naam                 | Lijst Vlaanderen | Lijst Wallonië | Monitoring Vlaanderen |
-| --------------- | -------------------------------------- | ---------------: | -------------: | --------------------- |
-| boerenzwaluw    | *Hirundo rustica* Linnaeus, 1758       |                x |              x | ABV + MAS             |
-| geelgors        | *Emberiza citrinella* Linnaeus, 1758   |                x |              x | ABV + MAS             |
-| gele kwikstaart | *Motacilla flava* Linnaeus, 1758       |                x |              x | ABV + MAS             |
-| grasmus         | *Curruca communis* (Latham, 1787)      |                x |              x | ABV + MAS             |
-| graspieper      | *Anthus pratensis* (Linnaeus, 1758)    |                x |              x | MAS ???               |
-| grauwe gors     | *Emberiza calandra* Linnaeus, 1758     |                  |              x | BBV (WGG)             |
-| grauwe klauwier | *Lanius collurio* Linnaeus, 1758       |                  |              x | BBV                   |
-| grutto          | *Limosa limosa* (Linnaeus, 1758)       |                x |                | ???                   |
-| kievit          | *Vanellus vanellus* (Linnaeus, 1758)   |                x |              x | ABV + MAS             |
-| kneu            | *Linaria cannabina* (Linnaeus, 1758)   |                x |              x | ABV + MAS             |
-| patrijs         | *Perdix perdix* (Linnaeus, 1758)       |                x |              x | ABV + MAS             |
-| ringmus         | *Passer montanus* (Linnaeus, 1758)     |                x |              x | ABV + MAS             |
-| roek            | *Corvus frugilegus* Linnaeus, 1758     |                  |              x | BBV                   |
-| roodborsttapuit | *Saxicola rubicola* (Linnaeus, 1766)   |                x |              x | ABV + MAS             |
-| scholekster     | *Haematopus ostralegus* Linnaeus, 1758 |                x |                | ABV                   |
-| spreeuw         | *Sturnus vulgaris* Linnaeus, 1758      |                  |              x | ABV + MAS             |
-| torenvalk       | *Falco tinnunculus* Linnaeus, 1758     |                x |              x | ABV + MAS             |
-| veldleeuwerik   | *Alauda arvensis* Linnaeus, 1758       |                x |              x | ABV + MAS             |
-| wulp            | *Numenius arquata* (Linnaeus, 1758)    |                x |                | ???                   |
-| zomertortel     | *Streptopelia turtur* (Linnaeus, 1758) |                  |              x | ???                   |
+```{r}
+#| label: tbl-soorten
+#| tbl-cap: "Overzicht van de algemene boerenlandvogels van België uit
+#|   Bijlage V van de Natuurherstelverordening."
+# nolint start
+soorten <- tibble::tribble(
+  ~Soort, ~`Wetenschappelijke naam`, ~`Lijst Vlaanderen`, ~`Lijst Wallonië`, ~`Monitoring Vlaanderen`,
+  "boerenzwaluw",    "\\textit{Hirundo rustica} Linnaeus, 1758",       "x", "x", "ABV + MAS",
+  "geelgors",        "\\textit{Emberiza citrinella} Linnaeus, 1758",   "x", "x", "ABV + MAS",
+  "gele kwikstaart", "\\textit{Motacilla flava} Linnaeus, 1758",      "x", "x", "ABV + MAS",
+  "grasmus",         "\\textit{Curruca communis} (Latham, 1787)",     "x", "x", "ABV + MAS",
+  "graspieper",      "\\textit{Anthus pratensis} (Linnaeus, 1758)",   "x", "x", "MAS ???",
+  "grauwe gors",     "\\textit{Emberiza calandra} Linnaeus, 1758",    "",  "x", "BBV (WGG)",
+  "grauwe klauwier", "\\textit{Lanius collurio} Linnaeus, 1758",      "",  "x", "BBV",
+  "grutto",          "\\textit{Limosa limosa} (Linnaeus, 1758)",      "x", "",  "???",
+  "kievit",          "\\textit{Vanellus vanellus} (Linnaeus, 1758)",  "x", "x", "ABV + MAS",
+  "kneu",            "\\textit{Linaria cannabina} (Linnaeus, 1758)",  "x", "x", "ABV + MAS",
+  "patrijs",         "\\textit{Perdix perdix} Linnaeus, 1758",        "x", "x", "ABV + MAS",
+  "ringmus",         "\\textit{Passer montanus} (Linnaeus, 1758)",   "x", "x", "ABV + MAS",
+  "roek",            "\\textit{Corvus frugilegus} Linnaeus, 1758",   "",  "x", "BBV",
+  "roodborsttapuit", "\\textit{Saxicola rubicola} (Linnaeus, 1766)",  "x", "x", "ABV + MAS",
+  "scholekster",     "\\textit{Haematopus ostralegus} Linnaeus, 1758","x", "",  "ABV",
+  "spreeuw",         "\\textit{Sturnus vulgaris} Linnaeus, 1758",     "",  "x", "ABV + MAS",
+  "torenvalk",       "\\textit{Falco tinnunculus} Linnaeus, 1758",   "x", "x", "ABV + MAS",
+  "veldleeuwerik",   "\\textit{Alauda arvensis} Linnaeus, 1758",      "x", "x", "ABV + MAS",
+  "wulp",            "\\textit{Numenius arquata} (Linnaeus, 1758)",   "x", "",  "???",
+  "zomertortel",     "\\textit{Streptopelia turtur} (Linnaeus, 1758)","", "x", "???"
+)
+# nolint end
+
+soorten %>%
+  kable(
+    format = "latex",
+    booktabs = TRUE,
+    escape = FALSE
+  ) %>%
+  kableExtra::kable_styling(
+    latex_options = c("striped", "scale_down")
+  ) %>%
+  kableExtra::row_spec(0, bold = TRUE)
+```
 
 Voor elke soort worden de nodige parameters geschat uit bestaande monitoringgegevens (zie @sec-samenvatting-simulatieparameters).
 In plaats van 15 afzonderlijke soorten volledig uit te werken, wordt de variatie tussen soorten benaderd door verschillende parametercombinaties te analyseren.
@@ -156,7 +185,7 @@ De simulatie gebeurt op het niveau van:
 
 Elke observatie stelt dus één telling voor op een bepaald telpunt in een bepaald jaar. De telperiode wordt niet expliciet gemodelleerd: voor elke soort wordt één representatieve telperiode geselecteerd, namelijk de periode met de hoogste aantallen in de beschikbare monitoringgegevens.
 
-De ware log-dichtheid op telpunt $j$ in jaar $i$ wordt beschreven door:
+De ware log-dichtheid op telpunt $j$ in jaar $i$ wordt beschreven door
 
 $$
 \eta_{ij} = \beta_0 + \beta_1 Jaar_i + \beta_2 SBP_j + \beta_3 (Jaar_i \times SBP_j) +
@@ -165,7 +194,7 @@ $$
 
 waarbij $Jaar_i$ het jaar van de telling weergeeft. Deze variabele start bij 0 voor het eerste jaar van de simulatie en neemt vervolgens met één toe voor elk opeenvolgend jaar. $SBP_j$ is een indicatorvariabele die aangeeft of telpunt $j$ binnen of buiten SBP-gebied ligt: $SBP_j = 0$ voor telpunten buiten en $SBP_j = 1$ voor telpunten binnen SBP-gebied.
 
-Het random intercept:
+Het random intercept
 
 $$
 u_{punt,j} \sim N(0,\sigma^2_{punt})
@@ -173,17 +202,25 @@ $$
 
 beschrijft de structurele verschillen tussen telpunten.
 
-De verwachte dichtheid wordt vervolgens:
+De verwachte dichtheid wordt vervolgens
+
+<!-- spell-check: ignore:start -->
 
 $$
 \mu_{ijt} = \exp(\eta_{ij})
 $$
 
-De waargenomen tellingen worden gegenereerd uit een poissonverdeling:
+<!-- spell-check: ignore:end -->
+
+De waargenomen tellingen worden gegenereerd uit een poissonverdeling
+
+<!-- spell-check: ignore:start -->
 
 $$
 y_{ij} \sim Poisson(\mu_{ij})
 $$
+
+<!-- spell-check: ignore:end -->
 
 ### Implementatie
 
@@ -251,7 +288,7 @@ $$
 \eta_{j} = \beta_0 + \beta_2 SBP_j + u_{punt,j}
 $$
 
-Waarbij het aantal per telpunt 
+Waarbij het aantal per telpunt een poissonverdeling volgt
 
 $$
 y_{j} \sim Poisson(\exp(\eta_{j}))
@@ -322,7 +359,7 @@ designpower::find_power(
 
 De power is de kans dat je een echt bestaand effect ook daadwerkelijk detecteert.
 Als er echt een verschil is in trend tussen SBP- en niet-SBP-gebieden, dan is de power de kans dat je analyse dat verschil ook als “significant” terugvindt.
-Een power van 0,9 betekent dus 90 % kans om een echt effect te detecteren (of 10 % kans op een vals negatief resultaat (type II-fout; je mist het effect terwijl het er wel is)).
+Een power van 0,9 betekent dus 90 % kans om een echt effect te detecteren, dus 10 % kans op een vals negatief resultaat (type II‐fout; je mist het effect terwijl het er wel is).
 
 Het significantieniveau ($\alpha$) is de drempel voor hoe snel je een effect als “statistisch significant” beschouwt terwijl het in werkelijkheid niet bestaat.
 Een $\alpha$ van 0.1 betekent dat je een 10% kans op een vals positief resultaat (type I-fout: je concludeert soms ten onrechte dat er een effect is, terwijl er eigenlijk geen is).
