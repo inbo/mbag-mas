@@ -8,7 +8,10 @@ library(tidyverse)
 
 # Methodiek {#sec-methodiek}
 
-Alle analyses werden uitgevoerd in R [@R]. De gebruikte code en de bronbestanden van het rapport zijn beschikbaar in de GitHub-repository <https://github.com/inbo/mbag-mas>. De analyses zijn ondergebracht in
+Alle analyses werden uitgevoerd in R [@R].
+Voor een reproduceerbare analyseworkflow werd gebruikgemaakt van het **targets** R package [@targets2021].
+De gebruikte code en de bronbestanden van het rapport zijn beschikbaar in de GitHub-repository <https://github.com/inbo/mbag-mas>.
+De analyses zijn ondergebracht in
 `source/targets/power_mas_light`, 
 en het rapport in
 `source/bookdown/power_mas_light`.
@@ -310,7 +313,7 @@ $$
 u_{punt,j}
 $$
 
-en fitten we met de **glmmTMB** package [@mcgillycuddy2025glmmTMB; @brooks2017glmmTMB].
+en fitten we met het **glmmTMB** package [@mcgillycuddy2025glmmTMB; @brooks2017glmmTMB].
 
 \vspace{0.5\baselineskip}
 
@@ -336,7 +339,7 @@ Deze parameter meet het verschil in trend tussen SBP- en niet-SBP-gebieden.
 In plaats van een klassieke steekproefgrootteanalyse wordt gewerkt vanuit een vast monitoringsontwerp (scenario's 100-400 telpunten) en wordt onderzocht welke trendverschillen tussen SBP- en niet-SBP-gebieden met dit ontwerp detecteerbaar zijn.
 De centrale effectparameter is de interactieterm tussen jaar en SBP-status, die het verschil in jaarlijkse log-trend tussen beide groepen beschrijft.
 
-Met behulp van de **designpower** package wordt via simulaties bepaald welke waarde van dit trendverschil nodig is om een vooraf gekozen power te bereiken [@onkelinx2026designpower].
+Met behulp van het **designpower** package (ontwikkelversie 0.0.3, GitHub-commit 45f8f3c) wordt via simulaties bepaald welke waarde van dit trendverschil nodig is om een vooraf gekozen power te bereiken [@onkelinx2026designpower].
 Dit levert de minimaal detecteerbare effectgrootte (MDE) op voor elk scenario van het aantal telpunten (en eventueel andere scenario's), en geeft zo direct inzicht in de gevoeligheid van het monitoringsnetwerk.
 We kiezen een power van 0,9 en significantieniveau van 0,1.
 
