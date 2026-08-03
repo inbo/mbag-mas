@@ -25,9 +25,12 @@ library(sf)    # Working with vector data
 library(tidyverse)
 library(INBOtheme)
 
+# Options
+conflicted::conflicts_prefer(dplyr::filter)
+terraOptions(progress = 0)
+
 # Globals
 mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
-conflicted::conflicts_prefer(dplyr::filter)
 ```
 
 # Doel
@@ -91,39 +94,103 @@ plot(
 )
 ```
 
-We visualiseren enkel landbouwgebied:
+We lezen het steekproefkader van MAS in.
+
+```{r}
+mas_samplingframe_df <- read_csv(
+  file.path(mbag_dir, "data", "steekproefkaders",
+            "steekproefkader_mbag_mas.csv"),
+  show_col_types = FALSE
+)
+```
+
+
+```{r}
+#| cache: true
+mas_samplingframe_points <- st_as_sf(
+  mas_samplingframe_df,
+  coords = c("x_coord", "y_coord"),
+  crs = unique(mas_samplingframe_df$crs)
+)
+mas_samplingframe_circles <- st_buffer(mas_samplingframe_points, 300)
+mas_samplingframe_union <- st_union(st_buffer(mas_samplingframe_circles, 300))
+```
+
+```{r}
+#| cache: true
+raster_edge <- as.polygons(
+  !is.na(abv_samplingframe),
+  dissolve = TRUE
+) |>
+  st_as_sf() |>
+  st_boundary() %>%
+  filter(max == 1)
+```
+
+# Vergelijking MAS met ABV2.0
+## Steekproefkaders
 
 ```{r}
 abv_akker_stratum <- abv_samplingframe == which(strata_abv == "akker")
 ```
 
+We zien gelijkaardige regio's, maar de resolutie van ABV2.0 is veel fijner (10x10 m vs cirkel met radius 300 m).
+
 ```{r}
-# Reserve space: legend on top, map underneath
-layout(matrix(c(1, 2), nrow = 2), heights = c(1, 5))
-
-# Legend area
-par(mar = c(0, 0, 0, 0))
-plot.new()
-
-# Only visualise agriculture
-legend(
-  "center",
-  legend = c("rest", "akker"),
-  fill = c("grey", "firebrick"),
-  ncol = 3,
-  bty = "n",
-  cex = 0.8
+#| fig.height: 7
+#| fig.width: 8
+# Set up one figure with two maps
+par(
+  mfrow = c(2, 1),
+  mar = c(2, 2, 3, 2),
+  oma = c(0, 0, 0, 0)
 )
 
-# Map area
-par(mar = c(4, 4, 2, 2))
+# --- ABV ---
+plot(
+  st_geometry(raster_edge),
+  col = "black",
+  border = NA,
+  axes = FALSE,
+  main = "ABV"
+)
+
 plot(
   abv_akker_stratum,
   type = "classes",
   levels = c("rest", "akker"),
-  col = c("grey", "firebrick"),
-  legend = FALSE
+  col = c("white", "firebrick"),
+  legend = FALSE,
+  axes = FALSE,
+  add = TRUE
 )
-layout(1)
-```
 
+# --- MAS ---
+plot(
+  st_geometry(raster_edge),
+  col = "black",
+  border = NA,
+  axes = FALSE,
+  main = "MAS"
+)
+
+plot(
+  st_geometry(mas_samplingframe_union),
+  col = "firebrick",
+  border = NA,
+  add = TRUE
+)
+
+# Shared legend
+par(mfrow = c(1, 1), mar = c(0, 0, 0, 0))
+
+legend(
+  "right",
+  legend = c("rest", "akker"),
+  fill = c("white", "firebrick"),
+  ncol = 2,
+  bty = "n",
+  cex = 0.9,
+  xpd = TRUE
+)
+```
