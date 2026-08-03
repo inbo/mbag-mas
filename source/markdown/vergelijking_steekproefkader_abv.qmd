@@ -18,14 +18,36 @@ editor_options:
 ```{r}
 #| warning: false
 #| message: false
+library(terra) # Working with raster data
+library(sf)    # Working with vector data
+
+# Data wrangling and visualisation
 library(tidyverse)
-library(knitr)
 library(INBOtheme)
 
+# Globals
 mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
 conflicted::conflicts_prefer(dplyr::filter)
 ```
 
 # Doel
 
+Vergelijking van het nieuwe steekproefkader van ABV2.0 voor landbouwgebied met MAS.
 
+- Is er veel overlap? Waar wel/niet? Waarom wel/niet?
+- Is er enkel overlap met HOL en OL of ook andere landschapstypes?
+
+# Data inlezen en verkennen
+
+We lezen de voorlopige kaartlaag in van ABV2.0.
+
+```{r}
+abv_samplingframe <- rast(file.path(mbag_dir, "data", "abv", "gauss100m.tif"))
+abv_samplingframe
+```
+
+De kaart ziet er als volgt uit:
+
+```{r}
+plot(abv_samplingframe)
+```
