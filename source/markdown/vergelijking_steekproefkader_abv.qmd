@@ -43,11 +43,87 @@ We lezen de voorlopige kaartlaag in van ABV2.0.
 
 ```{r}
 abv_samplingframe <- rast(file.path(mbag_dir, "data", "abv", "gauss100m.tif"))
+strata_abv <- c(
+  "bebouwd",
+  "bebouwed_groen",
+  "water",
+  "akker",
+  "grasland",
+  "bos",
+  "duinen/heide",
+  "moeras",
+  "estuarium",
+  "getijdensgebied/overgangswater",
+  "gemengd"
+)
 abv_samplingframe
 ```
+
+Het bevat de volgende strata: `r strata_abv`.
 
 De kaart ziet er als volgt uit:
 
 ```{r}
-plot(abv_samplingframe)
+# Reserve space: legend on top, map underneath
+layout(matrix(c(1, 2), nrow = 2), heights = c(1, 5))
+
+# Legend area
+par(mar = c(0, 0, 0, 0))
+plot.new()
+
+legend(
+  "center",
+  legend = strata_abv,
+  fill = hcl.colors(length(strata_abv), "viridis"),
+  ncol = 3,
+  bty = "n",
+  cex = 0.8
+)
+
+# Map area
+par(mar = c(4, 4, 2, 2))
+plot(
+  abv_samplingframe,
+  type = "classes",
+  levels = strata_abv,
+  col = hcl.colors(length(strata_abv), "viridis"),
+  legend = FALSE
+)
 ```
+
+We visualiseren enkel landbouwgebied:
+
+```{r}
+abv_akker_stratum <- abv_samplingframe == which(strata_abv == "akker")
+```
+
+```{r}
+# Reserve space: legend on top, map underneath
+layout(matrix(c(1, 2), nrow = 2), heights = c(1, 5))
+
+# Legend area
+par(mar = c(0, 0, 0, 0))
+plot.new()
+
+# Only visualise agriculture
+legend(
+  "center",
+  legend = c("rest", "akker"),
+  fill = c("grey", "firebrick"),
+  ncol = 3,
+  bty = "n",
+  cex = 0.8
+)
+
+# Map area
+par(mar = c(4, 4, 2, 2))
+plot(
+  abv_akker_stratum,
+  type = "classes",
+  levels = c("rest", "akker"),
+  col = c("grey", "firebrick"),
+  legend = FALSE
+)
+layout(1)
+```
+
