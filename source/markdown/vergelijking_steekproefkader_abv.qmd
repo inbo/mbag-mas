@@ -9,7 +9,6 @@ format:
     toc-depth: 3
     toc-location: right
     code-fold: true
-    self-contained: true
 
 editor_options: 
   chunk_output_type: console
@@ -20,6 +19,7 @@ editor_options:
 #| message: false
 library(terra) # Working with raster data
 library(sf)    # Working with vector data
+library(mapview) # Visualise spatial data interactively
 
 # Data wrangling and visualisation
 library(tidyverse)
@@ -31,6 +31,11 @@ terraOptions(progress = 0)
 
 # Globals
 mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
+cache_dir <- file.path(
+  mbag_dir,
+  "source", "markdown", "vergelijking_steekproefkader_abv_cache"
+)
+source(file.path(mbag_dir, "source", "R", "cache_compute.R"))
 ```
 
 # Doel
@@ -97,34 +102,46 @@ plot(
 We lezen het steekproefkader van MAS in.
 
 ```{r}
+# Read sampling frame
 mas_samplingframe_df <- read_csv(
   file.path(mbag_dir, "data", "steekproefkaders",
             "steekproefkader_mbag_mas.csv"),
   show_col_types = FALSE
 )
-```
 
-
-```{r}
-#| cache: true
+# Sampling frame to sf
 mas_samplingframe_points <- st_as_sf(
   mas_samplingframe_df,
   coords = c("x_coord", "y_coord"),
   crs = unique(mas_samplingframe_df$crs)
 )
-mas_samplingframe_circles <- st_buffer(mas_samplingframe_points, 300)
-mas_samplingframe_union <- st_union(st_buffer(mas_samplingframe_circles, 300))
-```
 
-```{r}
-#| cache: true
-raster_edge <- as.polygons(
-  !is.na(abv_samplingframe),
-  dissolve = TRUE
-) |>
-  st_as_sf() |>
-  st_boundary() %>%
-  filter(max == 1)
+# Union everything
+mas_samplingframe_union <- cache_compute(
+  path = cache_dir,
+  file = "mas_samplingframe_union",
+  expr = {
+    mas_samplingframe_circles <- st_buffer(mas_samplingframe_points, 300)
+    st_union(
+      st_buffer(mas_samplingframe_circles, 300)
+    )
+  }
+)
+
+# Get edge of flanders from ABV raster
+raster_edge <- cache_compute(
+  path = cache_dir,
+  file = "raster_edge",
+  expr = {
+    as.polygons(
+      !is.na(abv_samplingframe),
+      dissolve = TRUE
+    ) |>
+      st_as_sf() |>
+      st_boundary() %>%
+      filter(max == 1)
+  }
+)
 ```
 
 # Vergelijking MAS met ABV2.0
@@ -193,4 +210,56 @@ legend(
   cex = 0.9,
   xpd = TRUE
 )
+```
+
+```{r}
+# ABV raster to sf
+abv_akker_sf <- cache_compute(
+  path = cache_dir,
+  file = "abv_akker_sf",
+  expr = {
+    abv_akker_stratum |>
+      as.polygons(dissolve = TRUE, na.rm = TRUE) |>
+      st_as_sf() %>%
+      filter(max == 1) %>%
+      st_union() %>%
+      st_transform(unique(mas_samplingframe_df$crs))
+  }
+)
+
+# Calculate the three areas
+overlap <- st_intersection(abv_akker_sf, mas_samplingframe_union)
+abv_only <- st_difference(abv_akker_sf, mas_samplingframe_union)
+mas_only <- st_difference(mas_samplingframe_union, abv_akker_sf)
+
+# Convert to sf objects
+overlap <- st_as_sf(overlap)
+abv_only <- st_as_sf(abv_only)
+mas_only <- st_as_sf(mas_only)
+```
+
+Dit is duidelijker op een interactieve map.
+Het verschil tussen beide is natuurlijk dat het steekproefkader van mas start vanuit een locatie langs een weg.
+Het steekproefkader bevat dus zowel mogelijk telpuntlocaties als effectief landbouwgebied.
+ABV2.0 bevat enkel effectief landbouwgebied.
+
+```{r}
+mapview(
+  overlap,
+  col.regions = "purple",
+  layer.name = "Overlap",
+  map.types = c("OpenStreetMap", "Esri.WorldImagery")
+) +
+  mapview(
+    abv_only,
+    col.regions = "red",
+    layer.name = "ABV only",
+    map.types = c("OpenStreetMap", "Esri.WorldImagery")
+  ) +
+  mapview(
+    mas_only,
+    col.regions = "green",
+    layer.name = "MAS only",
+    map.types = c("OpenStreetMap", "Esri.WorldImagery")
+  )
 ```
