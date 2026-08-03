@@ -1,0 +1,31 @@
+---
+title: "Vergelijking steekproefkader ABV2.0"
+author: "Ward Langeraert"
+date: today
+
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-location: right
+    code-fold: true
+    self-contained: true
+
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+#| warning: false
+#| message: false
+library(tidyverse)
+library(knitr)
+library(INBOtheme)
+
+mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
+conflicted::conflicts_prefer(dplyr::filter)
+```
+
+# Doel
+
+
