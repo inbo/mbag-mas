@@ -263,3 +263,16 @@ mapview(
     map.types = c("OpenStreetMap", "Esri.WorldImagery")
   )
 ```
+
+- https://r-spatial.github.io/deckglgeoarrow/articles/getting_started.html
+- visuele conclusies? voeren, zwin
+
+## OSM filters
+
+- abv only vergelijken met osm filters
+
+## Openheid landschap
+
+- abv only vergelijken met openheid landschap
+
+# Conclusie
