@@ -353,6 +353,13 @@ openness_300m <- rast(
 openness_300m
 ```
 
+De oppervlakteverdeling over de openheidsklassen werd berekend op basis van het 25 m-raster (`terra::extract`).
+Bij `exact = FALSE` wordt een rastercel volledig meegerekend zodra deze het steekproefkader overlapt. 
+Met `exact = TRUE` wordt daarentegen voor elke overlappende rastercel het exacte aandeel binnen het steekproefkader berekend.
+Dit vraagt aanzienlijk meer rekentijd, omdat hiervoor bijkomende geometrische bewerkingen nodig zijn.
+Het verschil in de uiteindelijke percentages is echter klein, omdat alleen rastercellen langs de grenzen van het steekproefkader gedeeltelijk overlappen en deze een relatief klein deel van de totale oppervlakte vertegenwoordigen.
+Daarom wordt voor de verdere analyse `exact = FALSE` gebruikt.
+
 ```{r}
 # Convert category thresholds from degrees to radians
 ol <- 86.5 * pi / 180
@@ -363,74 +370,60 @@ hgl <- 71.6 * pi / 180
 abv_only_vect <- vect(abv_only)
 
 # Extract raster values and exact fraction of each cell
-# abv_only_open <- cache_compute(
-#   path = cache_dir,
-#   file = "abv_only_open",
-#   expr = {
-#     terra::extract(
-#       openness_300m,
-#       abv_only_vect,
-#       exact = TRUE
-#     )
-#   }
-# )
-test_buffer <- st_buffer(
-  st_centroid(abv_only[1, ]),
-  10000
-)
-test_area <- st_intersection(abv_only, test_buffer)
-
-openness_300m_test <- crop(
-  openness_300m,
-  vect(test_area)
-)
-
-# mapview(openness_300m_test) +
-#   mapview(test_area, col.regions = "green")
-
-abv_only_open <- terra::extract(
-  openness_300m_test,
-  vect(test_area),
-  exact = TRUE
+abv_only_open <- cache_compute(
+  path = cache_dir,
+  file = "abv_only_open",
+  expr = {
+    terra::extract(
+      openness_300m,
+      abv_only_vect,
+      # Not as exact, but makes almost no difference
+      # And takes much less time
+      exact = FALSE
+    )
+  }
 )
 
 # Assign openness categories
-abv_only_open_cat <- abv_only_open |>
-  mutate(
-    category = case_when(
-      focal_sum > ol ~ "OL",
-      focal_sum >= hol ~ "HOL",
-      focal_sum >= hgl ~ "HGL",
-      focal_sum < hgl ~ "GL",
-      TRUE ~ "onbekend"
+abv_only_open_cat <- abv_only_open %>%
+    mutate(
+        category = case_when(
+            focal_sum > ol ~ "OL",
+            focal_sum >= hol ~ "HOL",
+            focal_sum >= hgl ~ "HGL",
+            focal_sum < hgl ~ "GL",
+            TRUE ~ "onbekend"
+        )
     )
-  )
 
 # Calculate area per category
-category_area <- abv_only_open_cat |>
-  group_by(category) |>
-  summarise(
-    area_m2 = sum(fraction * 25 * 25),
-    .groups = "drop"
-  ) |>
+category_area <- abv_only_open_cat %>%
+  count(category) %>%
   mutate(
-    percentage = 100 * area_m2 / sum(area_m2)
-  )
+    percentage = 100 * n / sum(n)
+)
 
 sum_closed <- sum(
-  category_area$percentage[!category_area$category %in% c("OL", "HOL")]
+  category_area$percentage[
+    !category_area$category %in% c("OL", "HOL")
+  ]
 )
 
 category_area %>%
-  kable(digits = 1)
+    kable(digits = 1)
 ```
 
 In totaal valt `r round(sum_closed, 1)` % van het resterende ABV2.0 steekproefkader buiten OL of HOL.
+We zien zoals verwacht vooral in de kempen veel GL en HGL, terwijl het aan de kust vaak wel om OL of HOL gaat.
+We kunnen ons hierbij wel afvragen hoe relevant dit is voor ABV2.0.
+Als we enkele polygonen bekijken in meer gesloten landschap, dan zien we dat deze vaak omringt worden door bos.
+Dit kan wel perfect landbouwgebied zijn (zoals de selectie door ABV2.0 aangeeft), maar is niet opgenomen in MAS omdat het protocol daar niet kan gebruikt worden (300 m ver kijken om correctie te doen o.b.v. detectiekans).
+Het zal dus eerder van praktische overwegingen afhangen of deze worden opgenomen in ABV of niet.
 
 ```{r}
 # Define openness categories in radians
 abv_open_cat <- classify(
-  openness_300m_test,
+  openness_300m,
   rcl = matrix(
     c(
       -Inf, hgl, 4,   # GL
@@ -453,7 +446,7 @@ levels(abv_open_cat) <- data.frame(
 # Keep only the ABV-only area
 abv_only_open_cat <- mask(
   abv_open_cat,
-  vect(test_area)
+  abv_only_vect
 ) %>% as.polygons(
     na.rm = TRUE
   ) |>
@@ -462,7 +455,8 @@ abv_only_open_cat <- mask(
 mapview(
   abv_only_open_cat,
   zcol = "category",
-  layer.name = "Openheid"
+  layer.name = "Openheid",
+  map.types = c("OpenStreetMap", "Esri.WorldImagery")
 )
 ```
 
@@ -544,7 +538,80 @@ Het gaat om de volgende landgebruiken:
 
 We kijken in hoeverre de de ABV2.0 oppervlakte die niet met MAS overlapt ("ABV2.0 only") hierdoor kan verklaart worden.
 
-> abv only vergelijken met osm filters
+```{r}
+# Test dataset
+test_buffer <- st_buffer(
+  st_centroid(abv_only[1, ]),
+  10000
+)
+test_area <- st_make_valid(st_intersection(test_buffer, abv_only))
+
+# Arguments
+osmdata <- file.path(
+  osmextract::oe_download_directory(), "geofabrik_belgium-latest.osm.pbf"
+)
+landuse <- c("residential", "military", "industrial", "cemetery",
+            "railway", "commercial", "farmyard")
+leisure <- c("park")
+
+# Create string to get landuse and leisure variables
+str_landuse <- paste0("('", paste(landuse, collapse = "', '"), "')")
+str_leisure <- paste0("('", paste(leisure, collapse = "', '"), "')")
+query_landuse <- paste("landuse IN", str_landuse, "OR leisure IN", str_leisure,
+                       sep = " ")
+landuse_vectortranslate <- c(
+  "-t_srs", "EPSG:31370",
+  "-select", "landuse,leisure",
+  "-where", query_landuse,
+  "-nlt", "PROMOTE_TO_MULTI"
+)
+
+# Extract landuse and leisure variables
+exclusie_landgebruik <- osmextract::oe_read(
+  file_path = osmdata,
+  layer = "multipolygons",
+  download_directory = dirname(osmdata),
+  vectortranslate_options = landuse_vectortranslate,
+  boundary = test_area
+)
+
+# ...
+exclusie_landgebruik <- exclusie_landgebruik %>%
+  mutate(landuse = coalesce(landuse, leisure)) %>%
+  select(-leisure)
+
+intersection_osm <- st_intersection(exclusie_landgebruik, test_area)
+diff_osm <- st_union(st_difference(test_area, st_union(intersection_osm)))
+
+osm_landuse_area <- intersection_osm %>%
+  mutate(area = st_area(geometry)) %>%
+  st_drop_geometry() %>%
+  summarise(area = sum(area), .by = "landuse") %>%
+  bind_rows(
+    data.frame(landuse = "no_overlap", area = st_area(diff_osm))
+  ) %>%
+  mutate(
+      percentage = as.numeric(100 * area / sum(area))
+  )
+
+sum_osm <- sum(
+  osm_landuse_area$percentage[
+    osm_landuse_area$landuse != "no_overlap"
+  ]
+)
+
+osm_landuse_area %>%
+  select(landuse, percentage) %>%
+  arrange(percentage) %>%
+  kable(digits = 3)
+```
+
+In totaal overlapt `r round(sum_osm, 1)` % van het resterende ABV2.0 steekproefkader met OSM landgebruiken die door MAS werden geëxcludeerd.
+
+```{r}
+mapview(intersection_osm, layer = "OSM overlap") +
+  mapview(diff_osm, col.regions = "grey", layer = "Rest ABV2.0 only")
+```
 
 ## Bijkomende exclusiecriteria
 ### VITO landgebruikskaart
