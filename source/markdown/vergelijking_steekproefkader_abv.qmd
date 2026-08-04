@@ -22,12 +22,9 @@ library(sf)    # Working with vector data
 library(mapview) # Visualise spatial data interactively
 
 # Data wrangling and visualisation
+library(knitr)
 library(tidyverse)
 library(INBOtheme)
-
-# Tables
-library(knitr)
-library(kableExtra)
 
 # Options
 conflicted::conflicts_prefer(dplyr::filter)
@@ -343,10 +340,131 @@ De belangrijkste verschillen:
 
 ## Openheid landschap
 
-Binnen MAS wordt enkel open en half open landschap geselecteerd (resp. OL en HOL).
-We kijken in hoeverre de de ABV2.0 oppervlakte die niet met MAS overlapt ("ABV2.0 only") hierdoor kan verklaart worden.
+Binnen MAS wordt enkel open en halfopen landschap geselecteerd (respectievelijk OL en HOL).
+De landschappelijke openheid wordt bepaald als de gemiddelde openheid binnen een straal van 300 m en wordt ingedeeld in vier klassen: open landschap (OL; >86,5°), halfopen landschap (HOL; 77,3–86,5°), halfgesloten landschap (HGL; 71,6–77,3°) en gesloten landschap (GL; <71,6°).
+Om na te gaan in hoeverre deze selectie het verschil met ABV2.0 verklaart, onderzoeken we of de gebieden die uitsluitend tot het ABV2.0-steekproefkader behoren, vaker een lagere landschappelijke openheid hebben.
 
-> abv only vergelijken met openheid landschap
+```{r}
+openness_300m <- rast(
+  file.path(
+    mbag_dir, "data", "dem", "openness300m_chm_res25_c300_mean_vlaanderen.tif"
+  )
+)
+openness_300m
+```
+
+```{r}
+# Convert category thresholds from degrees to radians
+ol <- 86.5 * pi / 180
+hol <- 77.3 * pi / 180
+hgl <- 71.6 * pi / 180
+
+# Convert ABV-only polygon to SpatVector
+abv_only_vect <- vect(abv_only)
+
+# Extract raster values and exact fraction of each cell
+# abv_only_open <- cache_compute(
+#   path = cache_dir,
+#   file = "abv_only_open",
+#   expr = {
+#     terra::extract(
+#       openness_300m,
+#       abv_only_vect,
+#       exact = TRUE
+#     )
+#   }
+# )
+test_buffer <- st_buffer(
+  st_centroid(abv_only[1, ]),
+  10000
+)
+test_area <- st_intersection(abv_only, test_buffer)
+
+openness_300m_test <- crop(
+  openness_300m,
+  vect(test_area)
+)
+
+# mapview(openness_300m_test) +
+#   mapview(test_area, col.regions = "green")
+
+abv_only_open <- terra::extract(
+  openness_300m_test,
+  vect(test_area),
+  exact = TRUE
+)
+
+# Assign openness categories
+abv_only_open_cat <- abv_only_open |>
+  mutate(
+    category = case_when(
+      focal_sum > ol ~ "OL",
+      focal_sum >= hol ~ "HOL",
+      focal_sum >= hgl ~ "HGL",
+      focal_sum < hgl ~ "GL",
+      TRUE ~ "onbekend"
+    )
+  )
+
+# Calculate area per category
+category_area <- abv_only_open_cat |>
+  group_by(category) |>
+  summarise(
+    area_m2 = sum(fraction * 25 * 25),
+    .groups = "drop"
+  ) |>
+  mutate(
+    percentage = 100 * area_m2 / sum(area_m2)
+  )
+
+sum_closed <- sum(
+  category_area$percentage[!category_area$category %in% c("OL", "HOL")]
+)
+
+category_area %>%
+  kable(digits = 1)
+```
+
+In totaal valt `r round(sum_closed, 1)` % van het resterende ABV2.0 steekproefkader buiten OL of HOL.
+
+```{r}
+# Define openness categories in radians
+abv_open_cat <- classify(
+  openness_300m_test,
+  rcl = matrix(
+    c(
+      -Inf, hgl, 4,   # GL
+      hgl,  hol, 3,   # HGL
+      hol,  ol,  2,   # HOL
+      ol,  Inf,  1    # OL
+    ),
+    ncol = 3,
+    byrow = TRUE
+  )
+)
+
+# Assign category labels
+abv_open_cat <- as.factor(abv_open_cat)
+levels(abv_open_cat) <- data.frame(
+  ID = 1:4,
+  category = c("OL", "HOL", "HGL", "GL")
+)
+
+# Keep only the ABV-only area
+abv_only_open_cat <- mask(
+  abv_open_cat,
+  vect(test_area)
+) %>% as.polygons(
+    na.rm = TRUE
+  ) |>
+  st_as_sf()
+
+mapview(
+  abv_only_open_cat,
+  zcol = "category",
+  layer.name = "Openheid"
+)
+```
 
 ## OSM filters
 
