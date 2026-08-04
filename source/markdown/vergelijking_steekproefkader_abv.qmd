@@ -539,22 +539,20 @@ Het gaat om de volgende landgebruiken:
 We kijken in hoeverre de de ABV2.0 oppervlakte die niet met MAS overlapt ("ABV2.0 only") hierdoor kan verklaart worden.
 
 ```{r}
-# Test dataset
-test_buffer <- st_buffer(
-  st_centroid(abv_only[1, ]),
-  10000
-)
-test_area <- st_make_valid(st_intersection(test_buffer, abv_only))
-
+#| warning: false
+#| message: false
 # Arguments
 osmdata <- file.path(
   osmextract::oe_download_directory(), "geofabrik_belgium-latest.osm.pbf"
 )
 landuse <- c("residential", "military", "industrial", "cemetery",
-            "railway", "commercial", "farmyard")
+             "railway", "commercial", "farmyard")
 leisure <- c("park")
+layer_poly <- list(aeroway = c("aerodrome"))
+layer_line <- list(highway = c("motorway", "motorway_link"))
+buffer_line <- 100
 
-# Create string to get landuse and leisure variables
+# Create query to get landuse and leisure variables
 str_landuse <- paste0("('", paste(landuse, collapse = "', '"), "')")
 str_leisure <- paste0("('", paste(leisure, collapse = "', '"), "')")
 query_landuse <- paste("landuse IN", str_landuse, "OR leisure IN", str_leisure,
@@ -567,21 +565,103 @@ landuse_vectortranslate <- c(
 )
 
 # Extract landuse and leisure variables
-exclusie_landgebruik <- osmextract::oe_read(
-  file_path = osmdata,
-  layer = "multipolygons",
-  download_directory = dirname(osmdata),
-  vectortranslate_options = landuse_vectortranslate,
-  boundary = test_area
+osm_landuse_data <- cache_compute(
+  path = cache_dir,
+  file = "osm_landuse_data",
+  expr = {
+     osmextract::oe_read(
+      file_path = osmdata,
+      layer = "multipolygons",
+      download_directory = dirname(osmdata),
+      vectortranslate_options = landuse_vectortranslate,
+      boundary = abv_only
+    )
+  }
 )
 
-# ...
-exclusie_landgebruik <- exclusie_landgebruik %>%
-  mutate(landuse = coalesce(landuse, leisure)) %>%
-  select(-leisure)
 
-intersection_osm <- st_intersection(exclusie_landgebruik, test_area)
-diff_osm <- st_union(st_difference(test_area, st_union(intersection_osm)))
+# Create query to get other variables
+selection_poly <- paste(names(layer_poly), collapse = ", ")
+selection_line <- paste(names(layer_line), collapse = ", ")
+
+
+poly_list <- lapply(seq_along(layer_poly), function(i) {
+  paste0(names(layer_poly)[[i]], " IN ('",
+         paste(layer_poly[[i]], collapse = "', '"), "')")
+})
+line_list <- lapply(seq_along(layer_line), function(i) {
+  paste0(names(layer_line)[[i]], " IN ('",
+         paste(layer_line[[i]], collapse = "', '"), "')")
+})
+
+query_poly <- paste(unlist(poly_list), collapse = " OR ")
+query_line <- paste(unlist(line_list), collapse = " OR ")
+
+poly_vectortranslate <- c(
+  "-t_srs", "EPSG:31370",
+  "-select", selection_poly,
+  "-where", query_poly,
+  "-nlt", "PROMOTE_TO_MULTI"
+)
+line_vectortranslate <- c(
+  "-t_srs", "EPSG:31370",
+  "-select", selection_line,
+  "-where", query_line,
+  "-nlt", "PROMOTE_TO_MULTI"
+)
+
+# Extract other variables
+osm_poly_data <- cache_compute(
+  path = cache_dir,
+  file = "osm_poly_data",
+  expr = {
+     osmextract::oe_read(
+      file_path = osmdata,
+      layer = "multipolygons",
+      download_directory = dirname(osmdata),
+      vectortranslate_options = poly_vectortranslate,
+      extra_tags = names(layer_poly),
+      boundary = abv_only
+    )
+  }
+)
+osm_line_data <- cache_compute(
+  path = cache_dir,
+  file = "osm_line_data",
+  expr = {
+     osmextract::oe_read(
+      file_path = osmdata,
+      layer = "lines",
+      download_directory = dirname(osmdata),
+      vectortranslate_options = line_vectortranslate,
+      extra_tags = names(layer_line),
+      boundary = st_buffer(abv_only, buffer_line)
+    ) %>%
+      st_buffer(buffer_line)
+  }
+)
+
+# Combine all OSM data
+osm_data <- bind_rows(
+  osm_landuse_data %>%
+    mutate(landuse = coalesce(landuse, leisure)) %>%
+    select(-leisure),
+  osm_poly_data %>%
+    rename("landuse" = "aeroway"),
+  osm_line_data %>%
+    rename("landuse" = "highway")
+) %>%
+  st_make_valid()
+
+# Calculate intersection
+intersection_osm <- cache_compute(
+  path = cache_dir,
+  file = "intersection_osm",
+  expr = {
+     st_intersection(osm_data, abv_only)
+  }
+)
+diff_osm <- st_union(st_difference(abv_only, st_union(intersection_osm)))
 
 osm_landuse_area <- intersection_osm %>%
   mutate(area = st_area(geometry)) %>%
