@@ -25,6 +25,10 @@ library(mapview) # Visualise spatial data interactively
 library(tidyverse)
 library(INBOtheme)
 
+# Tables
+library(knitr)
+library(kableExtra)
+
 # Options
 conflicted::conflicts_prefer(dplyr::filter)
 terraOptions(progress = 0)
@@ -151,7 +155,7 @@ raster_edge <- cache_compute(
 abv_akker_stratum <- abv_samplingframe == which(strata_abv == "akker")
 ```
 
-We zien gelijkaardige regio's, maar de resolutie van ABV2.0 is veel fijner (10x10 m vs cirkel met radius 300 m).
+We zien gelijkaardige regio's, maar de resolutie van ABV2.0 is veel fijner (10 x 10 m versus cirkel met radius 300 m).
 
 ```{r}
 #| fig.height: 7
@@ -226,53 +230,217 @@ abv_akker_sf <- cache_compute(
       st_transform(unique(mas_samplingframe_df$crs))
   }
 )
-
-# Calculate the three areas
-overlap <- st_intersection(abv_akker_sf, mas_samplingframe_union)
-abv_only <- st_difference(abv_akker_sf, mas_samplingframe_union)
-mas_only <- st_difference(mas_samplingframe_union, abv_akker_sf)
-
-# Convert to sf objects
-overlap <- st_as_sf(overlap)
-abv_only <- st_as_sf(abv_only)
-mas_only <- st_as_sf(mas_only)
 ```
 
-Dit is duidelijker op een interactieve map.
-Het verschil tussen beide is natuurlijk dat het steekproefkader van mas start vanuit een locatie langs een weg.
-Het steekproefkader bevat dus zowel mogelijk telpuntlocaties als effectief landbouwgebied.
-ABV2.0 bevat enkel effectief landbouwgebied.
+```{r}
+# Simplification tolerance in CRS units
+tol <- 100
+
+# Calculate the three areas
+areas <- c("overlap", "abv_only", "mas_only")
+for (area in areas) {
+  result <- cache_compute(
+    path = cache_dir,
+    file = area,
+    expr = switch(
+      area,
+      overlap = {
+        st_intersection(
+          abv_akker_sf,
+          mas_samplingframe_union
+        ) |>
+          st_as_sf()
+      },
+      abv_only = {
+        st_difference(
+          abv_akker_sf,
+          mas_samplingframe_union
+        ) |>
+          st_as_sf()
+      },
+      mas_only = {
+        st_difference(
+          mas_samplingframe_union,
+          abv_akker_sf
+        ) |>
+          st_as_sf()
+      }
+    )
+  )
+
+  assign(area, result)
+}
+
+# Simplify and cache the three areas
+for (area in areas) {
+  result <- cache_compute(
+    path = cache_dir,
+    file = paste0(area, "_tol"),
+    expr = st_simplify(
+      get(area),
+      dTolerance = tol,
+      preserveTopology = TRUE
+    )
+  )
+
+  assign(paste0(area, "_tol"), result)
+}
+```
+
+Dit verschil wordt duidelijker weergegeven op een interactieve kaart, waarin het overlappende gebied en de gebieden die uitsluitend tot het ABV- of MAS-steekproefkader behoren afzonderlijk worden weergegeven.
+Voor de visualisatie werden de geometrieën vereenvoudigd met een tolerantie van 100 m.
+Hierbij worden kleine details in de begrenzing verwijderd, waardoor de kaart lichter en sneller te laden is.
 
 ```{r}
 mapview(
-  overlap,
+  overlap_tol,
   col.regions = "purple",
   layer.name = "Overlap",
   map.types = c("OpenStreetMap", "Esri.WorldImagery")
 ) +
   mapview(
-    abv_only,
+    abv_only_tol,
     col.regions = "red",
     layer.name = "ABV only",
     map.types = c("OpenStreetMap", "Esri.WorldImagery")
   ) +
   mapview(
-    mas_only,
+    mas_only_tol,
     col.regions = "green",
     layer.name = "MAS only",
     map.types = c("OpenStreetMap", "Esri.WorldImagery")
   )
 ```
 
-- https://r-spatial.github.io/deckglgeoarrow/articles/getting_started.html
-- visuele conclusies? voeren, zwin
+De verschillen in de kaart zijn vooral een gevolg van het feit dat MAS en ABV2.0 vanuit een fundamenteel andere definitie van het steekproefkader vertrekken.
+Bij MAS wordt het kader opgebouwd rond potentiële telpuntlocaties: eerst wordt geschikt landbouwgebied afgebakend op basis van onder meer de openheid van het landschap en andere selectiecriteria, waarna langs wegen potentiële telpunten worden geplaatst.
+Rond elk potentieel telpunt wordt vervolgens een cirkel met een straal van 300 m als steekproefkader beschouwd.
 
-## OSM filters
+Bij ABV2.0 wordt het steekproefkader daarentegen rechtstreeks afgeleid uit de beschikbare FLEA-kaartlagen, met een ruimtelijke resolutie van 10 × 10 m.
+Het kader bestaat daardoor uitsluitend uit daadwerkelijk als geschikt landbouwgebied gekarteerde cellen.
+Er wordt dus niet eerst vanuit potentiële telpunten gewerkt en vervolgens een ruimtelijke buffer rond die punten genomen.
 
-- abv only vergelijken met osm filters
+Dit verschil verklaart ook het patroon in de interactieve kaart.
+De overlap tussen beide kaders komt overeen met landbouwgebied dat zowel volgens de FLEA-gebaseerde afbakening van ABV2.0 als binnen de 300 m-buffers rond potentiële MAS-telpunten valt.
+Het gebied dat enkel in het MAS-kader voorkomt, bestaat daarentegen deels uit de omgeving rond potentiële telpunten die niet noodzakelijk zelf als landbouwgebied is gekarteerd.
+Omgekeerd vertegenwoordigt het gebied dat enkel in het ABV2.0-kader voorkomt landbouwgebied dat volgens de FLEA-kaarten wel geschikt is, maar niet binnen 300 m van een potentieel MAS-telpunt valt.
+
+De belangrijkste verschillen:
+
+**MAS only**
+
+- MAS heeft een opvallend groter steekproefkader in de Voerstreek
+- MAS zal door de grote radius ook regelmatig met aanliggende bebouwing/rivieren etc. overlappen wat niet het geval is voor ABV2.0
+- MAS heeft soms grote oppervlaktes die niet met ABV overlappen in natuurgebieden (bv. Schulensbroek, Natuurreservaat Zwarte Beek - Laren, Kalkense Meersen)
+
+**ABV2.0 only**
+
+- ABV2.0 heeft de grootste verschillen aan de kust
+  - Daar zien we ook wel overlap met een vliegtuigbasis en een militaire basis dus dan komt misschien uit de OSM analyse nog tevoorschijn
+  - MAS is niet aanwezig in de landbouwstreek van de duinen
+- In de kempen zien we opvallend veel kleine fragmenten die niet door MAS overlappen
+  - Dat zou eventueel ook te maken kunnen hebben met de openheid van het landschap (het landschap in de kempen is meer gesloten en valt zo uit MAS weg)
 
 ## Openheid landschap
 
-- abv only vergelijken met openheid landschap
+Binnen MAS wordt enkel open en half open landschap geselecteerd (resp. OL en HOL).
+We kijken in hoeverre de de ABV2.0 oppervlakte die niet met MAS overlapt ("ABV2.0 only") hierdoor kan verklaart worden.
+
+> abv only vergelijken met openheid landschap
+
+## OSM filters
+
+Binnen MAS hebben we exclusie irrelevante landgebruiken via OpenStreetMap‐data (OSM-data).
+Het gaat om de volgende landgebruiken:
+
+<!-- spell-check: ignore:start -->
+
+<table>
+  <thead>
+    <tr>
+      <th>Landgebruik</th>
+      <th>OSM-definitie</th>
+      <th>OSM-wiki</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>woongebied</td>
+      <td><code>landuse = residential</code></td>
+      <td><a href="https://wiki.openstreetmap.org/wiki/Tag:landuse%3Dresidential">OSM Wiki</a></td>
+    </tr>
+    <tr>
+      <td>militair terrein</td>
+      <td><code>landuse = military</code></td>
+      <td><a href="https://wiki.openstreetmap.org/wiki/Tag:landuse%3Dmilitary">OSM Wiki</a></td>
+    </tr>
+    <tr>
+      <td>industriegebied</td>
+      <td><code>landuse = industrial</code></td>
+      <td><a href="https://wiki.openstreetmap.org/wiki/Tag:landuse%3Dindustrial">OSM Wiki</a></td>
+    </tr>
+    <tr>
+      <td>begraafplaats</td>
+      <td><code>landuse = cemetery</code></td>
+      <td><a href="https://wiki.openstreetmap.org/wiki/Tag:landuse%3Dcemetery">OSM Wiki</a></td>
+    </tr>
+    <tr>
+      <td>spoorwegemplacement, spoorwegbedding</td>
+      <td><code>landuse = railway</code></td>
+      <td><a href="https://wiki.openstreetmap.org/wiki/Tag:landuse%3Drailway">OSM Wiki</a></td>
+    </tr>
+    <tr>
+      <td>commercieel</td>
+      <td><code>landuse = commercial</code></td>
+      <td><a href="https://wiki.openstreetmap.org/wiki/Tag:landuse%3Dcommercial">OSM Wiki</a></td>
+    </tr>
+    <tr>
+      <td>boerenerf</td>
+      <td><code>landuse = farmyard</code></td>
+      <td><a href="https://wiki.openstreetmap.org/wiki/Tag:landuse%3Dfarmyard">OSM Wiki</a></td>
+    </tr>
+    <tr>
+      <td>park</td>
+      <td><code>leisure = park</code></td>
+      <td><a href="https://wiki.openstreetmap.org/wiki/Tag:leisure%3Dpark">OSM Wiki</a></td>
+    </tr>
+    <tr>
+      <td>vliegveld</td>
+      <td><code>aeroway = aerodrome</code></td>
+      <td><a href="https://wiki.openstreetmap.org/wiki/Tag:aeroway%3Daerodrome">OSM Wiki</a></td>
+    </tr>
+    <tr>
+      <td>autosnelweg</td>
+      <td><code>highway = motorway</code></td>
+      <td><a href="https://wiki.openstreetmap.org/wiki/Tag:highway%3Dmotorway">OSM Wiki</a></td>
+    </tr>
+    <tr>
+      <td>invoegstroken en afritten van autosnelwegen</td>
+      <td><code>highway = motorway_link</code></td>
+      <td><a href="https://wiki.openstreetmap.org/wiki/Tag:highway%3Dmotorway_link">OSM Wiki</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- spell-check: ignore:end -->
+
+We kijken in hoeverre de de ABV2.0 oppervlakte die niet met MAS overlapt ("ABV2.0 only") hierdoor kan verklaart worden.
+
+> abv only vergelijken met osm filters
+
+## Bijkomende exclusiecriteria
+### VITO landgebruikskaart
+
+Een extra exclusiecriterium voor MAS was de VITO 2019 landgebruikskaart.
+Hierbij werden enkel potentiële telpunten behouden waar de samenstelling van het landgebruik in een buffer van 300 m rond het punt voldoet aan volgende regel:
+
+- Akker + Grasland > 40% én Grasland + Bos + Struikgewas + Akker > 50%
+
+### Zichtbaarheid
+
+Ook werden enkele punten verwijderd met een slechte zichtbaarheid.
+We berekenden zichtbaarheid als een cumulatieve zichtbaarheidsindex, waarbij de waarnemer een bewegingsvrijheid heeft van 25 m rondom het telpunt.
 
 # Conclusie
+
+...
