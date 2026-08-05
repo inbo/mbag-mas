@@ -762,6 +762,7 @@ De mate waarin het MAS-overschot daadwerkelijk problematisch is voor de steekpro
 We onderzochten of we het steekproefkader van ABV2.0 dat niet overlapt met MAS konden verklaren o.b.v. specifieke exclusiecriteria die gebruikt werden voor het MAS (openheid landschap en OSM landgebruiken).
 
 ```{r}
+#| warning: false
 abv_closed_area <- abv_only_open_cat %>%
   filter_out(category %in% c("OL", "HOL")) %>%
   st_union()
@@ -772,11 +773,12 @@ rest_osm <- st_difference(intersection_osm, abv_closed_area) %>%
 abv_rest <- st_difference(abv_only, st_union(abv_closed_area, rest_osm))
 ```
 
-In totaal valt `r round(sum_closed, 2)` % van het resterende ABV2.0 steekproefkader buiten OL of HOL en overlapt `r round(sum_osm, 1)` % met OSM landgebruiken die door MAS werden geëxcludeerd.
-Als we een stapsgewijze exclusieworkflow zouden volgen (zoals die in MAS werd gedaan), dan valt `r round(sum_closed, 1)` % van het resterende ABV2.0 steekproefkader buiten OL of HOL.
+In totaal valt `r round(sum_closed, 2)` % van het resterende ABV2.0 steekproefkader buiten OL of HOL en overlapt `r round(sum_osm, 2)` % met OSM landgebruiken die door MAS werden geëxcludeerd.
+Als we een stapsgewijze exclusieworkflow zouden volgen (zoals die in MAS werd gedaan), dan valt `r round(sum_closed, 2)` % van het resterende ABV2.0 steekproefkader buiten OL of HOL.
 Van de resterende `r 100 - round(sum_closed, 2)` %, overlapt `r round(as.numeric(st_area(rest_osm)) / as.numeric(st_area(abv_closed_area)), 2)` % met OSM landgebruiken die door MAS werden geëxcludeerd.
 
 ```{r}
+#| fig-width: 12
 areas_df <- tibble(
   cat = factor(
     c("overlap MAS en ABV", "MAS only", rep("ABV only", 3)),
@@ -814,7 +816,7 @@ p2 <- ggplot(
 p1 + p2
 ```
 
-Als we naar de "niet-verklaarde restjes kijken", lijken die toch telkens mooi in landbouwgebied te vallen.
+Als we naar de "niet-verklaarde restjes" kijken, lijken die toch telkens mooi in landbouwgebied te vallen.
 Het is niet meteen duidelijk waarom die niet verklaard konden worden.
 Deze gebieden vallen mogelijk in de landbouwstreek van de duinen, of werden in MAS door de bijkomende exclusiecriteria niet opgenomen.
 
@@ -826,4 +828,4 @@ mapview(abv_rest, map.types = c("OpenStreetMap", "Esri.WorldImagery"))
 
 - In het algemeen kan het huidige steekproefkader goed werken als afbakening van landbouwgebied
 - Veel van de resultaten hier zullen relevant zijn afhankelijk van waar geteld kan of moet worden. Zijn tellingen in gesloten landschap relevant voor het landbouwgebied? Kunnen tellingen gedaan worden op een vliegbasis?
-- FLEA kaarten kunnen in beperkte mate geoptimaliseerd worden via OSM. We zien bijvoorbeeld dat residentieel gebied en industrieterreinen soms schijnbaar incorrect als landbouwgebied zijn gecategoriseerd. Deze bevindingen worden best gecontroleerd en kunnen eventueel worden aangepast.
+- FLEA kaarten kunnen in beperkte mate geoptimaliseerd worden via OSM. We zien bijvoorbeeld dat residentieel gebied en industrieterreinen soms schijnbaar incorrect als landbouwgebied zijn gecategoriseerd. Deze bevindingen worden best gecontroleerd met de meest recente OSM kaarten en kunnen eventueel worden aangepast.
