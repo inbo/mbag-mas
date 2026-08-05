@@ -23,6 +23,7 @@ library(mapview) # Visualise spatial data interactively
 
 # Data wrangling and visualisation
 library(knitr)
+library(patchwork)
 library(tidyverse)
 library(INBOtheme)
 
@@ -688,12 +689,43 @@ osm_landuse_area %>%
 
 In totaal overlapt `r round(sum_osm, 1)` % van het resterende ABV2.0 steekproefkader met OSM landgebruiken die door MAS werden geëxcludeerd.
 
+Het gaat in eerste plaats vooral over snelwegen.
+Het is uiteraard logisch dat hiervoor niet gecorrigeerd is door ABV.
+Het zal wel een afweging zijn om dit mee te nemen als telpuntlocaties worden bepaald zoals bij MAS is gebeurd.
+
+Ten tweede zien we wel wat overlap met residentieel landgebruik.
+In sommige gevallen lijkt dit correct, in andere niet.
+Het is ook mogelijk dat dit randeffecten zijn van ABV.
+Dit wordt best eens gecontroleerd en eventueel aangepast waar nodig (in de FLEA kaarten).
+
+Andere landgebruiken overlappen weinig, maar zijn niet onbelangrijk; zoals militair domein, luchthavengebied en industriedomein.
+De overlap met het militair domein van Lombardsijde zijn randeffecten waar ik zojuist over sprak.
+De vliegbasis van Koksijde is wel een groot gebied dat vreemd lijkt op het eerste zicht.
+Dit wordt best eens gecontroleerd.
+De overlap met industriedomeinen lijkt niet altijd correct (bv. [51.117506, 5.028348](https://www.google.be/maps/place/51%C2%B007'03.0%22N+5%C2%B001'42.1%22E/@51.1175093,5.0257731,520m/data=!3m2!1e3!4b1!4m13!1m8!3m7!1s0x47c149d6cefac61f:0xabf1083a1aaf026!2sZittaart,+2450+Meerhout!3b1!8m2!3d51.1211037!4d5.0537993!16s%2Fg%2F11bwpv30j6!3m3!8m2!3d51.117506!4d5.028348?entry=ttu&g_ep=EgoyMDI2MDgwMi4wIKXMDSoASAFQAw%3D%3D)), maar soms wel (bv. [51.290286, 4.715674](https://www.google.be/maps/place/51%C2%B017'25.0%22N+4%C2%B042'56.4%22E/@51.2902893,4.7130991,680m/data=!3m2!1e3!4b1!4m13!1m8!3m7!1s0x47c4003a88a0c5d5:0xce12a24262bd5c02!2sWestmalle,+2390+Malle!3b1!8m2!3d51.2968136!4d4.6942633!16s%2Fm%2F025rtk4!3m3!8m2!3d51.290286!4d4.715674?entry=ttu&g_ep=EgoyMDI2MDgwMi4wIKXMDSoASAFQAw%3D%3D)).
+Dit kan ook zijn omdat ik een oude versie van OSM gebruikte voor deze vergelijking (dezelfde als voor MAS gebruikt werd).
+Misschien dat een recentere versie kan gebruikt worden om industrieterrein en residenties correct te controleren en eventueel de FLEA kaarten bij te sturen.
+
 ```{r}
-mapview(intersection_osm, layer = "OSM overlap") +
-  mapview(diff_osm, col.regions = "grey", layer = "Rest ABV2.0 only")
+mapview(
+  intersection_osm,
+  layer = "OSM overlap",
+  map.types = c("OpenStreetMap", "Esri.WorldImagery")
+) +
+  mapview(
+    diff_osm,
+    col.regions = "grey",
+    layer = "Rest ABV2.0 only",
+    map.types = c("OpenStreetMap", "Esri.WorldImagery")
+  )
 ```
 
 ## Bijkomende exclusiecriteria
+
+De volgende bijkomende exclusiecriteria werden voor MAS gebruikt, maar worden hier niet verder uitgewerkt.
+Ik voeg ze hier toe voor de volledigheid.
+Deze criteria zijn specifiek voor de MAS telpunten en lijken mij niet zo nuttig voor het afbakenen van het nieuwe ABV steekproefkader.
+
 ### VITO landgebruikskaart
 
 Een extra exclusiecriterium voor MAS was de VITO 2019 landgebruikskaart.
@@ -708,4 +740,89 @@ We berekenden zichtbaarheid als een cumulatieve zichtbaarheidsindex, waarbij de 
 
 # Conclusie
 
-...
+In het algemeen lijkt het landbouwgebied van het ABV2.0 steekproefkader goed.
+In totaal overlapt `r round(as.numeric(st_area(abv_only) / st_area(abv_akker_sf)) * 100, 1)` % van het ABV2.0 landbouwgebied steekproefkader niet met het MAS steekproefkader.
+Tegelijk is het wel zo dat `r round(as.numeric(st_area(mas_only) / st_area(mas_samplingframe_union)) * 100, 1)` % van het MAS steekproefkader niet valt in het landbouwgebied van ABV2.0, zie bv. Voerstreek.
+
+## Overschot MAS steekproefkader
+
+Het overschot van het MAS-steekproefkader ten opzichte van het ABV2.0-steekproefkader is relatief groot.
+Dit verschil moet echter worden geïnterpreteerd in het licht van de fundamenteel verschillende manier waarop beide steekproefkaders worden opgebouwd.
+Het MAS-steekproefkader wordt opgebouwd rond potentiële telpuntlocaties.
+Rond elk potentieel telpunt wordt een cirkel met een straal van 300 m als steekproefkader beschouwd.
+Het ABV2.0-steekproefkader wordt daarentegen rechtstreeks afgeleid uit de FLEA-kaarten en bestaat uitsluitend uit 10 x 10 m cellen die als geschikt landbouwgebied zijn gekarteerd. 
+
+Het MAS-overschot is bijgevolg vooral een gevolg van de verschillende definities van het steekproefkader.
+Hoewel het totale verschil aanzienlijk is, lijkt het op basis van de ruimtelijke patronen niet overal problematisch. 
+De mate waarin het MAS-overschot daadwerkelijk problematisch is voor de steekproefopzet hangt daarom vooral af van de vraag of de gebieden binnen de MAS-buffers die niet door ABV2.0 worden gedekt, in de praktijk als geschikt landbouwgebied voor MAS beschouwd moeten worden; en niet omgekeerd.
+
+## Overschot ABV2.0 steekproefkader
+
+We onderzochten of we het steekproefkader van ABV2.0 dat niet overlapt met MAS konden verklaren o.b.v. specifieke exclusiecriteria die gebruikt werden voor het MAS (openheid landschap en OSM landgebruiken).
+
+```{r}
+abv_closed_area <- abv_only_open_cat %>%
+  filter_out(category %in% c("OL", "HOL")) %>%
+  st_union()
+
+rest_osm <- st_difference(intersection_osm, abv_closed_area) %>%
+  st_union()
+
+abv_rest <- st_difference(abv_only, st_union(abv_closed_area, rest_osm))
+```
+
+In totaal valt `r round(sum_closed, 2)` % van het resterende ABV2.0 steekproefkader buiten OL of HOL en overlapt `r round(sum_osm, 1)` % met OSM landgebruiken die door MAS werden geëxcludeerd.
+Als we een stapsgewijze exclusieworkflow zouden volgen (zoals die in MAS werd gedaan), dan valt `r round(sum_closed, 1)` % van het resterende ABV2.0 steekproefkader buiten OL of HOL.
+Van de resterende `r 100 - round(sum_closed, 2)` %, overlapt `r round(as.numeric(st_area(rest_osm)) / as.numeric(st_area(abv_closed_area)), 2)` % met OSM landgebruiken die door MAS werden geëxcludeerd.
+
+```{r}
+areas_df <- tibble(
+  cat = factor(
+    c("overlap MAS en ABV", "MAS only", rep("ABV only", 3)),
+    levels = c("MAS only", "overlap MAS en ABV", "ABV only")
+  ),
+  group = c(
+    "overlap MAS en ABV",
+    "MAS only",
+    "openheid", "OSM", "rest"
+  ),
+  area = c(
+    as.numeric(st_area(overlap)),
+    as.numeric(st_area(mas_only)),
+    as.numeric(st_area(abv_closed_area)),
+    as.numeric(st_area(rest_osm)),
+    as.numeric(st_area(abv_rest))
+  )
+) %>%
+  mutate(area = area / 1e6)
+
+p1 <- ggplot(
+    subset(areas_df, cat != "ABV only"),
+    aes(x = cat, y = area)
+) +
+    geom_col(fill = "darkseagreen2") +
+    labs(x = NULL, y = "Oppervlakte (km²)")
+
+p2 <- ggplot(
+    subset(areas_df, cat == "ABV only"),
+    aes(x = cat, y = area, fill = group)
+) +
+    geom_col() +
+    labs(x = NULL, y = "Oppervlakte (km²)", fill = "Verklaring")
+
+p1 + p2
+```
+
+Als we naar de "niet-verklaarde restjes kijken", lijken die toch telkens mooi in landbouwgebied te vallen.
+Het is niet meteen duidelijk waarom die niet verklaard konden worden.
+Deze gebieden vallen mogelijk in de landbouwstreek van de duinen, of werden in MAS door de bijkomende exclusiecriteria niet opgenomen.
+
+```{r}
+mapview(abv_rest, map.types = c("OpenStreetMap", "Esri.WorldImagery"))
+```
+
+## Aanbevelingen voor ABV2.0 landbouw steekproefkader
+
+- In het algemeen kan het huidige steekproefkader goed werken als afbakening van landbouwgebied
+- Veel van de resultaten hier zullen relevant zijn afhankelijk van waar geteld kan of moet worden. Zijn tellingen in gesloten landschap relevant voor het landbouwgebied? Kunnen tellingen gedaan worden op een vliegbasis?
+- FLEA kaarten kunnen in beperkte mate geoptimaliseerd worden via OSM. We zien bijvoorbeeld dat residentieel gebied en industrieterreinen soms schijnbaar incorrect als landbouwgebied zijn gecategoriseerd. Deze bevindingen worden best gecontroleerd en kunnen eventueel worden aangepast.
