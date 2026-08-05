@@ -387,22 +387,22 @@ abv_only_open <- cache_compute(
 
 # Assign openness categories
 abv_only_open_cat <- abv_only_open %>%
-    mutate(
-        category = case_when(
-            focal_sum > ol ~ "OL",
-            focal_sum >= hol ~ "HOL",
-            focal_sum >= hgl ~ "HGL",
-            focal_sum < hgl ~ "GL",
-            TRUE ~ "onbekend"
-        )
+  mutate(
+    category = case_when(
+      focal_sum > ol ~ "OL",
+      focal_sum >= hol ~ "HOL",
+      focal_sum >= hgl ~ "HGL",
+      focal_sum < hgl ~ "GL",
+      TRUE ~ "onbekend"
     )
+  )
 
 # Calculate area per category
 category_area <- abv_only_open_cat %>%
   count(category) %>%
   mutate(
     percentage = 100 * n / sum(n)
-)
+  )
 
 sum_closed <- sum(
   category_area$percentage[
@@ -411,7 +411,7 @@ sum_closed <- sum(
 )
 
 category_area %>%
-    kable(digits = 1)
+  kable(digits = 1)
 ```
 
 In totaal valt `r round(sum_closed, 1)` % van het resterende ABV2.0 steekproefkader buiten OL of HOL.
@@ -448,7 +448,8 @@ levels(abv_open_cat) <- data.frame(
 abv_only_open_cat <- mask(
   abv_open_cat,
   abv_only_vect
-) %>% as.polygons(
+) %>%
+  as.polygons(
     na.rm = TRUE
   ) |>
   st_as_sf()
@@ -570,7 +571,7 @@ osm_landuse_data <- cache_compute(
   path = cache_dir,
   file = "osm_landuse_data",
   expr = {
-     osmextract::oe_read(
+    osmextract::oe_read(
       file_path = osmdata,
       layer = "multipolygons",
       download_directory = dirname(osmdata),
@@ -616,7 +617,7 @@ osm_poly_data <- cache_compute(
   path = cache_dir,
   file = "osm_poly_data",
   expr = {
-     osmextract::oe_read(
+    osmextract::oe_read(
       file_path = osmdata,
       layer = "multipolygons",
       download_directory = dirname(osmdata),
@@ -630,7 +631,7 @@ osm_line_data <- cache_compute(
   path = cache_dir,
   file = "osm_line_data",
   expr = {
-     osmextract::oe_read(
+    osmextract::oe_read(
       file_path = osmdata,
       layer = "lines",
       download_directory = dirname(osmdata),
@@ -659,7 +660,7 @@ intersection_osm <- cache_compute(
   path = cache_dir,
   file = "intersection_osm",
   expr = {
-     st_intersection(osm_data, abv_only)
+    st_intersection(osm_data, abv_only)
   }
 )
 diff_osm <- st_union(st_difference(abv_only, st_union(intersection_osm)))
@@ -672,7 +673,7 @@ osm_landuse_area <- intersection_osm %>%
     data.frame(landuse = "no_overlap", area = st_area(diff_osm))
   ) %>%
   mutate(
-      percentage = as.numeric(100 * area / sum(area))
+    percentage = as.numeric(100 * area / sum(area))
   )
 
 sum_osm <- sum(
@@ -797,18 +798,18 @@ areas_df <- tibble(
   mutate(area = area / 1e6)
 
 p1 <- ggplot(
-    subset(areas_df, cat != "ABV only"),
-    aes(x = cat, y = area)
+  subset(areas_df, cat != "ABV only"),
+  aes(x = cat, y = area)
 ) +
-    geom_col(fill = "darkseagreen2") +
-    labs(x = NULL, y = "Oppervlakte (km²)")
+  geom_col(fill = "darkseagreen2") +
+  labs(x = NULL, y = "Oppervlakte (km²)")
 
 p2 <- ggplot(
-    subset(areas_df, cat == "ABV only"),
-    aes(x = cat, y = area, fill = group)
+  subset(areas_df, cat == "ABV only"),
+  aes(x = cat, y = area, fill = group)
 ) +
-    geom_col() +
-    labs(x = NULL, y = "Oppervlakte (km²)", fill = "Verklaring")
+  geom_col() +
+  labs(x = NULL, y = "Oppervlakte (km²)", fill = "Verklaring")
 
 p1 + p2
 ```
