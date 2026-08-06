@@ -6,6 +6,7 @@
 /*\.tex
 output
 site_libs
+!_extensions/**
 
 !figures/cover_en.png
 !figures/cover.png
