@@ -31,6 +31,7 @@
 4x
 5'
 6x
+ABV2.0
 Active
 Akkervogelgemeenschappen
 Alauda
@@ -68,12 +69,14 @@ Duinen/Weidestreek
 DwC
 EPSG
 Emberiza
+FLEA
 Flanders
 GBIF.org
 GL
 GPKG
 GPKG-bestanden
 GVI
+Gaussische
 Geule
 Gittargets
 Glanskop
@@ -134,6 +137,7 @@ SOVON
 SQL-query
 SRMS02
 Saxicola
+Schulensbroek
 Sovon
 Synonym
 Telcirkels
@@ -198,14 +202,19 @@ distance
 double
 dynamic
 euring
+exclusiecriteria
+exclusiecriterium
 exclusiekaart
 exclusielaag
+exclusieworkflow
 final
 flava
 gelocaliseerd
 geojson
 geojson-bestand
+geometrieën
 gespecifieerd
+geëxcludeerd
 git2rdata
 globals
 groups
@@ -240,6 +249,7 @@ multipolygon
 names
 niet-kerend
 occurrence
+only
 onvertekende
 openness
 opgeslaan
@@ -298,6 +308,7 @@ telpunt
 telpunt/hok
 telpunten
 telpunten/
+telpuntlocaties
 telronde
 telrondes
 tertiare
