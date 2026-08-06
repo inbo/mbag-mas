@@ -76,6 +76,7 @@ GL
 GPKG
 GPKG-bestanden
 GVI
+Gaussische
 Geule
 Gittargets
 Glanskop
@@ -208,12 +209,12 @@ exclusielaag
 exclusieworkflow
 final
 flava
-geëxcludeerd
 gelocaliseerd
 geojson
 geojson-bestand
 geometrieën
 gespecifieerd
+geëxcludeerd
 git2rdata
 globals
 groups

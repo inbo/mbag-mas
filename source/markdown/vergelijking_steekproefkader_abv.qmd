@@ -697,8 +697,10 @@ Het zal wel een afweging zijn om dit mee te nemen als telpuntlocaties worden bep
 
 Ten tweede zien we wel wat overlap met residentieel landgebruik.
 In sommige gevallen lijkt dit correct, in andere niet.
-Het is ook mogelijk dat dit randeffecten zijn van ABV.
-Dit wordt best eens gecontroleerd en eventueel aangepast waar nodig (in de FLEA kaarten).
+Bovendien lijken dit vaak randeffecten te zijn van ABV (gebruik van vierkante pixels) en wordt het veroorzaakt door de manier waarop het stratum is bepaald.
+Per pixel is binnen een straal van 100 m gekeken welk type landgebruik aanwezig was (via Gaussische gewichten).
+Het kan dus zijn dat een pixel van 10 m op een huis licht maar binnen de 100 m gausscurve er veel landbouw licht.
+Voor kleine OSM polygonen (zoals een of een paar huizen) zal dit dus een veelvoorkomende uitleg zijn.
 
 Andere landgebruiken overlappen weinig, maar zijn niet onbelangrijk; zoals militair domein, luchthavengebied en industriedomein.
 De overlap met het militair domein van Lombardsijde zijn randeffecten waar ik zojuist over sprak.
@@ -706,7 +708,7 @@ De vliegbasis van Koksijde is wel een groot gebied dat vreemd lijkt op het eerst
 Dit wordt best eens gecontroleerd.
 De overlap met industriedomeinen lijkt niet altijd correct (bv. [51.117506, 5.028348](https://www.google.be/maps/place/51%C2%B007'03.0%22N+5%C2%B001'42.1%22E/@51.1175093,5.0257731,520m/data=!3m2!1e3!4b1!4m13!1m8!3m7!1s0x47c149d6cefac61f:0xabf1083a1aaf026!2sZittaart,+2450+Meerhout!3b1!8m2!3d51.1211037!4d5.0537993!16s%2Fg%2F11bwpv30j6!3m3!8m2!3d51.117506!4d5.028348?entry=ttu&g_ep=EgoyMDI2MDgwMi4wIKXMDSoASAFQAw%3D%3D)), maar soms wel (bv. [51.290286, 4.715674](https://www.google.be/maps/place/51%C2%B017'25.0%22N+4%C2%B042'56.4%22E/@51.2902893,4.7130991,680m/data=!3m2!1e3!4b1!4m13!1m8!3m7!1s0x47c4003a88a0c5d5:0xce12a24262bd5c02!2sWestmalle,+2390+Malle!3b1!8m2!3d51.2968136!4d4.6942633!16s%2Fm%2F025rtk4!3m3!8m2!3d51.290286!4d4.715674?entry=ttu&g_ep=EgoyMDI2MDgwMi4wIKXMDSoASAFQAw%3D%3D)).
 Dit kan ook zijn omdat ik een oude versie van OSM gebruikte voor deze vergelijking (dezelfde als voor MAS gebruikt werd).
-Misschien dat een recentere versie kan gebruikt worden om industrieterrein en residenties correct te controleren en eventueel de FLEA kaarten bij te sturen.
+Misschien dat een recentere versie kan gebruikt worden om industrieterrein correct te controleren en eventueel de FLEA kaarten bij te sturen.
 
 ```{r}
 mapview(
@@ -829,4 +831,4 @@ mapview(abv_rest, map.types = c("OpenStreetMap", "Esri.WorldImagery"))
 
 - In het algemeen kan het huidige steekproefkader goed werken als afbakening van landbouwgebied
 - Veel van de resultaten hier zullen relevant zijn afhankelijk van waar geteld kan of moet worden. Zijn tellingen in gesloten landschap relevant voor het landbouwgebied? Kunnen tellingen gedaan worden op een vliegbasis?
-- FLEA kaarten kunnen in beperkte mate geoptimaliseerd worden via OSM. We zien bijvoorbeeld dat residentieel gebied en industrieterreinen soms schijnbaar incorrect als landbouwgebied zijn gecategoriseerd. Deze bevindingen worden best gecontroleerd met de meest recente OSM kaarten en kunnen eventueel worden aangepast.
+- FLEA kaarten kunnen in beperkte mate geoptimaliseerd worden via OSM. We zien bijvoorbeeld dat industrieterreinen soms schijnbaar incorrect als landbouwgebied zijn gecategoriseerd. Deze bevindingen worden best gecontroleerd met de meest recente OSM kaarten en kunnen eventueel worden aangepast.
