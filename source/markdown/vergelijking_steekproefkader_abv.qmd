@@ -731,7 +731,7 @@ Deze criteria zijn specifiek voor de MAS telpunten en lijken mij niet zo nuttig 
 ### VITO landgebruikskaart
 
 Een extra exclusiecriterium voor MAS was de VITO 2019 landgebruikskaart.
-Hierbij werden enkel potentiële telpunten behouden waar de samenstelling van het landgebruik in een buffer van 300 m rond het punt voldoet aan volgende regel:
+Hierbij werden potentiële telpunten verwijderd waar de samenstelling van het landgebruik in een buffer van 300 m rond het punt niet voldoet, aan de volgende regel:
 
 - Akker + Grasland > 40% én Grasland + Bos + Struikgewas + Akker > 50%
 
