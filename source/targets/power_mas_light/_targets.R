@@ -303,7 +303,7 @@ list(
   tar_group_size(
     name = scenarios_sigma,
     command = scenarios %>%
-      filter(n_telpunten == 200, n_jaar == 10, beta_1 == log(0.99)) %>%
+      filter(n_jaar == 10, beta_1 == log(0.99)) %>%
       tidyr::expand(
         n_telpunten, n_jaar, beta_1, beta_0, beta_2, beta_3,
         sigma_punt = sigmas_punt

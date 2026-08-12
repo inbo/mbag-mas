@@ -475,3 +475,66 @@ ggsave(
 
 p_effect_years_model
 ```
+
+\newpage
+
+## Sensitiviteitsanalyse variantie tussen telpunten
+### Methodiek
+
+In de oorspronkelijke poweranalyse werd voor de hypothetische boerenlandvogelsoort uitgegaan van een zeer kleine variantie tussen telpunten (`sigma_punt`). Om na te gaan in welke mate deze keuze de resultaten beïnvloedt, werd een sensitiviteitsanalyse uitgevoerd waarbij de variantie tussen telpunten werd gevarieerd.
+
+Hiervoor werden vijf waarden van `sigma_punt` beschouwd, gelijkmatig verdeeld tussen de minimale en maximale geschatte variantie tussen telpunten over de onderzochte boerenlandvogels (resp. `r round(min(tar_read_mas("sigmas_punt"), 6)` en `r round(max(tar_read_mas("sigmas_punt"), 2)`). De overige parameters van de hypothetische soort werden constant gehouden. De sensitiviteitsanalyse werd uitgevoerd voor dezelfde scenario's als in de hoofdanalyse (voor 200 telpunten).
+
+Bij een model met een log-link heeft een verandering in `sigma_punt` twee tegengestelde effecten. Een grotere variantie leidt tot meer heterogeniteit tussen telpunten, wat de precisie van de schatting kan verminderen. Tegelijkertijd neemt bij een log-link de marginale verwachte abundantie toe met de variantie, omdat
+
+$$
+E(Y) = \exp\left(\beta_0 + \frac{\sigma_{\mathrm{punt}}^2}{2}\right).
+$$
+
+Een hogere variantie kan daardoor gepaard gaan met hogere verwachte aantallen en bijgevolg met een grotere statistische power. De sensitiviteitsanalyse onderzoekt in welke mate deze effecten doorwegen voor de berekening van het minimaal detecteerbare effect.
+
+### Resultaten
+
+Het minimaal detecteerbare effect varieert met de veronderstelde variantie tussen telpunten (@tbl-detectable-effect-sigma, @fig-detectable-effect-sigma). Bij de gekozen parameterwaarden blijkt het minimaal detecteerbare effect af te nemen bij een toenemende `sigma_punt`.
+
+De verandering in het detecteerbare effect is [beperkt/duidelijk], en is [vooral zichtbaar bij een klein/groot] aantal telpunten. [Indien van toepassing: De rangorde van de onderzochte scenario's blijft hierbij behouden.]
+
+```{r}
+#| label: tbl-detectable-effect-sigma
+#| tbl-cap: "Detecteerbaar jaarlijks trendverschil (%) als functie van het
+#|   aantal telpunten en de veronderstelde variantie tussen telpunten."
+detectable_effect_sigma_df <- tar_read_mas("detectable_effect_sigma_df")
+```
+
+De relatie tussen `sigma_punt` en het detecteerbare effect kan het best rechtstreeks worden weergegeven in een figuur waarin `sigma_punt` op de x-as staat en het minimaal detecteerbare jaarlijkse trendverschil op de y-as. De verschillende aantallen telpunten kunnen daarbij als afzonderlijke lijnen worden weergegeven (@fig-detectable-effect-sigma).
+
+```{r}
+#| label: fig-detectable-effect-sigma
+#| fig-cap: "Relatie tussen de veronderstelde variantie tussen telpunten
+#|   (`sigma_punt`) en het detecteerbaar jaarlijks trendverschil (%) voor
+#|   verschillende aantallen telpunten."
+# Visualise raw estimates
+detectable_effect_10j %>%
+  filter(scenario == 1) %>%
+  bind_rows(detectable_effect_sigma_df) %>%
+  ggplot(aes(x = sigma_punt, y = effect_pct_long, colour = factor(n_telpunten))) +
+  geom_line(linewidth = 0.3) +
+  geom_point(size = 1) +
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(
+    x = "Variantie tussen telpunten",
+    y = "Detecteerbaar 10-jaarlijks\ntrendverschil (%)",
+    colour = "Aantal telpunten"
+  ) +
+  theme_minimal()
+```
+
+### Bespreking
+
+De sensitiviteitsanalyse toont dat de keuze van de variantie tussen telpunten invloed heeft op het berekende minimaal detecteerbare effect. Een hogere `sigma_punt` leidt in deze simulatie tot [een lager/een vergelijkbaar/hoger] minimaal detecteerbaar effect.
+
+Dit resultaat moet worden geïnterpreteerd in het licht van de log-link in het model. Een hogere variantie tussen telpunten betekent niet alleen dat de abundantie sterker varieert tussen telpunten, maar verhoogt ook de marginale verwachte abundantie. Hierdoor kunnen hogere waarden van `sigma_punt` in deze analyse leiden tot hogere verwachte aantallen en bijgevolg tot een hogere power. Het effect van `sigma_punt` op het minimaal detecteerbare effect is daarom het resultaat van een afweging tussen enerzijds de toegenomen heterogeniteit en anderzijds de toegenomen marginale verwachte abundantie.
+
+De sensitiviteitsanalyse geeft daarom aan dat het niet zonder meer gerechtvaardigd is om een variantie van nagenoeg nul als meest optimale scenario te beschouwen. Wanneer het doel is om een hypothetische soort te definiëren waarvoor het minimaal detecteerbare effect zo klein mogelijk is, moet rekening worden gehouden met beide effecten van `sigma_punt`.
+
+Voor de conclusies van de poweranalyse is vooral van belang of de keuze van `sigma_punt` leidt tot een wezenlijk andere inschatting van het minimaal detecteerbare effect. [Indien de verschillen beperkt zijn: De verschillen tussen de onderzochte waarden van `sigma_punt` zijn relatief beperkt, waardoor de oorspronkelijke conclusies van de poweranalyse niet wezenlijk veranderen.] [Indien de verschillen groot zijn: De resultaten verschillen echter voldoende sterk tussen de onderzochte waarden van `sigma_punt` om deze parameterkeuze expliciet mee te nemen bij de interpretatie van het minimaal detecteerbare effect.]
