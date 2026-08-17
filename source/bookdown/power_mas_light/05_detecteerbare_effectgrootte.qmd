@@ -137,8 +137,7 @@ detectable_effect_10j %>%
 #| label: tbl-detectable-effect-10j
 #| tbl-cap: "Minimaal detecteerbaar trendverschil over een
 #|   periode van 10 jaar (%) voor drie trendscenario's buiten SBP-gebied en
-#|   verschillende aantallen telpunten. Waarden tussen haakjes geven de
-#|   onder- en bovengrens van de geschatte detecteerbare verandering weer."
+#|   verschillende aantallen telpunten."
 detectable_effect_10j %>%
   mutate(value = fmt_pct(effect_pct_long, 0)) %>%
   select(starts_with("trend_buiten"), n_telpunten, value) %>%
@@ -481,32 +480,66 @@ p_effect_years_model
 ## Sensitiviteitsanalyse variantie tussen telpunten
 ### Methodiek
 
-In de oorspronkelijke poweranalyse werd voor de hypothetische boerenlandvogelsoort uitgegaan van een zeer kleine variantie tussen telpunten (`sigma_punt`). Om na te gaan in welke mate deze keuze de resultaten beïnvloedt, werd een sensitiviteitsanalyse uitgevoerd waarbij de variantie tussen telpunten werd gevarieerd.
+In de oorspronkelijke poweranalyse werd voor de hypothetische boerenlandvogelsoort uitgegaan van een zeer kleine variantie tussen telpunten (`sigma_punt`).
+Om na te gaan in welke mate deze keuze de resultaten beïnvloedt, werd een sensitiviteitsanalyse uitgevoerd waarbij de variantie tussen telpunten werd gevarieerd.
 
-Hiervoor werden vijf waarden van `sigma_punt` beschouwd, gelijkmatig verdeeld tussen de minimale en maximale geschatte variantie tussen telpunten over de onderzochte boerenlandvogels (resp. `r round(min(tar_read_mas("sigmas_punt"), 6)` en `r round(max(tar_read_mas("sigmas_punt"), 2)`). De overige parameters van de hypothetische soort werden constant gehouden. De sensitiviteitsanalyse werd uitgevoerd voor dezelfde scenario's als in de hoofdanalyse (voor 200 telpunten).
+Hiervoor werden vijf waarden van `sigma_punt` beschouwd, gelijkmatig verdeeld tussen de minimale en maximale geschatte variantie tussen telpunten over de onderzochte boerenlandvogels (resp. `r round(min(tar_read_mas("sigmas_punt")), 6)` en `r round(max(tar_read_mas("sigmas_punt")), 2)`). De overige parameters van de hypothetische soort werden constant gehouden. De sensitiviteitsanalyse werd uitgevoerd voor dezelfde scenario's als in de vorige analyses (achteruitgang buiten SBP-gebied van -1 % per jaar).
 
-Bij een model met een log-link heeft een verandering in `sigma_punt` twee tegengestelde effecten. Een grotere variantie leidt tot meer heterogeniteit tussen telpunten, wat de precisie van de schatting kan verminderen. Tegelijkertijd neemt bij een log-link de marginale verwachte abundantie toe met de variantie, omdat
+Bij een model met een log-link heeft een verandering in `sigma_punt` twee tegengestelde effecten.
+Een grotere variantie leidt tot meer heterogeniteit tussen telpunten, wat de precisie van de schatting kan verminderen.
+Tegelijkertijd neemt bij een log-link de marginale verwachte abundantie toe met de variantie, omdat
 
 $$
 E(Y) = \exp\left(\beta_0 + \frac{\sigma_{\mathrm{punt}}^2}{2}\right).
 $$
 
-Een hogere variantie kan daardoor gepaard gaan met hogere verwachte aantallen en bijgevolg met een grotere statistische power. De sensitiviteitsanalyse onderzoekt in welke mate deze effecten doorwegen voor de berekening van het minimaal detecteerbare effect.
+Een hogere variantie kan daardoor gepaard gaan met hogere verwachte aantallen en bijgevolg met een grotere statistische power.
+De sensitiviteitsanalyse onderzoekt in welke mate deze effecten doorwegen voor de berekening van het minimaal detecteerbare effect.
 
 ### Resultaten
 
-Het minimaal detecteerbare effect varieert met de veronderstelde variantie tussen telpunten (@tbl-detectable-effect-sigma, @fig-detectable-effect-sigma). Bij de gekozen parameterwaarden blijkt het minimaal detecteerbare effect af te nemen bij een toenemende `sigma_punt`.
-
-De verandering in het detecteerbare effect is [beperkt/duidelijk], en is [vooral zichtbaar bij een klein/groot] aantal telpunten. [Indien van toepassing: De rangorde van de onderzochte scenario's blijft hierbij behouden.]
+Het minimaal detecteerbare effect varieert met de veronderstelde variantie tussen telpunten (@tbl-detectable-effect-sigma, @fig-detectable-effect-sigma).
+Bij de gekozen parameterwaarden blijkt het minimaal detecteerbare effect af te nemen bij een toenemende `sigma_punt`.
+De verandering in het detecteerbare effect is opvallender bij een kleiner aantal telpunten.
 
 ```{r}
 #| label: tbl-detectable-effect-sigma
-#| tbl-cap: "Detecteerbaar jaarlijks trendverschil (%) als functie van het
-#|   aantal telpunten en de veronderstelde variantie tussen telpunten."
+#| tbl-cap: "Minimaal detecteerbaar trendverschil over een
+#|   periode van 10 jaar (%) voor vijf telpuntvariantiescenario's en
+#|   verschillende aantallen telpunten."
 detectable_effect_sigma_df <- tar_read_mas("detectable_effect_sigma_df")
-```
 
-De relatie tussen `sigma_punt` en het detecteerbare effect kan het best rechtstreeks worden weergegeven in een figuur waarin `sigma_punt` op de x-as staat en het minimaal detecteerbare jaarlijkse trendverschil op de y-as. De verschillende aantallen telpunten kunnen daarbij als afzonderlijke lijnen worden weergegeven (@fig-detectable-effect-sigma).
+bind_rows(
+  detectable_effect_10j %>%
+    filter(scenario == 1),
+  detectable_effect_sigma_df
+) %>%
+  mutate(
+    sigma_punt = if_else(
+      sigma_punt < 0.1,
+      sprintf("%.6f", sigma_punt),
+      sprintf("%.2f", sigma_punt)
+    ),
+    value = fmt_pct(effect_pct_long, 0)
+  ) %>%
+  select(sigma_punt, n_telpunten, value) %>%
+  pivot_wider(
+    names_from = n_telpunten,
+    values_from = value,
+    names_prefix = "n = "
+  ) %>%
+  kable(
+    booktabs = TRUE,
+    align = "r"
+  ) %>%
+  kableExtra::add_header_above(c(
+    " " = 1,
+    "Detecteerbaar trendverschil met\n'binnen SBP' over 10 jaar" = 3
+  )) %>%
+  kableExtra::kable_styling(latex_options = "striped") %>%
+  kableExtra::column_spec(1, border_right = TRUE) %>%
+  kableExtra::row_spec(0, bold = TRUE)
+```
 
 ```{r}
 #| label: fig-detectable-effect-sigma
