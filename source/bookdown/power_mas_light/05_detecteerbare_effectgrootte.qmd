@@ -373,7 +373,7 @@ $$
 E = a n^{-b} T^{-c}
 $$
 
-waarbij 
+waarbij
 
 
 $E$: detecteerbare effectgrootte
@@ -411,16 +411,19 @@ summary(fit_time)
 #|   simulatiebereik weer; de stippellijn is extrapolatie."
 # Predict detectable effect
 pred_df <- detectable_effect_years %>%
+  # Make predictions for each scenario (time series length)
   group_split(scenario) %>%
   lapply(function(data) {
+    # Fit model
     mod <- lm(effect_pct ~ I(1 / sqrt(n_telpunten)), data = data)
 
+    # Make predictions
     newdata <- tibble(
       n_telpunten = seq(min(data$n_telpunten), 800, length.out = 200)
     )
-
     pred <- predict(mod, newdata = newdata, interval = "confidence")
 
+    # Create output dataframe
     bind_cols(
       newdata,
       as.data.frame(pred)
@@ -430,6 +433,7 @@ pred_df <- detectable_effect_years %>%
         scenario = unique(data$scenario)
       )
   }) %>%
+  # Combine
   bind_rows() %>%
   left_join(
     detectable_effect_years %>%
@@ -458,6 +462,7 @@ p_effect_years_model <- detectable_effect_years %>%
     linetype = "dashed"
   ) +
 
+  # Settings
   scale_y_continuous(limits = c(0, NA)) +
   labs(
     x = "Aantal telpunten",
@@ -480,40 +485,71 @@ p_effect_years_model
 ## Sensitiviteitsanalyse variantie tussen telpunten
 ### Methodiek
 
-In de oorspronkelijke poweranalyse werd voor de hypothetische boerenlandvogelsoort uitgegaan van een zeer kleine variantie tussen telpunten (`sigma_punt`).
-Om na te gaan in welke mate deze keuze de resultaten beïnvloedt, werd een sensitiviteitsanalyse uitgevoerd waarbij de variantie tussen telpunten werd gevarieerd.
+In de oorspronkelijke poweranalyse werd voor de hypothetische boerenlandvogelsoort uitgegaan van een zeer kleine de standaardafwijking tussen telpunten (`sigma_punt`).
+Om na te gaan in welke mate deze keuze de resultaten beïnvloedt, werd een sensitiviteitsanalyse uitgevoerd waarbij de variabiliteit tussen telpunten werd gevarieerd.
 
-Hiervoor werden vijf waarden van `sigma_punt` beschouwd, gelijkmatig verdeeld tussen de minimale en maximale geschatte variantie tussen telpunten over de onderzochte boerenlandvogels (resp. `r round(min(tar_read_mas("sigmas_punt")), 6)` en `r round(max(tar_read_mas("sigmas_punt")), 2)`). De overige parameters van de hypothetische soort werden constant gehouden. De sensitiviteitsanalyse werd uitgevoerd voor dezelfde scenario's als in de vorige analyses (achteruitgang buiten SBP-gebied van -1 % per jaar).
+Hiervoor werden vijf waarden van `sigma_punt` beschouwd, gelijkmatig verdeeld tussen de minimale en maximale geschatte standaardafwijking tussen telpunten over de onderzochte boerenlandvogels (resp. `r round(min(tar_read_mas("sigmas_punt")), 6)` en `r round(max(tar_read_mas("sigmas_punt")), 2)`).
+De overige parameters van de hypothetische soort werden constant gehouden.
+De sensitiviteitsanalyse werd uitgevoerd voor dezelfde scenario's als in de vorige analyses (achteruitgang buiten SBP-gebied van -1 % per jaar).
 
-Bij een model met een log-link heeft een verandering in `sigma_punt` twee tegengestelde effecten.
-Een grotere variantie leidt tot meer heterogeniteit tussen telpunten, wat de precisie van de schatting kan verminderen.
-Tegelijkertijd neemt bij een log-link de marginale verwachte abundantie toe met de variantie, omdat
+Door de log-link heeft een verandering in de variatie tussen telpunten ook gevolgen voor de marginale verwachte abundantie.
+Wanneer het telpunteffect ($u$) normaal verdeeld is met standaardafwijking ($\sigma_{\mathrm{punt}}$), geldt
 
 $$
-E(Y) = \exp\left(\beta_0 + \frac{\sigma_{\mathrm{punt}}^2}{2}\right).
+E[\exp(u)] =
+\exp\left(\frac{\sigma_{\mathrm{punt}}^2}{2}\right).
 $$
 
-Een hogere variantie kan daardoor gepaard gaan met hogere verwachte aantallen en bijgevolg met een grotere statistische power.
-De sensitiviteitsanalyse onderzoekt in welke mate deze effecten doorwegen voor de berekening van het minimaal detecteerbare effect.
+De marginale verwachte abundantie is bijgevolg evenredig met
+
+$$
+\exp\left(\frac{\sigma_{\mathrm{punt}}^2}{2}\right).
+$$
+
+Als we veronderstellen dat het minimaal detecteerbare effect ongeveer omgekeerd evenredig is met de vierkantswortel van het aantal waarnemingen (zie eerder), dan volgt hieruit voor de invloed van het aantal telpunten en `sigma_punt` de theoretische relatie
+
+$$
+\text{MDE}
+\propto
+\frac{1}{
+\sqrt{
+n_{\mathrm{telpunten}}
+\exp\left(\sigma_{\mathrm{punt}}^2/2\right)
+}
+}
+=
+
+\frac{1}{\sqrt{n_{\mathrm{telpunten}}}}
+\exp\left(-\frac{\sigma_{\mathrm{punt}}^2}{4}\right).
+$$
+
+Een hogere variabiliteit tussen telpunten kan dus gepaard gaan met hogere verwachte aantallen en bijgevolg met een grotere statistische power.
+Anderzijds zorgt een grotere variabiliteit echter ook voor een grotere heterogeniteit tussen telpunten, wat de precisie van de schatting kan verminderen.
+Deze sensitiviteitsanalyse onderzoekt daarom in welke mate deze effecten doorwegen voor de berekening van het minimaal detecteerbare effect.
 
 ### Resultaten
 
-Het minimaal detecteerbare effect varieert met de veronderstelde variantie tussen telpunten (@tbl-detectable-effect-sigma, @fig-detectable-effect-sigma).
+Het minimaal detecteerbare effect varieert met de veronderstelde standaardafwijking tussen telpunten (@tbl-detectable-effect-sigma, @fig-detectable-effect-sigma).
 Bij de gekozen parameterwaarden blijkt het minimaal detecteerbare effect af te nemen bij een toenemende `sigma_punt`.
 De verandering in het detecteerbare effect is opvallender bij een kleiner aantal telpunten.
 
 ```{r}
 #| label: tbl-detectable-effect-sigma
 #| tbl-cap: "Minimaal detecteerbaar trendverschil over een
-#|   periode van 10 jaar (%) voor vijf telpuntvariantiescenario's en
+#|   periode van 10 jaar (%) voor vijf telpuntvariatiescenario's en
 #|   verschillende aantallen telpunten."
 detectable_effect_sigma_df <- tar_read_mas("detectable_effect_sigma_df")
-
-bind_rows(
+detectable_effect_sigma <- bind_rows(
   detectable_effect_10j %>%
     filter(scenario == 1),
   detectable_effect_sigma_df
 ) %>%
+  select(sigma_punt, n_telpunten, beta3, effect_pct_long) %>%
+  group_by(n_telpunten) %>%
+  mutate(scenario = cur_group_id()) %>%
+  ungroup()
+
+detectable_effect_sigma %>%
   mutate(
     sigma_punt = if_else(
       sigma_punt < 0.1,
@@ -543,14 +579,13 @@ bind_rows(
 
 ```{r}
 #| label: fig-detectable-effect-sigma
-#| fig-cap: "Relatie tussen de veronderstelde variantie tussen telpunten
-#|   (`sigma_punt`) en het detecteerbaar jaarlijks trendverschil (%) voor
-#|   verschillende aantallen telpunten."
+#| fig-cap: "Relatie tussen de veronderstelde standaardafwijking tussen
+#|   telpunten (`sigma_punt`) en het detecteerbaar jaarlijks trendverschil (%)
+#|   voor verschillende aantallen telpunten."
 # Visualise raw estimates
-detectable_effect_10j %>%
-  filter(scenario == 1) %>%
-  bind_rows(detectable_effect_sigma_df) %>%
-  ggplot(aes(x = sigma_punt, y = effect_pct_long, colour = factor(n_telpunten))) +
+detectable_effect_sigma %>%
+  ggplot(aes(x = sigma_punt, y = effect_pct_long,
+             colour = factor(n_telpunten))) +
   geom_line(linewidth = 0.3) +
   geom_point(size = 1) +
   scale_y_continuous(limits = c(0, NA)) +
@@ -564,10 +599,104 @@ detectable_effect_10j %>%
 
 ### Bespreking
 
-De sensitiviteitsanalyse toont dat de keuze van de variantie tussen telpunten invloed heeft op het berekende minimaal detecteerbare effect. Een hogere `sigma_punt` leidt in deze simulatie tot [een lager/een vergelijkbaar/hoger] minimaal detecteerbaar effect.
+We fitten een model van de vorm
 
-Dit resultaat moet worden geïnterpreteerd in het licht van de log-link in het model. Een hogere variantie tussen telpunten betekent niet alleen dat de abundantie sterker varieert tussen telpunten, maar verhoogt ook de marginale verwachte abundantie. Hierdoor kunnen hogere waarden van `sigma_punt` in deze analyse leiden tot hogere verwachte aantallen en bijgevolg tot een hogere power. Het effect van `sigma_punt` op het minimaal detecteerbare effect is daarom het resultaat van een afweging tussen enerzijds de toegenomen heterogeniteit en anderzijds de toegenomen marginale verwachte abundantie.
+$$
+E =
+a
+n_{\mathrm{telpunten}}^{-b}
+\exp\left(-c\sigma_{\mathrm{punt}}^2\right),
+$$
 
-De sensitiviteitsanalyse geeft daarom aan dat het niet zonder meer gerechtvaardigd is om een variantie van nagenoeg nul als meest optimale scenario te beschouwen. Wanneer het doel is om een hypothetische soort te definiëren waarvoor het minimaal detecteerbare effect zo klein mogelijk is, moet rekening worden gehouden met beide effecten van `sigma_punt`.
+waarbij
 
-Voor de conclusies van de poweranalyse is vooral van belang of de keuze van `sigma_punt` leidt tot een wezenlijk andere inschatting van het minimaal detecteerbare effect. [Indien de verschillen beperkt zijn: De verschillen tussen de onderzochte waarden van `sigma_punt` zijn relatief beperkt, waardoor de oorspronkelijke conclusies van de poweranalyse niet wezenlijk veranderen.] [Indien de verschillen groot zijn: De resultaten verschillen echter voldoende sterk tussen de onderzochte waarden van `sigma_punt` om deze parameterkeuze expliciet mee te nemen bij de interpretatie van het minimaal detecteerbare effect.]
+$E$: detecteerbare effectgrootte
+
+$n_{\mathrm{telpunten}}$: het aantal telpunten
+
+$\sigma_{\mathrm{punt}}$: de standaardafwijking van de telpunteffecten.
+
+```{r, echo=FALSE}
+fit_sigma <- lm(
+  log(effect_pct_long) ~ log(n_telpunten) + I(sigma_punt^2),
+  data = detectable_effect_sigma
+)
+```
+
+De simulaties tonen dat de detecteerbare effectgrootte wordt beschreven door een functie van zowel het aantal telpunten als de standaardafwijking van de telpunteffecten (@fig-detectable-effect-sigma-model).
+De geschatte parameters ($-b =$ `r round(coef(fit_sigma)[2], 3)` voor het aantal telpunten en $-c =$ `r round(coef(fit_sigma)[3], 3)` voor het effect van `sigma_punt`) liggen dicht bij de theoretisch verwachte waarden van respectievelijk (-1/2) en (-1/4) (zie eerder).
+
+```{r, echo=TRUE}
+fit_sigma <- lm(
+  log(effect_pct_long) ~ log(n_telpunten) + I(sigma_punt^2),
+  data = detectable_effect_sigma
+)
+summary(fit_sigma)
+```
+
+De sensitiviteitsanalyse toont dat het minimaal detecteerbare effect afneemt bij een toenemende variantie tussen telpunten volgens
+
+$$
+\text{MDE} \propto \frac{1}{\sqrt{n_{\mathrm{telpunten}}}} \exp\left(-\frac{\sigma_{\mathrm{punt}}^2}{4}\right).
+$$
+
+Dit is op het eerste gezicht tegenintuïtief, omdat een grotere variantie ook leidt tot meer heterogeniteit tussen telpunten.
+Bij een log-link neemt de marginale verwachte abundantie echter toe met de variantie tussen telpunten.
+De toename in verwachte aantallen blijkt in deze simulatie het negatieve effect van de toegenomen heterogeniteit te overtreffen.
+Het minimaal detecteerbare effect wordt daardoor kleiner bij een toenemende `sigma_punt`.
+
+```{r}
+#| label: fig-detectable-effect-sigma-model
+#| fig-cap: "Geschatte relatie tussen het aantal telpunten en het detecteerbaar
+#|   jaarlijks trendverschil (%) op basis van een inverse
+#|   vierkantswortelmodel. De doorlopende lijn geeft interpolatie binnen het
+#|   simulatiebereik weer; de stippellijn is extrapolatie."
+# Predict detectable effect
+pred_df_sigma <- detectable_effect_sigma %>%
+  # Make predictions for each scenario (sample size)
+  group_split(scenario) %>%
+  lapply(function(data) {
+    # Fit model
+    mod <- lm(
+      effect_pct_long ~ exp((sigma_punt^2) / -4),
+      data = data
+    )
+
+    # Make predictions
+    newdata <- tibble(
+      n_telpunten = unique(data$n_telpunten),
+      sigma_punt = seq(min(data$sigma_punt), max(data$sigma_punt),
+                       length.out = 200)
+    )
+    pred <- predict(mod, newdata = newdata, interval = "confidence")
+
+    # Create output dataframe
+    bind_cols(
+      newdata,
+      as.data.frame(pred)
+    ) %>%
+      mutate(
+        scenario = unique(data$scenario)
+      )
+  }) %>%
+  # Combine
+  bind_rows()
+
+# Visualise effect trend
+detectable_effect_sigma %>%
+  ggplot(aes(x = sigma_punt, y = effect_pct_long,
+             colour = factor(n_telpunten))) +
+  geom_point(size = 1) +
+  geom_line(
+    data = pred_df_sigma,
+    aes(y = fit),
+    linewidth = 0.3
+  ) +
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(
+    x = "Variantie tussen telpunten",
+    y = "Detecteerbaar 10-jaarlijks\ntrendverschil (%)",
+    colour = "Aantal telpunten"
+  ) +
+  theme_minimal()
+```
