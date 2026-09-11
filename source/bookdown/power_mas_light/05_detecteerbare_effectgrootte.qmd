@@ -584,12 +584,16 @@ detectable_effect_sigma %>%
 
 We fitten een model van de vorm
 
+<!-- spell-check: ignore:start -->
+
 $$
 E =
 a
 n_{\mathrm{telpunten}}^{-b}
 \exp\left(-c\sigma_{\mathrm{punt}}^2\right),
 $$
+
+<!-- spell-check: ignore:end -->
 
 waarbij
 
