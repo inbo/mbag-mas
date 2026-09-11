@@ -8,14 +8,18 @@ $$
 \text{MDE} \propto \frac{1}{\sqrt{n*T^3}}
 $$
 
-De gepresenteerde powerberekeningen geven een realistische indicatie van de detecteerbare effectgrootte, maar zijn gebaseerd op gunstige aannames. De analyses vertrekken van een hypothetische boerenlandvogelsoort met de hoogst waargenomen densiteiten binnen en buiten SBP-gebied en de kleinst mogelijke variatie tussen telpunten. Voor soorten die zeldzamer zijn of een grilliger voorkomen kennen, zal de minimaal detecteerbare effectgrootte hoger liggen.
+De gepresenteerde powerberekeningen geven een realistische indicatie van de detecteerbare effectgrootte, maar zijn gebaseerd op gunstige aannames. De analyses vertrekken van een hypothetische boerenlandvogelsoort met de hoogst waargenomen densiteiten binnen en buiten SBP-gebied en de kleinst mogelijke variatie tussen telpunten. Voor soorten die zeldzamer zijn of een grilliger voorkomen kennen, zal de minimaal detecteerbare effectgrootte doorgaans hoger liggen.
 
-Zelfs voor deze hypothetische, optimale boerenlandvogelsoort blijft de minimaal detecteerbare trendverschil relatief groot. Bij een meetnet van 400 telpunten zijn, voor een realistische soort die niet overal voorkomt, in de praktijk mogelijk slechts ongeveer 200 telpunten informatief. In dat geval is pas een zeer sterke positieve interactie tussen SBP en niet-SBP detecteerbaar. Concreet betekent dit dat de populatie binnen SBP-gebied over een periode van 10 jaar 58 % gunstiger moet evolueren dan buiten SBP-gebied voordat een statistisch significant verschil in trend kan worden aangetoond. Indien deze soort 9,5 % buiten SBP-gebied afneemt over 10 jaar, moet ze binnen SBP-gebied 46 % toenemen. Voor een stabiele trend buiten SBP-gebied moet ze binnen SBP-gebied 58 % toenemen en voor een toename van 10,5 % buiten SBP-gebied moet ze 73 % toenemen binnen SBP-gebied.
+Zelfs voor deze hypothetische boerenlandvogelsoort blijft de minimaal detecteerbare trendverschil relatief groot. Bij een meetnet van 400 telpunten zijn, voor een realistische soort die niet overal voorkomt, in de praktijk mogelijk slechts ongeveer 200 telpunten informatief. In dat geval is pas een zeer sterke positieve interactie tussen SBP en niet-SBP detecteerbaar. Concreet betekent dit dat de populatie binnen SBP-gebied over een periode van 10 jaar 58 % gunstiger moet evolueren dan buiten SBP-gebied voordat een statistisch significant verschil in trend kan worden aangetoond. Indien deze soort 9,5 % buiten SBP-gebied afneemt over 10 jaar, moet ze binnen SBP-gebied 46 % toenemen. Voor een stabiele trend buiten SBP-gebied moet ze binnen SBP-gebied 58 % toenemen en voor een toename van 10,5 % buiten SBP-gebied moet ze 73 % toenemen binnen SBP-gebied.
+
+Een aanvullende sensitiviteitsanalyse laat zien dat het minimaal detecteerbare effect echter wel afneemt bij een grotere variatie tussen telpunten.
+Dit komt doordat bij een log-link de marginale verwachte abundantie toeneemt met de variantie tussen telpunten.
+De sensitiviteitsanalyse wijzigt de hoofdconclusie van de poweranalyse echter niet.
 
 We kunnen daarom besluiten dat het niet aangewezen is om het aantal meetpunten te verminderen, omdat dan de statistische gevoeligheid te beperkt wordt om verschillen in trend tussen binnen en buiten SBP-gebieden te detecteren.
 
 ```{=latex}
-\vspace{2\baselineskip}
+\vspace{\baselineskip}
 \begingroup
 \let\clearpage\relax
 \let\cleardoublepage\relax

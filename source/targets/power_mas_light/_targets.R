@@ -288,5 +288,69 @@ list(
   tar_target(
     name = detectable_effect_df,
     command = detectable_effect_to_df(detectable_effect)
+  ),
+
+  ## Sigma sensitivity analysis
+  # Define scenarios
+  tar_target(
+    name = sigmas_punt,
+    command = seq(
+      min(summary(parameters_df$sigma_punt)),
+      max(summary(parameters_df$sigma_punt)),
+      length.out = 5
+    )
+  ),
+  tar_group_size(
+    name = scenarios_sigma,
+    command = scenarios %>%
+      filter(n_jaar == 10, beta_1 == log(0.99)) %>%
+      tidyr::expand(
+        n_telpunten, n_jaar, beta_1, beta_0, beta_2, beta_3,
+        sigma_punt = sigmas_punt
+      ) %>%
+      filter_out(sigma_punt == min(summary(parameters_df$sigma_punt))),
+    size = 1
+  ),
+
+  # Prepare design lists
+  tar_target(
+    name = design_list_sigma,
+    command = prepare_design(
+      scenarios_sigma,
+      digits = c(
+        n_jaar = 0,
+        n_telpunten = 0,
+        beta_0 = 2,
+        beta_1 = 2,
+        beta_2 = 2,
+        beta_3 = 3,
+        sigma_punt = 2
+      )
+    ),
+    pattern = map(scenarios_sigma),
+    iteration = "list"
+  ),
+
+  # Run simulations
+  tar_target(
+    name = detectable_effect_sigma,
+    command = custom_find_power(
+      design = design_list_sigma$design,
+      design_digits = design_list_sigma$digits,
+      opti = "beta_3",
+      sim_power = simulate_mas_data,
+      power = 0.9,
+      alpha = 0.1,
+      db_file = "power_mas_light_akkervogel2.duckdb",
+      seed = 123
+    ),
+    pattern = map(design_list_sigma),
+    iteration = "list"
+  ),
+
+  # Get results
+  tar_target(
+    name = detectable_effect_sigma_df,
+    command = detectable_effect_to_df(detectable_effect_sigma)
   )
 )
