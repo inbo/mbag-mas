@@ -3,7 +3,7 @@ output: html_document
 editor_options: 
   chunk_output_type: console
 ---
-### {{subtitle}}
+## {{subtitle}}
 
 ```{r}
 # Variables
@@ -21,7 +21,7 @@ presence_df <- tar_read_mas("presence_logical", branch = branch)
 #|   (acht bezoeken in totaal), uitgesplitst naar SBP, regio en openheidsklasse.
 #|   De figuur toont het aantal telpunten waar de soort al dan niet werd
 #|   waargenomen binnen elke combinatie van strata."
-#| fig-height: 6.7
+#| fig-height: 5.7
 #| fig-width: 6
 presence_df %>%
   ggplot(aes(x = sbp, fill = present)) +

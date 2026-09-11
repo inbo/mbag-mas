@@ -13,7 +13,7 @@ message <- c(
 )
 
 autoqmd_finalise(
-  target_files = "04_schatting_simulatieparameters.qmd",
+  target_files = "zzz_aanwezigheid_per_soort.qmd",
   message = message,
   child_dirs_rm = "child_qmd"
 )

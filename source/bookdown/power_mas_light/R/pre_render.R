@@ -37,10 +37,10 @@ autoqmd_prepare(
   subtitle = stringr::str_to_sentence(target_species),
   label = gsub("\\s", ".", tolower(target_species)),
   branch = seq_along(target_species),
-  template = "_simulatieparameters_per_soort.qmd",
+  template = "_aanwezigheid_per_soort.qmd",
   child_dir = "child_qmd",
-  target_file = "04_schatting_simulatieparameters.qmd",
-  page_break = "newpage"
+  target_file = "zzz_aanwezigheid_per_soort.qmd",
+  page_break = "clearpage"
 )
 
 # Results appendix
