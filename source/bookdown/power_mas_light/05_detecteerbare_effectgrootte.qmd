@@ -503,7 +503,7 @@ $$
 \exp\left(\frac{\sigma_{\mathrm{punt}}^2}{2}\right)
 $$
 
-Een hogere variabiliteit tussen telpunten kan dus gepaard gaan met hogere verwachte aantallen en bijgevolg met een grotere statistische power.
+Een hogere variabiliteit tussen telpunten kan dus gepaard gaan met hogere verwachte aantallen en bijgevolg met een grotere statistische power [@signorini1991poisson].
 Anderzijds zorgt een grotere variabiliteit echter ook voor een grotere heterogeniteit tussen telpunten, wat de precisie van de schatting kan verminderen.
 Deze sensitiviteitsanalyse onderzoekt daarom in welke mate deze effecten doorwegen voor de berekening van het minimaal detecteerbare effect.
 
