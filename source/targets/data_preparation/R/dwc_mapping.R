@@ -247,10 +247,11 @@ dwc_mapping <- function(data_df) {
 }
 
 map_taxa_manual <- function(
-    taxonomy_df,
-    manual_taxon_list,
-    vernacular_name_col = "vernacularName",
-    out_cols = "scientificName") {
+  taxonomy_df,
+  manual_taxon_list,
+  vernacular_name_col = "vernacularName",
+  out_cols = "scientificName"
+) {
   require("dplyr")
   require("rlang")
 
@@ -289,9 +290,10 @@ map_taxa_manual <- function(
 }
 
 add_species_aggregates <- function(
-    taxonomy_df,
-    manual_taxon_list,
-    vernacular_name_col = "dwc_vernacularName") {
+  taxonomy_df,
+  manual_taxon_list,
+  vernacular_name_col = "dwc_vernacularName"
+) {
   require("dplyr")
   require("rlang")
 

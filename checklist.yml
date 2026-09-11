@@ -27,4 +27,12 @@ spelling:
     en-GB:
     - source/targets/data_preparation/R/anonymise_observers.R
     - source/targets/data_preparation/R/create_output.R
+    - source/bookdown/power_mas_light/R/autoqmd_cleanup.R
+    - source/bookdown/power_mas_light/R/autoqmd_dependency_stamp.R
+    - source/bookdown/power_mas_light/R/autoqmd_finalise.R
+    - source/bookdown/power_mas_light/R/autoqmd_generate_children.R
+    - source/bookdown/power_mas_light/R/autoqmd_insert_children.R
+    - source/bookdown/power_mas_light/R/autoqmd_insert_qmd.R
+    - source/bookdown/power_mas_light/R/autoqmd_insert_yaml.R
+    - source/bookdown/power_mas_light/R/autoqmd_prepare.R
 pak: STBrinkmann/GVI

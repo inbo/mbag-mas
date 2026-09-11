@@ -1,0 +1,32 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+## {{subtitle}}
+
+```{r}
+# Variables
+branch <- {{branch}}
+
+# Load presence absence data (logical over counting periods)
+presence_df <- tar_read_mas("presence_logical", branch = branch)
+```
+
+`r describe_presence(presence_df, spec = "{{species}}")` De {{species}} werd het vaakst waargenomen in telronde `r unname(gsub("R", "", tar_read_mas("best_period", branch = branch)))`. Enkel deze data werden behouden voor de schatting van de parameters.
+
+```{r}
+#| label: fig-presence-{{label}}
+#| fig-cap: "Aanwezigheid van {{species}} over twee jaren en vier telperiodes
+#|   (acht bezoeken in totaal), uitgesplitst naar SBP, regio en openheidsklasse.
+#|   De figuur toont het aantal telpunten waar de soort al dan niet werd
+#|   waargenomen binnen elke combinatie van strata."
+#| fig-height: 5.7
+#| fig-width: 6
+presence_df %>%
+  ggplot(aes(x = sbp, fill = present)) +
+  geom_bar() +
+  facet_grid(regio ~ openheid_klasse, scales = "free") +
+  labs(x = "SBP", y = "Aantal telpunten", fill = "Aanwezig") +
+  theme_minimal()
+```

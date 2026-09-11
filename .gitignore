@@ -7,6 +7,8 @@
 .httr-oauth
 *.dbf
 *.doc*
+*.duckdb
+*.duckdb.wal
 *.gddoc
 *.gdsheet
 *.gpkg
@@ -41,3 +43,7 @@ temp
 *_cache/
 /cache/
 source/markdown/cache
+.positai
+
+# output dir
+output
