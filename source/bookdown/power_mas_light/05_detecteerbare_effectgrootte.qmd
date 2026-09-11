@@ -497,30 +497,13 @@ Wanneer het telpunteffect ($u$) normaal verdeeld is met standaardafwijking ($\si
 
 $$
 E[\exp(u)] =
-\exp\left(\frac{\sigma_{\mathrm{punt}}^2}{2}\right).
+\exp\left(\frac{\sigma_{\mathrm{punt}}^2}{2}\right)
 $$
 
 De marginale verwachte abundantie is bijgevolg evenredig met
 
 $$
-\exp\left(\frac{\sigma_{\mathrm{punt}}^2}{2}\right).
-$$
-
-Als we veronderstellen dat het minimaal detecteerbare effect ongeveer omgekeerd evenredig is met de vierkantswortel van het aantal waarnemingen (zie eerder), dan volgt hieruit voor de invloed van het aantal telpunten en `sigma_punt` de theoretische relatie
-
-$$
-\text{MDE}
-\propto
-\frac{1}{
-\sqrt{
-n_{\mathrm{telpunten}}
-\exp\left(\sigma_{\mathrm{punt}}^2/2\right)
-}
-}
-=
-
-\frac{1}{\sqrt{n_{\mathrm{telpunten}}}}
-\exp\left(-\frac{\sigma_{\mathrm{punt}}^2}{4}\right).
+\exp\left(\frac{\sigma_{\mathrm{punt}}^2}{2}\right)
 $$
 
 Een hogere variabiliteit tussen telpunten kan dus gepaard gaan met hogere verwachte aantallen en bijgevolg met een grotere statistische power.
@@ -624,7 +607,27 @@ fit_sigma <- lm(
 ```
 
 De simulaties tonen dat de detecteerbare effectgrootte wordt beschreven door een functie van zowel het aantal telpunten als de standaardafwijking van de telpunteffecten (@fig-detectable-effect-sigma-model).
-De geschatte parameters ($-b =$ `r round(coef(fit_sigma)[2], 3)` voor het aantal telpunten en $-c =$ `r round(coef(fit_sigma)[3], 3)` voor het effect van `sigma_punt`) liggen dicht bij de theoretisch verwachte waarden van respectievelijk (-1/2) en (-1/4) (zie eerder).
+De geschatte parameters ($-b =$ `r round(coef(fit_sigma)[2], 3)` voor het aantal telpunten en $-c =$ `r round(coef(fit_sigma)[3], 3)` voor het effect van `sigma_punt`) liggen in de buurt van de theoretisch verwachte waarden van respectievelijk (-1/2) en (-1/4)
+
+$$
+\text{MDE}
+\propto
+\frac{1}{
+\sqrt{
+n_{\mathrm{telpunten}}
+\exp\left(\sigma_{\mathrm{punt}}^2/2\right)
+}
+}
+=
+
+\frac{1}{\sqrt{n_{\mathrm{telpunten}}}}
+\exp\left(-\frac{\sigma_{\mathrm{punt}}^2}{4}\right)
+$$
+
+Dit is op het eerste gezicht tegenintuïtief, omdat een grotere variantie ook leidt tot meer heterogeniteit tussen telpunten.
+Bij een log-link neemt de marginale verwachte abundantie echter toe met de variantie tussen telpunten.
+De toename in verwachte aantallen blijkt in deze simulatie het negatieve effect van de toegenomen heterogeniteit te overtreffen.
+Het minimaal detecteerbare effect wordt daardoor kleiner bij een toenemende `sigma_punt`.
 
 ```{r, echo=TRUE}
 fit_sigma <- lm(
@@ -633,17 +636,6 @@ fit_sigma <- lm(
 )
 summary(fit_sigma)
 ```
-
-De sensitiviteitsanalyse toont dat het minimaal detecteerbare effect afneemt bij een toenemende variantie tussen telpunten volgens
-
-$$
-\text{MDE} \propto \frac{1}{\sqrt{n_{\mathrm{telpunten}}}} \exp\left(-\frac{\sigma_{\mathrm{punt}}^2}{4}\right).
-$$
-
-Dit is op het eerste gezicht tegenintuïtief, omdat een grotere variantie ook leidt tot meer heterogeniteit tussen telpunten.
-Bij een log-link neemt de marginale verwachte abundantie echter toe met de variantie tussen telpunten.
-De toename in verwachte aantallen blijkt in deze simulatie het negatieve effect van de toegenomen heterogeniteit te overtreffen.
-Het minimaal detecteerbare effect wordt daardoor kleiner bij een toenemende `sigma_punt`.
 
 ```{r}
 #| label: fig-detectable-effect-sigma-model
