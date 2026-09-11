@@ -1,0 +1,834 @@
+---
+title: "Vergelijking steekproefkader ABV2.0"
+author: "Ward Langeraert"
+date: today
+
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-location: right
+    code-fold: true
+    embed-resources: true
+
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+#| warning: false
+#| message: false
+library(terra) # Working with raster data
+library(sf)    # Working with vector data
+library(mapview) # Visualise spatial data interactively
+
+# Data wrangling and visualisation
+library(knitr)
+library(patchwork)
+library(tidyverse)
+library(INBOtheme)
+
+# Options
+conflicted::conflicts_prefer(dplyr::filter)
+terraOptions(progress = 0)
+
+# Globals
+mbag_dir <- rprojroot::find_root_file(criterion = rprojroot::is_git_root)
+cache_dir <- file.path(
+  mbag_dir,
+  "source", "markdown", "vergelijking_steekproefkader_abv_cache"
+)
+source(file.path(mbag_dir, "source", "R", "cache_compute.R"))
+```
+
+# Doel
+
+Vergelijking van het nieuwe steekproefkader van ABV2.0 voor landbouwgebied met MAS.
+
+- Is er veel overlap? Waar wel/niet? Waarom wel/niet?
+- Is er enkel overlap met HOL en OL of ook andere landschapstypes?
+
+# Data inlezen en verkennen
+
+We lezen de voorlopige kaartlaag in van ABV2.0.
+
+```{r}
+abv_samplingframe <- rast(file.path(mbag_dir, "data", "abv", "gauss100m.tif"))
+strata_abv <- c(
+  "bebouwd",
+  "bebouwed_groen",
+  "water",
+  "akker",
+  "grasland",
+  "bos",
+  "duinen/heide",
+  "moeras",
+  "estuarium",
+  "getijdensgebied/overgangswater",
+  "gemengd"
+)
+abv_samplingframe
+```
+
+Het bevat de volgende strata: `r strata_abv`.
+
+De kaart ziet er als volgt uit:
+
+```{r}
+# Reserve space: legend on top, map underneath
+layout(matrix(c(1, 2), nrow = 2), heights = c(1, 5))
+
+# Legend area
+par(mar = c(0, 0, 0, 0))
+plot.new()
+
+legend(
+  "center",
+  legend = strata_abv,
+  fill = hcl.colors(length(strata_abv), "viridis"),
+  ncol = 3,
+  bty = "n",
+  cex = 0.8
+)
+
+# Map area
+par(mar = c(4, 4, 2, 2))
+plot(
+  abv_samplingframe,
+  type = "classes",
+  levels = strata_abv,
+  col = hcl.colors(length(strata_abv), "viridis"),
+  legend = FALSE
+)
+```
+
+We lezen het steekproefkader van MAS in.
+
+```{r}
+# Read sampling frame
+mas_samplingframe_df <- read_csv(
+  file.path(mbag_dir, "data", "steekproefkaders",
+            "steekproefkader_mbag_mas.csv"),
+  show_col_types = FALSE
+)
+
+# Sampling frame to sf
+mas_samplingframe_points <- st_as_sf(
+  mas_samplingframe_df,
+  coords = c("x_coord", "y_coord"),
+  crs = unique(mas_samplingframe_df$crs)
+)
+
+# Union everything
+mas_samplingframe_union <- cache_compute(
+  path = cache_dir,
+  file = "mas_samplingframe_union",
+  expr = {
+    mas_samplingframe_circles <- st_buffer(mas_samplingframe_points, 300)
+    st_union(
+      st_buffer(mas_samplingframe_circles, 300)
+    )
+  }
+)
+
+# Get edge of flanders from ABV raster
+raster_edge <- cache_compute(
+  path = cache_dir,
+  file = "raster_edge",
+  expr = {
+    as.polygons(
+      !is.na(abv_samplingframe),
+      dissolve = TRUE
+    ) |>
+      st_as_sf() |>
+      st_boundary() %>%
+      filter(max == 1)
+  }
+)
+```
+
+# Vergelijking MAS met ABV2.0
+## Steekproefkaders
+
+```{r}
+abv_akker_stratum <- abv_samplingframe == which(strata_abv == "akker")
+```
+
+We zien gelijkaardige regio's, maar de resolutie van ABV2.0 is veel fijner (10 x 10 m versus cirkel met radius 300 m).
+
+```{r}
+#| fig.height: 7
+#| fig.width: 8
+# Set up one figure with two maps
+par(
+  mfrow = c(2, 1),
+  mar = c(2, 2, 3, 2),
+  oma = c(0, 0, 0, 0)
+)
+
+# --- ABV ---
+plot(
+  st_geometry(raster_edge),
+  col = "black",
+  border = NA,
+  axes = FALSE,
+  main = "ABV"
+)
+
+plot(
+  abv_akker_stratum,
+  type = "classes",
+  levels = c("rest", "akker"),
+  col = c("white", "firebrick"),
+  legend = FALSE,
+  axes = FALSE,
+  add = TRUE
+)
+
+# --- MAS ---
+plot(
+  st_geometry(raster_edge),
+  col = "black",
+  border = NA,
+  axes = FALSE,
+  main = "MAS"
+)
+
+plot(
+  st_geometry(mas_samplingframe_union),
+  col = "firebrick",
+  border = NA,
+  add = TRUE
+)
+
+# Shared legend
+par(mfrow = c(1, 1), mar = c(0, 0, 0, 0))
+
+legend(
+  "right",
+  legend = c("rest", "akker"),
+  fill = c("white", "firebrick"),
+  ncol = 2,
+  bty = "n",
+  cex = 0.9,
+  xpd = TRUE
+)
+```
+
+```{r}
+# ABV raster to sf
+abv_akker_sf <- cache_compute(
+  path = cache_dir,
+  file = "abv_akker_sf",
+  expr = {
+    abv_akker_stratum |>
+      as.polygons(dissolve = TRUE, na.rm = TRUE) |>
+      st_as_sf() %>%
+      filter(max == 1) %>%
+      st_union() %>%
+      st_transform(unique(mas_samplingframe_df$crs))
+  }
+)
+```
+
+```{r}
+# Simplification tolerance in CRS units
+tol <- 100
+
+# Calculate the three areas
+areas <- c("overlap", "abv_only", "mas_only")
+for (area in areas) {
+  result <- cache_compute(
+    path = cache_dir,
+    file = area,
+    expr = switch(
+      area,
+      overlap = {
+        st_intersection(
+          abv_akker_sf,
+          mas_samplingframe_union
+        ) |>
+          st_as_sf()
+      },
+      abv_only = {
+        st_difference(
+          abv_akker_sf,
+          mas_samplingframe_union
+        ) |>
+          st_as_sf()
+      },
+      mas_only = {
+        st_difference(
+          mas_samplingframe_union,
+          abv_akker_sf
+        ) |>
+          st_as_sf()
+      }
+    )
+  )
+
+  assign(area, result)
+}
+
+# Simplify and cache the three areas
+for (area in areas) {
+  result <- cache_compute(
+    path = cache_dir,
+    file = paste0(area, "_tol"),
+    expr = st_simplify(
+      get(area),
+      dTolerance = tol,
+      preserveTopology = TRUE
+    )
+  )
+
+  assign(paste0(area, "_tol"), result)
+}
+```
+
+Dit verschil wordt duidelijker weergegeven op een interactieve kaart, waarin het overlappende gebied en de gebieden die uitsluitend tot het ABV- of MAS-steekproefkader behoren afzonderlijk worden weergegeven.
+Voor de visualisatie werden de geometrieën vereenvoudigd met een tolerantie van 100 m.
+Hierbij worden kleine details in de begrenzing verwijderd, waardoor de kaart lichter en sneller te laden is.
+
+```{r}
+mapview(
+  overlap_tol,
+  col.regions = "purple",
+  layer.name = "Overlap",
+  map.types = c("OpenStreetMap", "Esri.WorldImagery")
+) +
+  mapview(
+    abv_only_tol,
+    col.regions = "red",
+    layer.name = "ABV only",
+    map.types = c("OpenStreetMap", "Esri.WorldImagery")
+  ) +
+  mapview(
+    mas_only_tol,
+    col.regions = "green",
+    layer.name = "MAS only",
+    map.types = c("OpenStreetMap", "Esri.WorldImagery")
+  )
+```
+
+De verschillen in de kaart zijn vooral een gevolg van het feit dat MAS en ABV2.0 vanuit een fundamenteel andere definitie van het steekproefkader vertrekken.
+Bij MAS wordt het kader opgebouwd rond potentiële telpuntlocaties: eerst wordt geschikt landbouwgebied afgebakend op basis van onder meer de openheid van het landschap en andere selectiecriteria, waarna langs wegen potentiële telpunten worden geplaatst.
+Rond elk potentieel telpunt wordt vervolgens een cirkel met een straal van 300 m als steekproefkader beschouwd.
+
+Bij ABV2.0 wordt het steekproefkader daarentegen rechtstreeks afgeleid uit de beschikbare FLEA-kaartlagen, met een ruimtelijke resolutie van 10 × 10 m.
+Het kader bestaat daardoor uitsluitend uit daadwerkelijk als geschikt landbouwgebied gekarteerde cellen.
+Er wordt dus niet eerst vanuit potentiële telpunten gewerkt en vervolgens een ruimtelijke buffer rond die punten genomen.
+
+Dit verschil verklaart ook het patroon in de interactieve kaart.
+De overlap tussen beide kaders komt overeen met landbouwgebied dat zowel volgens de FLEA-gebaseerde afbakening van ABV2.0 als binnen de 300 m-buffers rond potentiële MAS-telpunten valt.
+Het gebied dat enkel in het MAS-kader voorkomt, bestaat daarentegen deels uit de omgeving rond potentiële telpunten die niet noodzakelijk zelf als landbouwgebied is gekarteerd.
+Omgekeerd vertegenwoordigt het gebied dat enkel in het ABV2.0-kader voorkomt landbouwgebied dat volgens de FLEA-kaarten wel geschikt is, maar niet binnen 300 m van een potentieel MAS-telpunt valt.
+
+De belangrijkste verschillen:
+
+**MAS only**
+
+- MAS heeft een opvallend groter steekproefkader in de Voerstreek
+- MAS zal door de grote radius ook regelmatig met aanliggende bebouwing/rivieren etc. overlappen wat niet het geval is voor ABV2.0
+- MAS heeft soms grote oppervlaktes die niet met ABV overlappen in natuurgebieden (bv. Schulensbroek, Natuurreservaat Zwarte Beek - Laren, Kalkense Meersen)
+
+**ABV2.0 only**
+
+- ABV2.0 heeft de grootste verschillen aan de kust
+  - Daar zien we ook wel overlap met een vliegtuigbasis en een militaire basis dus dan komt misschien uit de OSM analyse nog tevoorschijn
+  - MAS is niet aanwezig in de landbouwstreek van de duinen
+- In de kempen zien we opvallend veel kleine fragmenten die niet door MAS overlappen
+  - Dat zou eventueel ook te maken kunnen hebben met de openheid van het landschap (het landschap in de kempen is meer gesloten en valt zo uit MAS weg)
+
+## Openheid landschap
+
+Binnen MAS wordt enkel open en halfopen landschap geselecteerd (respectievelijk OL en HOL).
+De landschappelijke openheid wordt bepaald als de gemiddelde openheid binnen een straal van 300 m en wordt ingedeeld in vier klassen: open landschap (OL; >86,5°), halfopen landschap (HOL; 77,3–86,5°), halfgesloten landschap (HGL; 71,6–77,3°) en gesloten landschap (GL; <71,6°).
+Om na te gaan in hoeverre deze selectie het verschil met ABV2.0 verklaart, onderzoeken we of de gebieden die uitsluitend tot het ABV2.0-steekproefkader behoren, vaker een lagere landschappelijke openheid hebben.
+
+```{r}
+openness_300m <- rast(
+  file.path(
+    mbag_dir, "data", "dem", "openness300m_chm_res25_c300_mean_vlaanderen.tif"
+  )
+)
+openness_300m
+```
+
+De oppervlakteverdeling over de openheidsklassen werd berekend op basis van het 25 m-raster (`terra::extract`).
+Bij `exact = FALSE` wordt een rastercel volledig meegerekend zodra deze het steekproefkader overlapt. 
+Met `exact = TRUE` wordt daarentegen voor elke overlappende rastercel het exacte aandeel binnen het steekproefkader berekend.
+Dit vraagt aanzienlijk meer rekentijd, omdat hiervoor bijkomende geometrische bewerkingen nodig zijn.
+Het verschil in de uiteindelijke percentages is echter klein, omdat alleen rastercellen langs de grenzen van het steekproefkader gedeeltelijk overlappen en deze een relatief klein deel van de totale oppervlakte vertegenwoordigen.
+Daarom wordt voor de verdere analyse `exact = FALSE` gebruikt.
+
+```{r}
+# Convert category thresholds from degrees to radians
+ol <- 86.5 * pi / 180
+hol <- 77.3 * pi / 180
+hgl <- 71.6 * pi / 180
+
+# Convert ABV-only polygon to SpatVector
+abv_only_vect <- vect(abv_only)
+
+# Extract raster values and exact fraction of each cell
+abv_only_open <- cache_compute(
+  path = cache_dir,
+  file = "abv_only_open",
+  expr = {
+    terra::extract(
+      openness_300m,
+      abv_only_vect,
+      # Not as exact, but makes almost no difference
+      # And takes much less time
+      exact = FALSE
+    )
+  }
+)
+
+# Assign openness categories
+abv_only_open_cat <- abv_only_open %>%
+  mutate(
+    category = case_when(
+      focal_sum > ol ~ "OL",
+      focal_sum >= hol ~ "HOL",
+      focal_sum >= hgl ~ "HGL",
+      focal_sum < hgl ~ "GL",
+      TRUE ~ "onbekend"
+    )
+  )
+
+# Calculate area per category
+category_area <- abv_only_open_cat %>%
+  count(category) %>%
+  mutate(
+    percentage = 100 * n / sum(n)
+  )
+
+sum_closed <- sum(
+  category_area$percentage[
+    !category_area$category %in% c("OL", "HOL")
+  ]
+)
+
+category_area %>%
+  kable(digits = 1)
+```
+
+In totaal valt `r round(sum_closed, 1)` % van het resterende ABV2.0 steekproefkader buiten OL of HOL.
+We zien zoals verwacht vooral in de kempen veel GL en HGL, terwijl het aan de kust vaak wel om OL of HOL gaat.
+We kunnen ons hierbij wel afvragen hoe relevant dit is voor ABV2.0.
+Als we enkele polygonen bekijken in meer gesloten landschap, dan zien we dat deze vaak omringt worden door bos.
+Dit kan wel perfect landbouwgebied zijn (zoals de selectie door ABV2.0 aangeeft), maar is niet opgenomen in MAS omdat het protocol daar niet kan gebruikt worden (300 m ver kijken om correctie te doen o.b.v. detectiekans).
+Het zal dus eerder van praktische overwegingen afhangen of deze worden opgenomen in ABV of niet.
+
+```{r}
+# Define openness categories in radians
+abv_open_cat <- classify(
+  openness_300m,
+  rcl = matrix(
+    c(
+      -Inf, hgl, 4,   # GL
+      hgl,  hol, 3,   # HGL
+      hol,  ol,  2,   # HOL
+      ol,  Inf,  1    # OL
+    ),
+    ncol = 3,
+    byrow = TRUE
+  )
+)
+
+# Assign category labels
+abv_open_cat <- as.factor(abv_open_cat)
+levels(abv_open_cat) <- data.frame(
+  ID = 1:4,
+  category = c("OL", "HOL", "HGL", "GL")
+)
+
+# Keep only the ABV-only area
+abv_only_open_cat <- mask(
+  abv_open_cat,
+  abv_only_vect
+) %>%
+  as.polygons(
+    na.rm = TRUE
+  ) |>
+  st_as_sf()
+
+mapview(
+  abv_only_open_cat,
+  zcol = "category",
+  layer.name = "Openheid",
+  map.types = c("OpenStreetMap", "Esri.WorldImagery")
+)
+```
+
+## OSM filters
+
+Binnen MAS hebben we exclusie irrelevante landgebruiken via OpenStreetMap‐data (OSM-data).
+Het gaat om de volgende landgebruiken:
+
+<!-- spell-check: ignore:start -->
+
+<table>
+  <thead>
+    <tr>
+      <th>Landgebruik</th>
+      <th>OSM-definitie</th>
+      <th>OSM-wiki</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>woongebied</td>
+      <td><code>landuse = residential</code></td>
+      <td><a href="https://wiki.openstreetmap.org/wiki/Tag:landuse%3Dresidential">OSM Wiki</a></td>
+    </tr>
+    <tr>
+      <td>militair terrein</td>
+      <td><code>landuse = military</code></td>
+      <td><a href="https://wiki.openstreetmap.org/wiki/Tag:landuse%3Dmilitary">OSM Wiki</a></td>
+    </tr>
+    <tr>
+      <td>industriegebied</td>
+      <td><code>landuse = industrial</code></td>
+      <td><a href="https://wiki.openstreetmap.org/wiki/Tag:landuse%3Dindustrial">OSM Wiki</a></td>
+    </tr>
+    <tr>
+      <td>begraafplaats</td>
+      <td><code>landuse = cemetery</code></td>
+      <td><a href="https://wiki.openstreetmap.org/wiki/Tag:landuse%3Dcemetery">OSM Wiki</a></td>
+    </tr>
+    <tr>
+      <td>spoorwegemplacement, spoorwegbedding</td>
+      <td><code>landuse = railway</code></td>
+      <td><a href="https://wiki.openstreetmap.org/wiki/Tag:landuse%3Drailway">OSM Wiki</a></td>
+    </tr>
+    <tr>
+      <td>commercieel</td>
+      <td><code>landuse = commercial</code></td>
+      <td><a href="https://wiki.openstreetmap.org/wiki/Tag:landuse%3Dcommercial">OSM Wiki</a></td>
+    </tr>
+    <tr>
+      <td>boerenerf</td>
+      <td><code>landuse = farmyard</code></td>
+      <td><a href="https://wiki.openstreetmap.org/wiki/Tag:landuse%3Dfarmyard">OSM Wiki</a></td>
+    </tr>
+    <tr>
+      <td>park</td>
+      <td><code>leisure = park</code></td>
+      <td><a href="https://wiki.openstreetmap.org/wiki/Tag:leisure%3Dpark">OSM Wiki</a></td>
+    </tr>
+    <tr>
+      <td>vliegveld</td>
+      <td><code>aeroway = aerodrome</code></td>
+      <td><a href="https://wiki.openstreetmap.org/wiki/Tag:aeroway%3Daerodrome">OSM Wiki</a></td>
+    </tr>
+    <tr>
+      <td>autosnelweg</td>
+      <td><code>highway = motorway</code></td>
+      <td><a href="https://wiki.openstreetmap.org/wiki/Tag:highway%3Dmotorway">OSM Wiki</a></td>
+    </tr>
+    <tr>
+      <td>invoegstroken en afritten van autosnelwegen</td>
+      <td><code>highway = motorway_link</code></td>
+      <td><a href="https://wiki.openstreetmap.org/wiki/Tag:highway%3Dmotorway_link">OSM Wiki</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- spell-check: ignore:end -->
+
+We kijken in hoeverre de de ABV2.0 oppervlakte die niet met MAS overlapt ("ABV2.0 only") hierdoor kan verklaart worden.
+
+```{r}
+#| warning: false
+#| message: false
+# Arguments
+osmdata <- file.path(
+  osmextract::oe_download_directory(), "geofabrik_belgium-latest.osm.pbf"
+)
+landuse <- c("residential", "military", "industrial", "cemetery",
+             "railway", "commercial", "farmyard")
+leisure <- c("park")
+layer_poly <- list(aeroway = c("aerodrome"))
+layer_line <- list(highway = c("motorway", "motorway_link"))
+buffer_line <- 100
+
+# Create query to get landuse and leisure variables
+str_landuse <- paste0("('", paste(landuse, collapse = "', '"), "')")
+str_leisure <- paste0("('", paste(leisure, collapse = "', '"), "')")
+query_landuse <- paste("landuse IN", str_landuse, "OR leisure IN", str_leisure,
+                       sep = " ")
+landuse_vectortranslate <- c(
+  "-t_srs", "EPSG:31370",
+  "-select", "landuse,leisure",
+  "-where", query_landuse,
+  "-nlt", "PROMOTE_TO_MULTI"
+)
+
+# Extract landuse and leisure variables
+osm_landuse_data <- cache_compute(
+  path = cache_dir,
+  file = "osm_landuse_data",
+  expr = {
+    osmextract::oe_read(
+      file_path = osmdata,
+      layer = "multipolygons",
+      download_directory = dirname(osmdata),
+      vectortranslate_options = landuse_vectortranslate,
+      boundary = abv_only
+    )
+  }
+)
+
+
+# Create query to get other variables
+selection_poly <- paste(names(layer_poly), collapse = ", ")
+selection_line <- paste(names(layer_line), collapse = ", ")
+
+
+poly_list <- lapply(seq_along(layer_poly), function(i) {
+  paste0(names(layer_poly)[[i]], " IN ('",
+         paste(layer_poly[[i]], collapse = "', '"), "')")
+})
+line_list <- lapply(seq_along(layer_line), function(i) {
+  paste0(names(layer_line)[[i]], " IN ('",
+         paste(layer_line[[i]], collapse = "', '"), "')")
+})
+
+query_poly <- paste(unlist(poly_list), collapse = " OR ")
+query_line <- paste(unlist(line_list), collapse = " OR ")
+
+poly_vectortranslate <- c(
+  "-t_srs", "EPSG:31370",
+  "-select", selection_poly,
+  "-where", query_poly,
+  "-nlt", "PROMOTE_TO_MULTI"
+)
+line_vectortranslate <- c(
+  "-t_srs", "EPSG:31370",
+  "-select", selection_line,
+  "-where", query_line,
+  "-nlt", "PROMOTE_TO_MULTI"
+)
+
+# Extract other variables
+osm_poly_data <- cache_compute(
+  path = cache_dir,
+  file = "osm_poly_data",
+  expr = {
+    osmextract::oe_read(
+      file_path = osmdata,
+      layer = "multipolygons",
+      download_directory = dirname(osmdata),
+      vectortranslate_options = poly_vectortranslate,
+      extra_tags = names(layer_poly),
+      boundary = abv_only
+    )
+  }
+)
+osm_line_data <- cache_compute(
+  path = cache_dir,
+  file = "osm_line_data",
+  expr = {
+    osmextract::oe_read(
+      file_path = osmdata,
+      layer = "lines",
+      download_directory = dirname(osmdata),
+      vectortranslate_options = line_vectortranslate,
+      extra_tags = names(layer_line),
+      boundary = st_buffer(abv_only, buffer_line)
+    ) %>%
+      st_buffer(buffer_line)
+  }
+)
+
+# Combine all OSM data
+osm_data <- bind_rows(
+  osm_landuse_data %>%
+    mutate(landuse = coalesce(landuse, leisure)) %>%
+    select(-leisure),
+  osm_poly_data %>%
+    rename("landuse" = "aeroway"),
+  osm_line_data %>%
+    rename("landuse" = "highway")
+) %>%
+  st_make_valid()
+
+# Calculate intersection
+intersection_osm <- cache_compute(
+  path = cache_dir,
+  file = "intersection_osm",
+  expr = {
+    st_intersection(osm_data, abv_only)
+  }
+)
+diff_osm <- st_union(st_difference(abv_only, st_union(intersection_osm)))
+
+osm_landuse_area <- intersection_osm %>%
+  mutate(area = st_area(geometry)) %>%
+  st_drop_geometry() %>%
+  summarise(area = sum(area), .by = "landuse") %>%
+  bind_rows(
+    data.frame(landuse = "no_overlap", area = st_area(diff_osm))
+  ) %>%
+  mutate(
+    percentage = as.numeric(100 * area / sum(area))
+  )
+
+sum_osm <- sum(
+  osm_landuse_area$percentage[
+    osm_landuse_area$landuse != "no_overlap"
+  ]
+)
+
+osm_landuse_area %>%
+  select(landuse, percentage) %>%
+  arrange(percentage) %>%
+  kable(digits = 3)
+```
+
+In totaal overlapt `r round(sum_osm, 1)` % van het resterende ABV2.0 steekproefkader met OSM landgebruiken die door MAS werden geëxcludeerd.
+
+Het gaat in eerste plaats vooral over snelwegen.
+Het is uiteraard logisch dat hiervoor niet gecorrigeerd is door ABV.
+Het zal wel een afweging zijn om dit mee te nemen als telpuntlocaties worden bepaald zoals bij MAS is gebeurd.
+
+Ten tweede zien we wel wat overlap met residentieel landgebruik.
+In sommige gevallen lijkt dit correct, in andere niet.
+Bovendien lijken dit vaak randeffecten te zijn van ABV (gebruik van vierkante pixels) en wordt het veroorzaakt door de manier waarop het stratum is bepaald.
+Per pixel is binnen een straal van 100 m gekeken welk type landgebruik aanwezig was (via Gaussische gewichten).
+Het kan dus zijn dat een pixel van 10 m op een huis licht maar binnen de 100 m gausscurve er veel landbouw licht.
+Voor kleine OSM polygonen (zoals een of een paar huizen) zal dit dus een veelvoorkomende uitleg zijn.
+
+Andere landgebruiken overlappen weinig, maar zijn niet onbelangrijk; zoals militair domein, luchthavengebied en industriedomein.
+De overlap met het militair domein van Lombardsijde zijn randeffecten waar ik zojuist over sprak.
+De vliegbasis van Koksijde is wel een groot gebied dat vreemd lijkt op het eerste zicht.
+Dit wordt best eens gecontroleerd.
+De overlap met industriedomeinen lijkt niet altijd correct (bv. [51.117506, 5.028348](https://www.google.be/maps/place/51%C2%B007'03.0%22N+5%C2%B001'42.1%22E/@51.1175093,5.0257731,520m/data=!3m2!1e3!4b1!4m13!1m8!3m7!1s0x47c149d6cefac61f:0xabf1083a1aaf026!2sZittaart,+2450+Meerhout!3b1!8m2!3d51.1211037!4d5.0537993!16s%2Fg%2F11bwpv30j6!3m3!8m2!3d51.117506!4d5.028348?entry=ttu&g_ep=EgoyMDI2MDgwMi4wIKXMDSoASAFQAw%3D%3D)), maar soms wel (bv. [51.290286, 4.715674](https://www.google.be/maps/place/51%C2%B017'25.0%22N+4%C2%B042'56.4%22E/@51.2902893,4.7130991,680m/data=!3m2!1e3!4b1!4m13!1m8!3m7!1s0x47c4003a88a0c5d5:0xce12a24262bd5c02!2sWestmalle,+2390+Malle!3b1!8m2!3d51.2968136!4d4.6942633!16s%2Fm%2F025rtk4!3m3!8m2!3d51.290286!4d4.715674?entry=ttu&g_ep=EgoyMDI2MDgwMi4wIKXMDSoASAFQAw%3D%3D)).
+Dit kan ook zijn omdat ik een oude versie van OSM gebruikte voor deze vergelijking (dezelfde als voor MAS gebruikt werd).
+Misschien dat een recentere versie kan gebruikt worden om industrieterrein correct te controleren en eventueel de FLEA kaarten bij te sturen.
+
+```{r}
+mapview(
+  intersection_osm,
+  layer = "OSM overlap",
+  map.types = c("OpenStreetMap", "Esri.WorldImagery")
+) +
+  mapview(
+    diff_osm,
+    col.regions = "grey",
+    layer = "Rest ABV2.0 only",
+    map.types = c("OpenStreetMap", "Esri.WorldImagery")
+  )
+```
+
+## Bijkomende exclusiecriteria
+
+De volgende bijkomende exclusiecriteria werden voor MAS gebruikt, maar worden hier niet verder uitgewerkt.
+Ik voeg ze hier toe voor de volledigheid.
+Deze criteria zijn specifiek voor de MAS telpunten en lijken mij niet zo nuttig voor het afbakenen van het nieuwe ABV steekproefkader.
+
+### VITO landgebruikskaart
+
+Een extra exclusiecriterium voor MAS was de VITO 2019 landgebruikskaart.
+Hierbij werden potentiële telpunten verwijderd waar de samenstelling van het landgebruik in een buffer van 300 m rond het punt niet voldoet, aan de volgende regel:
+
+- Akker + Grasland > 40% én Grasland + Bos + Struikgewas + Akker > 50%
+
+### Zichtbaarheid
+
+Ook werden enkele punten verwijderd met een slechte zichtbaarheid.
+We berekenden zichtbaarheid als een cumulatieve zichtbaarheidsindex, waarbij de waarnemer een bewegingsvrijheid heeft van 25 m rondom het telpunt.
+
+# Conclusie
+
+In het algemeen lijkt het landbouwgebied van het ABV2.0 steekproefkader goed.
+In totaal overlapt `r round(as.numeric(st_area(abv_only) / st_area(abv_akker_sf)) * 100, 1)` % van het ABV2.0 landbouwgebied steekproefkader niet met het MAS steekproefkader.
+Tegelijk is het wel zo dat `r round(as.numeric(st_area(mas_only) / st_area(mas_samplingframe_union)) * 100, 1)` % van het MAS steekproefkader niet valt in het landbouwgebied van ABV2.0, zie bv. Voerstreek.
+
+## Overschot MAS steekproefkader
+
+Het overschot van het MAS-steekproefkader ten opzichte van het ABV2.0-steekproefkader is relatief groot.
+Dit verschil moet echter worden geïnterpreteerd in het licht van de fundamenteel verschillende manier waarop beide steekproefkaders worden opgebouwd.
+Het MAS-steekproefkader wordt opgebouwd rond potentiële telpuntlocaties.
+Rond elk potentieel telpunt wordt een cirkel met een straal van 300 m als steekproefkader beschouwd.
+Het ABV2.0-steekproefkader wordt daarentegen rechtstreeks afgeleid uit de FLEA-kaarten en bestaat uitsluitend uit 10 x 10 m cellen die als geschikt landbouwgebied zijn gekarteerd. 
+
+Het MAS-overschot is bijgevolg vooral een gevolg van de verschillende definities van het steekproefkader.
+Hoewel het totale verschil aanzienlijk is, lijkt het op basis van de ruimtelijke patronen niet overal problematisch. 
+De mate waarin het MAS-overschot daadwerkelijk problematisch is voor de steekproefopzet hangt daarom vooral af van de vraag of de gebieden binnen de MAS-buffers die niet door ABV2.0 worden gedekt, in de praktijk als geschikt landbouwgebied voor MAS beschouwd moeten worden; en niet omgekeerd.
+
+## Overschot ABV2.0 steekproefkader
+
+We onderzochten of we het steekproefkader van ABV2.0 dat niet overlapt met MAS konden verklaren o.b.v. specifieke exclusiecriteria die gebruikt werden voor het MAS (openheid landschap en OSM landgebruiken).
+
+```{r}
+#| warning: false
+abv_closed_area <- abv_only_open_cat %>%
+  filter_out(category %in% c("OL", "HOL")) %>%
+  st_union()
+
+rest_osm <- st_difference(intersection_osm, abv_closed_area) %>%
+  st_union()
+
+abv_rest <- st_difference(abv_only, st_union(abv_closed_area, rest_osm))
+```
+
+In totaal valt `r round(sum_closed, 2)` % van het resterende ABV2.0 steekproefkader buiten OL of HOL en overlapt `r round(sum_osm, 2)` % met OSM landgebruiken die door MAS werden geëxcludeerd.
+Als we een stapsgewijze exclusieworkflow zouden volgen (zoals die in MAS werd gedaan), dan valt `r round(sum_closed, 2)` % van het resterende ABV2.0 steekproefkader buiten OL of HOL.
+Van de resterende `r 100 - round(sum_closed, 2)` %, overlapt `r round(as.numeric(st_area(rest_osm)) / as.numeric(st_area(abv_closed_area)), 2)` % met OSM landgebruiken die door MAS werden geëxcludeerd.
+
+```{r}
+#| fig-width: 12
+areas_df <- tibble(
+  cat = factor(
+    c("overlap MAS en ABV", "MAS only", rep("ABV only", 3)),
+    levels = c("MAS only", "overlap MAS en ABV", "ABV only")
+  ),
+  group = c(
+    "overlap MAS en ABV",
+    "MAS only",
+    "openheid", "OSM", "rest"
+  ),
+  area = c(
+    as.numeric(st_area(overlap)),
+    as.numeric(st_area(mas_only)),
+    as.numeric(st_area(abv_closed_area)),
+    as.numeric(st_area(rest_osm)),
+    as.numeric(st_area(abv_rest))
+  )
+) %>%
+  mutate(area = area / 1e6)
+
+p1 <- ggplot(
+  subset(areas_df, cat != "ABV only"),
+  aes(x = cat, y = area)
+) +
+  geom_col(fill = "darkseagreen2") +
+  labs(x = NULL, y = "Oppervlakte (km²)")
+
+p2 <- ggplot(
+  subset(areas_df, cat == "ABV only"),
+  aes(x = cat, y = area, fill = group)
+) +
+  geom_col() +
+  labs(x = NULL, y = "Oppervlakte (km²)", fill = "Verklaring")
+
+p1 + p2
+```
+
+Als we naar de "niet-verklaarde restjes" kijken, lijken die toch telkens mooi in landbouwgebied te vallen.
+Het is niet meteen duidelijk waarom die niet verklaard konden worden.
+Deze gebieden vallen mogelijk in de landbouwstreek van de duinen, of werden in MAS door de bijkomende exclusiecriteria niet opgenomen.
+
+```{r}
+mapview(abv_rest, map.types = c("OpenStreetMap", "Esri.WorldImagery"))
+```
+
+## Aanbevelingen voor ABV2.0 landbouw steekproefkader
+
+- In het algemeen kan het huidige steekproefkader goed werken als afbakening van landbouwgebied
+- Veel van de resultaten hier zullen relevant zijn afhankelijk van waar geteld kan of moet worden. Zijn tellingen in gesloten landschap relevant voor het landbouwgebied? Kunnen tellingen gedaan worden op een vliegbasis?
+- FLEA kaarten kunnen in beperkte mate geoptimaliseerd worden via OSM. We zien bijvoorbeeld dat industrieterreinen soms schijnbaar incorrect als landbouwgebied zijn gecategoriseerd. Deze bevindingen worden best gecontroleerd met de meest recente OSM kaarten en kunnen eventueel worden aangepast.
