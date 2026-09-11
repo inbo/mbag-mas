@@ -560,8 +560,8 @@ detectable_effect_sigma %>%
 ```{r}
 #| label: fig-detectable-effect-sigma
 #| fig-cap: "Relatie tussen de standaardafwijking tussen
-#|   telpunten (`sigma_punt`) en het detecteerbaar 10-jaarlijks trendverschil (%)
-#|   voor verschillende aantallen telpunten."
+#|   telpunten (`sigma_punt`) en het detecteerbaar 10-jaarlijks trendverschil
+#|   (%) voor verschillende aantallen telpunten."
 # Visualise raw estimates
 detectable_effect_sigma %>%
   ggplot(aes(x = sigma_punt, y = effect_pct_long,
