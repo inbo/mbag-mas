@@ -19,7 +19,7 @@ De sensitiviteitsanalyse wijzigt de hoofdconclusie van de poweranalyse echter ni
 We kunnen daarom besluiten dat het niet aangewezen is om het aantal meetpunten te verminderen, omdat dan de statistische gevoeligheid te beperkt wordt om verschillen in trend tussen binnen en buiten SBP-gebieden te detecteren.
 
 ```{=latex}
-\vspace{2\baselineskip}
+\vspace{\baselineskip}
 \begingroup
 \let\clearpage\relax
 \let\cleardoublepage\relax
