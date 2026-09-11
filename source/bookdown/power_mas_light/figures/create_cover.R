@@ -83,7 +83,7 @@ dev.off()
 img <- image_read("./figures/cover_raw.png")
 info <- image_info(img)
 
-cut_start <- 90 * scale
+cut_start <- 88 * scale
 cut_width <- 128 * scale
 
 left <- image_crop(
