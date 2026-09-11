@@ -85,6 +85,6 @@ book:
     - 06_conclusie.md
     - referenties.md
   appendices:
-    - appendix.qmd
+    - zzz_visualisatie_poweroptimalisatie.qmd
 
 bibliography: references.bib
