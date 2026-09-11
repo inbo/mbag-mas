@@ -562,8 +562,8 @@ detectable_effect_sigma %>%
 
 ```{r}
 #| label: fig-detectable-effect-sigma
-#| fig-cap: "Relatie tussen de veronderstelde standaardafwijking tussen
-#|   telpunten (`sigma_punt`) en het detecteerbaar jaarlijks trendverschil (%)
+#| fig-cap: "Relatie tussen de standaardafwijking tussen
+#|   telpunten (`sigma_punt`) en het detecteerbaar 10-jaarlijks trendverschil (%)
 #|   voor verschillende aantallen telpunten."
 # Visualise raw estimates
 detectable_effect_sigma %>%
@@ -573,7 +573,7 @@ detectable_effect_sigma %>%
   geom_point(size = 1) +
   scale_y_continuous(limits = c(0, NA)) +
   labs(
-    x = "Variantie tussen telpunten",
+    x = "Variatie tussen telpunten (sigma_punt)",
     y = "Detecteerbaar 10-jaarlijks\ntrendverschil (%)",
     colour = "Aantal telpunten"
   ) +
@@ -643,10 +643,10 @@ summary(fit_sigma)
 
 ```{r}
 #| label: fig-detectable-effect-sigma-model
-#| fig-cap: "Geschatte relatie tussen het aantal telpunten en het detecteerbaar
-#|   jaarlijks trendverschil (%) op basis van een inverse
-#|   vierkantswortelmodel. De doorlopende lijn geeft interpolatie binnen het
-#|   simulatiebereik weer; de stippellijn is extrapolatie."
+#| fig-cap: "Geschatte relatie tussen de standaardafwijking tussen
+#|   telpunten (`sigma_punt`) en het detecteerbaar
+#|   10-jaarlijks trendverschil (%). De lijnen geven de geschatte relatie weer
+#|   voor verschillende aantallen telpunten."
 # Predict detectable effect
 pred_df_sigma <- detectable_effect_sigma %>%
   # Make predictions for each scenario (sample size)
@@ -690,7 +690,7 @@ detectable_effect_sigma %>%
   ) +
   scale_y_continuous(limits = c(0, NA)) +
   labs(
-    x = "Variantie tussen telpunten",
+    x = "Variatie tussen telpunten (sigma_punt)",
     y = "Detecteerbaar 10-jaarlijks\ntrendverschil (%)",
     colour = "Aantal telpunten"
   ) +
