@@ -480,9 +480,7 @@ ggsave(
 p_effect_years_model
 ```
 
-\newpage
-
-## Sensitiviteitsanalyse variantie tussen telpunten
+## Sensitiviteitsanalyse variatie tussen telpunten
 ### Methodiek
 
 In de oorspronkelijke poweranalyse werd voor de hypothetische boerenlandvogelsoort uitgegaan van een zeer kleine de standaardafwijking tussen telpunten (`sigma_punt`).
@@ -496,8 +494,7 @@ Door de log-link heeft een verandering in de variatie tussen telpunten ook gevol
 Wanneer het telpunteffect ($u$) normaal verdeeld is met standaardafwijking ($\sigma_{\mathrm{punt}}$), geldt
 
 $$
-E[\exp(u)] =
-\exp\left(\frac{\sigma_{\mathrm{punt}}^2}{2}\right)
+E[\exp(u)] = \exp\left(\frac{\sigma_{\mathrm{punt}}^2}{2}\right)
 $$
 
 De marginale verwachte abundantie is bijgevolg evenredig met
@@ -580,6 +577,8 @@ detectable_effect_sigma %>%
   theme_minimal()
 ```
 
+\newpage
+
 ### Bespreking
 
 We fitten een model van de vorm
@@ -587,10 +586,7 @@ We fitten een model van de vorm
 <!-- spell-check: ignore:start -->
 
 $$
-E =
-a
-n_{\mathrm{telpunten}}^{-b}
-\exp\left(-c\sigma_{\mathrm{punt}}^2\right),
+E = a n_{\mathrm{telpunten}}^{-b} \exp\left(-c\sigma_{\mathrm{punt}}^2\right)
 $$
 
 <!-- spell-check: ignore:end -->
@@ -614,16 +610,9 @@ De simulaties tonen dat de detecteerbare effectgrootte wordt beschreven door een
 De geschatte parameters ($-b =$ `r round(coef(fit_sigma)[2], 3)` voor het aantal telpunten en $-c =$ `r round(coef(fit_sigma)[3], 3)` voor het effect van `sigma_punt`) liggen in de buurt van de theoretisch verwachte waarden van respectievelijk (-1/2) en (-1/4)
 
 $$
-\text{MDE}
-\propto
-\frac{1}{
-\sqrt{
-n_{\mathrm{telpunten}}
-\exp\left(\sigma_{\mathrm{punt}}^2/2\right)
-}
-}
-=
-
+\text{MDE} \propto
+\frac{1}{\sqrt{n_{\mathrm{telpunten}}
+\exp\left(\sigma_{\mathrm{punt}}^2/2\right)}} =
 \frac{1}{\sqrt{n_{\mathrm{telpunten}}}}
 \exp\left(-\frac{\sigma_{\mathrm{punt}}^2}{4}\right)
 $$
