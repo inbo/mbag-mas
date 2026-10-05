@@ -26,4 +26,5 @@ jobs:
               libproj-dev \
               libpoppler-cpp-dev \
               libglpk-dev \
+              libsecret-1-dev \
               libudunits2-dev
