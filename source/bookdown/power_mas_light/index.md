@@ -3,10 +3,12 @@
 # Samenvatting {.unnumbered}
 
 <!-- description: start -->
-Dit rapport maakt deel uit van het Meetnet Biodiversiteit Agrarisch Gebied (MBAG).
-Daarbij werd het Meetnet Agrarische Soorten (MAS), dat op algemene boerenlandvogels focust, in 2024 en 2025 over heel Vlaanderen uitgerold.
-Het MAS biedt ondersteuning aan de doelstelling uit de EU Natuurherstelverordening die stelt dat de lidstaten herstelmaatregelen nemen om te verzekeren dat de index van algemene boerenlandvogelsoorten tegen 2030 5 % hoger is dan in 2025.
-Om daarbij zo kosteneffectief mogelijk te werk te gaan, onderzoekt dit huidige rapport de statistische haalbaarheid van een vereenvoudigd monitoringsontwerp, genaamd "MAS light". Het doel van dit meetnet is na te gaan of de populatietrends van algemene boerenlandvogels binnen soortenbeschermingsprogrammagebieden (SBP-gebieden) gunstiger evolueren dan in vergelijkbare gebieden buiten SBP's. De centrale vraag is welk verschil in trend tussen beide groepen met voldoende statistische zekerheid kan worden aangetoond.
+Het Meetnet Agrarische Soorten (MAS), dat op algemene boerenlandvogels focust, werd in 2024 en 2025 over heel Vlaanderen uitgerold als onderdeel van het Meetnet Biodiversiteit Agrarisch Gebied (MBAG).
+Het primaire doel van het MAS is het evalueren van de doeltreffendheid van herstelmaatregelen door populatietrends te vergelijken tussen gebieden met en zonder herstel.
+Daarnaast kunnen MAS-telpunten bijdragen aan het opvolgen van de nationale boerenlandvogelindex, ter ondersteuning van de EU Natuurherstelverordening [@vangossum2026natuurherstelverordening].
+
+Dit rapport focust niet op de nationale index, maar onderzoekt specifiek de statistische haalbaarheid van een vereenvoudigd monitoringsontwerp ("MAS light") om verschillen in populatietrends van algemene boerenlandvogels tussen soortenbeschermingsprogrammagebieden (SBP-gebieden) en vergelijkbare gebieden buiten SBP's aan te tonen.
+De centrale vraag is welk verschil in trend tussen beide groepen met voldoende statistische zekerheid kan worden aangetoond.
 Een kleiner minimaal detecteerbaar trendverschil is hierbij gunstiger, omdat dit betekent dat ook kleinere verschillen in populatietrend statistisch aantoonbaar zijn.
 
 Hiervoor werd een simulatiegebaseerde poweranalyse uitgevoerd, waarbij telgegevens werden gegenereerd met een Poisson GLMM (*generalized linear mixed model*) en vervolgens geanalyseerd met hetzelfde model. De minimaal detecteerbare effectgrootte (MDE) werd bepaald voor verschillende scenario's met 100, 200 en 400 telpunten en tijdreeksen van 10, 16 en 24 jaar. De effectgrootte wordt hierbij gedefinieerd als het minimaal detecteerbare verschil in populatietrend tussen SBP- en niet-SBP-gebieden.
