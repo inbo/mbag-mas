@@ -59,7 +59,7 @@ Binnen elk stratum worden telpunten aselect geselecteerd uit het steekproefkader
 
 Voor deze poweranalyse wordt aangenomen dat het totale aantal telpunten vooraf wordt vastgelegd. Dit totaal wordt vervolgens verdeeld over de landbouwstreek en landschapstype op basis van hun relatieve oppervlakte binnen Vlaanderen. Binnen elke combinatie van landbouwstreek en landschapstype wordt daarbij een gelijke verdeling gehanteerd tussen telpunten binnen en buiten SBP-gebieden.
 
-Een finale steekproefgrootte van 400 punten zal bv. resulteren in 200 punten binnen SBP-gebied en 200 buiten SBP-gebied. Verdere allocatie in landbouwstreek landschapstype gebeurt in verhouding met het aantal potentiële telpunten in elk stratum van het steekproefkader (@tbl-gewichten-strata).
+Een finale steekproefgrootte van 400 punten zal bv. resulteren in 200 punten binnen SBP-gebied en 200 buiten SBP-gebied. Verdere allocatie in landbouwstreek en landschapstype gebeurt in verhouding met het aantal potentiële telpunten in elk stratum van het steekproefkader (@tbl-gewichten-strata).
 
 ```{r}
 #| label: tbl-gewichten-strata

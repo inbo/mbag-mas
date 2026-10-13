@@ -275,7 +275,7 @@ ggplot(detectable_effect_10j,
 ## Variabele lengte tijdreeks
 ### Methodiek
 
-We onderscheiden in drie scenario's voor de lengte van de tijdreeks (10, 16 en 24 jaar).
+We onderscheiden drie scenario's voor de lengte van de tijdreeks: 10, 16 en 24 jaar.
 Dit is uitgevoerd voor een achteruitgang buiten SBP-gebied van -1 % per jaar (scenario 1 uit vorige Paragraaf).
 
 ### Resultaten
@@ -483,7 +483,7 @@ p_effect_years_model
 ## Sensitiviteitsanalyse variatie tussen telpunten
 ### Methodiek
 
-In de oorspronkelijke poweranalyse werd voor de hypothetische boerenlandvogelsoort uitgegaan van een zeer kleine de standaardafwijking tussen telpunten (`sigma_punt`).
+In de oorspronkelijke poweranalyse werd voor de hypothetische boerenlandvogelsoort uitgegaan van een zeer kleine standaardafwijking tussen telpunten (`sigma_punt`).
 Om na te gaan in welke mate deze keuze de resultaten beïnvloedt, werd een sensitiviteitsanalyse uitgevoerd waarbij de variabiliteit tussen telpunten werd gevarieerd.
 
 Hiervoor werden vijf waarden van `sigma_punt` beschouwd, gelijkmatig verdeeld tussen de minimale en maximale geschatte standaardafwijking tussen telpunten over de onderzochte boerenlandvogels (resp. `r round(min(tar_read_mas("sigmas_punt")), 6)` en `r round(max(tar_read_mas("sigmas_punt")), 2)`).
