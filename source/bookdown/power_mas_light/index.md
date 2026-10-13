@@ -19,8 +19,8 @@ Zelfs voor deze hypothetische boerenlandvogelsoort blijft het minimaal detecteer
 Beschouw hetzelfde voorbeeld voor een tijdreeks van 24 jaar; dan moet de populatie binnen SBP-gebied 38 % gunstiger evolueren dan buiten SBP-gebied voordat een statistisch significant verschil in trend kan worden aangetoond.
 
 Een aanvullende sensitiviteitsanalyse toont aan dat het minimaal detecteerbare effect afneemt bij een grotere variatie tussen telpunten, als gevolg van de toename in marginale verwachte abundantie bij een log-link.
-Bij het vastleggen van de variantieparameter voor toekomstige poweranalyses raden we daarom aan voorzichtig te zijn en deze eerder te hoog dan te laag in te stellen.
-Deze sensitiviteitsanalyse wijzigt de hoofdconclusie van de poweranalyse echter niet.
+Voor toekomstige poweranalyses raden we aan extreme ondergrenzen (zoals nulvariantie) te vermijden en eerder te hoge dan te lage waarden te hanteren, of idealiter een sensitiviteitsanalyse over een bereik van varianties uit te voeren.
+Deze inzichten wijzigen de hoofdconclusie van de poweranalyse echter niet.
 
 De resultaten wijzen er dan ook op dat het verkleinen van het aantal meetpunten niet aangewezen is, omdat de statistische gevoeligheid dan te beperkt wordt om verschillen in populatietrend tussen SBP- en niet-SBP-gebieden betrouwbaar aan te tonen.
 <!-- description: end -->
