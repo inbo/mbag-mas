@@ -1,0 +1,91 @@
+project:
+  type: book
+  render:
+  - '*.md'
+  - '*.qmd'
+  - '!LICENSE.md'
+  - '!README.md'
+  output-dir: ../../../output/rapporten/power_mas_light
+  pre-render: R/pre_render.R
+  post-render: _extensions/inbo/flandersqmd-book/filters/post_render.R
+
+execute:
+  echo: false
+  warnings: true
+  errors: true
+  message: true
+  freeze: false
+  cache: false
+
+format:
+  flandersqmd-book-pdf: default
+
+lang: nl-BE
+
+flandersqmd:
+  entity: INBO
+  publisher: INBO
+  level: 2
+  public_report: true
+  colophon: true
+  linenr: true
+
+  title: Poweranalyse voor het meten van de effectiviteit van soortenbeschermingsprogramma’s
+    in landbouwgebied van Vlaanderen
+  subtitle: Aanzet tot een vereenvoudigde versie van het Meetnet Agrarische Soorten
+    (“MAS light”)
+  shorttitle: power-mas-light
+
+  author:
+  - name:
+      given: Ward
+      family: Langeraert
+    email: ward.langeraert@inbo.be
+    orcid: 0000-0002-5900-8109
+    affiliation:
+    - Instituut voor Natuur- en Bosonderzoek (INBO)
+    corresponding: true
+
+  reviewer:
+  - name:
+      given: Thierry
+      family: Onkelinx
+    email: thierry.onkelinx@inbo.be
+    orcid: 0000-0001-8804-4216
+    affiliation:
+    - Instituut voor Natuur- en Bosonderzoek (INBO)
+
+  rightsholder:
+  - name:
+      given: Instituut voor Natuur- en Bosonderzoek (INBO)
+    email: info@inbo.be
+    ror: 00j54wy13
+  funder:
+  - name:
+      given: Instituut voor Natuur- en Bosonderzoek (INBO)
+    email: info@inbo.be
+    ror: 00j54wy13
+
+  doi: 10.21436/inbor.152017328
+  depotnr: D/2026/3241/272
+  year: 2026
+  reportnr: 53
+  cover: figures/cover.png
+  coverphoto: figures/cover.png
+  coverdescription: Visualisatie van de iteratieve optimalisatie van de detecteerbare effectgrootte voor een van de onderzochte simulatiescenario's. Via simulaties wordt de minimale waarde voor de parameter $\beta_3$ bepaald die een statistische power van 0,9 bereikt.
+
+book:
+  chapters:
+    - index.md
+    - 01_abstract.md
+    - 02_inleiding.md
+    - 03_methodiek.qmd
+    - 04_schatting_simulatieparameters.qmd
+    - 05_detecteerbare_effectgrootte.qmd
+    - 06_conclusie.md
+    - referenties.md
+  appendices:
+    - zzz_aanwezigheid_per_soort.qmd
+    - zzz_visualisatie_poweroptimalisatie.qmd
+
+bibliography: references.bib

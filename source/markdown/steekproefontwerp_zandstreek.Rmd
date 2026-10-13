@@ -971,9 +971,9 @@ first_samples <- function(steekproef_df, min_n, multiplicatie) {
     group_by(.data$openheid_sbp, .data$thin_dist) %>%
     mutate(id = row_number()) %>% # sample_order cannot be used due to thinning
     ungroup() %>%
-    filter(id <= factor_n) %>%
-    mutate(batch = ifelse(id <= min_n, .data$batch, "reserve set")) %>%
-    select(-id) %>%
+    filter(.data$id <= factor_n) %>%
+    mutate(batch = ifelse(.data$id <= min_n, .data$batch, "reserve set")) %>%
+    select(-"id") %>%
     mutate(puntenset = paste("eerste", min_n, "per stratum",
       sep = " "
     ))

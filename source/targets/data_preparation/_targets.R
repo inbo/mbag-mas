@@ -232,6 +232,14 @@ list(
     name = mas_data_clean,
     command = remove_columns(mas_data_full)
   ),
+  tar_target(
+    name = mas_data_clean_file,
+    command = create_output_csv(
+      mas_data_clean,
+      file = "mas_data_clean",
+      path = file.path(mbag_dir, "output", "datasets")
+    )
+  ),
 
   # Write out distance sampling dataset
   tar_target(
