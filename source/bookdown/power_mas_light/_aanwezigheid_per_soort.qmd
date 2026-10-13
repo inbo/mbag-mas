@@ -24,6 +24,10 @@ presence_df <- tar_read_mas("presence_logical", branch = branch)
 #| fig-height: 5.7
 #| fig-width: 6
 presence_df %>%
+  mutate(regio = case_when(
+    regio == "Zandleemstreek" ~ "Zandleemstr.",
+    .default = regio
+  )) %>%
   ggplot(aes(x = sbp, fill = present)) +
   geom_bar() +
   facet_grid(regio ~ openheid_klasse, scales = "free") +
