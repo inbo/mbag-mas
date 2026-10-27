@@ -28,7 +28,7 @@ flandersqmd:
   level: 2
   public_report: true
   colophon: true
-  linenr: true
+  linenr: false
 
   title: Poweranalyse voor het meten van de effectiviteit van soortenbeschermingsprogramma’s
     in landbouwgebied van Vlaanderen
