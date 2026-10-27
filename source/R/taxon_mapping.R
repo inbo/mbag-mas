@@ -14,7 +14,7 @@ find_df_name <- function(df_list, search_value, lang = NA) {
 
   # Check how many times the value is present in each dataframe
   contains_value <- purrr::map(df_list, function(df) {
-    if (is.na(lang) | !"language" %in% names(df)) {
+    if (is.na(lang) || !"language" %in% names(df)) {
       vernacular_names <- df %>%
         pull(.data$vernacularName)
     } else {
@@ -57,11 +57,12 @@ get_accepted_name_usage <- function(taxon_data) {
 # Inspired by:
 # https://gist.github.com/damianooldoni/3fa9cc1ffa67377a9757df097d48d19f
 match_vernacular_name <- function(
-    vernacular_name_df,
-    filter_cols = NULL,
-    lang = NA,
-    increment = 0,
-    ...) {
+  vernacular_name_df,
+  filter_cols = NULL,
+  lang = NA,
+  increment = 0,
+  ...
+) {
   # Get vernacular name
   vernacular_name <- pull(vernacular_name_df[1])
 
@@ -149,13 +150,14 @@ match_vernacular_name <- function(
 
 # Input dataframe with vernacular names and get taxon information
 map_taxa_from_vernacular <- function(
-    vernacular_name_df,
-    vernacular_name_col = "vernacularName",
-    out_cols = "scientificName",
-    filter_cols = NULL,
-    lang = NA,
-    increment = 0,
-    ...) {
+  vernacular_name_df,
+  vernacular_name_col = "vernacularName",
+  out_cols = "scientificName",
+  filter_cols = NULL,
+  lang = NA,
+  increment = 0,
+  ...
+) {
   require("dplyr")
   require("tidyr")
 
