@@ -1,6 +1,6 @@
 # Conclusie
 
-De doelstelling van deze studie was om via een simulatiegebaseerde poweranalyse te bepalen in welke mate een vereenvoudigd monitoringsontwerp ("MAS light") over een periode van 10 jaar in staat is om trendverschillen tussen SBP-gebieden en niet-SBP-gebieden in Vlaanderen te detecteren.
+De doelstelling van deze studie was om via een simulatiegebaseerde poweranalyse te bepalen in welke mate een vereenvoudigd monitoringsontwerp ('MAS *light*') over een periode van 10 jaar in staat is om trendverschillen tussen SBP-gebieden en niet-SBP-gebieden in Vlaanderen te detecteren.
 
 De simulaties tonen aan dat de detecteerbare effectgrootte (MDE) (= trendverschil buiten vs. binnen SBP-gebied) zich gedraagt volgens een wiskundige machtsfunctie van zowel het aantal telpunten ($n$) als de lengte van de tijdreeks ($T$ in jaren):
 

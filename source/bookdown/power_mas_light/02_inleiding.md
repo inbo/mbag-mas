@@ -13,7 +13,7 @@ In het kader van het Meetnet Biodiversiteit Agrarisch Gebied (MBAG) werd het MAS
 
 De volledige MAS-methodiek vereist echter een aanzienlijke veldinspanning, mede doordat er ook voor subgebieden (bv. per landbouwstreek en type landschap) een uitspraak werd beoogd. Zowel het aantal telpunten als het aantal bezoeken per jaar hebben een belangrijke invloed op de benodigde middelen voor coördinatie, opleiding, kwaliteitscontrole en veldwerk.
 
-Bij de verdere uitrol van MAS rijst daarom de vraag of een vereenvoudigde versie van het meetnet ("MAS light") voldoende statistische kracht behoudt om beleidsrelevante veranderingen te detecteren op schaal Vlaanderen (dus niet langer focus op subgebieden).
+Bij de verdere uitrol van MAS rijst daarom de vraag of een vereenvoudigde versie van het meetnet ('MAS *light*') voldoende statistische kracht behoudt om beleidsrelevante veranderingen te detecteren op schaal Vlaanderen (dus niet langer focus op subgebieden).
 
 Een centrale toepassing van het meetnet is de evaluatie van soortenbeschermingsprogrammagebieden (SBP-gebieden). Hiervoor is het noodzakelijk om populatietrends binnen SBP-gebieden te kunnen vergelijken met trends buiten SBP-gebieden. Indien de populaties binnen SBP-gebieden systematisch gunstiger evolueren dan buiten SBP-gebieden, kan dit een indicatie vormen dat de genomen maatregelen bijdragen aan het behalen van de beleidsdoelen.
 
@@ -21,17 +21,17 @@ Het is belangrijk te benadrukken dat dergelijke vergelijkingen observationeel zi
 
 ## Doel van deze studie
 
-Deze studie voert een simulatiegebaseerde poweranalyse uit voor een mogelijke "MAS light".
+Deze studie voert een simulatiegebaseerde poweranalyse uit voor een mogelijke 'MAS *light*'.
 
 Daarbij wordt onderzocht welke verschillen in populatietrend tussen SBP- en niet-SBP-gebieden detecteerbaar zijn na tien jaar jaarlijkse monitoring, gegeven verschillende aantallen telpunten. De analyse focust op uitspraken voor Vlaanderen als geheel. Landbouwstreken en landschapstypes worden wel gebruikt bij de steekproeftrekking om representativiteit te garanderen, maar vormen geen afzonderlijke rapporteringsniveaus.
 
-De resultaten moeten toelaten om de benodigde monitoringinspanning af te wegen tegen de verwachte informatiewinst en zo een onderbouwde keuze te maken voor de omvang van een toekomstig "MAS light".
+De resultaten moeten toelaten om de benodigde monitoringinspanning af te wegen tegen de verwachte informatiewinst en zo een onderbouwde keuze te maken voor de omvang van een toekomstig 'MAS *light*'.
 
 ## Onderzoeksvraag
 
 De centrale onderzoeksvraag luidt:
 
-> Welk verschil in populatietrend tussen SBP-gebieden en niet-SBP-gebieden kan worden gedetecteerd met een "MAS light" van tien jaar, gegeven een vooraf vastgelegd aantal telpunten?
+> Welk verschil in populatietrend tussen SBP-gebieden en niet-SBP-gebieden kan worden gedetecteerd met een 'MAS *light*' van tien jaar, gegeven een vooraf vastgelegd aantal telpunten?
 
 De parameter waarin we geïnteresseerd zijn, is het verschil in trend tussen beide groepen uit een model waarin de jaarlijkse trend binnen en buiten SBP-gebied wordt vergeleken.
 

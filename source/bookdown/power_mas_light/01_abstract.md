@@ -5,7 +5,7 @@ A monitoring network, which focuses on common farmland birds (known as the 'Meet
 The primary objective of the MAS is to evaluate the effectiveness of restoration measures by comparing population trends between areas with and without restoration.
 In addition, MAS survey points can contribute to monitoring the national farmland bird index in support of the EU Nature Restoration Regulation [@vangossum2026natuurherstelverordening].
 
-This report does not focus on the national index, but specifically assesses the statistical feasibility of a simplified monitoring design ("MAS light") to demonstrate differences in population trends of common farmland birds between Species Protection Programme (SPP) areas and comparable areas outside SPPs.
+This report does not focus on the national index, but specifically assesses the statistical feasibility of a simplified monitoring design ('MAS light') to demonstrate differences in population trends of common farmland birds between Species Protection Programme (SPP) areas and comparable areas outside SPPs.
 The central question is what difference in trend between both groups can be detected with sufficient statistical confidence.
 A smaller minimally detectable trend difference is more favourable in this context, because it means that smaller differences in population trend are also statistically demonstrable.
 
