@@ -3,24 +3,20 @@
 # Samenvatting {.unnumbered}
 
 <!-- description: start -->
-Het Meetnet Agrarische Soorten (MAS), dat op algemene boerenlandvogels focust, werd in 2024 en 2025 over heel Vlaanderen uitgerold als onderdeel van het Meetnet Biodiversiteit Agrarisch Gebied (MBAG).
-Het primaire doel van het MAS is het evalueren van de doeltreffendheid van herstelmaatregelen door populatietrends te vergelijken tussen gebieden met en zonder herstel.
-Daarnaast kunnen MAS-telpunten bijdragen aan het opvolgen van de nationale boerenlandvogelindex, ter ondersteuning van de EU Natuurherstelverordening [@vangossum2026natuurherstelverordening].
+In 2024 en 2025 werd het Meetnet Agrarische Soorten (MAS) uitgerold over heel Vlaanderen als onderdeel van het Meetnet Biodiversiteit Agrarisch Gebied (MBAG). Dit meetnet volgt veelvoorkomende boerenlandvogels op.
 
-Dit rapport focust niet op de nationale index, maar onderzoekt specifiek de statistische haalbaarheid van een vereenvoudigd monitoringsontwerp ('MAS *light*') om verschillen in populatietrends van algemene boerenlandvogels tussen soortenbeschermingsprogrammagebieden (SBP-gebieden) en vergelijkbare gebieden buiten SBP's aan te tonen.
-De centrale vraag is welk verschil in trend tussen beide groepen met voldoende statistische zekerheid kan worden aangetoond.
-Een kleiner minimaal detecteerbaar trendverschil is hierbij gunstiger, omdat dit betekent dat ook kleinere verschillen in populatietrend statistisch aantoonbaar zijn.
+* Het doel van het MAS is om te meten of maatregelen voor natuurherstel echt werken.  
+* Dat doen we door de evolutie van de vogels te vergelijken tussen gebieden mét en gebieden zónder natuurherstel.  
+* De tellingen kunnen daarnaast helpen om de Europese Natuurherstelwet op te volgen [@vangossum2026natuurherstelverordening].
 
-Hiervoor werd een simulatiegebaseerde poweranalyse uitgevoerd, waarbij telgegevens werden gegenereerd met een Poisson GLMM (*generalized linear mixed model*) en vervolgens geanalyseerd met hetzelfde model. De minimaal detecteerbare effectgrootte (MDE) werd bepaald voor verschillende scenario's met 100, 200 en 400 telpunten en tijdreeksen van 10, 16 en 24 jaar. De effectgrootte wordt hierbij gedefinieerd als het minimaal detecteerbare verschil in populatietrend tussen SBP- en niet-SBP-gebieden.
+Dit rapport onderzoekt of we een vereenvoudigd meetnet met minder meetpunten ('MAS *light*') kunnen gebruiken. We willen weten of we met minder telpunten nog betrouwbaar kunnen aantonen of vogels het beter doen in gebieden met een soortenbeschermingsprogramma (SBP) dan in vergelijkbare gebieden zonder zo'n programma. Het rapport focust niet op de mogelijke toepassing voor de Europese Natuurherstelwet.
 
-De simulaties tonen dat de detecteerbare effectgrootte afneemt naarmate zowel het aantal telpunten ($n$) als de lengte van de tijdreeks ($T$) toeneemt en bij benadering evenredig is met $1 / \sqrt{nT^3}$. De analyses zijn uitgevoerd voor een hypothetische boerenlandvogelsoort met een hoge dichtheid en een beperkte variatie tussen telpunten. De resultaten zijn daarmee niet rechtstreeks representatief voor alle boerenlandvogels; voor zeldzamere soorten of soorten met een heterogenere verspreiding zal de minimaal detecteerbare effectgrootte doorgaans groter zijn.
+Om dit te testen, voerden we computersimulaties uit (een zogeheten poweranalyse) voor verschillende scenario's met 100, 200 en 400 telpunten, verspreid over 10, 16 en 24 jaar. De resultaten tonen het volgende aan:
 
-Zelfs voor deze hypothetische boerenlandvogelsoort blijft het minimaal detecteerbare trendverschil relatief groot. Bij een meetnet van 400 telpunten zijn, voor een realistische soort die niet overal voorkomt, in de praktijk mogelijk slechts ongeveer 200 telpunten informatief. In dat geval is pas een sterk gunstiger trend binnen SBP-gebieden dan buiten SBP-gebieden detecteerbaar. Concreet betekent dit dat de populatie binnen SBP-gebied over een periode van 10 jaar 58 % gunstiger moet evolueren dan buiten SBP-gebied voordat een statistisch significant verschil in trend kan worden aangetoond. Indien deze soort 9,5 % buiten SBP-gebied afneemt over 10 jaar, moet ze binnen SBP-gebied 46 % toenemen. Voor een stabiele trend buiten SBP-gebied moet ze binnen SBP-gebied 58 % toenemen en voor een toename van 10,5 % buiten SBP-gebied moet ze 73 % toenemen binnen SBP-gebied.
-Beschouw hetzelfde voorbeeld voor een tijdreeks van 24 jaar; dan moet de populatie binnen SBP-gebied 38 % gunstiger evolueren dan buiten SBP-gebied voordat een statistisch significant verschil in trend kan worden aangetoond.
+* We kunnen de effecten beter meten als we meer telpunten gebruiken en als we langer meten.  
+* We testten dit voor een veelvoorkomende, hypothetische vogelsoort, maar zelfs dan is het moeilijk om statistisch aan te tonen dat populaties verschillend evolueren. Voor zeldzamere vogels zal dit nog moeilijker zijn.  
+* Stel dat we 400 telpunten gebruiken. In de praktijk zijn waarschijnlijk maar ongeveer 200 daarvan echt nuttig voor een realistische vogelsoort. In dat geval zien we pas een meetbaar effect als de vogels in SBP-gebieden het véél beter doen dan daarbuiten.  
+* Concreet: over een periode van 10 jaar moet de vogelpopulatie in een beschermd gebied 58 % beter evolueren dan daarbuiten om dit wetenschappelijk te kunnen bewijzen. Over een periode van 24 jaar volstaat een verschil van 38 %.
 
-Een aanvullende sensitiviteitsanalyse toont aan dat het minimaal detecteerbare effect afneemt bij een grotere variatie tussen telpunten, als gevolg van de toename in marginale verwachte abundantie bij een log-link.
-Voor toekomstige poweranalyses raden we aan extreme ondergrenzen (zoals nulvariantie) te vermijden en eerder te hoge dan te lage waarden te hanteren, of idealiter een sensitiviteitsanalyse over een bereik van varianties uit te voeren.
-Deze inzichten wijzigen de hoofdconclusie van de poweranalyse echter niet.
-
-De resultaten wijzen er dan ook op dat het verkleinen van het aantal meetpunten niet aangewezen is, omdat de statistische gevoeligheid dan te beperkt wordt om verschillen in populatietrend tussen SBP- en niet-SBP-gebieden betrouwbaar aan te tonen.
+Extra analyses bevestigen deze resultaten. De belangrijkste conclusie is dan ook duidelijk: we mogen het aantal telpunten niet verminderen. Doen we dat wel, dan hebben we te weinig gegevens om (kleinere) verschillen op te merken. Zo kunnen we het effect van de beschermingsprogramma's op boerenlandvogels niet meer aantonen.
 <!-- description: end -->

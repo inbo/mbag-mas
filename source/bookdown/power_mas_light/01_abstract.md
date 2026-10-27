@@ -1,25 +1,26 @@
 ::: {lang=en-GB}
 
 # English abstract {-}
-A monitoring network, which focuses on common farmland birds (known as the 'Meetnet Agrarische Soorten', MAS), was rolled out across Flanders in 2024 and 2025 as part of the Agricultural Area Biodiversity Monitoring Network (known as the 'Meetnet Biodiversiteit Agrarisch Gebied', MBAG).
-The primary objective of the MAS is to evaluate the effectiveness of restoration measures by comparing population trends between areas with and without restoration.
-In addition, MAS survey points can contribute to monitoring the national farmland bird index in support of the EU Nature Restoration Regulation [@vangossum2026natuurherstelverordening].
+In 2024 and 2025, a monitoring network which focuses on common farmland birds (known as the *Meetnet Agrarische Soorten*, MAS) was rolled out across Flanders as part of the Agricultural Area Biodiversity Monitoring Network (known as the *Meetnet Biodiversiteit Agrarisch Gebied*, MBAG).
+This monitoring network focuses on common farmland birds.
 
-This report does not focus on the national index, but specifically assesses the statistical feasibility of a simplified monitoring design ('MAS light') to demonstrate differences in population trends of common farmland birds between Species Protection Programme (SPP) areas and comparable areas outside SPPs.
-The central question is what difference in trend between both groups can be detected with sufficient statistical confidence.
-A smaller minimally detectable trend difference is more favourable in this context, because it means that smaller differences in population trend are also statistically demonstrable.
+* The objective of the MAS is to assess whether nature restoration measures are genuinely effective.
+* We do this by comparing bird population trends between areas with and without nature restoration measures.
+* In addition, the counts can help monitor the EU Nature Restoration Law [@vangossum2026natuurherstelverordening].
 
-To address this question, a simulation-based power analysis was conducted. Count data were generated using a Poisson generalized linear mixed model (GLMM) and subsequently analysed using the same model. The minimum detectable effect (MDE) was estimated for scenarios with 100, 200, and 400 survey points for a time series of 10, 16, and 24 years. The effect size was defined as the smallest detectable difference in population trend between SPP and non-SPP areas.
+This report examines whether a simplified monitoring design with fewer survey points ('MAS light') can be used.
+We want to determine whether we can still reliably demonstrate, with fewer survey points, whether birds are doing better in areas covered by a Species Protection Programme (SPP) compared to similar areas without such a programme.
+The report does not focus on potential applications for the EU Nature Restoration Law.
 
-The simulations show that the detectable effect size decreases as both the number of survey points ($n$) and the length of the time series ($T$) increase, and is approximately proportional to $1/\sqrt{nT^3}$. The analyses were conducted for a hypothetical farmland bird species with a high abundance and limited variation between survey points. The results are therefore not directly representative of all farmland bird species; for rarer species or species with a more heterogeneous distribution, the minimum detectable effect size will generally be larger.
+To test this, we performed computer simulations (a so-called power analysis) for various scenarios involving 100, 200, and 400 survey points, over time spans of 10, 16, and 24 years.
+The results show the following:
 
-Even for this hypothetical farmland bird species, the minimum detectable difference in population trend remains relatively large. In a monitoring scheme with 400 survey points, only around 200 survey points may, in practice, provide informative observations for a realistic species that does not occur everywhere. Under these conditions, only a substantially more favourable trend within SPP areas than outside SPP areas can be detected. Specifically, over a 10-year period, the population within SPP areas would need to show a trend 58 % more favourable than that outside SPP areas before a statistically significant difference could be demonstrated. For example, if the population declines by 9.5 % outside SPP areas over 10 years, it would need to increase by 46 % within SPP areas. If the population remains stable outside SPP areas, it would need to increase by 58 % within SPP areas, while an increase of 10.5 % outside SPP areas would require an increase of 73 % within SPP areas to yield a statistically significant difference. For a 24-year time series, the required difference is smaller: the population within SPP areas would need to exhibit a trend that is 38 % more favourable than that outside SPP areas before a statistically significant difference could be detected.
+* We can detect effects more reliably when using more survey points and when monitoring over longer periods.
+* We tested this for a common, hypothetical bird species, yet even then it remains difficult to statistically demonstrate differing population trends. For rarer species, this will be even more challenging.
+* Suppose we use 400 survey points. In practice, only about 200 of them are likely to be truly informative for a realistic bird species. In that scenario, we can only detect an effect if the birds in SPP areas show a considerably more favourable trend than those outside.
+* Concretely: over a 10-year period, the bird population in a protected area must show a 58 % more favourable trend than outside before this can be proven statistically. Over a 24-year period, a 38 % difference is sufficient.
 
-An additional sensitivity analysis shows that the minimum detectable effect decreases with increasing variation between survey points, as a result of the increase in marginal expected abundance under a log link.
-For future power analyses, we recommend avoiding extreme lower bounds (such as zero variance) and using higher rather than lower values, or ideally performing a sensitivity analysis across a range of variances.
-However, these insights do not alter the main conclusion of the power analysis.
-
-These results indicate that reducing the number of survey points is not advisable, as doing so would substantially reduce the statistical power of the monitoring scheme and limit its ability to reliably detect differences in population trends between SPP and non-SPP areas.
+Additional analyses confirm these findings. The key conclusion is therefore clear: we should not reduce the number of survey points. Doing so would leave us with insufficient data to detect (smaller) differences, making it impossible to reliably demonstrate the impact of species protection programmes on farmland birds.
 :::
 
 <!-- This part adds the table of content in the pdf -->
