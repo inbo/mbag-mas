@@ -533,8 +533,18 @@ detectable_effect_sigma %>%
   mutate(
     sigma_punt = if_else(
       sigma_punt < 0.1,
-      sprintf("%.6f", sigma_punt),
-      sprintf("%.2f", sigma_punt)
+      formatC(
+        sigma_punt,
+        format = "f",
+        digits = 6,
+        decimal.mark = ","
+      ),
+      formatC(
+        sigma_punt,
+        format = "f",
+        digits = 2,
+        decimal.mark = ","
+      )
     ),
     value = fmt_pct(effect_pct_long, 0)
   ) %>%

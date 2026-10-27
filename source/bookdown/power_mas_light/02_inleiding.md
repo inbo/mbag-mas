@@ -35,4 +35,4 @@ De centrale onderzoeksvraag luidt:
 
 De parameter waarin we geïnteresseerd zijn, is het verschil in trend tussen beide groepen uit een model waarin de jaarlijkse trend binnen en buiten SBP-gebied wordt vergeleken.
 
-Meer specifiek wordt voor verschillende scenario's van het aantal telpunten bepaald welke minimale effectgrootte detecteerbaar is met een statistische power (ook wel 'onderscheidend vermogen') van 90 % en een significantieniveau van 0,1.
+Meer specifiek wordt voor verschillende scenario's van het aantal telpunten bepaald welke minimale effectgrootte detecteerbaar is met een statistische power (ook wel 'onderscheidend vermogen') van 90 % en een significantieniveau van 0,05.
