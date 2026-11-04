@@ -1,6 +1,6 @@
 <!-- badges: start -->
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
-[![CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-brightgreen)](https://raw.githubusercontent.com/inbo/checklist/refs/heads/main/inst/generic_template/cc_by_4_0.md)
+[![CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-brightgreen)](https://raw.githubusercontent.com/inbo/citeme/refs/heads/main/inst/licenses/cc_by_4_0.md)
 [![Release](https://img.shields.io/github/release/inbo/mbag-mas.svg)](https://github.com/inbo/mbag-mas/releases)
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/inbo/mbag-mas/check-project)
 ![GitHub repo size](https://img.shields.io/github/repo-size/inbo/mbag-mas)
