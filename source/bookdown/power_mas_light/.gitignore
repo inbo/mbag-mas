@@ -2,6 +2,7 @@
 /\.Rproj.user
 /*\.eps
 /*\.pdf
+!cover.pdf
 /*\.sty
 /*\.tex
 output
